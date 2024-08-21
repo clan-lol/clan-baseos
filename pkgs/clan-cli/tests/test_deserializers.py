@@ -255,13 +255,13 @@ def test_none_or_string() -> None:
     class Person:
         name: Path
 
-    checked = from_dict(str | None, data)
+    checked: str | None = from_dict(str | None, data)
     assert checked is None
 
-    checked2 = from_dict(dict[str, str] | None, data)
+    checked2: dict[str, str] | None = from_dict(dict[str, str] | None, data)
     assert checked2 is None
 
-    checked3 = from_dict(Person | None, data)
+    checked3: Person | None = from_dict(Person | None, data)
     assert checked3 is None
 
 

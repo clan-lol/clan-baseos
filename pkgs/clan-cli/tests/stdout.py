@@ -15,7 +15,7 @@ class CaptureOutput:
         self.capsys.readouterr()
         return self
 
-    def __exit__(self, exc_type: Any, exc_value: Any, exc_traceback: Any) -> bool:
+    def __exit__(self, exc_type: Any, exc_value: Any, exc_traceback: Any) -> None:
         res = self.capsys.readouterr()
         self.out = res.out
         self.err = res.err
@@ -23,7 +23,6 @@ class CaptureOutput:
         # Disable capsys again
         self.capsys_disabled = self.capsys.disabled()
         self.capsys_disabled.__enter__()
-        return False
 
 
 @pytest.fixture
