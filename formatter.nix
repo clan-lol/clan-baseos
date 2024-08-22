@@ -46,15 +46,11 @@
       };
       treefmt.programs.mypy.directories =
         {
-          "pkgs/clan-cli" = {
-            extraPythonPackages = self'.packages.clan-cli.testDependencies;
-            modules = [ "clan_cli" ];
-          };
+          "pkgs/clan-cli".extraPythonPackages = self'.packages.clan-cli.testDependencies;
           "pkgs/clan-app" = {
             extraPythonPackages =
               (self'.packages.clan-app.externalTestDeps or [ ]) ++ self'.packages.clan-cli.testDependencies;
             extraPythonPaths = [ "../clan-cli" ];
-            modules = [ "clan_app" ];
           };
         }
         // (
@@ -64,7 +60,6 @@
                 extraPythonPackages =
                   self'.packages.clan-vm-manager.externalTestDeps ++ self'.packages.clan-cli.testDependencies;
                 extraPythonPaths = [ "../clan-cli" ];
-                modules = [ "clan_vm_manager" ];
               };
             }
           else
@@ -72,6 +67,5 @@
         );
       treefmt.programs.ruff.check = true;
       treefmt.programs.ruff.format = true;
-
     };
 }
