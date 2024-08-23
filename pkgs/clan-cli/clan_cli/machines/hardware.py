@@ -3,10 +3,11 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
+from typing import Literal
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
-from clan_cli.errors import ClanError
+from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.git import commit_file
 
 from ..cmd import run, run_no_stdout
@@ -19,26 +20,32 @@ log = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class HardwareInfo:
-    system: str | None
+class HardwareReport:
+    file: Literal["nixos-generate-config", "nixos-facter"]
+
+
+hw_nix_file = "hardware-configuration.nix"
+facter_file = "facter.json"
 
 
 @API.register
 def show_machine_hardware_info(
     clan_dir: str | Path, machine_name: str
-) -> HardwareInfo | None:
+) -> HardwareReport | None:
     """
     Show hardware information for a machine returns None if none exist.
     """
 
-    hw_file = Path(f"{clan_dir}/machines/{machine_name}/hardware-configuration.nix")
-
+    hw_file = Path(f"{clan_dir}/machines/{machine_name}/{hw_nix_file}")
     is_template = hw_file.exists() and "throw" in hw_file.read_text()
-    if not hw_file.exists() or is_template:
-        return None
 
-    system = show_machine_hardware_platform(clan_dir, machine_name)
-    return HardwareInfo(system)
+    if hw_file.exists() and not is_template:
+        return HardwareReport("nixos-generate-config")
+
+    if Path(f"{clan_dir}/machines/{machine_name}/{facter_file}").exists():
+        return HardwareReport("nixos-facter")
+
+    return None
 
 
 @API.register
@@ -46,7 +53,7 @@ def show_machine_deployment_target(
     clan_dir: str | Path, machine_name: str
 ) -> str | None:
     """
-    Show hardware information for a machine returns None if none exist.
+    Show deployment target for a machine returns None if none exist.
     """
     config = nix_config()
     system = config["system"]
@@ -97,7 +104,7 @@ def generate_machine_hardware_info(
     password: str | None = None,
     keyfile: str | None = None,
     force: bool | None = False,
-) -> HardwareInfo:
+) -> HardwareReport:
     """
     Generate hardware information for a machine
     and place the resulting *.nix file in the machine's directory.
@@ -157,17 +164,42 @@ def generate_machine_hardware_info(
             location=f"{__name__} {hw_file}",
         )
 
+    backup_file = None
+    if hw_file.exists() and force:
+        # Backup the existing file
+        backup_file = hw_file.with_suffix(".bak")
+        hw_file.replace(backup_file)
+        print(f"Backed up existing hardware-configuration.nix to {backup_file}")
+
     with open(hw_file, "w") as f:
         f.write(out.stdout)
         print(f"Successfully generated: {hw_file}")
 
-    system = show_machine_hardware_platform(clan_dir, machine_name)
+    # try to evaluate the machine
+    # If it fails, the hardware-configuration.nix file is invalid
 
     commit_file(
-        hw_file, clan_dir.path, f"Generate hardware configuration for {machine_name}"
+        hw_file,
+        clan_dir.path,
+        f"HW/report: Hardware configuration for {machine_name}",
     )
+    try:
+        show_machine_hardware_platform(clan_dir, machine_name)
+    except ClanCmdError as e:
+        log.error(e)
+        # Restore the backup file
+        print(f"Restoring backup file {backup_file}")
+        if backup_file:
+            backup_file.replace(hw_file)
+        # TODO: Undo the commit
 
-    return HardwareInfo(system)
+        raise ClanError(
+            "Invalid hardware-configuration.nix file",
+            description="The hardware-configuration.nix file is invalid. Please check the file and try again.",
+            location=f"{__name__} {hw_file}",
+        )
+
+    return HardwareReport("nixos-generate-config")
 
 
 def hw_generate_command(args: argparse.Namespace) -> None:
@@ -177,7 +209,7 @@ def hw_generate_command(args: argparse.Namespace) -> None:
     print("----")
     print("Successfully generated hardware information.")
     print(f"Target: {args.machine} ({args.hostname})")
-    print(f"System: {hw_info.system}")
+    print(f"Type: {hw_info.file}")
     print("----")
 
 
