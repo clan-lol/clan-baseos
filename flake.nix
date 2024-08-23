@@ -17,6 +17,11 @@
     systems.url = "github:nix-systems/default";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
+    nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
+    nixos-facter-modules.inputs.nixpkgs.follows = "nixpkgs";
+
+    nixos-facter.url = "github:numtide/nixos-facter";
+    nixos-facter.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -49,6 +54,13 @@
           ./nixosModules/clanCore/vars/flake-module.nix
           ./pkgs/flake-module.nix
           ./templates/flake-module.nix
+
+          # Inherit the nixos-facter package so its build is chached in clans binary cache
+          {
+            perSystem = {system, inputs', ...}: {
+              packages.nixos-facter = inputs'.nixos-facter.packages.default;
+            };
+          }
         ];
       }
     );
