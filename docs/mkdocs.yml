@@ -59,6 +59,8 @@ nav:
           - reference/clanModules/borgbackup.md
           - reference/clanModules/deltachat.md
           - reference/clanModules/dyndns.md
+          - reference/clanModules/nginx.md
+          - reference/clanModules/vaultwarden.md
           - reference/clanModules/ergochat.md
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
