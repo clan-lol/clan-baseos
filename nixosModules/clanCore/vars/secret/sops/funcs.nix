@@ -14,17 +14,12 @@ rec {
 
   listVars =
     varsDir:
-    flip concatMap (readDirNames varsDir) (
-      machine_name:
-      flip concatMap (readDirNames (varsDir + "/${machine_name}")) (
-        generator_name:
-        flip map (readDirNames (varsDir + "/${machine_name}/${generator_name}")) (secret_name: {
-          machine = machine_name;
-          generator = generator_name;
-          name = secret_name;
-          id = "${machine_name}/${generator_name}/${secret_name}";
-          sopsFile = "${varsDir}/${machine_name}/${generator_name}/${secret_name}/secret";
-        })
-      )
+    flip concatMap (readDirNames (varsDir)) (
+      generator_name:
+      flip map (readDirNames (varsDir + "/${generator_name}")) (secret_name: {
+        generator = generator_name;
+        name = secret_name;
+        sopsFile = "${varsDir}/${generator_name}/${secret_name}/secret";
+      })
     );
 }
