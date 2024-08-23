@@ -8,6 +8,8 @@ let
       imports = [
         ./iwd.nix
         self.nixosModules.installer
+        # Allow to download pre-build binaries from our nix caches
+        self.clanModules.trusted-nix-caches
       ];
 
       system.stateVersion = config.system.nixos.version;
