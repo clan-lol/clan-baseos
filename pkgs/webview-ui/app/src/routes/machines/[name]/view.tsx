@@ -94,7 +94,7 @@ const InstallMachine = (props: InstallMachineProps) => {
     }
 
     const loading_toast = toast.loading(
-      "Installing machine. Grab coffee (15min)..."
+      "Installing machine. Grab coffee (15min)...",
     );
     const r = await callApi("install_machine", {
       opts: {
@@ -371,7 +371,7 @@ const MachineForm = (props: MachineDetailsProps) => {
     });
     if (machine_response.status === "error") {
       toast.error(
-        `Failed to set machine: ${machine_response.errors[0].message}`
+        `Failed to set machine: ${machine_response.errors[0].message}`,
       );
     }
     if (machine_response.status === "success") {

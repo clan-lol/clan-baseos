@@ -57,9 +57,11 @@
 
           # Inherit the nixos-facter package so its build is chached in clans binary cache
           {
-            perSystem = {system, inputs', ...}: {
-              packages.nixos-facter = inputs'.nixos-facter.packages.default;
-            };
+            perSystem =
+              { inputs', ... }:
+              {
+                packages.nixos-facter = inputs'.nixos-facter.packages.default;
+              };
           }
         ];
       }
