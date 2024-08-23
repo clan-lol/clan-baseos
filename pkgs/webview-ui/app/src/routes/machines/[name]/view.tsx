@@ -77,7 +77,7 @@ const InstallMachine = (props: InstallMachineProps) => {
           machine_name: props.name,
         });
         if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data || null;
+        return result.data?.file === "nixos-facter" || null;
       }
       return null;
     },
@@ -94,7 +94,7 @@ const InstallMachine = (props: InstallMachineProps) => {
     }
 
     const loading_toast = toast.loading(
-      "Installing machine. Grab coffee (15min)...",
+      "Installing machine. Grab coffee (15min)..."
     );
     const r = await callApi("install_machine", {
       opts: {
@@ -152,6 +152,7 @@ const InstallMachine = (props: InstallMachineProps) => {
       machine_name: props.name,
       keyfile: props.sshKey?.name,
       hostname: props.targetHost,
+      report_type: "nixos-facter",
     });
     toast.dismiss(loading_toast);
     hwInfoQuery.refetch();
@@ -370,7 +371,7 @@ const MachineForm = (props: MachineDetailsProps) => {
     });
     if (machine_response.status === "error") {
       toast.error(
-        `Failed to set machine: ${machine_response.errors[0].message}`,
+        `Failed to set machine: ${machine_response.errors[0].message}`
       );
     }
     if (machine_response.status === "success") {
