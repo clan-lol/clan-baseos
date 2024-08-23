@@ -15,6 +15,7 @@
     moonlight = ./moonlight;
     mumble = ./mumble;
     packages = ./packages;
+    nginx = ./nginx;
     postgresql = ./postgresql;
     root-password = ./root-password;
     single-disk = ./single-disk;
@@ -26,6 +27,7 @@
     thelounge = ./thelounge;
     trusted-nix-caches = ./trusted-nix-caches;
     user-password = ./user-password;
+    vaultwarden = ./vaultwarden;
     xfce = ./xfce;
     zerotier-static-peers = ./zerotier-static-peers;
     zt-tcp-relay = ./zt-tcp-relay;

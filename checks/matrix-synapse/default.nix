@@ -22,7 +22,11 @@
               enableACME = lib.mkForce false;
               forceSSL = lib.mkForce false;
             };
-            clan.matrix-synapse.domain = "clan.test";
+            security.acme.defaults.email = "admin@clan.test";
+            clan.matrix-synapse = {
+              server_tld = "clan.test";
+              app_domain = "matrix.clan.test";
+            };
             clan.matrix-synapse.users.admin.admin = true;
             clan.matrix-synapse.users.someuser = { };
 
