@@ -19,18 +19,15 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
 
     check_parser = subparser.add_parser(
         "check",
-        help="check if facts are up to date",
+        help="check if vars are up to date",
         epilog=(
-            f"""
-This subcommand allows checking if all facts are up to date.
+            """
+This subcommand allows checking if all vars are up to date.
 
 Examples:
 
-  $ clan facts check [MACHINE]
-  Will check facts for the specified machine.
-
-
-For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
+  $ clan vars check [MACHINE]
+  Will check vars for the specified machine.
         """
         ),
         formatter_class=argparse.RawTextHelpFormatter,
@@ -39,12 +36,12 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
 
     list_parser = subparser.add_parser(
         "list",
-        help="list all facts",
+        help="list all vars",
         epilog=(
             f"""
-This subcommand allows listing all public facts for a specific machine.
+This subcommand allows listing all non-secret vars for a specific machine.
 
-The resulting list will be a json string with the name of the fact as its key
+The resulting list will be a json string with the name of the variable as its key
 and the fact itself as it's value.
 
 This is how an example output might look like:
@@ -56,10 +53,10 @@ This is how an example output might look like:
 
 Examples:
 
-  $ clan facts list [MACHINE]
-  Will list facts for the specified machine.
+  $ clan vars list [MACHINE]
+  Will list non-secret vars for the specified machine.
 
-   
+
 For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
         """
         ),
@@ -69,36 +66,36 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
 
     parser_generate = subparser.add_parser(
         "generate",
-        help="generate public and secret facts for machines",
+        help="(re-)generate vars for specific or all machines",
         epilog=(
             f"""
-This subcommand allows control of the generation of facts.
+This subcommand allows control of the generation of vars.
 Often this function will be invoked automatically on deploying machines,
 but there are situations the user may want to have more granular control,
 especially for the regeneration of certain services.
 
-A service is an included clan-module that implements facts generation functionality.
-For example the zerotier module will generate private and public facts.
-In this case the public fact will be the resulting zerotier-ip of the machine.
-The secret fact will be the zerotier-identity-secret, which is used by zerotier
+A service is an included clan-module that implements vars generation functionality.
+For example the zerotier module will generate secret and public vars.
+In this case the public vars will be the resulting zerotier-ip of the machine.
+The secret variable will be the zerotier-identity-secret, which is used by zerotier
 to prove the machine has control of the zerotier-ip.
 
 
 Examples:
 
-  $ clan facts generate
-  Will generate facts for all machines.
-   
-  $ clan facts generate [MACHINE]
-  Will generate facts for the specified machine.
+  $ clan vars generate
+  Will generate vars for all machines.
 
-  $ clan facts generate [MACHINE] --service [SERVICE]
-  Will generate facts for the specified machine for the specified service.
+  $ clan vars generate [MACHINE]
+  Will generate vars for the specified machine.
 
-  $ clan facts generate --service [SERVICE] --regenerate
-  Will regenerate facts, if they are already generated for a specific service.
+  $ clan vars generate [MACHINE] --service [SERVICE]
+  Will generate vars for the specified machine for the specified service.
+
+  $ clan vars generate --service [SERVICE] --regenerate
+  Will regenerate vars, if they are already generated for a specific service.
   This is especially useful for resetting certain passwords while leaving the rest
-  of the facts for a machine in place.
+  of the vars for a machine in place.
 
 For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
         """
@@ -121,9 +118,9 @@ The default backend is sops.
 
 Examples:
 
-  $ clan facts upload [MACHINE]
+  $ clan vars upload [MACHINE]
   Will upload secrets to a specific machine.
-   
+
 For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
         """
         ),
