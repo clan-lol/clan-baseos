@@ -21,12 +21,12 @@ in
   };
 
   test_listSecrets = {
-    expr = listVars ./populated/vars;
+    expr = listVars ./populated/vars/my_machine;
     expected = [
       {
-        machine = "my_machine";
         generator = "my_generator";
         name = "my_secret";
+        sopsFile = "${./populated/vars/my_machine}/my_generator/my_secret/secret";
       }
     ];
   };

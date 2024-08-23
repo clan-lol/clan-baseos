@@ -10,17 +10,12 @@ let
 
   inherit (import ./funcs.nix { inherit lib; }) listVars;
 
-  varsDirMachines = config.clan.core.clanDir + "/sops/vars/per-machine";
+  inherit (config.clan.core) machineName;
+
+  varsDirMachines = config.clan.core.clanDir + "/sops/vars/per-machine/${machineName}";
   varsDirShared = config.clan.core.clanDir + "/sops/vars/shared";
 
-  varsUnfiltered = (listVars varsDirMachines) ++ (listVars varsDirShared);
-  filterVars =
-    vars:
-    builtins.elem vars.machine [
-      config.clan.core.machineName
-      "shared"
-    ];
-  vars = lib.filter filterVars varsUnfiltered;
+  vars = (listVars varsDirMachines) ++ (listVars varsDirShared);
 
 in
 {
@@ -28,7 +23,7 @@ in
     # Before we generate a secret we cannot know the path yet, so we need to set it to an empty string
     fileModule = file: {
       path = lib.mkIf file.config.secret (
-        config.sops.secrets.${"${config.clan.core.machineName}/${file.config.generatorName}/${file.config.name}"}.path
+        config.sops.secrets.${"vars/${file.config.generatorName}/${file.config.name}"}.path
           or "/no-such-path"
       );
     };
@@ -39,7 +34,7 @@ in
   config.sops = lib.mkIf (config.clan.core.vars.settings.secretStore == "sops") {
     secrets = lib.listToAttrs (
       flip map vars (secret: {
-        name = secret.id;
+        name = "vars/${secret.generator}/${secret.name}";
         value = {
           sopsFile = secret.sopsFile;
           format = "binary";
@@ -51,7 +46,7 @@ in
       lib.mkDefault (builtins.toString (pkgs.writeText "dummy.yaml" ""))
     );
     age.keyFile = lib.mkIf (builtins.pathExists (
-      config.clan.core.clanDir + "/sops/secrets/${config.clan.core.machineName}-age.key/secret"
+      config.clan.core.clanDir + "/sops/secrets/${machineName}-age.key/secret"
     )) (lib.mkDefault "/var/lib/sops-nix/key.txt");
   };
 }

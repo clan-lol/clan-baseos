@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,8 @@ from helpers import cli
 from helpers.nixos_config import nested_dict
 from helpers.vms import qga_connect, run_vm_in_thread, wait_vm_down
 from root import CLAN_CORE
+
+from clan_cli.nix import nix_eval, run
 
 
 @pytest.mark.impure
@@ -32,10 +35,29 @@ def test_vm_deployment(
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["vars", "generate", "my_machine"])
+    # check sops secrets not empty
+    sops_secrets = json.loads(
+        run(
+            nix_eval(
+                [
+                    f"{flake.path}#nixosConfigurations.my_machine.config.sops.secrets",
+                ]
+            )
+        ).stdout.strip()
+    )
+    assert sops_secrets != dict()
+    my_secret_path = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_secret.path",
+            ]
+        )
+    ).stdout.strip()
+    assert "no-such-path" not in my_secret_path
     run_vm_in_thread("my_machine")
     qga = qga_connect("my_machine")
-    qga.run("ls /run/secrets/my_machine/my_generator/my_secret", check=True)
-    _, out, _ = qga.run("cat /run/secrets/my_machine/my_generator/my_secret")
+    qga.run("ls /run/secrets/vars/my_generator/my_secret", check=True)
+    _, out, _ = qga.run("cat /run/secrets/vars/my_generator/my_secret", check=True)
     assert out == "hello\n"
     qga.exec_cmd("poweroff")
     wait_vm_down("my_machine")
