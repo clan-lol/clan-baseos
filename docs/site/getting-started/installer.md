@@ -42,8 +42,8 @@ sudo umount /dev/sdb1
 === "**Linux OS**"
     ### Step 2. Flash Custom Installer
 
-    Using clan flash enables the inclusion of ssh public keys.
-    It also allows to set language and keymap currently in the installer image.
+    Using clan flash enables the inclusion of ssh public keys and wifi access points.
+    It also allows to set language and keymap in the installer image.
 
     ```bash
     clan flash --flake git+https://git.clan.lol/clan/clan-core \
@@ -54,18 +54,31 @@ sudo umount /dev/sdb1
       flash-installer
     ```
 
-    The `--ssh-pubkey`, `--language` and `--keymap` are optional.
-    You can get a list of all keymaps with the following command:
-
-    ```
-    $ find $(nix-build 'https://github.com/NixOS/nixpkgs/archive/refs/heads/nixpkgs-unstable.tar.gz' --no-out-link -A kbd)/share/keymaps -type f -name '*.map.gz'
-    ```
     Replace `$HOME/.ssh/id_ed25519.pub` with a path to your SSH public key.
     If you do not have an ssh key yet, you can generate one with `ssh-keygen -t ed25519` command.
 
     !!! Danger "Specifying the wrong device can lead to unrecoverable data loss."
 
         The `clan flash` utility will erase the disk. Make sure to specify the correct device
+
+    !!! Note
+        To add wifi credentials into the installer image append the option:
+        ```
+          --wifi <ssid> <password>  
+        ```
+
+    !!! Note
+        You can get a list of all keymaps with the following command:
+        ```
+        clan flash asd --list-keymaps
+        ```
+    
+    !!! Note
+        You can get a list of all languages with the following command:
+        ```
+        clan flash asd --list-languages
+        ```
+    
 
 
 
@@ -95,9 +108,7 @@ sudo umount /dev/sdb1
 ### Step 4. Boot and Connect to your network
 
 After writing the installer to the USB drive, use it to boot the target machine.
-
-!!! info 
-    Plug it into the target machine and select the USB drive as a temporary boot device.
+To do this plug the USB drive into the target machine and select the USB drive as a temporary boot device.
 
 ??? tip "Here you can find the key combinations for selection used by most vendors."
     - **Dell**: F12 (Boot Menu), F2/Del (BIOS Setup)
@@ -112,16 +123,13 @@ After writing the installer to the USB drive, use it to boot the target machine.
     - **Apple**: Option (Alt) Key (Boot Menu for Mac)
     - If your hardware was not listed read the manufacturers instructions how to enter the boot Menu/BIOS Setup.
 
-**During Boot**
-
-Select `NixOS` to boot into the clan installer.
 
 **After Booting**
 
-For deploying your configuration the machine needs to be connected via LAN (recommended).
+Now you can deploy your clan configuration onto the machine
 
 
-## (Optional) Connect to Wifi
+## (Optional) Connect to Wifi Manually
 
 If you don't have access via LAN the Installer offers support for connecting via Wifi.
 

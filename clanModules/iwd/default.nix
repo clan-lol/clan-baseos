@@ -31,7 +31,7 @@ in
           {
             options = {
               ssid = lib.mkOption {
-                type = lib.types.strMatching "^[a-zA-Z0-9._-]+$";
+                type = lib.types.str;
                 default = name;
                 description = "The name of the wifi network";
               };
@@ -66,6 +66,9 @@ in
     {
       # disable wpa supplicant
       networking.wireless.enable = false;
+
+      # Set the network manager backend to iwd
+      networking.networkmanager.wifi.backend = "iwd";
 
       # Use iwd instead of wpa_supplicant. It has a user friendly CLI
       networking.wireless.iwd = {
