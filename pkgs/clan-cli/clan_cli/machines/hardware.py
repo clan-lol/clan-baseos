@@ -1,7 +1,7 @@
 import argparse
-import dataclasses
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -19,7 +19,7 @@ from .types import machine_name_type
 log = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclass
 class HardwareReport:
     file: Literal["nixos-generate-config", "nixos-facter"]
 
@@ -120,8 +120,6 @@ def generate_machine_hardware_info(
         [
             "nixpkgs#openssh",
             "nixpkgs#sshpass",
-            # Provides nixos-generate-config on non-NixOS systems
-            "nixpkgs#nixos-install-tools",
         ],
         [
             *(["sshpass", "-p", f"{password}"] if password else []),
@@ -202,15 +200,29 @@ def generate_machine_hardware_info(
     return HardwareReport("nixos-generate-config")
 
 
+@dataclass
+class HardwareGenerateOptions:
+    flake: FlakeId
+    machine: str
+    target_host: str | None
+    password: str | None
+    force: bool | None
+
+
 def hw_generate_command(args: argparse.Namespace) -> None:
-    hw_info = generate_machine_hardware_info(
-        args.flake, args.machine, args.hostname, args.password, args.force
+    opts = HardwareGenerateOptions(
+        flake=args.flake,
+        machine=args.machine,
+        target_host=args.target_host,
+        password=args.password,
+        force=args.force,
     )
-    print("----")
+    hw_info = generate_machine_hardware_info(
+        opts.flake, opts.machine, opts.target_host, opts.password, opts.force
+    )
     print("Successfully generated hardware information.")
-    print(f"Target: {args.machine} ({args.hostname})")
+    print(f"Target: {opts.machine} ({opts.target_host})")
     print(f"Type: {hw_info.file}")
-    print("----")
 
 
 def register_hw_generate(parser: argparse.ArgumentParser) -> None:

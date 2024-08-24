@@ -10,10 +10,10 @@
     let
       dependencies = [
         pkgs.disko
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test_install_machine.config.system.build.toplevel
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test_install_machine.config.system.build.diskoScript
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test_install_machine.config.system.build.diskoScript.drvPath
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test_install_machine.config.system.clan.deployment.file
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.build.toplevel
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.build.diskoScript
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.build.diskoScript.drvPath
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.clan.deployment.file
       ] ++ builtins.map (i: i.outPath) (builtins.attrValues self.inputs);
       closureInfo = pkgs.closureInfo { rootPaths = dependencies; };
     in
@@ -42,7 +42,7 @@
           testScript = ''
             start_all()
 
-            machine.succeed("clan flash --debug --flake ${../..} --yes --disk main /dev/vdb test_install_machine")
+            machine.succeed("clan flash --debug --flake ${../..} --yes --disk main /dev/vdb test-install-machine")
           '';
         } { inherit pkgs self; };
       };
