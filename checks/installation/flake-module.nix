@@ -96,9 +96,11 @@
             start_all()
 
             client.succeed("${pkgs.coreutils}/bin/install -Dm 600 ${../lib/ssh/privkey} /root/.ssh/id_ed25519")
-            client.wait_until_succeeds("ssh -o StrictHostKeyChecking=accept-new -v root@target hostname")
-
-            client.succeed("clan machines install --debug --flake ${../..} --yes test_install_machine root@target >&2")
+            client.wait_until_succeeds("timeout 2 ssh -o StrictHostKeyChecking=accept-new -v root@target hostname")
+            client.succeed("cp -r ${../..} test-flake && chmod -R +w test-flake")
+            client.fail("test -f test-flake/machines/test-install-machine/hardware-configuration.nix")
+            client.succeed("clan machines hw-generate --flake test-flake test-install-machine root@target>&2")
+            client.succeed("test -f test-flake/machines/test-install-machine/hardware-configuration.nix")
             client.succeed("clan machines install --debug --flake ${../..} --yes test-install-machine root@target >&2")
             try:
               target.shutdown()
