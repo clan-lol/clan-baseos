@@ -58,18 +58,6 @@ let
 in
 {
   options.clan.${name} = {
-
-    user = lib.mkOption {
-      type = lib.types.str;
-      default = name;
-      description = "User to run the service as";
-    };
-    group = lib.mkOption {
-      type = lib.types.str;
-      default = name;
-      description = "Group to run the service as";
-    };
-
     server = {
       enable = lib.mkEnableOption "dyndns webserver";
       domain = lib.mkOption {
@@ -150,9 +138,9 @@ in
     (lib.mkIf (cfg.settings != { }) {
       clan.core.facts.services = lib.mapAttrs' secret_generator cfg.settings;
 
-      users.groups.${cfg.group} = { };
-      users.users.${cfg.user} = {
-        group = cfg.group;
+      users.groups.${name} = { };
+      users.users.${name} = {
+        group = name;
         isSystemUser = true;
         description = "User for ${name} service";
         home = "/var/lib/${name}";
@@ -236,8 +224,8 @@ in
             ExecStartPre = lib.getExe pyscript;
             ExecStart = lib.getExe pkgs.ddns-updater;
             LoadCredential = lib.mapAttrsToList (_: opt: "${secret_id opt}:${secret_path opt}") cfg.settings;
-            User = cfg.user;
-            Group = cfg.group;
+            User = name;
+            Group = name;
             NoNewPrivileges = true;
             PrivateTmp = true;
             ProtectSystem = "strict";

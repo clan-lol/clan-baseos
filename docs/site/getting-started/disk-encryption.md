@@ -1,167 +1,213 @@
-## Setting up Encryption with Remote Decryption in NixOS
 
-This guide provides an example setup for a single-disk ZFS system with native encryption, accessible for decryption remotely. This configuration only applies to `systemd-boot` enabled systems and requires UEFI booting.
+This guide provides an example setup for a single-disk ZFS system with native encryption, accessible for decryption remotely. 
 
-For a mirrored disk setup, add `mode = "mirror";` to `zroot`. Under the `disk` option, provide the additional disk identifier, e.g., `y = mirrorBoot /dev/disk/by-id/<second_disk_id>`.
+!!! Warning
+    This configuration only applies to `systemd-boot` enabled systems and **requires** UEFI booting.
 
-Replace the disk `nvme-eui.002538b931b59865` with your own. 
 
-Below is the configuration for `disko.nix`
-```nix
-{ lib, ... }:
-let
-  mirrorBoot = idx: {
-    type = "disk";
-    device = "/dev/disk/by-id/${idx}";
-    content = {
-      type = "gpt";
-      partitions = {
-        boot = {
-          size = "1M";
-          type = "EF02"; # for grub MBR
-          priority = 1;
-        };
-        ESP = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
-          size = "1G";
-          type = "EF00";
-          content = {
-            type = "filesystem";
-            format = "vfat";
-            mountpoint = "/boot";
-            mountOptions = [ "nofail" ];
-          };
-        };
-        zfs = {
-          size = "100%";
-          content = {
-            type = "zfs";
-            pool = "zroot";
-          };
-        };
-      };
-    };
-  };
-in
-{
-  boot.loader.systemd-boot.enable = true;
-
-  disko.devices = {
-    disk = {
-      x = mirrorBoot "nvme-eui.002538b931b59865";
-    };
-    zpool = {
-      zroot = {
-        type = "zpool";
-        rootFsOptions = {
-          compression = "lz4";
-          acltype = "posixacl";
-          xattr = "sa";
-          "com.sun:auto-snapshot" = "true";
-          mountpoint = "none";
-        };
-        datasets = {
-          "root" = {
-            type = "zfs_fs";
-            options = {
-              mountpoint = "none";
-              encryption = "aes-256-gcm";
-              keyformat = "passphrase";
-              keylocation = "file:///tmp/secret.key";
-            };
-          };
-          "root/nixos" = {
-            type = "zfs_fs";
-            options.mountpoint = "/";
-            mountpoint = "/";
-          };
-          "root/home" = {
-            type = "zfs_fs";
-            options.mountpoint = "/home";
-            mountpoint = "/home";
-          };
-          "root/tmp" = {
-            type = "zfs_fs";
-            mountpoint = "/tmp";
-            options = {
-              mountpoint = "/tmp";
-              sync = "disabled";
-            };
-          };
-        };
-      };
-    };
-  };
-}
+Replace the highlighted lines with your own disk-id.
+You can find our your disk-id by executing:
+```bash
+lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
 ```
 
-Add this to networking.nix and **replace** the `default` values as well as the name `gchq-local` and `networking.hostId` with your own.
 
-```nix
-{ config, lib, ... }:
-{
-  options = {
-    networking.gchq-local.ipv4.address = lib.mkOption {
-      type = lib.types.str;
-      default = "192.168.178.177";
+=== "**Single Disk**"
+    Below is the configuration for `disko.nix`
+    ```nix hl_lines="14 40"
+    { lib, ... }:
+    let
+    mirrorBoot = idx: {
+        type = "disk";
+        device = "/dev/disk/by-id/${idx}";
+        content = {
+            type = "gpt";
+            partitions = {
+                boot = {
+                    size = "1M";
+                    type = "EF02"; # for grub MBR
+                    priority = 1;
+                };
+                ESP = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
+                    size = "1G";
+                    type = "EF00";
+                    content = {
+                        type = "filesystem";
+                        format = "vfat";
+                        mountpoint = "/boot";
+                        mountOptions = [ "nofail" ];
+                    };
+                };
+                zfs = {
+                    size = "100%";
+                    content = {
+                        type = "zfs";
+                        pool = "zroot";
+                    };
+                };
+            };
+        };
     };
-    networking.gchq-local.ipv4.cidr = lib.mkOption {
-      type = lib.types.str;
-      default = "24";
-    };
+    in
+    {
+    boot.loader.systemd-boot.enable = true;
 
-    networking.gchq-local.ipv4.gateway = lib.mkOption {
-      type = lib.types.str;
-      default = "192.168.178.1";
+    disko.devices = {
+        disk = {
+            x = mirrorBoot "nvme-eui.002538b931b59865";
+        };
+        zpool = {
+            zroot = {
+                type = "zpool";
+                rootFsOptions = {
+                    compression = "lz4";
+                    acltype = "posixacl";
+                    xattr = "sa";
+                    "com.sun:auto-snapshot" = "true";
+                    mountpoint = "none";
+                };
+                datasets = {
+                    "root" = {
+                        type = "zfs_fs";
+                        options = {
+                            mountpoint = "none";
+                            encryption = "aes-256-gcm";
+                            keyformat = "passphrase";
+                            keylocation = "file:///tmp/secret.key";
+                        };
+                    };
+                    "root/nixos" = {
+                        type = "zfs_fs";
+                        options.mountpoint = "/";
+                        mountpoint = "/";
+                    };
+                    "root/home" = {
+                        type = "zfs_fs";
+                        options.mountpoint = "/home";
+                        mountpoint = "/home";
+                    };
+                    "root/tmp" = {
+                        type = "zfs_fs";
+                        mountpoint = "/tmp";
+                        options = {
+                            mountpoint = "/tmp";
+                            sync = "disabled";
+                        };
+                    };
+                };
+            };
+        };
     };
+    }
+    ```
 
-    networking.gchq-local.ipv6.address = lib.mkOption {
-      type = lib.types.str;
-      default = "2003:100:6701:d500:fbbc:40fb:cff3:3b87";
+
+
+=== "**Raid 1**"
+    Below is the configuration for `disko.nix`
+    ```nix hl_lines="14 40 41"
+    { lib, ... }:
+    let
+    mirrorBoot = idx: {
+        type = "disk";
+        device = "/dev/disk/by-id/${idx}";
+        content = {
+            type = "gpt";
+            partitions = {
+                boot = {
+                    size = "1M";
+                    type = "EF02"; # for grub MBR
+                    priority = 1;
+                };
+                ESP = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
+                    size = "1G";
+                    type = "EF00";
+                    content = {
+                        type = "filesystem";
+                        format = "vfat";
+                        mountpoint = "/boot";
+                        mountOptions = [ "nofail" ];
+                    };
+                };
+                zfs = {
+                    size = "100%";
+                    content = {
+                        type = "zfs";
+                        pool = "zroot";
+                    };
+                };
+            };
+        };
     };
+    in
+    {
+    boot.loader.systemd-boot.enable = true;
 
-    networking.gchq-local.ipv6.cidr = lib.mkOption {
-      type = lib.types.str;
-      default = "64";
+    disko.devices = {
+        disk = {
+            x = mirrorBoot "nvme-eui.002538b931b59865";
+            y = mirrorBoot "myOtherDrive"
+        };
+        zpool = {
+            zroot = {
+                type = "zpool";
+                rootFsOptions = {
+                    compression = "lz4";
+                    acltype = "posixacl";
+                    xattr = "sa";
+                    "com.sun:auto-snapshot" = "true";
+                    mountpoint = "none";
+                };
+                datasets = {
+                    "root" = {
+                        type = "zfs_fs";
+                        options = {
+                            mountpoint = "none";
+                            encryption = "aes-256-gcm";
+                            keyformat = "passphrase";
+                            keylocation = "file:///tmp/secret.key";
+                        };
+                    };
+                    "root/nixos" = {
+                        type = "zfs_fs";
+                        options.mountpoint = "/";
+                        mountpoint = "/";
+                    };
+                    "root/home" = {
+                        type = "zfs_fs";
+                        options.mountpoint = "/home";
+                        mountpoint = "/home";
+                    };
+                    "root/tmp" = {
+                        type = "zfs_fs";
+                        mountpoint = "/tmp";
+                        options = {
+                            mountpoint = "/tmp";
+                            sync = "disabled";
+                        };
+                    };
+                };
+            };
+        };
     };
-    networking.gchq-local.ipv6.gateway = lib.mkOption {
-      type = lib.types.str;
-      default = "fe80::3ea6:2fff:feef:3435";
-    };
-  };
+    }
+    ```
 
-  config = {
-    networking.dhcpcd.enable = false;
-    networking.nameservers = [ "127.0.0.1" ];
-    networking.hostId = "a76ebcca"; # Needs to be unique for each host
-
-    # The '10' in the network name is the priority, so this will be the first network to be configured
-    systemd.network.networks."10-eth" = {
-      matchConfig.Type = "ether";
-      addresses = [
-        {
-          Address=config.networking.gchq-local.ipv4.address + "/" + config.networking.gchq-local.ipv4.cidr;
-        }
-        {
-          Address=config.networking.gchq-local.ipv6.address + "/" + config.networking.gchq-local.ipv6.cidr;
-        }
-      ];
-      DHCP = "yes";
-    };
-  };
-}
-```
-
-Put this into initrd.nix and add your pubkey to `authorizedKeys`.
-Replace `kernelModules` with the ethernet module loaded one on your system.
-```nix
+Below is the configuration for `initrd.nix`.  
+Replace `<yourkey>` with your ssh public key.  
+Replace `kernelModules` with the ethernet module loaded one on your target machine.
+```nix hl_lines="18 29"
 {config, pkgs, ...}:
 
 {
 
   boot.initrd.systemd = {
     enable = true;
-    network.networks."10-eth" = config.systemd.network.networks."10-eth";
   };
+
+  # uncomment this if you want to be asked for the decryption password on login
+  #users.root.shell = "/bin/systemd-tty-ask-password-agent";
+
   boot.initrd.network = {
     enable = true;
 
@@ -178,8 +224,8 @@ Replace `kernelModules` with the ethernet module loaded one on your system.
     "xhci_pci"
   ];
 
-  # Check the network card by running `lspci -k` on the target machine
-  boot.initrd.kernelModules = [ "r8169" ];
+  # Find out the required network card driver by running `lspci -k` on the target machine
+  boot.initrd.kernelModules = [ "r8169" ]; 
 }
 ```
 
