@@ -45,13 +45,16 @@
     security.sudo.wheelNeedsPassword = false;
 
     users.users.user = lib.mkIf (config.clan.services.waypipe.user == "user") {
-      isNormalUser = true;
-      uid = 1000;
-      password = "";
+      # workaround sysusers
+      isSystemUser = true;
+      uid = 998;
+      group = "users";
+      initialPassword = "";
       extraGroups = [
         "wheel"
         "video"
       ];
+      home = "/home/user";
       shell = "/run/current-system/sw/bin/bash";
     };
 
