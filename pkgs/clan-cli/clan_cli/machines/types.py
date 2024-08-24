@@ -17,6 +17,6 @@ def machine_name_type(arg_value: str) -> str:
         )
     if not VALID_HOSTNAME.match(arg_value):
         raise argparse.ArgumentTypeError(
-            "Invalid character in machine name. Allowed characters are a-z, 0-9, ., -, and _. Must not start with a number"
+            "Invalid character in machine name. Allowed characters are a-z, 0-9, ., and -. Must not start with a number"
         )
     return arg_value
