@@ -114,8 +114,8 @@ def test_vm_persistence(
         "/var/user-state",
     ]
     config["my_machine"]["users"]["users"] = {
-        "test": {"password": "test", "isNormalUser": True},
-        "root": {"password": "root"},
+        "test": {"initialPassword": "test", "isSystemUser": True, "group": "users"},
+        "root": {"initialPassword": "root"},
     }
 
     flake = generate_flake(

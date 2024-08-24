@@ -48,7 +48,7 @@ let
     boot.initrd.systemd.emergencyAccess = true;
 
     # sysusers would be faster because it doesn't need perl, but it cannot create normal users
-    systemd.sysusers.enable = false;
+    systemd.sysusers.enable = true;
     users.mutableUsers = false;
     users.allowNoPasswordLogin = true;
 
