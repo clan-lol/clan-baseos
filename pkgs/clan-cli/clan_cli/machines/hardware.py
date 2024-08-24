@@ -120,8 +120,6 @@ def generate_machine_hardware_info(
         [
             "nixpkgs#openssh",
             "nixpkgs#sshpass",
-            # Provides nixos-generate-config on non-NixOS systems
-            "nixpkgs#nixos-install-tools",
         ],
         [
             *(["sshpass", "-p", f"{password}"] if password else []),
