@@ -1,14 +1,14 @@
 { self, lib, ... }:
 {
-  clan.machines.test_install_machine = {
-    clan.core.networking.targetHost = "test_install_machine";
+  clan.machines.test-install-machine = {
+    clan.core.networking.targetHost = "test-install-machine";
     fileSystems."/".device = lib.mkDefault "/dev/vdb";
     boot.loader.grub.device = lib.mkDefault "/dev/vdb";
 
-    imports = [ self.nixosModules.test_install_machine ];
+    imports = [ self.nixosModules.test-install-machine ];
   };
   flake.nixosModules = {
-    test_install_machine =
+    test-install-machine =
       { lib, modulesPath, ... }:
       {
         imports = [
@@ -34,9 +34,9 @@
     let
       dependencies = [
         self
-        self.nixosConfigurations.test_install_machine.config.system.build.toplevel
-        self.nixosConfigurations.test_install_machine.config.system.build.diskoScript
-        self.nixosConfigurations.test_install_machine.config.system.clan.deployment.file
+        self.nixosConfigurations.test-install-machine.config.system.build.toplevel
+        self.nixosConfigurations.test-install-machine.config.system.build.diskoScript
+        self.nixosConfigurations.test-install-machine.config.system.clan.deployment.file
         pkgs.stdenv.drvPath
         pkgs.nixos-anywhere
       ] ++ builtins.map (i: i.outPath) (builtins.attrValues self.inputs);
@@ -99,6 +99,7 @@
             client.wait_until_succeeds("ssh -o StrictHostKeyChecking=accept-new -v root@target hostname")
 
             client.succeed("clan machines install --debug --flake ${../..} --yes test_install_machine root@target >&2")
+            client.succeed("clan machines install --debug --flake ${../..} --yes test-install-machine root@target >&2")
             try:
               target.shutdown()
             except BrokenPipeError:
