@@ -45,7 +45,6 @@
     };
     clanDir = lib.mkOption {
       type = lib.types.path;
-      default = ./.;
       description = ''
         the location of the flake repo, used to calculate the location of facts and secrets
       '';
