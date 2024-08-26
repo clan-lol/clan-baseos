@@ -7,7 +7,9 @@ import {
   SubmitHandler,
 } from "@modular-forms/solid";
 import toast from "solid-toast";
-import { setActiveURI } from "@/src/App";
+import { setActiveURI, setClanList } from "@/src/App";
+import { TextInput } from "@/src/components/TextInput";
+import { useNavigate } from "@solidjs/router";
 
 type CreateForm = Meta & {
   template: string;
@@ -21,10 +23,10 @@ export const ClanForm = () => {
       template: "minimal",
     },
   });
+  const navigate = useNavigate();
 
   const handleSubmit: SubmitHandler<CreateForm> = async (values, event) => {
     const { template, ...meta } = values;
-
     const response = await callApi("open_file", {
       file_request: { mode: "save" },
     });
@@ -39,29 +41,31 @@ export const ClanForm = () => {
       return;
     }
 
-    await toast.promise(
-      (async () => {
-        await callApi("create_clan", {
-          options: {
-            directory: target_dir[0],
-            template,
-            initial: {
-              meta,
-              services: {},
-              machines: {},
-            },
-          },
-        });
-        setActiveURI(target_dir[0]);
-        // setRoute("machines");
-      })(),
-      {
-        loading: "Creating clan...",
-        success: "Clan Successfully Created",
-        error: "Failed to create clan",
+    const loading_toast = toast.loading("Creating Clan....");
+    const r = await callApi("create_clan", {
+      options: {
+        directory: target_dir[0],
+        template,
+        initial: {
+          meta,
+          services: {},
+          machines: {},
+        },
       },
-    );
-    reset(formStore);
+    });
+    toast.dismiss(loading_toast);
+
+    if (r.status === "error") {
+      toast.error("Failed to create clan");
+      return;
+    }
+    if (r.status === "success") {
+      toast.success("Clan Successfully Created");
+      setActiveURI(target_dir[0]);
+      setClanList((list) => [...list, target_dir[0]]);
+      navigate("/machines");
+      reset(formStore);
+    }
   };
 
   return (
@@ -108,7 +112,7 @@ export const ClanForm = () => {
                   {...props}
                   disabled={formStore.submitting}
                   required
-                  placeholder="Clan Name"
+                  placeholder="Give your Clan a legendary name"
                   class="input input-bordered"
                   classList={{ "input-error": !!field.error }}
                   value={field.value}
@@ -133,7 +137,7 @@ export const ClanForm = () => {
                   disabled={formStore.submitting}
                   required
                   type="text"
-                  placeholder="Some words about your clan"
+                  placeholder="Tell us what makes your Clan legendary"
                   class="input input-bordered"
                   classList={{ "input-error": !!field.error }}
                   value={field.value || ""}
@@ -152,23 +156,20 @@ export const ClanForm = () => {
                 <input type="checkbox" />
                 <div class="collapse-title link font-medium ">Advanced</div>
                 <div class="collapse-content">
-                  <label class="form-control w-full">
-                    <div class="label ">
-                      <span class="label-text  after:ml-0.5 after:text-primary after:content-['*']">
-                        Template to use
-                      </span>
-                    </div>
-                    <input
-                      {...props}
-                      required
-                      disabled={formStore.submitting}
-                      type="text"
-                      placeholder="Template to use"
-                      class="input input-bordered"
-                      classList={{ "input-error": !!field.error }}
-                      value={field.value}
-                    />
-                  </label>
+                  <TextInput
+                    adornment={{
+                      content: (
+                        <span class="-mr-1 text-neutral-500">clan-core #</span>
+                      ),
+                      position: "start",
+                    }}
+                    formStore={formStore}
+                    inputProps={props}
+                    label="Template to use"
+                    value={field.value ?? ""}
+                    error={field.error}
+                    required
+                  />
                 </div>
               </div>
             )}
