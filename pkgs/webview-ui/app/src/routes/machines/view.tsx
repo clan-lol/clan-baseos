@@ -113,7 +113,17 @@ export const MachineListView: Component = () => {
             nixOnlyMachines()?.length === 0
           }
         >
-          No machines found
+          <div class="mt-8 flex w-full flex-col items-center justify-center gap-2">
+            <span class="text-lg text-neutral">
+              No machines defined yet. Click below to define one.
+            </span>
+            <button
+              class="btn btn-square btn-ghost size-28 overflow-hidden p-2"
+              onClick={() => navigate("/machines/create")}
+            >
+              <span class="material-icons text-6xl font-light">add</span>
+            </button>
+          </div>
         </Match>
         <Match when={!inventoryQuery.isLoading}>
           <ul>
