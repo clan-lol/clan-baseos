@@ -1,5 +1,6 @@
 import { callApi, SuccessData } from "@/src/api";
 import { activeURI } from "@/src/App";
+import { BackButton } from "@/src/components/BackButton";
 import { FileInput } from "@/src/components/FileInput";
 import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
@@ -420,159 +421,163 @@ const MachineForm = (props: MachineDetailsProps) => {
     }
   };
   return (
-    <div class="m-2 w-full max-w-xl">
-      <Form onSubmit={handleSubmit}>
-        <div class="flex w-full justify-center p-2">
-          <div
-            class="avatar placeholder"
-            classList={{
-              online: onlineStatusQuery.data === "Online",
-              offline: onlineStatusQuery.data === "Offline",
-            }}
-          >
-            <div class="w-24 rounded-full bg-neutral text-neutral-content">
-              <Show
-                when={onlineStatusQuery.isFetching}
-                fallback={<span class="material-icons text-4xl">devices</span>}
-              >
-                <span class="loading loading-bars loading-sm justify-self-end"></span>
-              </Show>
+    <div class="flex w-full justify-center">
+      <div class="m-2 w-full max-w-xl">
+        <Form onSubmit={handleSubmit}>
+          <div class="flex w-full justify-center p-2">
+            <div
+              class="avatar placeholder"
+              classList={{
+                online: onlineStatusQuery.data === "Online",
+                offline: onlineStatusQuery.data === "Offline",
+              }}
+            >
+              <div class="w-24 rounded-full bg-neutral text-neutral-content">
+                <Show
+                  when={onlineStatusQuery.isFetching}
+                  fallback={
+                    <span class="material-icons text-4xl">devices</span>
+                  }
+                >
+                  <span class="loading loading-bars loading-sm justify-self-end"></span>
+                </Show>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="my-2 w-full text-2xl">Details</div>
-        <Field name="name">
-          {(field, props) => (
-            <TextInput
-              formStore={formStore}
-              inputProps={props}
-              label="Name"
-              value={field.value ?? ""}
-              error={field.error}
-              class="col-span-2"
-              required
-            />
-          )}
-        </Field>
-        <Field name="description">
-          {(field, props) => (
-            <TextInput
-              formStore={formStore}
-              inputProps={props}
-              label="Description"
-              value={field.value ?? ""}
-              error={field.error}
-              class="col-span-2"
-              required
-            />
-          )}
-        </Field>
+          <div class="my-2 w-full text-2xl">Details</div>
+          <Field name="name">
+            {(field, props) => (
+              <TextInput
+                formStore={formStore}
+                inputProps={props}
+                label="Name"
+                value={field.value ?? ""}
+                error={field.error}
+                class="col-span-2"
+                required
+              />
+            )}
+          </Field>
+          <Field name="description">
+            {(field, props) => (
+              <TextInput
+                formStore={formStore}
+                inputProps={props}
+                label="Description"
+                value={field.value ?? ""}
+                error={field.error}
+                class="col-span-2"
+                required
+              />
+            )}
+          </Field>
 
-        <div class="collapse collapse-arrow" tabindex="0">
-          <input type="checkbox" />
-          <div class="collapse-title link px-0 text-xl ">
-            Connection Settings
-          </div>
-          <div class="collapse-content">
-            <Field name="targetHost">
-              {(field, props) => (
-                <TextInput
-                  formStore={formStore}
-                  inputProps={props}
-                  label="Target Host"
-                  value={field.value ?? ""}
-                  error={field.error}
-                  class="col-span-2"
-                  required
-                />
-              )}
-            </Field>
-            <Field name="sshKey" type="File">
-              {(field, props) => (
-                <>
-                  <FileInput
-                    {...props}
-                    onClick={async (event) => {
-                      event.preventDefault(); // Prevent the native file dialog from opening
-                      const input = event.target;
-                      const files = await selectSshKeys();
-
-                      // Set the files
-                      Object.defineProperty(input, "files", {
-                        value: files,
-                        writable: true,
-                      });
-                      // Define the files property on the input element
-                      const changeEvent = new Event("input", {
-                        bubbles: true,
-                        cancelable: true,
-                      });
-                      input.dispatchEvent(changeEvent);
-                    }}
-                    placeholder={"When empty the default key(s) will be used"}
-                    value={field.value}
+          <div class="collapse collapse-arrow" tabindex="0">
+            <input type="checkbox" />
+            <div class="collapse-title link px-0 text-xl ">
+              Connection Settings
+            </div>
+            <div class="collapse-content">
+              <Field name="targetHost">
+                {(field, props) => (
+                  <TextInput
+                    formStore={formStore}
+                    inputProps={props}
+                    label="Target Host"
+                    value={field.value ?? ""}
                     error={field.error}
-                    helperText="Provide the SSH key used to connect to the machine"
-                    label="SSH Key"
+                    class="col-span-2"
+                    required
                   />
-                </>
-              )}
-            </Field>
+                )}
+              </Field>
+              <Field name="sshKey" type="File">
+                {(field, props) => (
+                  <>
+                    <FileInput
+                      {...props}
+                      onClick={async (event) => {
+                        event.preventDefault(); // Prevent the native file dialog from opening
+                        const input = event.target;
+                        const files = await selectSshKeys();
+
+                        // Set the files
+                        Object.defineProperty(input, "files", {
+                          value: files,
+                          writable: true,
+                        });
+                        // Define the files property on the input element
+                        const changeEvent = new Event("input", {
+                          bubbles: true,
+                          cancelable: true,
+                        });
+                        input.dispatchEvent(changeEvent);
+                      }}
+                      placeholder={"When empty the default key(s) will be used"}
+                      value={field.value}
+                      error={field.error}
+                      helperText="Provide the SSH key used to connect to the machine"
+                      label="SSH Key"
+                    />
+                  </>
+                )}
+              </Field>
+            </div>
           </div>
-        </div>
 
-        <div class="my-2 w-full">
-          <button
-            class="btn btn-primary btn-wide"
-            type="submit"
-            disabled={!formStore.dirty}
-          >
-            Save
-          </button>
-        </div>
-      </Form>
-      <div class="my-2 w-full text-2xl">Remote Interactions</div>
-      <div class="my-2 flex w-full flex-col gap-2">
-        <span class="max-w-md text-neutral">
-          Installs the system for the first time. Used to bootstrap the remote
-          device.
-        </span>
-        <div class="tooltip w-fit" data-tip="Machine must be online">
-          <button
-            class="btn btn-primary btn-sm btn-wide"
-            disabled={!online()}
-            // @ts-expect-error: This string method is not supported by ts
-            onClick="install_modal.showModal()"
-          >
-            <span class="material-icons">send_to_mobile</span>
-            Install
-          </button>
-        </div>
-
-        <dialog id="install_modal" class="modal backdrop:bg-transparent">
-          <div class="modal-box w-11/12 max-w-5xl">
-            <InstallMachine
-              name={machineName()}
-              sshKey={sshKey()}
-              targetHost={getValue(formStore, "targetHost")}
-              disks={remoteDiskQuery.data?.blockdevices || []}
-            />
+          <div class="my-2 w-full">
+            <button
+              class="btn btn-primary btn-wide"
+              type="submit"
+              disabled={!formStore.dirty}
+            >
+              Save
+            </button>
           </div>
-        </dialog>
+        </Form>
+        <div class="my-2 w-full text-2xl">Remote Interactions</div>
+        <div class="my-2 flex w-full flex-col gap-2">
+          <span class="max-w-md text-neutral">
+            Installs the system for the first time. Used to bootstrap the remote
+            device.
+          </span>
+          <div class="tooltip w-fit" data-tip="Machine must be online">
+            <button
+              class="btn btn-primary btn-sm btn-wide"
+              disabled={!online()}
+              // @ts-expect-error: This string method is not supported by ts
+              onClick="install_modal.showModal()"
+            >
+              <span class="material-icons">send_to_mobile</span>
+              Install
+            </button>
+          </div>
 
-        <span class="max-w-md text-neutral">
-          Update the system if changes should be synced after the installation
-          process.
-        </span>
-        <div class="tooltip w-fit" data-tip="Machine must be online">
-          <button
-            class="btn btn-primary btn-sm btn-wide"
-            disabled={!online()}
-            onClick={() => handleUpdate()}
-          >
-            <span class="material-icons">update</span>
-            Update
-          </button>
+          <dialog id="install_modal" class="modal backdrop:bg-transparent">
+            <div class="modal-box w-11/12 max-w-5xl">
+              <InstallMachine
+                name={machineName()}
+                sshKey={sshKey()}
+                targetHost={getValue(formStore, "targetHost")}
+                disks={remoteDiskQuery.data?.blockdevices || []}
+              />
+            </div>
+          </dialog>
+
+          <span class="max-w-md text-neutral">
+            Update the system if changes should be synced after the installation
+            process.
+          </span>
+          <div class="tooltip w-fit" data-tip="Machine must be online">
+            <button
+              class="btn btn-primary btn-sm btn-wide"
+              disabled={!online()}
+              onClick={() => handleUpdate()}
+            >
+              <span class="material-icons">update</span>
+              Update
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -602,7 +607,8 @@ export const MachineDetails = () => {
   }));
 
   return (
-    <>
+    <div class="p-2">
+      <BackButton />
       <Show
         when={query.data}
         fallback={<span class="loading loading-lg"></span>}
@@ -615,6 +621,6 @@ export const MachineDetails = () => {
           }}
         />
       </Show>
-    </>
+    </div>
   );
 };
