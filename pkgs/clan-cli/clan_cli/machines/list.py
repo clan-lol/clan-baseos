@@ -103,10 +103,13 @@ def check_machine_online(
             "ssh",
             *(["-i", f"{opts.keyfile}"] if opts and opts.keyfile else []),
             # Disable strict host key checking
-            "-o StrictHostKeyChecking=no",
+            "-o",
+            "StrictHostKeyChecking=no",
             # Disable known hosts file
-            "-o UserKnownHostsFile=/dev/null",
-            f"-o ConnectTimeout={timeout}",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            f"ConnectTimeout={timeout}",
             f"{hostname}",
             "true",
             "&> /dev/null",
