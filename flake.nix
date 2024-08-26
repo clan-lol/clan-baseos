@@ -58,8 +58,14 @@
           # Inherit the nixos-facter package so its build is chached in clans binary cache
           {
             perSystem =
-              { inputs', ... }:
+              # Facter doesnt have a package for darwin yet.
               {
+                inputs',
+                system,
+                lib,
+                ...
+              }:
+              lib.optionalAttrs (system == "x86_64-linux") {
                 packages.nixos-facter = inputs'.nixos-facter.packages.default;
               };
           }
