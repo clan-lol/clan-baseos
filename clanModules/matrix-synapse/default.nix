@@ -203,7 +203,7 @@ in
           forceSSL = true;
           enableACME = true;
           locations."/".root = element-web;
-          locations."/_matrix".proxyPass = "http://localhost:8008";
+          locations."/_matrix".proxyPass = "http://localhost:8008"; # TODO: We should make the port configurable
           locations."/_synapse".proxyPass = "http://localhost:8008";
         };
       };

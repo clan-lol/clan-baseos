@@ -69,6 +69,7 @@ nav:
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
           - reference/clanModules/matrix-synapse.md
+          - reference/clanModules/heisenbridge.md
           - reference/clanModules/moonlight.md
           - reference/clanModules/mumble.md
           - reference/clanModules/packages.md
