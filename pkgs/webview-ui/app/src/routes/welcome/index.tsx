@@ -13,7 +13,7 @@ export const Welcome = () => {
           <div class="flex flex-col items-start gap-2">
             <button
               class="btn btn-primary w-full"
-              // onClick={() => setRoute("createClan")}
+              onClick={() => navigate("/clan/create")}
             >
               Build your own
             </button>
@@ -28,14 +28,6 @@ export const Welcome = () => {
               }}
             >
               Or select folder
-            </button>
-            <button
-              class="link w-full text-right text-secondary"
-              onClick={async () => {
-                setClanList((c) => [...c, "debug"]);
-              }}
-            >
-              Skip (Debug)
             </button>
           </div>
         </div>

@@ -59,68 +59,73 @@ export function CreateMachine() {
     }
   };
   return (
-    <div class="px-1">
-      <span class="px-2">Create new Machine</span>
-      <Form onSubmit={handleSubmit}>
-        <Field
-          name="machine.name"
-          validate={[required("This field is required")]}
-        >
-          {(field, props) => (
-            <TextInput
-              inputProps={props}
-              formStore={formStore}
-              value={`${field.value}`}
-              label={"name"}
-              error={field.error}
-              required
-            />
-          )}
-        </Field>
-        <Field name="machine.description">
-          {(field, props) => (
-            <TextInput
-              inputProps={props}
-              formStore={formStore}
-              value={`${field.value}`}
-              label={"description"}
-              error={field.error}
-            />
-          )}
-        </Field>
-        <Field name="machine.deploy.targetHost">
-          {(field, props) => (
-            <>
+    <div class="flex w-full justify-center">
+      <div class="mt-4 w-full max-w-3xl self-stretch px-2">
+        <span class="px-2">Create new Machine</span>
+        <Form onSubmit={handleSubmit}>
+          <Field
+            name="machine.name"
+            validate={[required("This field is required")]}
+          >
+            {(field, props) => (
               <TextInput
                 inputProps={props}
                 formStore={formStore}
                 value={`${field.value}`}
-                label={"Deployment target"}
+                label={"name"}
+                error={field.error}
+                required
+              />
+            )}
+          </Field>
+          <Field name="machine.description">
+            {(field, props) => (
+              <TextInput
+                inputProps={props}
+                formStore={formStore}
+                value={`${field.value}`}
+                label={"description"}
                 error={field.error}
               />
-            </>
-          )}
-        </Field>
-        <button
-          class="btn btn-error float-right"
-          type="submit"
-          classList={{
-            "btn-disabled": formStore.submitting,
-          }}
-        >
-          <Switch
-            fallback={
+            )}
+          </Field>
+          <Field name="machine.deploy.targetHost">
+            {(field, props) => (
               <>
-                <span class="loading loading-spinner loading-sm"></span>Creating
+                <TextInput
+                  inputProps={props}
+                  formStore={formStore}
+                  value={`${field.value}`}
+                  label={"Deployment target"}
+                  error={field.error}
+                />
               </>
-            }
-          >
-            <Match when={!formStore.submitting}>
-              <span class="material-icons">add</span>Create
-            </Match>
-          </Switch>
-        </button>
-      </Form>
+            )}
+          </Field>
+          <div class="mt-12 flex justify-end">
+            <button
+              class="btn btn-primary"
+              type="submit"
+              classList={{
+                "btn-disabled": formStore.submitting,
+              }}
+            >
+              <Switch
+                fallback={
+                  <>
+                    <span class="loading loading-spinner loading-sm"></span>
+                    Creating
+                  </>
+                }
+              >
+                <Match when={!formStore.submitting}>
+                  <span class="material-icons">add</span>Create
+                </Match>
+              </Switch>
+            </button>
+          </div>
+        </Form>
+      </div>
     </div>
   );
 }

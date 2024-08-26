@@ -3,7 +3,7 @@ import { callApi, SuccessData } from "../api";
 import { Menu } from "./Menu";
 import { activeURI } from "../App";
 import toast from "solid-toast";
-import { useNavigate } from "@solidjs/router";
+import { A, useNavigate } from "@solidjs/router";
 
 type MachineDetails = SuccessData<"list_inventory_machines">["data"][string];
 
@@ -116,14 +116,16 @@ export const MachineListItem = (props: MachineListItemProps) => {
         </figure>
         <div class="card-body flex-row justify-between ">
           <div class="flex flex-col">
-            <h2
-              class="card-title"
-              classList={{
-                "text-neutral-500": nixOnly,
-              }}
-            >
-              {name}
-            </h2>
+            <A href={`/machines/${name}`}>
+              <h2
+                class="card-title underline"
+                classList={{
+                  "text-neutral-500": nixOnly,
+                }}
+              >
+                {name}
+              </h2>
+            </A>
             <div class="text-slate-600">
               <Show when={info}>{(d) => d()?.description}</Show>
             </div>
