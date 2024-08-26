@@ -8,6 +8,7 @@
     ergochat = ./ergochat;
     garage = ./garage;
     golem-provider = ./golem-provider;
+    heisenbridge = ./heisenbridge;
     iwd = ./iwd;
     localbackup = ./localbackup;
     localsend = ./localsend;
