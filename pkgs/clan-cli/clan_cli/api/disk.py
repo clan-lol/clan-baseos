@@ -32,7 +32,8 @@ def set_single_disk_uuid(
         meta=ServiceMeta(name=instance_name),
         roles=ServiceSingleDiskRole(
             default=ServiceSingleDiskRoleDefault(
-                config=SingleDiskConfig(device=disk_uuid)
+                config=SingleDiskConfig(device=f"/dev/disk/by-id/{disk_uuid}"),
+                machines=[machine_name],
             )
         ),
     )
