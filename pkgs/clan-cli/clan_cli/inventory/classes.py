@@ -31,6 +31,45 @@ class Meta:
 
 
 @dataclass
+class AdminConfig:
+    allowedKeys: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceAdminMachine:
+    config: AdminConfig = field(default_factory = AdminConfig)
+    imports: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceMeta:
+    name: str
+    description: None | str = field(default = None)
+    icon: None | str = field(default = None)
+
+
+@dataclass
+class ServiceAdminRoleDefault:
+    config: AdminConfig = field(default_factory = AdminConfig)
+    imports: list[str] = field(default_factory = list)
+    machines: list[str] = field(default_factory = list)
+    tags: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceAdminRole:
+    default: ServiceAdminRoleDefault
+
+
+@dataclass
+class ServiceAdmin:
+    meta: ServiceMeta
+    roles: ServiceAdminRole
+    config: AdminConfig = field(default_factory = AdminConfig)
+    machines: dict[str, ServiceAdminMachine] = field(default_factory = dict)
+
+
+@dataclass
 class BorgbackupConfigDestination:
     name: str
     repo: str
@@ -46,13 +85,6 @@ class BorgbackupConfig:
 class ServiceBorgbackupMachine:
     config: BorgbackupConfig = field(default_factory = BorgbackupConfig)
     imports: list[str] = field(default_factory = list)
-
-
-@dataclass
-class ServiceMeta:
-    name: str
-    description: None | str = field(default = None)
-    icon: None | str = field(default = None)
 
 
 @dataclass
@@ -151,6 +183,7 @@ class ServiceSingleDisk:
 
 @dataclass
 class Service:
+    admin: dict[str, ServiceAdmin] = field(default_factory = dict)
     borgbackup: dict[str, ServiceBorgbackup] = field(default_factory = dict)
     packages: dict[str, ServicePackage] = field(default_factory = dict)
     single_disk: dict[str, ServiceSingleDisk] = field(default_factory = dict, metadata = {"alias": "single-disk"})

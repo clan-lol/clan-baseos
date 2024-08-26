@@ -1,6 +1,7 @@
 { ... }:
 {
   flake.clanModules = {
+    admin = ./admin;
     borgbackup = ./borgbackup;
     borgbackup-static = ./borgbackup-static;
     deltachat = ./deltachat;

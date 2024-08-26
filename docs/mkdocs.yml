@@ -55,6 +55,7 @@ nav:
   - Reference:
       - reference/index.md
       - Clan Modules:
+          - reference/clanModules/admin.md
           - reference/clanModules/borgbackup-static.md
           - reference/clanModules/borgbackup.md
           - reference/clanModules/deltachat.md
