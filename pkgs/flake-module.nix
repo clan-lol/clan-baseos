@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, lib, ... }:
 
 {
   imports = [
@@ -22,16 +22,18 @@
   perSystem =
     { pkgs, config, ... }:
     {
-      packages = {
-        tea-create-pr = pkgs.callPackage ./tea-create-pr { };
-        zerotier-members = pkgs.callPackage ./zerotier-members { };
-        zt-tcp-relay = pkgs.callPackage ./zt-tcp-relay { };
-        moonlight-sunshine-accept = pkgs.callPackage ./moonlight-sunshine-accept { };
-        merge-after-ci = pkgs.callPackage ./merge-after-ci { inherit (config.packages) tea-create-pr; };
-        pending-reviews = pkgs.callPackage ./pending-reviews { };
-        editor = pkgs.callPackage ./editor/clan-edit-codium.nix { };
-        classgen = pkgs.callPackage ./classgen { };
-        zerotierone = pkgs.callPackage ./zerotierone { };
-      };
+      packages =
+        {
+          tea-create-pr = pkgs.callPackage ./tea-create-pr { };
+          zerotier-members = pkgs.callPackage ./zerotier-members { };
+          zt-tcp-relay = pkgs.callPackage ./zt-tcp-relay { };
+          moonlight-sunshine-accept = pkgs.callPackage ./moonlight-sunshine-accept { };
+          merge-after-ci = pkgs.callPackage ./merge-after-ci { inherit (config.packages) tea-create-pr; };
+          pending-reviews = pkgs.callPackage ./pending-reviews { };
+          editor = pkgs.callPackage ./editor/clan-edit-codium.nix { };
+          classgen = pkgs.callPackage ./classgen { };
+          zerotierone = pkgs.callPackage ./zerotierone { };
+        }
+        // lib.optionalAttrs (pkgs.stdenv.isLinux) { nixos-facter = pkgs.callPackage ./nixos-facter { }; };
     };
 }
