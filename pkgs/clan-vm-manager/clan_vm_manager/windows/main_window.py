@@ -2,7 +2,6 @@ import logging
 import threading
 
 import gi
-from clan_cli.clan_uri import FlakeId
 from clan_cli.history.list import list_history
 
 from clan_vm_manager.components.interfaces import ClanConfig
@@ -74,7 +73,6 @@ class MainWindow(Adw.ApplicationWindow):
         # Execute `clan flakes add <path>` to democlan for this to work
         # TODO: Make list_history a generator function
         for entry in list_history():
-            assert isinstance(entry.flake.flake_url, FlakeId)
             GLib.idle_add(ClanStore.use().create_vm_task, entry)
 
         GLib.idle_add(self._set_clan_store_ready)

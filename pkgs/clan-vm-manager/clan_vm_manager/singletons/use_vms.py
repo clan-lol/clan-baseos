@@ -110,12 +110,8 @@ class ClanStore:
         def log_details(gfile: Gio.File) -> None:
             self.log_details(vm, gfile)
 
-        assert isinstance(entry.flake.flake_url, FlakeId)
-
         vm = VMObject(icon=icon, data=entry, build_log_cb=log_details)
-        assert isinstance(vm.data.flake.flake_url, FlakeId)
         self.push(vm)
-        assert isinstance(vm.data.flake.flake_url, FlakeId)
 
     def log_details(self, vm: VMObject, gfile: Gio.File) -> None:
         views = ViewStack.use().view

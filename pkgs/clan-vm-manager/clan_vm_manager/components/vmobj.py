@@ -13,7 +13,7 @@ from typing import IO, ClassVar
 
 import gi
 from clan_cli import vms
-from clan_cli.clan_uri import ClanURI, FlakeId
+from clan_cli.clan_uri import ClanURI
 from clan_cli.dirs import vm_state_dir
 from clan_cli.history.add import HistoryEntry
 from clan_cli.machines.machines import Machine
@@ -51,7 +51,6 @@ class VMObject(GObject.Object):
 
         # Store the data from the history entry
         self.data: HistoryEntry = data
-        assert isinstance(self.data.flake.vm.flake_url, FlakeId)
         self.build_log_cb = build_log_cb
 
         # Create a process object to store the VM process
@@ -99,7 +98,6 @@ class VMObject(GObject.Object):
         return GLib.SOURCE_REMOVE
 
     def update(self, data: HistoryEntry) -> None:
-        assert isinstance(data.flake.flake_url, FlakeId)
         self.data = data
 
     def _on_vm_status_changed(self, source: "VMObject") -> None:
@@ -181,14 +179,12 @@ class VMObject(GObject.Object):
             return GLib.SOURCE_REMOVE
 
     def __start(self) -> None:
-        assert isinstance(self.data.flake.vm.flake_url, FlakeId)
         with self._create_machine() as machine:
             # Start building VM
             tstart = datetime.now()
             log.info(f"Building VM {self.get_id()}")
             log_dir = Path(str(self.log_dir.name))
 
-            assert isinstance(self.data.flake.vm.flake_url, FlakeId)
             # Start the build process
             self.build_process = spawn(
                 on_except=None,
@@ -275,7 +271,6 @@ class VMObject(GObject.Object):
             self.emit("vm_status_changed", self)
             return
         log.debug(f"VM state dir {self.log_dir.name}")
-        assert isinstance(self.data.flake.vm.flake_url, FlakeId)
         self._start_thread = threading.Thread(target=self.__start)
         self._start_thread.start()
 
