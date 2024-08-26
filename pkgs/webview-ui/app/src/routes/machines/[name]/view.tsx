@@ -77,7 +77,7 @@ const InstallMachine = (props: InstallMachineProps) => {
           machine_name: props.name,
         });
         if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data || null;
+        return result.data?.file === "nixos-facter" || null;
       }
       return null;
     },
@@ -152,6 +152,7 @@ const InstallMachine = (props: InstallMachineProps) => {
       machine_name: props.name,
       keyfile: props.sshKey?.name,
       hostname: props.targetHost,
+      report_type: "nixos-facter",
     });
     toast.dismiss(loading_toast);
     hwInfoQuery.refetch();

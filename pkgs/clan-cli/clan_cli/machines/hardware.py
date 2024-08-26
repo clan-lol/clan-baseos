@@ -104,6 +104,9 @@ def generate_machine_hardware_info(
     password: str | None = None,
     keyfile: str | None = None,
     force: bool | None = False,
+    report_type: Literal[
+        "nixos-generate-config", "nixos-facter"
+    ] = "nixos-generate-config",
 ) -> HardwareReport:
     """
     Generate hardware information for a machine
@@ -113,6 +116,14 @@ def generate_machine_hardware_info(
     machine = Machine(machine_name, flake=clan_dir)
     if hostname is not None:
         machine.target_host_address = hostname
+
+    nixos_generate_cmd = [
+        "nixos-generate-config",  # Filesystems are managed by disko
+        "--no-filesystems",
+        "--show-hardware-config",
+    ]
+
+    nixos_facter_cmd = ["nix", "run", "--refresh", "github:numtide/nixos-facter"]
 
     host = machine.target_host
     target_host = f"{host.user or 'root'}@{host.host}"
@@ -137,10 +148,11 @@ def generate_machine_hardware_info(
                 else []
             ),
             target_host,
-            "nixos-generate-config",
-            # Filesystems are managed by disko
-            "--no-filesystems",
-            "--show-hardware-config",
+            *(
+                nixos_generate_cmd
+                if report_type == "nixos-generate-config"
+                else nixos_facter_cmd
+            ),
         ],
     )
     out = run(cmd)
@@ -149,7 +161,9 @@ def generate_machine_hardware_info(
         log.error(out)
         raise ClanError(f"Failed to inspect {machine_name}. Address: {hostname}")
 
-    hw_file = Path(f"{clan_dir}/machines/{machine_name}/hardware-configuration.nix")
+    hw_file = Path(
+        f"{clan_dir}/machines/{machine_name}/{hw_nix_file if report_type == 'nixos-generate-config' else facter_file}"
+    )
     hw_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Check if the hardware-configuration.nix file is a template
@@ -167,7 +181,7 @@ def generate_machine_hardware_info(
         # Backup the existing file
         backup_file = hw_file.with_suffix(".bak")
         hw_file.replace(backup_file)
-        print(f"Backed up existing hardware-configuration.nix to {backup_file}")
+        print(f"Backed up existing {hw_file} to {backup_file}")
 
     with open(hw_file, "w") as f:
         f.write(out.stdout)
@@ -197,7 +211,7 @@ def generate_machine_hardware_info(
             location=f"{__name__} {hw_file}",
         )
 
-    return HardwareReport("nixos-generate-config")
+    return HardwareReport(report_type)
 
 
 @dataclass

@@ -1,5 +1,28 @@
 {
   "nodes": {
+    "blueprint": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1724053269,
+        "narHash": "sha256-DinmPyxmUSLjBUYMe3eK0GKykwe33vWbVTmp7++P4Ng=",
+        "owner": "numtide",
+        "repo": "blueprint",
+        "rev": "766302be9063650ca6578e5ba09cc4260b0da29c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "blueprint",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -37,6 +60,35 @@
       "original": {
         "owner": "hercules-ci",
         "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "nixos-facter-modules": {
+      "inputs": {
+        "blueprint": [
+          "blueprint"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": [
+          "systems"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1724320449,
+        "narHash": "sha256-0hB5P75tIwPS9lNI3nYxEorpcFtuQUJGmGHGIEgWksY=",
+        "owner": "numtide",
+        "repo": "nixos-facter-modules",
+        "rev": "e00d789870e72baabb79d19afcc645428c3c6980",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "nixos-facter-modules",
         "type": "github"
       }
     },
@@ -79,8 +131,10 @@
     },
     "root": {
       "inputs": {
+        "blueprint": "blueprint",
         "disko": "disko",
         "flake-parts": "flake-parts",
+        "nixos-facter-modules": "nixos-facter-modules",
         "nixos-images": "nixos-images",
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix",
