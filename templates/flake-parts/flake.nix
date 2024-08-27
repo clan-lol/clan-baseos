@@ -2,7 +2,7 @@
   description = "<Put your description here>";
 
   inputs.clan-core.url = "https://git.clan.lol/clan/clan-core/archive/main.tar.gz";
-  inputs.nixpkgs.url = "clan/nixpkgs";
+  inputs.nixpkgs.follows = "clan-core/nixpkgs";
   inputs.flake-parts.url = "github:hercules-ci/flake-parts";
   inputs.flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
 
@@ -30,11 +30,11 @@
           inherit (self) inputs nixosModules packages;
         };
         directory = self;
-        machines =
-          { pkgs, ... }:
-          {
-            # "jon" will be the hostname of the machine
-            jon = {
+        machines = {
+          # "jon" will be the hostname of the machine
+          jon =
+            { pkgs, ... }:
+            {
               imports = [
                 ./modules/shared.nix
                 ./modules/disko.nix
@@ -66,8 +66,10 @@
               # the controller can be offline and routing still works.
               clan.core.networking.zerotier.controller.enable = true;
             };
-            # "sara" will be the hostname of the machine
-            sara = {
+          # "sara" will be the hostname of the machine
+          sara =
+            { pkgs, ... }:
+            {
               imports = [
                 ./modules/shared.nix
                 ./modules/disko.nix
@@ -102,7 +104,7 @@
               */
               # clan.core.networking.zerotier.networkId = builtins.readFile ../jon/facts/zerotier-network-id;
             };
-          };
+        };
       };
       perSystem =
         { pkgs, inputs', ... }:

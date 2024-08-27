@@ -102,7 +102,7 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--template",
         type=str,
-        choices=["default", "minimal"],
+        choices=["default", "minimal", "flake-parts"],
         help="Clan template name",
         default="default",
     )
