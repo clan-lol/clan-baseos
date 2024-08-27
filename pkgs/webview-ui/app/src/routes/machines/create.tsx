@@ -17,6 +17,7 @@ export function CreateMachine() {
         loc: activeURI() || "",
       },
       machine: {
+        tags: ["all"],
         deploy: {
           targetHost: "",
         },
