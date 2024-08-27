@@ -18,16 +18,16 @@
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
-    nixos-facter-modules.inputs.nixpkgs.follows = "nixpkgs";
-    nixos-facter-modules.inputs.systems.follows = "systems";
-    nixos-facter-modules.inputs.blueprint.follows = "blueprint";
-    nixos-facter-modules.inputs.treefmt-nix.follows = "treefmt-nix";
+    #nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
+    #nixos-facter-modules.inputs.nixpkgs.follows = "nixpkgs";
+    #nixos-facter-modules.inputs.systems.follows = "systems";
+    #nixos-facter-modules.inputs.blueprint.follows = "blueprint";
+    #nixos-facter-modules.inputs.treefmt-nix.follows = "treefmt-nix";
     # Pinned input for nixos-facter-modules
     # Allows downstream flakes to .follow override the input
-    blueprint.url = "github:numtide/blueprint";
-    blueprint.inputs.nixpkgs.follows = "nixpkgs";
-    blueprint.inputs.systems.follows = "systems";
+    #blueprint.url = "github:numtide/blueprint";
+    #blueprint.inputs.nixpkgs.follows = "nixpkgs";
+    #blueprint.inputs.systems.follows = "systems";
   };
 
   outputs =
