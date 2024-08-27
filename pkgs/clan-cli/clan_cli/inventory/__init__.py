@@ -22,16 +22,25 @@ from clan_cli.git import commit_file
 from ..cmd import run_no_stdout
 from ..nix import nix_eval
 from .classes import (
+    AdminConfig,
     Inventory,
+    # Machine classes
     Machine,
     MachineDeploy,
+    # General classes
     Meta,
     Service,
+    # Admin service
+    ServiceAdmin,
+    ServiceAdminRole,
+    ServiceAdminRoleDefault,
+    # Borgbackup service
     ServiceBorgbackup,
     ServiceBorgbackupRole,
     ServiceBorgbackupRoleClient,
     ServiceBorgbackupRoleServer,
     ServiceMeta,
+    # Single Disk service
     ServiceSingleDisk,
     ServiceSingleDiskRole,
     ServiceSingleDiskRoleDefault,
@@ -58,6 +67,11 @@ __all__ = [
     "ServiceSingleDiskRole",
     "ServiceSingleDiskRoleDefault",
     "SingleDiskConfig",
+    # Admin service
+    "ServiceAdmin",
+    "ServiceAdminRole",
+    "ServiceAdminRoleDefault",
+    "AdminConfig",
 ]
 
 
