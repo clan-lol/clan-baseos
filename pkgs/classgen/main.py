@@ -127,7 +127,7 @@ def field_def_from_default_value(
                 default_factory=nested_class_name,
             )
 
-        elif f"dict[str, {nested_class_name}]" in serialised_types:
+        elif "dict[str," in serialised_types:
             return finalize_field(
                 field_types=field_types,
                 default_factory="dict",

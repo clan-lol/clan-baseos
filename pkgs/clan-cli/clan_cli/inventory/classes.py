@@ -32,7 +32,7 @@ class Meta:
 
 @dataclass
 class AdminConfig:
-    allowedKeys: dict[str, str] | dict[str,Any] = field(default_factory = dict)
+    allowedKeys: dict[str, str] = field(default_factory = dict)
 
 
 @dataclass
