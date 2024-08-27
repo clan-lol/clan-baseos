@@ -163,7 +163,7 @@ let
   );
   ##################################################
 
-  allMachines = inventory.machines or { } // config.machines or { } // testMachines;
+  allMachines = inventory.machines or { } // machines // testMachines;
 
   supportedSystems = [
     "x86_64-linux"
