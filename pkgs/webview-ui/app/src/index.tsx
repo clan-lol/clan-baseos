@@ -15,6 +15,7 @@ import { CreateMachine } from "./routes/machines/create";
 import { HostList } from "./routes/hosts/view";
 import { Welcome } from "./routes/welcome";
 import { Toaster } from "solid-toast";
+import { Details } from "./routes/clan/details";
 
 const client = new QueryClient();
 
@@ -66,7 +67,7 @@ export const routes: AppRoute[] = [
     ],
   },
   {
-    path: "/clan",
+    path: "/clans",
     label: "Clans",
     icon: "groups",
     children: [
@@ -84,6 +85,7 @@ export const routes: AppRoute[] = [
         path: "/:id",
         label: "Details",
         hidden: true,
+        component: () => <Details />,
       },
     ],
   },

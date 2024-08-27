@@ -5,7 +5,8 @@ import { createQuery } from "@tanstack/solid-query";
 import { useFloating } from "@/src/floating";
 import { autoUpdate, flip, hide, offset, shift } from "@floating-ui/dom";
 import { EditClanForm } from "../clan/editClan";
-import { useNavigate } from "@solidjs/router";
+import { useNavigate, A } from "@solidjs/router";
+import { fileURLToPath } from "url";
 
 export const registerClan = async () => {
   try {
@@ -145,7 +146,9 @@ const ClanDetails = (props: ClanDetailsProps) => {
         <div class="skeleton h-12 w-80" />
       </Show>
       <Show when={details.isSuccess}>
-        <div class="stat-value">{details.data?.name}</div>
+        <A href={`/clans/${window.btoa(clan_dir)}`}>
+          <div class="stat-value underline">{details.data?.name}</div>
+        </A>
       </Show>
       <Show when={details.isSuccess && details.data?.description}>
         <div class="stat-desc text-lg">{details.data?.description}</div>

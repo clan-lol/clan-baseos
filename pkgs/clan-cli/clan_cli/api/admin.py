@@ -23,7 +23,10 @@ def get_admin_service(base_url: str) -> ServiceAdmin | None:
 
 @API.register
 def set_admin_service(
-    base_url: str, allowed_keys: list[str], instance_name: str = "admin"
+    base_url: str,
+    allowed_keys: dict[str, str],
+    instance_name: str = "admin",
+    extra_machines: list[str] = [],
 ) -> None:
     """
     Set the admin service of a clan
@@ -34,20 +37,20 @@ def set_admin_service(
     if not allowed_keys:
         raise ValueError("At least one key must be provided to ensure access")
 
-    keys = []
-    for keyfile in allowed_keys:
+    keys = {}
+    for name, keyfile in allowed_keys.items():
         if not keyfile.startswith("/"):
             raise ValueError(f"Keyfile '{keyfile}' must be an absolute path")
         with open(keyfile) as f:
             pubkey = f.read()
-            keys.append(pubkey)
+            keys[name] = pubkey
 
     instance = ServiceAdmin(
         meta=ServiceMeta(name=instance_name),
         roles=ServiceAdminRole(
             default=ServiceAdminRoleDefault(
                 config=AdminConfig(allowedKeys=keys),
-                machines=[],
+                machines=extra_machines,
                 tags=["all"],
             )
         ),

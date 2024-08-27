@@ -13,7 +13,7 @@ export const Welcome = () => {
           <div class="flex flex-col items-start gap-2">
             <button
               class="btn btn-primary w-full"
-              onClick={() => navigate("/clan/create")}
+              onClick={() => navigate("/clans/create")}
             >
               Build your own
             </button>
