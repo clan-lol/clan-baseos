@@ -45,6 +45,8 @@
     };
     clanDir = lib.mkOption {
       type = lib.types.path;
+      # TODO: @DavHau: before we can remove this, we need to make sure that Palo's config case works
+      default = ./.;
       description = ''
         the location of the flake repo, used to calculate the location of facts and secrets
       '';
