@@ -17,21 +17,6 @@
     }
   },
   "services": {
-    "admin": {
-      "admin": {
-        "meta": {
-          "name": "Admin service"
-        },
-        "roles": {
-          "default": {
-            "tags": ["all"]
-          }
-        },
-        "config": {
-          "allowedKeys": { "keyfile_1": "rsa_..." }
-        }
-      }
-    },
     "packages": {
       "editors": {
         "meta": {
