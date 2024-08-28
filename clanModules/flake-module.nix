@@ -36,5 +36,6 @@
     xfce = ./xfce;
     zerotier-static-peers = ./zerotier-static-peers;
     zt-tcp-relay = ./zt-tcp-relay;
+    zerotier = ./zerotier;
   };
 }
