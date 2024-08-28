@@ -67,13 +67,13 @@ let
           facterJson = "${directory}/machines/${name}/facter.json";
           hwConfig = "${directory}/machines/${name}/hardware-configuration.nix";
 
+          facterModules = lib.optionals (builtins.pathExists facterJson) [
+            "${clan-core.inputs.nixos-facter-modules}/modules/nixos/facter.nix"
+            { config.facter.reportPath = facterJson; }
+          ];
         in
-        #facterModules = lib.optionals (builtins.pathExists facterJson) [
-        #  clan-core.inputs.nixos-facter-modules.nixosModules.facter
-        #  { config.facter.reportPath = facterJson; }
-        #];
         (machineImports settings)
-        #++ facterModules
+        ++ facterModules
         ++ [
           {
             # Autoinclude configuration.nix and hardware-configuration.nix

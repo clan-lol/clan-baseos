@@ -45,8 +45,11 @@
     };
     clanDir = lib.mkOption {
       type = lib.types.path;
-      # TODO: @DavHau: before we can remove this, we need to make sure that Palo's config case works
-      default = ./.;
+      # documentation.nixos.extraModules = [
+      #   ...
+      #   clan-core.nixosModules.clanCore
+      #   { clan.core.clanDir = ./path/to/flake; }
+      # ];
       description = ''
         the location of the flake repo, used to calculate the location of facts and secrets
       '';
