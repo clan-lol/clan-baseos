@@ -58,21 +58,41 @@ To introduce a new machine to the VPN, adhere to the following steps:
    Replace `<NEW_MACHINE>` with the designated new machine name.
 
     !!! Note "For Private Networks"
-        1. **Retrieve the ZeroTier ID**: On the `new_machine`, execute:
-             ```bash
-             $ sudo zerotier-cli info
-             ```
-             Example Output: 
-             ```{.console, .no-copy}
-             200 info d2c71971db 1.12.1 OFFLINE
-             ```
-             , where `d2c71971db` is the ZeroTier ID.
+        1. **Retrieve Zerotier Metadata**
+
+            === "From the repo"
+                **Retrieve the ZeroTier IP**: In the clan repo, execute:
+                 ```console
+                 $ clan facts list <NEW_MACHINE> |  jq -r '.["zerotier-ip"]'
+                 ```
+
+                 The returned address is the Zerotier IP address of the machine.
+
+            === "On the new machine"
+                **Retrieve the ZeroTier ID**: On the `new_machine`, execute:
+                 ```bash
+                 $ sudo zerotier-cli info
+                 ```
+                 Example Output: 
+                 ```{.console, .no-copy}
+                 200 info d2c71971db 1.12.1 OFFLINE
+                 ```
+                 , where `d2c71971db` is the ZeroTier ID.
+
+          
         2. **Authorize the New Machine on the Controller**: On the controller machine,
              execute:
-             ```bash
-             $ sudo zerotier-members allow <ID>
-             ```
-             Substitute `<ID>` with the ZeroTier ID obtained previously.
+
+            === "with ZerotierIP"
+                 ```bash
+                 $ sudo zerotier-members allow --member-ip <IP>
+                 ```
+                 Substitute `<IP>` with the ZeroTier IP obtained previously.
+            === "with ZerotierID"
+                 ```bash
+                 $ sudo zerotier-members allow <ID>
+                 ```
+                 Substitute `<ID>` with the ZeroTier ID obtained previously.
 
 2. **Verify Connection**: On the `new_machine`, re-execute:
    ```bash
