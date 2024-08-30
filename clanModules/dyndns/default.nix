@@ -126,11 +126,6 @@ in
   };
 
   imports = [
-    (lib.mkRemovedOptionModule [
-      "clan"
-      "dyndns"
-      "enable"
-    ] "Just define clan.dyndns.settings to enable it")
     ../nginx
   ];
 
