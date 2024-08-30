@@ -106,6 +106,7 @@ class SecretStore(SecretStoreBase):
         return local_hash.decode() == remote_hash
 
     def upload(self, output_dir: Path) -> None:
+        os.umask(0o077)
         for service in self.machine.facts_data:
             for secret in self.machine.facts_data[service]["secret"]:
                 if isinstance(secret, dict):
