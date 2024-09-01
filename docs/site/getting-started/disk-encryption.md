@@ -278,7 +278,7 @@ ssh root@nixos-installer.local
 
 ```bash
 zpool import zroot
-zfs set keystate=prompt zroot/root
+zfs set keylocation=prompt zroot/root
 zfs load-key zroot/root
 zfs set mountpoint=/mnt zroot/root/nixos
 mount /dev/nvme0n1p2 /mnt/boot
