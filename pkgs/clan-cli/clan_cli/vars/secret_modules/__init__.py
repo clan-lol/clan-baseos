@@ -17,6 +17,7 @@ class SecretStoreBase(ABC):
         value: bytes,
         groups: list[str],
         shared: bool = False,
+        deployed: bool = True,
     ) -> Path | None:
         pass
 

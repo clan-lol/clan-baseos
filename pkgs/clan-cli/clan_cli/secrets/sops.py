@@ -143,12 +143,15 @@ def update_keys(secret_path: Path, keys: list[str]) -> list[Path]:
 
 
 def encrypt_file(
-    secret_path: Path, content: IO[str] | str | bytes | None, keys: list[str]
+    secret_path: Path,
+    content: IO[str] | str | bytes | None,
+    pubkeys: list[str],
+    meta: dict = {},
 ) -> None:
     folder = secret_path.parent
     folder.mkdir(parents=True, exist_ok=True)
 
-    with sops_manifest(keys) as manifest:
+    with sops_manifest(pubkeys) as manifest:
         if not content:
             args = ["sops", "--config", str(manifest)]
             args.extend([str(secret_path)])
@@ -186,6 +189,9 @@ def encrypt_file(
                 with NamedTemporaryFile(dir=folder, delete=False) as f2:
                     shutil.copyfile(f.name, f2.name)
                     os.rename(f2.name, secret_path)
+                meta_path = secret_path.parent / "meta.json"
+                with open(meta_path, "w") as f_meta:
+                    json.dump(meta, f_meta, indent=2)
             finally:
                 try:
                     os.remove(f.name)
@@ -201,6 +207,14 @@ def decrypt_file(secret_path: Path) -> str:
         )
     res = run(cmd, error_msg=f"Could not decrypt {secret_path}")
     return res.stdout
+
+
+def get_meta(secret_path: Path) -> dict:
+    meta_path = secret_path.parent / "meta.json"
+    if not meta_path.exists():
+        return {}
+    with open(meta_path) as f:
+        return json.load(f)
 
 
 def write_key(path: Path, publickey: str, overwrite: bool) -> None:

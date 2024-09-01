@@ -152,6 +152,7 @@ def execute_generator(
         # store secrets
         files = machine.vars_generators[generator_name]["files"]
         for file_name, file in files.items():
+            is_deployed = file["deploy"]
             groups = machine.deployment["sops"]["defaultGroups"]
 
             secret_file = tmpdir_out / file_name
@@ -166,6 +167,7 @@ def execute_generator(
                     secret_file.read_bytes(),
                     groups,
                     shared=is_shared,
+                    deployed=is_deployed,
                 )
             else:
                 file_path = public_vars_store.set(

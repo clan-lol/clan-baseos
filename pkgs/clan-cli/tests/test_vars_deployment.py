@@ -25,20 +25,19 @@ def test_vm_deployment(
     config["networking"]["firewall"]["enable"] = False
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
-    my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = """
         echo hello > $out/my_secret
-        echo hello > $out/my_value
     """
     my_shared_generator = config["clan"]["core"]["vars"]["generators"][
         "my_shared_generator"
     ]
     my_shared_generator["share"] = True
-    my_shared_generator["files"]["my_shared_secret"]["secret"] = True
-    my_shared_generator["files"]["my_shared_value"]["secret"] = False
+    my_shared_generator["files"]["shared_secret"]["secret"] = True
+    my_shared_generator["files"]["no_deploy_secret"]["secret"] = True
+    my_shared_generator["files"]["no_deploy_secret"]["deploy"] = False
     my_shared_generator["script"] = """
-        echo hello > $out/my_shared_secret
-        echo hello > $out/my_shared_value
+        echo hello > $out/shared_secret
+        echo hello > $out/no_deploy_secret
     """
     flake = generate_flake(
         temporary_home,
@@ -69,11 +68,18 @@ def test_vm_deployment(
     assert "no-such-path" not in my_secret_path
     run_vm_in_thread("my_machine")
     qga = qga_connect("my_machine")
+    # check my_secret is deployed
     _, out, _ = qga.run("cat /run/secrets/vars/my_generator/my_secret", check=True)
     assert out == "hello\n"
+    # check shared_secret is deployed
     _, out, _ = qga.run(
-        "cat /run/secrets/vars/my_shared_generator/my_shared_secret", check=True
+        "cat /run/secrets/vars/my_shared_generator/shared_secret", check=True
     )
     assert out == "hello\n"
+    # check no_deploy_secret is not deployed
+    returncode, out, _ = qga.run(
+        "test -e /run/secrets/vars/my_shared_generator/no_deploy_secret", check=False
+    )
+    assert returncode != 0
     qga.exec_cmd("poweroff")
     wait_vm_down("my_machine")

@@ -21,6 +21,7 @@ class SecretStore(SecretStoreBase):
         value: bytes,
         groups: list[str],
         shared: bool = False,
+        deployed: bool = True,
     ) -> Path | None:
         secret_file = self.dir / service / name
         secret_file.parent.mkdir(parents=True, exist_ok=True)

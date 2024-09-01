@@ -31,6 +31,7 @@ class SecretStore(SecretStoreBase):
         value: bytes,
         groups: list[str],
         shared: bool = False,
+        deployed: bool = True,
     ) -> Path | None:
         subprocess.run(
             nix_shell(
