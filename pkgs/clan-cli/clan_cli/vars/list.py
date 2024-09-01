@@ -18,11 +18,17 @@ def get_all_vars(machine: Machine) -> list[Var]:
     return public_vars_store.get_all() + secret_vars_store.get_all()
 
 
+def stringify_vars(_vars: list[Var]) -> str:
+    return "\n".join([str(var) for var in _vars])
+
+
+def stringify_all_vars(machine: Machine) -> str:
+    return stringify_vars(get_all_vars(machine))
+
+
 def get_command(args: argparse.Namespace) -> None:
     machine = Machine(name=args.machine, flake=args.flake)
-
-    for var in get_all_vars(machine):
-        print(var)
+    print(stringify_all_vars(machine))
 
 
 def register_list_parser(parser: argparse.ArgumentParser) -> None:
