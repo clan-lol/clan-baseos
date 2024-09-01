@@ -13,6 +13,7 @@ from root import CLAN_CORE
 from clan_cli.clan_uri import FlakeId
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
+from clan_cli.vars.check import check_vars
 from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
 from clan_cli.vars.secret_modules import password_store, sops
@@ -78,13 +79,15 @@ def test_generate_public_var(
         machine_configs=dict(my_machine=config),
     )
     monkeypatch.chdir(flake.path)
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    assert not check_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    assert check_vars(machine)
     store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
     assert store.exists("my_generator", "my_value")
     assert store.get("my_generator", "my_value").decode() == "hello\n"
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     vars_text = stringify_all_vars(machine)
     assert "my_generator/my_value: hello" in vars_text
 
@@ -106,7 +109,10 @@ def test_generate_secret_var_sops(
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    assert not check_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    assert check_vars(machine)
     in_repo_store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
@@ -116,7 +122,6 @@ def test_generate_secret_var_sops(
     )
     assert sops_store.exists("my_generator", "my_secret")
     assert sops_store.get("my_generator", "my_secret").decode() == "hello\n"
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     vars_text = stringify_all_vars(machine)
     assert "my_generator/my_secret" in vars_text
 
@@ -194,13 +199,15 @@ def test_generate_secret_var_password_store(
     subprocess.run(
         nix_shell(["nixpkgs#pass"], ["pass", "init", "test@local"]), check=True
     )
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    assert not check_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    assert check_vars(machine)
     store = password_store.SecretStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
     assert store.exists("my_generator", "my_secret")
     assert store.get("my_generator", "my_secret").decode() == "hello\n"
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     vars_text = stringify_all_vars(machine)
     assert "my_generator/my_secret" in vars_text
 

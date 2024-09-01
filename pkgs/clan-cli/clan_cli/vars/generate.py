@@ -21,7 +21,7 @@ from ..git import commit_files
 from ..machines.inventory import get_all_machines, get_selected_machines
 from ..machines.machines import Machine
 from ..nix import nix_shell
-from .check import check_secrets
+from .check import check_vars
 from .public_modules import FactStoreBase
 from .secret_modules import SecretStoreBase
 
@@ -101,7 +101,7 @@ def execute_generator(
     public_vars_store: FactStoreBase,
 ) -> bool:
     # check if all secrets exist and generate them if at least one is missing
-    needs_regeneration = not check_secrets(machine, generator_name=generator_name)
+    needs_regeneration = not check_vars(machine, generator_name=generator_name)
     log.debug(f"{generator_name} needs_regeneration: {needs_regeneration}")
     if not (needs_regeneration or regenerate):
         return False
