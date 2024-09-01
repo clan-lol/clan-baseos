@@ -17,6 +17,10 @@ class SecretStoreBase(StoreBase):
     ) -> Path | None:
         pass
 
+    @property
+    def is_secret_store(self) -> bool:
+        return True
+
     def update_check(self) -> bool:
         return False
 

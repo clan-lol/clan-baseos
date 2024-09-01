@@ -13,6 +13,7 @@ from root import CLAN_CORE
 from clan_cli.clan_uri import FlakeId
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
+from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
 from clan_cli.vars.secret_modules import password_store, sops
 
@@ -66,7 +67,6 @@ def test_dependencies_as_files() -> None:
 def test_generate_public_var(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
-    # age_keys: list["KeyPair"],
 ) -> None:
     config = nested_dict()
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
@@ -84,6 +84,9 @@ def test_generate_public_var(
     )
     assert store.exists("my_generator", "my_value")
     assert store.get("my_generator", "my_value").decode() == "hello\n"
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    vars_text = stringify_all_vars(machine)
+    assert "my_generator/my_value: hello" in vars_text
 
 
 @pytest.mark.impure
@@ -113,6 +116,9 @@ def test_generate_secret_var_sops(
     )
     assert sops_store.exists("my_generator", "my_secret")
     assert sops_store.get("my_generator", "my_secret").decode() == "hello\n"
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    vars_text = stringify_all_vars(machine)
+    assert "my_generator/my_secret" in vars_text
 
 
 @pytest.mark.impure
@@ -194,6 +200,9 @@ def test_generate_secret_var_password_store(
     )
     assert store.exists("my_generator", "my_secret")
     assert store.get("my_generator", "my_secret").decode() == "hello\n"
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    vars_text = stringify_all_vars(machine)
+    assert "my_generator/my_secret" in vars_text
 
 
 @pytest.mark.impure

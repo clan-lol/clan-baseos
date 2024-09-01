@@ -33,10 +33,18 @@ class StoreBase(ABC):
     def get(self, service: str, name: str, shared: bool = False) -> bytes:
         pass
 
+    @property
+    @abstractmethod
+    def is_secret_store(self) -> bool:
+        pass
+
     def get_all(self) -> list[Var]:
         all_vars = []
         for gen_name, generator in self.machine.vars_generators.items():
             for f_name, file in generator["files"].items():
+                # only handle vars compatible to this store
+                if self.is_secret_store != file["secret"]:
+                    continue
                 all_vars.append(
                     Var(
                         store=self,
