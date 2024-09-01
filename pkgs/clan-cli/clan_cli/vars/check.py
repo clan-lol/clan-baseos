@@ -8,7 +8,7 @@ from ..machines.machines import Machine
 log = logging.getLogger(__name__)
 
 
-def check_secrets(machine: Machine, generator_name: None | str = None) -> bool:
+def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
     secret_vars_module = importlib.import_module(machine.secret_vars_module)
     secret_vars_store = secret_vars_module.SecretStore(machine=machine)
     public_vars_module = importlib.import_module(machine.public_vars_module)
@@ -47,7 +47,9 @@ def check_command(args: argparse.Namespace) -> None:
         name=args.machine,
         flake=args.flake,
     )
-    check_secrets(machine, generator_name=args.service)
+    ok = check_vars(machine, generator_name=args.service)
+    if not ok:
+        raise SystemExit(1)
 
 
 def register_check_parser(parser: argparse.ArgumentParser) -> None:
