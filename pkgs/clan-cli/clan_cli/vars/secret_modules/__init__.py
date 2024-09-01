@@ -1,14 +1,10 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from pathlib import Path
 
-from clan_cli.machines.machines import Machine
+from clan_cli.vars._types import StoreBase
 
 
-class SecretStoreBase(ABC):
-    @abstractmethod
-    def __init__(self, machine: Machine) -> None:
-        pass
-
+class SecretStoreBase(StoreBase):
     @abstractmethod
     def set(
         self,
@@ -19,14 +15,6 @@ class SecretStoreBase(ABC):
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
-        pass
-
-    @abstractmethod
-    def get(self, service: str, name: str, shared: bool = False) -> bytes:
-        pass
-
-    @abstractmethod
-    def exists(self, service: str, name: str, shared: bool = False) -> bool:
         pass
 
     def update_check(self) -> bool:

@@ -41,15 +41,3 @@ class FactStore(FactStoreBase):
     # get a single fact
     def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
         return self._var_path(generator_name, name, shared).read_bytes()
-
-    # get all public vars
-    def get_all(self) -> dict[str, dict[str, bytes]]:
-        facts: dict[str, dict[str, bytes]] = {}
-        facts["TODO"] = {}
-        if self.per_machine_folder.exists():
-            for fact_path in self.per_machine_folder.iterdir():
-                facts["TODO"][fact_path.name] = fact_path.read_bytes()
-        if self.shared_folder.exists():
-            for fact_path in self.shared_folder.iterdir():
-                facts["TODO"][fact_path.name] = fact_path.read_bytes()
-        return facts
