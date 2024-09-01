@@ -35,14 +35,3 @@ class FactStore(FactStoreBase):
         if fact_path.exists():
             return fact_path.read_bytes()
         raise ClanError(f"Fact {name} for service {service} not found")
-
-    # get all facts
-    def get_all(self) -> dict[str, dict[str, bytes]]:
-        facts: dict[str, dict[str, bytes]] = {}
-        if self.dir.exists():
-            for service in self.dir.iterdir():
-                facts[service.name] = {}
-                for fact in service.iterdir():
-                    facts[service.name][fact.name] = fact.read_bytes()
-
-        return facts
