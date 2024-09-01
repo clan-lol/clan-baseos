@@ -45,7 +45,11 @@ in
             prompts
             share
             ;
-          files = lib.flip lib.mapAttrs generator.files (_name: file: { inherit (file) secret; });
+          files = lib.flip lib.mapAttrs generator.files (
+            _name: file: {
+              inherit (file) deploy secret;
+            }
+          );
         }
       );
       inherit (config.clan.core.vars.settings) secretUploadDirectory secretModule publicModule;

@@ -87,9 +87,10 @@ def encrypt_secret(
     add_users: list[str] = [],
     add_machines: list[str] = [],
     add_groups: list[str] = [],
+    meta: dict = {},
 ) -> None:
     key = ensure_sops_key(flake_dir)
-    keys = set([])
+    recipient_keys = set([])
 
     files_to_commit = []
     for user in add_users:
@@ -122,10 +123,10 @@ def encrypt_secret(
             )
         )
 
-    keys = collect_keys_for_path(secret_path)
+    recipient_keys = collect_keys_for_path(secret_path)
 
-    if key.pubkey not in keys:
-        keys.add(key.pubkey)
+    if key.pubkey not in recipient_keys:
+        recipient_keys.add(key.pubkey)
         files_to_commit.extend(
             allow_member(
                 users_folder(secret_path),
@@ -136,7 +137,7 @@ def encrypt_secret(
         )
 
     secret_path = secret_path / "secret"
-    encrypt_file(secret_path, value, list(sorted(keys)))
+    encrypt_file(secret_path, value, list(sorted(recipient_keys)), meta)
     files_to_commit.append(secret_path)
     commit_files(
         files_to_commit,

@@ -6,17 +6,26 @@
 }:
 let
 
-  inherit (lib) flip;
+  inherit (lib) importJSON flip;
+
+  inherit (builtins) dirOf pathExists;
 
   inherit (import ./funcs.nix { inherit lib; }) listVars;
 
   inherit (config.clan.core) machineName;
 
+  metaFile = sopsFile: dirOf sopsFile + "/meta.json";
+
+  metaData = sopsFile: if pathExists (metaFile sopsFile) then importJSON (metaFile sopsFile) else { };
+
+  toDeploy = secret: (metaData secret.sopsFile).deploy or true;
+
   varsDirMachines = config.clan.core.clanDir + "/sops/vars/per-machine/${machineName}";
   varsDirShared = config.clan.core.clanDir + "/sops/vars/shared";
 
-  vars = (listVars varsDirMachines) ++ (listVars varsDirShared);
+  vars' = (listVars varsDirMachines) ++ (listVars varsDirShared);
 
+  vars = lib.filter (secret: toDeploy secret) vars';
 in
 {
   config.clan.core.vars.settings = lib.mkIf (config.clan.core.vars.settings.secretStore == "sops") {

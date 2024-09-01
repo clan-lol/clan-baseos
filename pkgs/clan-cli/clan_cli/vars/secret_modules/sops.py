@@ -58,6 +58,7 @@ class SecretStore(SecretStoreBase):
         value: bytes,
         groups: list[str],
         shared: bool = False,
+        deployed: bool = True,
     ) -> Path | None:
         path = self.secret_path(generator_name, name, shared)
         encrypt_secret(
@@ -66,6 +67,9 @@ class SecretStore(SecretStoreBase):
             value,
             add_machines=[self.machine.name],
             add_groups=groups,
+            meta=dict(
+                deploy=deployed,
+            ),
         )
         return path
 

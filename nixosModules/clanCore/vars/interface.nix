@@ -74,6 +74,15 @@ in
                       readOnly = true;
                       default = generator.config._module.args.name;
                     };
+                    deploy = {
+                      description = ''
+                        Whether the file should be deployed to the target machine.
+
+                        Enable this if the generated file is only used as an input to other generators.
+                      '';
+                      type = bool;
+                      default = true;
+                    };
                     secret = {
                       description = ''
                         Whether the file should be treated as a secret.
