@@ -42,7 +42,7 @@ def test_vm_deployment(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -57,7 +57,7 @@ def test_vm_deployment(
             )
         ).stdout.strip()
     )
-    assert sops_secrets != dict()
+    assert sops_secrets != {}
     my_secret_path = run(
         nix_eval(
             [

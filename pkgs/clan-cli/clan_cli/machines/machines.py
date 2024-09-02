@@ -144,7 +144,7 @@ class Machine:
         config = nix_config()
         system = config["system"]
 
-        file_info = dict()
+        file_info = {}
         with NamedTemporaryFile(mode="w") as config_json:
             if extra_config is not None:
                 json.dump(extra_config, config_json, indent=2)

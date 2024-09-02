@@ -42,7 +42,7 @@ def update_secrets(
         changed_files.extend(
             update_keys(
                 secret_path,
-                list(sorted(collect_keys_for_path(secret_path))),
+                sorted(collect_keys_for_path(secret_path)),
             )
         )
     return changed_files
@@ -69,7 +69,7 @@ def collect_keys_for_type(folder: Path) -> set[str]:
 
 
 def collect_keys_for_path(path: Path) -> set[str]:
-    keys = set([])
+    keys = set()
     keys.update(collect_keys_for_type(path / "machines"))
     keys.update(collect_keys_for_type(path / "users"))
     groups = path / "groups"
@@ -99,7 +99,7 @@ def encrypt_secret(
     if add_users is None:
         add_users = []
     key = ensure_sops_key(flake_dir)
-    recipient_keys = set([])
+    recipient_keys = set()
 
     files_to_commit = []
     for user in add_users:
@@ -146,7 +146,7 @@ def encrypt_secret(
         )
 
     secret_path = secret_path / "secret"
-    encrypt_file(secret_path, value, list(sorted(recipient_keys)), meta)
+    encrypt_file(secret_path, value, sorted(recipient_keys), meta)
     files_to_commit.append(secret_path)
     commit_files(
         files_to_commit,
@@ -226,7 +226,7 @@ def allow_member(
         changed.extend(
             update_keys(
                 group_folder.parent,
-                list(sorted(collect_keys_for_path(group_folder.parent))),
+                sorted(collect_keys_for_path(group_folder.parent)),
             )
         )
     return changed
@@ -254,7 +254,7 @@ def disallow_member(group_folder: Path, name: str) -> list[Path]:
         os.rmdir(group_folder.parent)
 
     return update_keys(
-        target.parent.parent, list(sorted(collect_keys_for_path(group_folder.parent)))
+        target.parent.parent, sorted(collect_keys_for_path(group_folder.parent))
     )
 
 

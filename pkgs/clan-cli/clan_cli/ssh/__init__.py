@@ -222,12 +222,12 @@ class Host:
                     for line in lines:
                         if not is_err:
                             cmdlog.info(
-                                line, extra=dict(command_prefix=self.command_prefix)
+                                line, extra={"command_prefix": self.command_prefix}
                             )
                             pass
                         else:
                             cmdlog.error(
-                                line, extra=dict(command_prefix=self.command_prefix)
+                                line, extra={"command_prefix": self.command_prefix}
                             )
                     print_buf = ""
                 last_output = time.time()
@@ -248,7 +248,7 @@ class Host:
                 elapsed_msg = time.strftime("%H:%M:%S", time.gmtime(elapsed))
                 cmdlog.warn(
                     f"still waiting for '{displayed_cmd}' to finish... ({elapsed_msg} elapsed)",
-                    extra=dict(command_prefix=self.command_prefix),
+                    extra={"command_prefix": self.command_prefix},
                 )
 
             def handle_fd(fd: IO[Any] | None, readlist: list[IO[Any]]) -> str:
@@ -350,7 +350,7 @@ class Host:
                     else:
                         cmdlog.warning(
                             f"[Command failed: {ret}] {displayed_cmd}",
-                            extra=dict(command_prefix=self.command_prefix),
+                            extra={"command_prefix": self.command_prefix},
                         )
                 return subprocess.CompletedProcess(
                     cmd, ret, stdout=stdout_data, stderr=stderr_data
@@ -386,9 +386,7 @@ class Host:
             cmd = [cmd]
             shell = True
         displayed_cmd = " ".join(cmd)
-        cmdlog.info(
-            f"$ {displayed_cmd}", extra=dict(command_prefix=self.command_prefix)
-        )
+        cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
         return self._run(
             cmd,
             displayed_cmd,
@@ -446,9 +444,7 @@ class Host:
             displayed_cmd += " ".join(cmd)
         else:
             displayed_cmd += cmd
-        cmdlog.info(
-            f"$ {displayed_cmd}", extra=dict(command_prefix=self.command_prefix)
-        )
+        cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
 
         bash_cmd = export_cmd
         bash_args = []
@@ -624,7 +620,7 @@ class HostGroup:
             if e:
                 cmdlog.error(
                     f"failed with: {e}",
-                    extra=dict(command_prefix=result.host.command_prefix),
+                    extra={"command_prefix": result.host.command_prefix},
                 )
                 errors += 1
         if errors > 0:
@@ -653,19 +649,19 @@ class HostGroup:
             fn = self._run_local if local else self._run_remote
             thread = Thread(
                 target=fn,
-                kwargs=dict(
-                    results=results,
-                    cmd=cmd,
-                    host=host,
-                    stdout=stdout,
-                    stderr=stderr,
-                    extra_env=extra_env,
-                    cwd=cwd,
-                    check=check,
-                    timeout=timeout,
-                    verbose_ssh=verbose_ssh,
-                    tty=tty,
-                ),
+                kwargs={
+                    "results": results,
+                    "cmd": cmd,
+                    "host": host,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "extra_env": extra_env,
+                    "cwd": cwd,
+                    "check": check,
+                    "timeout": timeout,
+                    "verbose_ssh": verbose_ssh,
+                    "tty": tty,
+                },
             )
             thread.start()
             threads.append(thread)

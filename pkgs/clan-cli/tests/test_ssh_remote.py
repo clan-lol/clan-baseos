@@ -19,10 +19,10 @@ def test_run(host_group: HostGroup) -> None:
 
 def test_run_environment(host_group: HostGroup) -> None:
     p1 = host_group.run(
-        "echo $env_var", stdout=subprocess.PIPE, extra_env=dict(env_var="true")
+        "echo $env_var", stdout=subprocess.PIPE, extra_env={"env_var": "true"}
     )
     assert p1[0].result.stdout == "true\n"
-    p2 = host_group.run(["env"], stdout=subprocess.PIPE, extra_env=dict(env_var="true"))
+    p2 = host_group.run(["env"], stdout=subprocess.PIPE, extra_env={"env_var": "true"})
     assert "env_var=true" in p2[0].result.stdout
 
 

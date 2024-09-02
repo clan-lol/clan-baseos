@@ -10,7 +10,7 @@ T = TypeVar("T")
 
 class MachineGroup:
     def __init__(self, machines: list[Machine]) -> None:
-        self.group = HostGroup(list(m.target_host for m in machines))
+        self.group = HostGroup([m.target_host for m in machines])
 
     def run_function(
         self, func: Callable[[Machine], T], check: bool = True

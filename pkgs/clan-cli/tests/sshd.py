@@ -42,7 +42,7 @@ def sshd_config(test_root: Path) -> Iterator[SshdConfig]:
         host_key = test_root / "data" / "ssh_host_ed25519_key"
         host_key.chmod(0o600)
         template = (test_root / "data" / "sshd_config").read_text()
-        content = string.Template(template).substitute(dict(host_key=host_key))
+        content = string.Template(template).substitute({"host_key": host_key})
         config = tmpdir / "sshd_config"
         config.write_text(content)
         login_shell = tmpdir / "shell"
@@ -100,10 +100,10 @@ def sshd(
     sshd = shutil.which("sshd")
     assert sshd is not None, "no sshd binary found"
     env = {}
-    env = dict(
-        LD_PRELOAD=str(sshd_config.preload_lib),
-        LOGIN_SHELL=str(sshd_config.login_shell),
-    )
+    env = {
+        "LD_PRELOAD": str(sshd_config.preload_lib),
+        "LOGIN_SHELL": str(sshd_config.login_shell),
+    }
     proc = command.run(
         [sshd, "-f", str(sshd_config.path), "-D", "-p", str(port)], extra_env=env
     )

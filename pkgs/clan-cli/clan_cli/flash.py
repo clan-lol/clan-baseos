@@ -123,7 +123,7 @@ def flash_machine(
 
     if system_config.ssh_keys_path:
         root_keys = []
-        for key_path in map(lambda x: Path(x), system_config.ssh_keys_path):
+        for key_path in (Path(x) for x in system_config.ssh_keys_path):
             try:
                 root_keys.append(key_path.read_text())
             except OSError as e:

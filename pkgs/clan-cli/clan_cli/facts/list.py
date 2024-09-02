@@ -30,7 +30,7 @@ def get_command(args: argparse.Namespace) -> None:
 
     # the raw_facts are bytestrings making them not json serializable
     raw_facts = get_all_facts(machine)
-    facts = dict()
+    facts = {}
     for key in raw_facts["TODO"]:
         facts[key] = raw_facts["TODO"][key].decode("utf8")
 

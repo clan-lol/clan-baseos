@@ -208,7 +208,7 @@ def run_command(
 
     vm: VmConfig = inspect_vm(machine=machine_obj)
 
-    portmap = [(h, g) for h, g in (p.split(":") for p in args.publish)]
+    portmap = [p.split(":") for p in args.publish]
 
     run_vm(vm, nix_options=args.option, portmap=portmap)
 

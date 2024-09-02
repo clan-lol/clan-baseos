@@ -158,7 +158,7 @@ API.register(open_file)
             "$comment": "An object containing API methods. ",
             "type": "object",
             "additionalProperties": False,
-            "required": [func_name for func_name in self._registry.keys()],
+            "required": list(self._registry.keys()),
             "properties": {},
         }
 

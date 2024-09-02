@@ -65,15 +65,15 @@ def test_vm_qmp(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(
-            my_machine=dict(
-                clan=dict(
-                    virtualisation=dict(graphics=False),
-                    networking=dict(targetHost="client"),
-                ),
-                services=dict(getty=dict(autologinUser="root")),
-            )
-        ),
+        machine_configs={
+            "my_machine": {
+                "clan": {
+                    "virtualisation": {"graphics": False},
+                    "networking": {"targetHost": "client"},
+                },
+                "services": {"getty": {"autologinUser": "root"}},
+            }
+        },
     )
 
     # 'clan vms run' must be executed from within the flake

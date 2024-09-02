@@ -116,7 +116,7 @@ def ensure_sops_key(flake_dir: Path) -> SopsKey:
 def sops_manifest(keys: list[str]) -> Iterator[Path]:
     with NamedTemporaryFile(delete=False, mode="w") as manifest:
         json.dump(
-            dict(creation_rules=[dict(key_groups=[dict(age=keys)])]), manifest, indent=2
+            {"creation_rules": [{"key_groups": [{"age": keys}]}]}, manifest, indent=2
         )
         manifest.flush()
         yield Path(manifest.name)
