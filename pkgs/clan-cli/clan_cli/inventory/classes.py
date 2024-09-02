@@ -118,6 +118,43 @@ class ServiceBorgbackup:
 
 
 @dataclass
+class IwdConfigNetwork:
+    ssid: str
+
+
+@dataclass
+class IwdConfig:
+    networks: dict[str, IwdConfigNetwork] = field(default_factory = dict)
+
+
+@dataclass
+class ServiceIwdMachine:
+    config: IwdConfig = field(default_factory = IwdConfig)
+    imports: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceIwdRoleDefault:
+    config: IwdConfig = field(default_factory = IwdConfig)
+    imports: list[str] = field(default_factory = list)
+    machines: list[str] = field(default_factory = list)
+    tags: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceIwdRole:
+    default: ServiceIwdRoleDefault
+
+
+@dataclass
+class ServiceIwd:
+    meta: ServiceMeta
+    roles: ServiceIwdRole
+    config: IwdConfig = field(default_factory = IwdConfig)
+    machines: dict[str, ServiceIwdMachine] = field(default_factory = dict)
+
+
+@dataclass
 class PackagesConfig:
     packages: list[str] = field(default_factory = list)
 
@@ -185,6 +222,7 @@ class ServiceSingleDisk:
 class Service:
     admin: dict[str, ServiceAdmin] = field(default_factory = dict)
     borgbackup: dict[str, ServiceBorgbackup] = field(default_factory = dict)
+    iwd: dict[str, ServiceIwd] = field(default_factory = dict)
     packages: dict[str, ServicePackage] = field(default_factory = dict)
     single_disk: dict[str, ServiceSingleDisk] = field(default_factory = dict, metadata = {"alias": "single-disk"})
 
