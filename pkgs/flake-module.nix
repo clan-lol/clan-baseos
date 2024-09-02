@@ -20,7 +20,7 @@
     };
 
   perSystem =
-    { pkgs, config, ... }:
+    { config, pkgs, ... }:
     {
       packages =
         {
@@ -34,6 +34,8 @@
           classgen = pkgs.callPackage ./classgen { };
           zerotierone = pkgs.callPackage ./zerotierone { };
         }
-        // lib.optionalAttrs (pkgs.stdenv.isLinux) { nixos-facter = pkgs.callPackage ./nixos-facter { }; };
+        // lib.optionalAttrs pkgs.stdenv.isLinux {
+          nixos-facter = pkgs.callPackage ./nixos-facter { };
+        };
     };
 }
