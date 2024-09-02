@@ -1,6 +1,7 @@
 # !/usr/bin/env python3
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 
 from clan_cli.machines.machines import Machine
 
@@ -31,6 +32,17 @@ class StoreBase(ABC):
     # get a single fact
     @abstractmethod
     def get(self, service: str, name: str, shared: bool = False) -> bytes:
+        pass
+
+    @abstractmethod
+    def set(
+        self,
+        service: str,
+        name: str,
+        value: bytes,
+        shared: bool = False,
+        deployed: bool = True,
+    ) -> Path | None:
         pass
 
     @property

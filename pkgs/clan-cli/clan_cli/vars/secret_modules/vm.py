@@ -18,7 +18,6 @@ class SecretStore(SecretStoreBase):
         service: str,
         name: str,
         value: bytes,
-        groups: list[str],
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:

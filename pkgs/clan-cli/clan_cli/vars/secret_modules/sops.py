@@ -56,7 +56,6 @@ class SecretStore(SecretStoreBase):
         generator_name: str,
         name: str,
         value: bytes,
-        groups: list[str],
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
@@ -66,7 +65,7 @@ class SecretStore(SecretStoreBase):
             path,
             value,
             add_machines=[self.machine.name],
-            add_groups=groups,
+            add_groups=self.machine.deployment["sops"]["defaultGroups"],
             meta={
                 "deploy": deployed,
             },

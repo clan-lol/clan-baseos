@@ -21,7 +21,12 @@ class FactStore(FactStoreBase):
         return self.per_machine_folder / generator_name / name
 
     def set(
-        self, generator_name: str, name: str, value: bytes, shared: bool = False
+        self,
+        generator_name: str,
+        name: str,
+        value: bytes,
+        shared: bool = False,
+        deployed: bool = True,
     ) -> Path | None:
         if self.machine.flake.is_local():
             fact_path = self._var_path(generator_name, name, shared)
