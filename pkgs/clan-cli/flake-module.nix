@@ -6,7 +6,11 @@
 }:
 {
   perSystem =
-    { self', pkgs, ... }:
+    {
+      self',
+      pkgs,
+      ...
+    }:
     let
       flakeLock = lib.importJSON (self + /flake.lock);
       flakeInputs = builtins.removeAttrs inputs [ "self" ];
@@ -63,7 +67,6 @@
           src = ./.;
 
           buildInputs = [
-
             # TODO: see postFixup clan-cli/default.nix:L188
             pkgs.python3
             self'.packages.clan-cli.propagatedBuildInputs
@@ -84,16 +87,27 @@
 
           buildInputs = [
             pkgs.python3
-
+            self'.packages.json2ts
             # TODO: see postFixup clan-cli/default.nix:L188
             self'.packages.clan-cli.propagatedBuildInputs
           ];
 
           installPhase = ''
             ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json ./clan_cli/inventory/classes.py
-
-            python api.py > $out
+            mkdir -p $out
+            python api.py > $out/API.json
+            ${self'.packages.json2ts}/bin/json2ts --input $out/API.json > $out/API.ts
           '';
+        };
+        json2ts = pkgs.buildNpmPackage {
+          name = "json2ts";
+          src = pkgs.fetchFromGitHub {
+            owner = "bcherny";
+            repo = "json-schema-to-typescript";
+            rev = "118d6a8e7a5a9397d1d390ce297f127ae674a623";
+            hash = "sha256-ldAFfw3E0A0lIJyDSsshgPRPR7OmV/FncPsDhC3waT8=";
+          };
+          npmDepsHash = "sha256-kLKau4SBxI9bMAd7X8/FQfCza2sYl/+0bg2LQcOQIJo=";
         };
 
         default = self'.packages.clan-cli;

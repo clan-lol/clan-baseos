@@ -1,8 +1,6 @@
-import { FromSchema } from "json-schema-to-ts";
-import { schema } from "@/api";
+import schema from "@/api/API.json" assert { type: "json" };
+import { API } from "@/api/API";
 import { nanoid } from "nanoid";
-
-export type API = FromSchema<typeof schema>;
 
 export type OperationNames = keyof API;
 export type OperationArgs<T extends OperationNames> = API[T]["arguments"];

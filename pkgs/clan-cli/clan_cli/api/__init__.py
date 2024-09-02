@@ -163,6 +163,7 @@ API.register(open_file)
             "properties": {},
         }
 
+        err_type = None
         for name, func in self._registry.items():
             hints = get_type_hints(func)
 
@@ -174,6 +175,15 @@ API.register(open_file)
             }
 
             return_type = serialized_hints.pop("return")
+
+            if err_type is None:
+                err_type = next(
+                    t
+                    for t in return_type["oneOf"]
+                    if ("error" in t["properties"]["status"]["enum"])
+                )
+
+            return_type["oneOf"][1] = {"$ref": "#/$defs/error"}
 
             sig = signature(func)
             required_args = []
@@ -195,6 +205,8 @@ API.register(open_file)
                     },
                 },
             }
+
+        api_schema["$defs"] = {"error": err_type}
 
         return api_schema
 
