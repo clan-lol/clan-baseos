@@ -1,35 +1,34 @@
 import argparse
 import json
-import os
 import sqlite3
+from pathlib import Path
 
 
-def ensure_config(path: str, db_path: str) -> None:
+def ensure_config(path: Path, db_path: Path) -> None:
     # Default JSON structure if the file doesn't exist
     default_json = {
         "misc": {
             "audio_wizard_has_been_shown": True,
-            "database_location": db_path,
+            "database_location": str(db_path),
             "viewed_server_ping_consent_message": True,
         },
         "settings_version": 1,
     }
 
     # Check if the file exists
-    if os.path.exists(path):
-        with open(path) as file:
-            data = json.load(file)
+    if path.exists():
+        data = json.loads(path.read_text())
     else:
         data = default_json
         # Create the file with default JSON structure
-        with open(path, "w") as file:
+        with path.open("w") as file:
             json.dump(data, file, indent=4)
 
     # TODO: make sure to only update the diff
     updated_data = {**default_json, **data}
 
     # Write the modified JSON object back to the file
-    with open(path, "w") as file:
+    with path.open("w") as file:
         json.dump(updated_data, file, indent=4)
 
 
@@ -206,7 +205,7 @@ if __name__ == "__main__":
     parser.add_argument("--servers")
     parser.add_argument("--username")
     parser.add_argument("--db-location")
-    parser.add_argument("--ensure-config")
+    parser.add_argument("--ensure-config", type=Path)
     args = parser.parse_args()
 
     print(args)

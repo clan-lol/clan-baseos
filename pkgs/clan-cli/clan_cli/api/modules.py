@@ -69,8 +69,8 @@ def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatte
     )
 
 
-def get_roles(module_path: str) -> None | list[str]:
-    roles_dir = Path(module_path) / "roles"
+def get_roles(module_path: Path) -> None | list[str]:
+    roles_dir = module_path / "roles"
     if not roles_dir.exists() or not roles_dir.is_dir():
         return None
 
@@ -117,14 +117,14 @@ def list_modules(base_path: str) -> dict[str, ModuleInfo]:
     """
     modules = get_modules(base_path)
     return {
-        module_name: get_module_info(module_name, module_path)
+        module_name: get_module_info(module_name, Path(module_path))
         for module_name, module_path in modules.items()
     }
 
 
 def get_module_info(
     module_name: str,
-    module_path: str,
+    module_path: Path,
 ) -> ModuleInfo:
     """
     Retrieves information about a module
@@ -136,7 +136,7 @@ def get_module_info(
             location=f"show_module_info {module_name}",
             description="Module does not exist",
         )
-    module_readme = Path(module_path) / "README.md"
+    module_readme = module_path / "README.md"
     if not module_readme.exists():
         msg = "Module not found"
         raise ClanError(
@@ -144,7 +144,7 @@ def get_module_info(
             location=f"show_module_info {module_name}",
             description="Module does not exist or doesn't have any README.md file",
         )
-    with open(module_readme) as f:
+    with module_readme.open() as f:
         readme = f.read()
         frontmatter, readme_content = extract_frontmatter(
             readme, f"{module_path}/README.md"
