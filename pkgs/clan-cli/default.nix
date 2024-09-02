@@ -151,15 +151,6 @@ python3.pkgs.buildPythonApplication {
             ${pythonWithTestDeps}/bin/python -m pytest -m "not impure and with_core" ./tests
             touch $out
           '';
-
-      check-for-breakpoints = runCommand "breakpoints" { } ''
-        if grep --include \*.py -Rq "breakpoint()" ${source}; then
-          echo "breakpoint() found in ${source}:"
-          grep --include \*.py -Rn "breakpoint()" ${source}
-          exit 1
-        fi
-        touch $out
-      '';
     };
 
   passthru.nixpkgs = nixpkgs';

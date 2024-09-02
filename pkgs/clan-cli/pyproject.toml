@@ -78,6 +78,7 @@ lint.select = [
   "N",
   "RUF",
   "TID",
+  "T100",
   "U",
 ]
 lint.ignore = ["E501", "E402", "E731", "ANN101", "ANN401", "A003"]
