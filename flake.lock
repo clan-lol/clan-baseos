@@ -40,6 +40,22 @@
         "type": "github"
       }
     },
+    "nixos-facter-modules": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1724681057,
+        "narHash": "sha256-wxx2Sh/urE3sKY/1v3tmrWTNMIQ3RoJtd7bcuqVpY2Y=",
+        "owner": "numtide",
+        "repo": "nixos-facter-modules",
+        "rev": "55088bf19810d23ca7cb86fb71516c95d97f035b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "nixos-facter-modules",
+        "type": "github"
+      }
+    },
     "nixos-images": {
       "inputs": {
         "nixos-stable": [],
@@ -81,6 +97,7 @@
       "inputs": {
         "disko": "disko",
         "flake-parts": "flake-parts",
+        "nixos-facter-modules": "nixos-facter-modules",
         "nixos-images": "nixos-images",
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix",
