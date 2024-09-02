@@ -23,12 +23,12 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
         content = {
             type = "gpt";
             partitions = {
-                boot = {
+                "${config.networking.hostName}-boot" = {
                     size = "1M";
                     type = "EF02"; # for grub MBR
                     priority = 1;
                 };
-                ESP = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
+                "${config.networking.hostName}-ESP" = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
                     size = "1G";
                     type = "EF00";
                     content = {
@@ -38,7 +38,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
                         mountOptions = [ "nofail" ];
                     };
                 };
-                zfs = {
+                "${config.networking.hostName}-root" = {
                     size = "100%";
                     content = {
                         type = "zfs";
