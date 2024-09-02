@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any
+from typing import Any, Literal
 
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run_no_stdout
@@ -64,13 +64,24 @@ class Machine:
         self.deployment["targetHost"] = value
 
     @property
-    def secret_facts_module(self) -> str:
+    def secret_facts_module(
+        self,
+    ) -> Literal[
+        "clan_cli.facts.secret_modules.sops",
+        "clan_cli.facts.secret_modules.vm",
+        "clan_cli.facts.secret_modules.password_store",
+    ]:
         return self.deployment["facts"]["secretModule"]
 
     @property
-    def public_facts_module(self) -> str:
+    def public_facts_module(
+        self,
+    ) -> Literal[
+        "clan_cli.facts.public_modules.in_repo", "clan_cli.facts.public_modules.vm"
+    ]:
         return self.deployment["facts"]["publicModule"]
 
+    # WIP: Vars module is not ready yet.
     @property
     def secret_vars_module(self) -> str:
         return self.deployment["vars"]["secretModule"]

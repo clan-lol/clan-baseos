@@ -57,10 +57,12 @@ export const Flash = () => {
   });
 
   const addWifiNetwork = () => {
-    const updatedNetworks = [...wifiNetworks(), { ssid: "", password: "" }];
-    setWifiNetworks(updatedNetworks);
-    setPasswordVisibility([...passwordVisibility(), false]);
-    setValue(formStore, "wifi", updatedNetworks);
+    setWifiNetworks((c) => {
+      const res = [...c, { ssid: "", password: "" }];
+      setValue(formStore, "wifi", res);
+      return res;
+    });
+    setPasswordVisibility((c) => [...c, false]);
   };
 
   const removeWifiNetwork = (index: number) => {
@@ -153,10 +155,7 @@ export const Flash = () => {
           language: values.language,
           keymap: values.keymap,
           ssh_keys_path: values.sshKeys.map((file) => file.name),
-          wifi_settings: values.wifi.map((network) => ({
-            ssid: network.ssid,
-            password: network.password,
-          })),
+          wifi_settings: values.wifi,
         },
         dry_run: false,
         write_efi_boot_entries: false,
