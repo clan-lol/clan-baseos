@@ -6,6 +6,8 @@ let
     documentation.nixos.enable = true;
     documentation.nixos.extraModules = [
       self.nixosModules.clanCore
+      # This is the only option that is not part of the
+      # module because it is usually set by flake-parts
       { clan.core.clanDir = ./.; }
     ];
   };
