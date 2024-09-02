@@ -122,7 +122,7 @@ class Programs:
     @classmethod
     def is_allowed(cls: type["Programs"], program: str) -> bool:
         if cls.allowed_programs is None:
-            with open(Path(__file__).parent / "allowed-programs.json") as f:
+            with (Path(__file__).parent / "allowed-programs.json").open() as f:
                 cls.allowed_programs = json.load(f)
         return program in cls.allowed_programs
 

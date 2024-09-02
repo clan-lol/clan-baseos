@@ -16,7 +16,7 @@ def extract_public_key(filepath: Path) -> str:
     Extracts the public key from a given text file.
     """
     try:
-        with open(filepath) as file:
+        with filepath.open() as file:
             for line in file:
                 # Check if the line contains the public key
                 if line.startswith("# public key:"):

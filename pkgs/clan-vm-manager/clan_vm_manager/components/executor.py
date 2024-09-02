@@ -64,7 +64,7 @@ def _init_proc(
     os.setsid()
 
     # Open stdout and stderr
-    with open(out_file, "w") as out_fd:
+    with out_file.open("w") as out_fd:
         os.dup2(out_fd.fileno(), sys.stdout.fileno())
         os.dup2(out_fd.fileno(), sys.stderr.fileno())
 

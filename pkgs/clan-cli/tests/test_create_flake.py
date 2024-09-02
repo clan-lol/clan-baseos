@@ -33,10 +33,9 @@ def test_create_flake(
     # create a hardware-configuration.nix that doesn't throw an eval error
 
     for patch_machine in ["jon", "sara"]:
-        with open(
-            flake_dir / "machines" / f"{patch_machine}/hardware-configuration.nix", "w"
-        ) as hw_config_nix:
-            hw_config_nix.write("{}")
+        (
+            flake_dir / "machines" / f"{patch_machine}/hardware-configuration.nix"
+        ).write_text("{}")
 
     with capture_output as output:
         cli.run(["machines", "list"])

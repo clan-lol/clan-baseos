@@ -1,5 +1,4 @@
 import argparse
-import os
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -20,7 +19,7 @@ def secret_name_type(arg_value: str) -> str:
 
 
 def public_or_private_age_key_type(arg_value: str) -> str:
-    if os.path.isfile(arg_value):
+    if Path(arg_value).is_file():
         arg_value = Path(arg_value).read_text().strip()
     if arg_value.startswith("age1"):
         return arg_value.strip()

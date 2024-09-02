@@ -28,6 +28,7 @@ lint.select = [
   "N",
   "PIE",
   "PT",
+  "PTH",
   "PYI",
   "Q",
   "RET",
