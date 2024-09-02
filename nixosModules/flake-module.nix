@@ -14,7 +14,6 @@
       inputs.sops-nix.nixosModules.sops
       inputs.disko.nixosModules.default
       ./clanCore
-      ./iso
       (
         { pkgs, lib, ... }:
         {

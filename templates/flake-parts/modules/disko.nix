@@ -11,12 +11,12 @@
         content = {
           type = "gpt";
           partitions = {
-            boot = {
+            "${config.networking.hostName}-boot" = {
               size = "1M";
               type = "EF02"; # for grub MBR
               priority = 1;
             };
-            ESP = {
+            "${config.networking.hostName}-ESP" = {
               size = "512M";
               type = "EF00";
               content = {
@@ -25,7 +25,7 @@
                 mountpoint = "/boot";
               };
             };
-            root = {
+            "${config.networking.hostName}-root" = {
               size = "100%";
               content = {
                 type = "filesystem";
