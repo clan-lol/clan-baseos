@@ -3,13 +3,12 @@ from pathlib import Path
 
 import pytest
 from age_keys import SopsSetup
+from clan_cli.nix import nix_eval, run
 from fixtures_flakes import generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
 from helpers.vms import qga_connect, run_vm_in_thread, wait_vm_down
 from root import CLAN_CORE
-
-from clan_cli.nix import nix_eval, run
 
 
 @pytest.mark.impure

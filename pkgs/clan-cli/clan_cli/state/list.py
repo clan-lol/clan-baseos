@@ -34,8 +34,9 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
         proc = run_no_stdout(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
+        msg = "Clan might not have meta attributes"
         raise ClanError(
-            "Clan might not have meta attributes",
+            msg,
             location=f"show_clan {uri}",
             description="Evaluation failed on clanInternals.meta attribute",
         ) from e
@@ -45,8 +46,9 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
         if state_info := state.get(service):
             state = {service: state_info}
         else:
+            msg = f"Service {service} isn't configured for this machine."
             raise ClanError(
-                f"Service {service} isn't configured for this machine.",
+                msg,
                 location=f"clan state list {machine} --service {service}",
                 description=f"The service: {service} needs to be configured for the machine.",
             )

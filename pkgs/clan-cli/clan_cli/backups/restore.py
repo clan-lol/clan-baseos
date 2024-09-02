@@ -32,9 +32,8 @@ def restore_service(machine: Machine, name: str, provider: str, service: str) ->
             extra_env=env,
         )
         if proc.returncode != 0:
-            raise ClanError(
-                f"failed to run preRestoreCommand: {pre_restore}, error was: {proc.stdout}"
-            )
+            msg = f"failed to run preRestoreCommand: {pre_restore}, error was: {proc.stdout}"
+            raise ClanError(msg)
 
     proc = machine.target_host.run(
         [backup_metadata["providers"][provider]["restore"]],
@@ -42,9 +41,8 @@ def restore_service(machine: Machine, name: str, provider: str, service: str) ->
         extra_env=env,
     )
     if proc.returncode != 0:
-        raise ClanError(
-            f"failed to restore backup: {backup_metadata['providers'][provider]['restore']}"
-        )
+        msg = f"failed to restore backup: {backup_metadata['providers'][provider]['restore']}"
+        raise ClanError(msg)
 
     if post_restore := backup_folders[service]["postRestoreCommand"]:
         proc = machine.target_host.run(
@@ -53,9 +51,8 @@ def restore_service(machine: Machine, name: str, provider: str, service: str) ->
             extra_env=env,
         )
         if proc.returncode != 0:
-            raise ClanError(
-                f"failed to run postRestoreCommand: {post_restore}, error was: {proc.stdout}"
-            )
+            msg = f"failed to run postRestoreCommand: {post_restore}, error was: {proc.stdout}"
+            raise ClanError(msg)
 
 
 def restore_backup(
@@ -85,7 +82,8 @@ def restore_backup(
 
 def restore_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     machine = Machine(name=args.machine, flake=args.flake)
     restore_backup(
         machine=machine,

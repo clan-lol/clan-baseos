@@ -120,9 +120,8 @@ def add_member(
     user_target = group_folder / name
     if user_target.exists():
         if not user_target.is_symlink():
-            raise ClanError(
-                f"Cannot add user {name}. {user_target} exists but is not a symlink"
-            )
+            msg = f"Cannot add user {name}. {user_target} exists but is not a symlink"
+            raise ClanError(msg)
         os.remove(user_target)
     user_target.symlink_to(os.path.relpath(source, user_target.parent))
     return update_group_keys(flake_dir, group_folder.parent.name)

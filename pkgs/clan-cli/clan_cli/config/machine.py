@@ -89,7 +89,8 @@ def config_for_machine(flake_dir: Path, machine_name: str) -> dict:
 def set_config_for_machine(flake_dir: Path, machine_name: str, config: dict) -> None:
     hostname_regex = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)$"
     if not re.match(hostname_regex, machine_name):
-        raise ClanError("Machine name must be a valid hostname")
+        msg = "Machine name must be a valid hostname"
+        raise ClanError(msg)
     if "networking" in config and "hostName" in config["networking"]:
         if machine_name != config["networking"]["hostName"]:
             raise ClanHttpError(

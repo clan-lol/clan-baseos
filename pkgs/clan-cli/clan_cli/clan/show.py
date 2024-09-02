@@ -27,8 +27,9 @@ def show_clan_meta(uri: str | Path) -> Meta:
         proc = run_no_stdout(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
+        msg = "Evaluation failed on meta attribute"
         raise ClanError(
-            "Evaluation failed on meta attribute",
+            msg,
             location=f"show_clan {uri}",
             description=str(e.cmd),
         ) from e
@@ -45,8 +46,9 @@ def show_clan_meta(uri: str | Path) -> Meta:
             icon_path = meta_icon
         elif scheme in [""]:
             if Path(meta_icon).is_absolute():
+                msg = "Invalid absolute path"
                 raise ClanError(
-                    "Invalid absolute path",
+                    msg,
                     location=f"show_clan {uri}",
                     description="Icon path must be a URL or a relative path.",
                 )
@@ -54,8 +56,9 @@ def show_clan_meta(uri: str | Path) -> Meta:
             else:
                 icon_path = str((Path(uri) / meta_icon).resolve())
         else:
+            msg = "Invalid schema"
             raise ClanError(
-                "Invalid schema",
+                msg,
                 location=f"show_clan {uri}",
                 description="Icon path must be a URL or a relative path.",
             )

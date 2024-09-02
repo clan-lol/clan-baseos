@@ -159,7 +159,8 @@ def generate_machine_hardware_info(
     if out.returncode != 0:
         log.error(f"Failed to inspect {machine_name}. Address: {hostname}")
         log.error(out)
-        raise ClanError(f"Failed to inspect {machine_name}. Address: {hostname}")
+        msg = f"Failed to inspect {machine_name}. Address: {hostname}"
+        raise ClanError(msg)
 
     hw_file = Path(
         f"{clan_dir}/machines/{machine_name}/{hw_nix_file if report_type == 'nixos-generate-config' else facter_file}"
@@ -170,8 +171,9 @@ def generate_machine_hardware_info(
     is_template = hw_file.exists() and "throw" in hw_file.read_text()
 
     if hw_file.exists() and not force and not is_template:
+        msg = "File exists."
         raise ClanError(
-            "File exists.",
+            msg,
             description="Hardware file already exists. To force overwrite the existing configuration use '--force'.",
             location=f"{__name__} {hw_file}",
         )
@@ -205,8 +207,9 @@ def generate_machine_hardware_info(
             backup_file.replace(hw_file)
         # TODO: Undo the commit
 
+        msg = "Invalid hardware-configuration.nix file"
         raise ClanError(
-            "Invalid hardware-configuration.nix file",
+            msg,
             description="The hardware-configuration.nix file is invalid. Please check the file and try again.",
             location=f"{__name__} {hw_file}",
         ) from e

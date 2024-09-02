@@ -110,5 +110,6 @@ def machine_schema(
             env=env,
         )
     if proc.returncode != 0:
-        raise ClanError(f"Failed to read schema:\n{proc.stderr}")
+        msg = f"Failed to read schema:\n{proc.stderr}"
+        raise ClanError(msg)
     return json.loads(proc.stdout)

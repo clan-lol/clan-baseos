@@ -126,7 +126,8 @@ def add_app(
 def get_moonlight_certificate() -> str:
     config = load_state()
     if config is None:
-        raise FileNotFoundError("Moonlight state file not found.")
+        msg = "Moonlight state file not found."
+        raise FileNotFoundError(msg)
     certificate = config.get("General", "certificate")
     certificate = convert_bytearray_to_string(certificate)
     return certificate

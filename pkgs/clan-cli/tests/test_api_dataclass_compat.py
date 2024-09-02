@@ -82,14 +82,17 @@ def load_dataclass_from_file(
         sys.path.insert(0, root_dir)
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         if not spec:
-            raise ClanError(f"Could not load spec from file: {file_path}")
+            msg = f"Could not load spec from file: {file_path}"
+            raise ClanError(msg)
 
         module = importlib.util.module_from_spec(spec)
         if not module:
-            raise ClanError(f"Could not create module: {file_path}")
+            msg = f"Could not create module: {file_path}"
+            raise ClanError(msg)
 
         if not spec.loader:
-            raise ClanError(f"Could not load loader from spec: {spec}")
+            msg = f"Could not load loader from spec: {spec}"
+            raise ClanError(msg)
 
         spec.loader.exec_module(module)
 
@@ -100,7 +103,8 @@ def load_dataclass_from_file(
     if dataclass_type and is_dataclass(dataclass_type):
         return dataclass_type
 
-    raise ClanError(f"Could not load dataclass {class_name} from file: {file_path}")
+    msg = f"Could not load dataclass {class_name} from file: {file_path}"
+    raise ClanError(msg)
 
 
 def test_all_dataclasses() -> None:
@@ -132,8 +136,7 @@ def test_all_dataclasses() -> None:
             type_to_dict(dclass)
         except JSchemaTypeError as e:
             print(f"Error loading dataclass {dataclass} from {file}: {e}")
-            raise ClanError(
-                f"""
+            msg = f"""
 --------------------------------------------------------------------------------
 Error converting dataclass 'class {dataclass}()' from {file}
 
@@ -144,6 +147,8 @@ Help:
 - Converting public fields to PRIVATE by prefixing them with underscore ('_')
 - Ensure all private fields are initialized the API wont provide initial values for them.
 --------------------------------------------------------------------------------
-""",
+"""
+            raise ClanError(
+                msg,
                 location=__file__,
             ) from e

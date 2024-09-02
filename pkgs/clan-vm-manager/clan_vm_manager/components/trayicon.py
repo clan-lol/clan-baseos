@@ -350,9 +350,8 @@ class StatusNotifierImplementation(BaseImplementation):
             )
 
             if not registration_id:
-                raise GLib.Error(
-                    f"Failed to register object with path {self._object_path}"
-                )
+                msg = f"Failed to register object with path {self._object_path}"
+                raise GLib.Error(msg)
 
             self._registration_id = registration_id
 
@@ -582,9 +581,8 @@ class StatusNotifierImplementation(BaseImplementation):
 
         except GLib.Error as error:
             self.unload()
-            raise ImplUnavailableError(
-                f"StatusNotifier implementation not available: {error}"
-            ) from error
+            msg = f"StatusNotifier implementation not available: {error}"
+            raise ImplUnavailableError(msg) from error
 
         self.update_menu()
 

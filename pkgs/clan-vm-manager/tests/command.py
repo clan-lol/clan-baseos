@@ -17,12 +17,14 @@ class Command:
     def run(
         self,
         command: list[str],
-        extra_env: dict[str, str] = {},
+        extra_env: dict[str, str] | None = None,
         stdin: _FILE = None,
         stdout: _FILE = None,
         stderr: _FILE = None,
         workdir: Path | None = None,
     ) -> subprocess.Popen[str]:
+        if extra_env is None:
+            extra_env = {}
         env = os.environ.copy()
         env.update(extra_env)
         # We start a new session here so that we can than more reliably kill all childs as well

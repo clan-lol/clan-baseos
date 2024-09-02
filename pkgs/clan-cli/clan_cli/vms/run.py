@@ -60,7 +60,8 @@ def build_vm(
         vm_data["secrets_dir"] = str(secrets_dir)
         return vm_data
     except json.JSONDecodeError as e:
-        raise ClanError(f"Failed to parse vm config: {e}") from e
+        msg = f"Failed to parse vm config: {e}"
+        raise ClanError(msg) from e
 
 
 def get_secrets(

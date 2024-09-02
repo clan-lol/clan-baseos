@@ -71,9 +71,11 @@ class ZerotierController:
         self,
         path: str,
         method: str = "GET",
-        headers: dict[str, str] = {},
+        headers: dict[str, str] | None = None,
         data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        if headers is None:
+            headers = {}
         body = None
         headers = headers.copy()
         if data is not None:
@@ -88,7 +90,9 @@ class ZerotierController:
     def status(self) -> dict[str, Any]:
         return self._http_request("/status")
 
-    def create_network(self, data: dict[str, Any] = {}) -> dict[str, Any]:
+    def create_network(self, data: dict[str, Any] | None = None) -> dict[str, Any]:
+        if data is None:
+            data = {}
         return self._http_request(
             f"/controller/network/{self.identity.node_id()}______",
             method="POST",
@@ -104,7 +108,8 @@ def zerotier_controller() -> Iterator[ZerotierController]:
     # This check could be racy but it's unlikely in practice
     controller_port = find_free_port()
     if controller_port is None:
-        raise ClanError("cannot find a free port for zerotier controller")
+        msg = "cannot find a free port for zerotier controller"
+        raise ClanError(msg)
 
     with TemporaryDirectory() as d:
         tempdir = Path(d)
@@ -128,9 +133,10 @@ def zerotier_controller() -> Iterator[ZerotierController]:
                 while not try_connect_port(controller_port):
                     status = p.poll()
                     if status is not None:
-                        raise ClanError(
+                        msg = (
                             f"zerotier-one has been terminated unexpected with {status}"
                         )
+                        raise ClanError(msg)
                     time.sleep(0.1)
                 print()
 
@@ -209,7 +215,8 @@ def main() -> None:
     match args.mode:
         case "network":
             if args.network_id is None:
-                raise ValueError("network_id parameter is required")
+                msg = "network_id parameter is required"
+                raise ValueError(msg)
             controller = create_network_controller()
             identity = controller.identity
             network_id = controller.networkid
@@ -218,7 +225,8 @@ def main() -> None:
             identity = create_identity()
             network_id = args.network_id
         case _:
-            raise ValueError(f"unknown mode {args.mode}")
+            msg = f"unknown mode {args.mode}"
+            raise ValueError(msg)
     ip = compute_zerotier_ip(network_id, identity)
 
     args.identity_secret.write_text(identity.private)

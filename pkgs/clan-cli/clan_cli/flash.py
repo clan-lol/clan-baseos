@@ -44,7 +44,8 @@ def list_possible_keymaps() -> list[str]:
     keymaps_dir = Path(result.stdout.strip()) / "share" / "keymaps"
 
     if not keymaps_dir.exists():
-        raise FileNotFoundError(f"Keymaps directory '{keymaps_dir}' does not exist.")
+        msg = f"Keymaps directory '{keymaps_dir}' does not exist."
+        raise FileNotFoundError(msg)
 
     keymap_files = []
 
@@ -65,7 +66,8 @@ def list_possible_languages() -> list[str]:
     locale_file = Path(result.stdout.strip()) / "share" / "i18n" / "SUPPORTED"
 
     if not locale_file.exists():
-        raise FileNotFoundError(f"Locale file '{locale_file}' does not exist.")
+        msg = f"Locale file '{locale_file}' does not exist."
+        raise FileNotFoundError(msg)
 
     with locale_file.open() as f:
         lines = f.readlines()
@@ -107,18 +109,20 @@ def flash_machine(
 
     if system_config.language:
         if system_config.language not in list_possible_languages():
-            raise ClanError(
+            msg = (
                 f"Language '{system_config.language}' is not a valid language. "
                 f"Run 'clan flash --list-languages' to see a list of possible languages."
             )
+            raise ClanError(msg)
         system_config_nix["i18n"] = {"defaultLocale": system_config.language}
 
     if system_config.keymap:
         if system_config.keymap not in list_possible_keymaps():
-            raise ClanError(
+            msg = (
                 f"Keymap '{system_config.keymap}' is not a valid keymap. "
                 f"Run 'clan flash --list-keymaps' to see a list of possible keymaps."
             )
+            raise ClanError(msg)
         system_config_nix["console"] = {"keyMap": system_config.keymap}
 
     if system_config.ssh_keys_path:
@@ -127,9 +131,8 @@ def flash_machine(
             try:
                 root_keys.append(key_path.read_text())
             except OSError as e:
-                raise ClanError(
-                    f"Cannot read SSH public key file: {key_path}: {e}"
-                ) from e
+                msg = f"Cannot read SSH public key file: {key_path}: {e}"
+                raise ClanError(msg) from e
         system_config_nix["users"] = {
             "users": {"root": {"openssh": {"authorizedKeys": {"keys": root_keys}}}}
         }
@@ -153,9 +156,8 @@ def flash_machine(
 
         if os.geteuid() != 0:
             if shutil.which("sudo") is None:
-                raise ClanError(
-                    "sudo is required to run disko-install as a non-root user"
-                )
+                msg = "sudo is required to run disko-install as a non-root user"
+                raise ClanError(msg)
             wrapper = 'set -x; disko_install=$(command -v disko-install); exec sudo "$disko_install" "$@"'
             disko_install.extend(["bash", "-c", wrapper])
 

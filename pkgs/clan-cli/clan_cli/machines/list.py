@@ -44,7 +44,8 @@ def get_inventory_machine_details(
     inventory = load_inventory_eval(flake_url)
     machine = inventory.machines.get(machine_name)
     if machine is None:
-        raise ClanError(f"Machine {machine_name} not found in inventory")
+        msg = f"Machine {machine_name} not found in inventory"
+        raise ClanError(msg)
 
     hw_config_path = (
         Path(flake_url) / "machines" / Path(machine_name) / "hardware-configuration.nix"
@@ -73,7 +74,8 @@ def list_nixos_machines(flake_url: str | Path) -> list[str]:
         data = json.loads(res)
         return data
     except json.JSONDecodeError as e:
-        raise ClanError(f"Error decoding machines from flake: {e}") from e
+        msg = f"Error decoding machines from flake: {e}"
+        raise ClanError(msg) from e
 
 
 @dataclass
@@ -88,12 +90,14 @@ def check_machine_online(
 ) -> Literal["Online", "Offline"]:
     machine = load_inventory_eval(flake_url).machines.get(machine_name)
     if not machine:
-        raise ClanError(f"Machine {machine_name} not found in inventory")
+        msg = f"Machine {machine_name} not found in inventory"
+        raise ClanError(msg)
 
     hostname = machine.deploy.targetHost
 
     if not hostname:
-        raise ClanError(f"Machine {machine_name} does not specify a targetHost")
+        msg = f"Machine {machine_name} does not specify a targetHost"
+        raise ClanError(msg)
 
     timeout = opts.timeout if opts and opts.timeout else 20
 

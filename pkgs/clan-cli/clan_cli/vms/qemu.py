@@ -169,7 +169,8 @@ class QMPWrapper:
     def qmp_ctx(self) -> Generator[QEMUMonitorProtocol, None, None]:
         rpath = self._qmp_socket.resolve()
         if not rpath.exists():
-            raise ClanError(f"qmp socket {rpath} does not exist. Is the VM running?")
+            msg = f"qmp socket {rpath} does not exist. Is the VM running?"
+            raise ClanError(msg)
         qmp = QEMUMonitorProtocol(str(rpath))
         qmp.connect()
         try:

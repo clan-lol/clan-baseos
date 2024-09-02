@@ -8,8 +8,10 @@ from typing import Any
 
 # Function to map JSON schemas and types to Python types
 def map_json_type(
-    json_type: Any, nested_types: set[str] = {"Any"}, parent: Any = None
+    json_type: Any, nested_types: set[str] | None = None, parent: Any = None
 ) -> set[str]:
+    if nested_types is None:
+        nested_types = {"Any"}
     if isinstance(json_type, list):
         res = set()
         for t in json_type:
@@ -32,7 +34,8 @@ def map_json_type(
     elif json_type == "null":
         return {"None"}
     else:
-        raise ValueError(f"Python type not found for {json_type}")
+        msg = f"Python type not found for {json_type}"
+        raise ValueError(msg)
 
 
 known_classes = set()
@@ -67,8 +70,7 @@ def field_def_from_default_type(
         # PackagesConfig
         # ...
         # Config classes MUST always be optional
-        raise ValueError(
-            f"""
+        msg = f"""
             #################################################
             Clan module '{class_name}' specifies a top-level option '{field_name}' without a default value.
 
@@ -96,7 +98,7 @@ def field_def_from_default_type(
             Or report this problem to the clan team. So the class generator can be improved.
             #################################################
             """
-        )
+        raise ValueError(msg)
 
     return None
 
@@ -147,9 +149,8 @@ def field_def_from_default_value(
         )
     else:
         # Other default values unhandled yet.
-        raise ValueError(
-            f"Unhandled default value for field '{field_name}' - default value: {default_value}"
-        )
+        msg = f"Unhandled default value for field '{field_name}' - default value: {default_value}"
+        raise ValueError(msg)
 
 
 def get_field_def(
@@ -200,7 +201,8 @@ def generate_dataclass(schema: dict[str, Any], class_name: str = root_class) -> 
         nested_class_name = f"""{class_name if class_name != root_class and not prop_info.get("title") else ""}{title_sanitized}"""
 
         if (prop_type is None) and (not union_variants):
-            raise ValueError(f"Type not found for property {prop} {prop_info}")
+            msg = f"Type not found for property {prop} {prop_info}"
+            raise ValueError(msg)
 
         if union_variants:
             field_types = map_json_type(union_variants)

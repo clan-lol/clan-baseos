@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from clan_cli import config
 from clan_cli.config import parsing
 from clan_cli.errors import ClanError

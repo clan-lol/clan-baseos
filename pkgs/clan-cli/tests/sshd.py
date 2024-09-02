@@ -133,5 +133,6 @@ def sshd(
         else:
             rc = proc.poll()
             if rc is not None:
-                raise Exception(f"sshd processes was terminated with {rc}")
+                msg = f"sshd processes was terminated with {rc}"
+                raise Exception(msg)
             time.sleep(0.1)

@@ -39,7 +39,8 @@ def remove_object(path: Path, name: str) -> list[Path]:
         shutil.rmtree(path / name)
         paths_to_commit.append(path / name)
     except FileNotFoundError as e:
-        raise ClanError(f"{name} not found in {path}") from e
+        msg = f"{name} not found in {path}"
+        raise ClanError(msg) from e
     if not os.listdir(path):
         os.rmdir(path)
     return paths_to_commit

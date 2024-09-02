@@ -22,24 +22,28 @@ def create_backup(machine: Machine, provider: str | None = None) -> None:
                 [backup_scripts["providers"][provider]["create"]],
             )
             if proc.returncode != 0:
-                raise ClanError("failed to start backup")
+                msg = "failed to start backup"
+                raise ClanError(msg)
             else:
                 print("successfully started backup")
     else:
         if provider not in backup_scripts["providers"]:
-            raise ClanError(f"provider {provider} not found")
+            msg = f"provider {provider} not found"
+            raise ClanError(msg)
         proc = machine.target_host.run(
             [backup_scripts["providers"][provider]["create"]],
         )
         if proc.returncode != 0:
-            raise ClanError("failed to start backup")
+            msg = "failed to start backup"
+            raise ClanError(msg)
         else:
             print("successfully started backup")
 
 
 def create_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     machine = Machine(name=args.machine, flake=args.flake)
     create_backup(machine=machine, provider=args.provider)
 

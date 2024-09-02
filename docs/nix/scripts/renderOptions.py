@@ -152,12 +152,12 @@ options_head = "\n## Module Options\n"
 
 def produce_clan_core_docs() -> None:
     if not CLAN_CORE_DOCS:
-        raise ValueError(
-            f"Environment variables are not set correctly: $CLAN_CORE_DOCS={CLAN_CORE_DOCS}"
-        )
+        msg = f"Environment variables are not set correctly: $CLAN_CORE_DOCS={CLAN_CORE_DOCS}"
+        raise ValueError(msg)
 
     if not OUT:
-        raise ValueError(f"Environment variables are not set correctly: $out={OUT}")
+        msg = f"Environment variables are not set correctly: $out={OUT}"
+        raise ValueError(msg)
 
     # A mapping of output file to content
     core_outputs: dict[str, str] = {}
@@ -227,17 +227,18 @@ clan_modules_descr = """Clan modules are [NixOS modules](https://wiki.nixos.org/
 
 def produce_clan_modules_docs() -> None:
     if not CLAN_MODULES:
-        raise ValueError(
+        msg = (
             f"Environment variables are not set correctly: $CLAN_MODULES={CLAN_MODULES}"
         )
+        raise ValueError(msg)
 
     if not CLAN_CORE_PATH:
-        raise ValueError(
-            f"Environment variables are not set correctly: $CLAN_CORE_PATH={CLAN_CORE_PATH}"
-        )
+        msg = f"Environment variables are not set correctly: $CLAN_CORE_PATH={CLAN_CORE_PATH}"
+        raise ValueError(msg)
 
     if not OUT:
-        raise ValueError(f"Environment variables are not set correctly: $out={OUT}")
+        msg = f"Environment variables are not set correctly: $out={OUT}"
+        raise ValueError(msg)
 
     with open(CLAN_MODULES) as f:
         links: dict[str, str] = json.load(f)

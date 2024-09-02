@@ -122,9 +122,8 @@ def type_to_dict(
         # And return the resolved type instead of the TypeVar
         resolved = type_map.get(t)
         if not resolved:
-            raise JSchemaTypeError(
-                f"{scope} - TypeVar {t} not found in type_map, map: {type_map}"
-            )
+            msg = f"{scope} - TypeVar {t} not found in type_map, map: {type_map}"
+            raise JSchemaTypeError(msg)
         return type_to_dict(type_map.get(t), scope, type_map)
 
     elif hasattr(t, "__origin__"):  # Check if it's a generic type
@@ -134,7 +133,8 @@ def type_to_dict(
         if origin is None:
             # Non-generic user-defined or built-in type
             # TODO: handle custom types
-            raise JSchemaTypeError(f"{scope} Unhandled Type: ", origin)
+            msg = f"{scope} Unhandled Type: "
+            raise JSchemaTypeError(msg, origin)
 
         elif origin is Literal:
             # Handle Literal values for enums in JSON Schema
@@ -179,7 +179,8 @@ def type_to_dict(
             new_map.update(inspect_dataclass_fields(t))
             return type_to_dict(origin, scope, new_map)
 
-        raise JSchemaTypeError(f"{scope} - Error api type not yet supported {t!s}")
+        msg = f"{scope} - Error api type not yet supported {t!s}"
+        raise JSchemaTypeError(msg)
 
     elif isinstance(t, type):
         if t is str:
@@ -193,23 +194,23 @@ def type_to_dict(
         if t is object:
             return {"type": "object"}
         if t is Any:
-            raise JSchemaTypeError(
-                f"{scope} - Usage of the Any type is not supported for API functions. In: {scope}"
-            )
+            msg = f"{scope} - Usage of the Any type is not supported for API functions. In: {scope}"
+            raise JSchemaTypeError(msg)
         if t is pathlib.Path:
             return {
                 # TODO: maybe give it a pattern for URI
                 "type": "string",
             }
         if t is dict:
-            raise JSchemaTypeError(
-                f"{scope} - Generic 'dict' type not supported. Use dict[str, Any] or any more expressive type."
-            )
+            msg = f"{scope} - Generic 'dict' type not supported. Use dict[str, Any] or any more expressive type."
+            raise JSchemaTypeError(msg)
 
         # Optional[T] gets internally transformed Union[T,NoneType]
         if t is NoneType:
             return {"type": "null"}
 
-        raise JSchemaTypeError(f"{scope} - Error primitive type not supported {t!s}")
+        msg = f"{scope} - Error primitive type not supported {t!s}"
+        raise JSchemaTypeError(msg)
     else:
-        raise JSchemaTypeError(f"{scope} - Error type not supported {t!s}")
+        msg = f"{scope} - Error type not supported {t!s}"
+        raise JSchemaTypeError(msg)

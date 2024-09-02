@@ -51,8 +51,9 @@ def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatte
             # Parse the TOML frontmatter
             frontmatter_parsed = tomllib.loads(frontmatter_raw)
         except tomllib.TOMLDecodeError as e:
+            msg = f"Error parsing TOML frontmatter: {e}"
             raise ClanError(
-                f"Error parsing TOML frontmatter: {e}",
+                msg,
                 description=f"Invalid TOML frontmatter. {err_scope}",
                 location="extract_frontmatter",
             ) from e
@@ -60,8 +61,9 @@ def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatte
         return Frontmatter(**frontmatter_parsed), remaining_content
 
     # If no frontmatter is found, raise an error
+    msg = "Invalid README: Frontmatter not found."
     raise ClanError(
-        "Invalid README: Frontmatter not found.",
+        msg,
         location="extract_frontmatter",
         description=f"{err_scope} does not contain valid frontmatter.",
     )
@@ -98,8 +100,9 @@ def get_modules(base_path: str) -> dict[str, str]:
         proc = run_no_stdout(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
+        msg = "clanInternals might not have clanModules attributes"
         raise ClanError(
-            "clanInternals might not have clanModules attributes",
+            msg,
             location=f"list_modules {base_path}",
             description="Evaluation failed on clanInternals.clanModules attribute",
         ) from e
@@ -127,15 +130,17 @@ def get_module_info(
     Retrieves information about a module
     """
     if not module_path:
+        msg = "Module not found"
         raise ClanError(
-            "Module not found",
+            msg,
             location=f"show_module_info {module_name}",
             description="Module does not exist",
         )
     module_readme = Path(module_path) / "README.md"
     if not module_readme.exists():
+        msg = "Module not found"
         raise ClanError(
-            "Module not found",
+            msg,
             location=f"show_module_info {module_name}",
             description="Module does not exist or doesn't have any README.md file",
         )
@@ -170,9 +175,8 @@ def set_service_instance(
     service_keys = get_type_hints(Service).keys()
 
     if module_name not in service_keys:
-        raise ValueError(
-            f"{module_name} is not a valid Service attribute. Expected one of {', '.join(service_keys)}."
-        )
+        msg = f"{module_name} is not a valid Service attribute. Expected one of {', '.join(service_keys)}."
+        raise ValueError(msg)
 
     inventory = load_inventory_json(base_path)
     target_type = get_args(get_type_hints(Service)[module_name])[1]

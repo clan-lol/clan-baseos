@@ -2,12 +2,11 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
+from clan_cli.dirs import user_history_file
+from clan_cli.history.add import HistoryEntry
 from fixtures_flakes import FlakeForTest
 from helpers import cli
 from stdout import CaptureOutput
-
-from clan_cli.dirs import user_history_file
-from clan_cli.history.add import HistoryEntry
 
 if TYPE_CHECKING:
     pass

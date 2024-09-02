@@ -31,9 +31,8 @@ class FactStore(FactStoreBase):
             fact_path.write_bytes(value)
             return fact_path
         else:
-            raise ClanError(
-                f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
-            )
+            msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
+            raise ClanError(msg)
 
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
         return self._var_path(generator_name, name, shared).exists()

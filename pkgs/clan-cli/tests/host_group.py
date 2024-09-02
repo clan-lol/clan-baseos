@@ -2,9 +2,8 @@ import os
 import pwd
 
 import pytest
-from sshd import Sshd
-
 from clan_cli.ssh import Host, HostGroup, HostKeyCheck
+from sshd import Sshd
 
 
 @pytest.fixture

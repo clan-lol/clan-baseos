@@ -258,14 +258,16 @@ class ClanList(Gtk.Box):
     def show_vm_build_logs(self, target: str) -> None:
         vm = ClanStore.use().set_logging_vm(target)
         if vm is None:
-            raise ValueError(f"VM {target} not found")
+            msg = f"VM {target} not found"
+            raise ValueError(msg)
 
         views = ViewStack.use().view
         # Reset the logs view
         logs: Logs = views.get_child_by_name("logs")  # type: ignore
 
         if logs is None:
-            raise ValueError("Logs view not found")
+            msg = "Logs view not found"
+            raise ValueError(msg)
 
         name = vm.machine.name if vm.machine else "Unknown"
 

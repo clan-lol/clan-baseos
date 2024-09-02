@@ -195,7 +195,8 @@ def prompt_func(description: str, input_type: str) -> str:
     elif input_type == "hidden":
         result = getpass(f"Enter the value for {description} (hidden): ")
     else:
-        raise ClanError(f"Unknown input type: {input_type} for prompt {description}")
+        msg = f"Unknown input type: {input_type} for prompt {description}"
+        raise ClanError(msg)
     log.info("Input received. Processing...")
     return result
 
@@ -226,9 +227,8 @@ def _generate_vars_for_machine(
 
     if generator_name and generator_name not in machine.vars_generators:
         generators = list(machine.vars_generators.keys())
-        raise ClanError(
-            f"Could not find generator with name: {generator_name}. The following generators are available: {generators}"
-        )
+        msg = f"Could not find generator with name: {generator_name}. The following generators are available: {generators}"
+        raise ClanError(msg)
 
     graph = {
         gen_name: set(generator["dependencies"])
@@ -243,9 +243,8 @@ def _generate_vars_for_machine(
     for gen_name, dependencies in graph.items():
         for dep in dependencies:
             if dep not in graph:
-                raise ClanError(
-                    f"Generator {gen_name} has a dependency on {dep}, which does not exist"
-                )
+                msg = f"Generator {gen_name} has a dependency on {dep}, which does not exist"
+                raise ClanError(msg)
 
     # process generators in topological order
     sorter = TopologicalSorter(graph)
@@ -280,9 +279,8 @@ def generate_vars(
             log.error(f"Failed to generate facts for {machine.name}: {exc}")
             errors += [exc]
         if len(errors) > 0:
-            raise ClanError(
-                f"Failed to generate facts for {len(errors)} hosts. Check the logs above"
-            ) from errors[0]
+            msg = f"Failed to generate facts for {len(errors)} hosts. Check the logs above"
+            raise ClanError(msg) from errors[0]
 
     if not was_regenerated:
         print("All secrets and facts are already up to date")

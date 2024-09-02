@@ -38,12 +38,14 @@ def set_admin_service(
     inventory = load_inventory_eval(base_url)
 
     if not allowed_keys:
-        raise ValueError("At least one key must be provided to ensure access")
+        msg = "At least one key must be provided to ensure access"
+        raise ValueError(msg)
 
     keys = {}
     for name, keyfile in allowed_keys.items():
         if not keyfile.startswith("/"):
-            raise ValueError(f"Keyfile '{keyfile}' must be an absolute path")
+            msg = f"Keyfile '{keyfile}' must be an absolute path"
+            raise ValueError(msg)
         with open(keyfile) as f:
             pubkey = f.read()
             keys[name] = pubkey

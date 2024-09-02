@@ -46,7 +46,8 @@ def test_timeout(host_group: HostGroup) -> None:
     except Exception:
         pass
     else:
-        raise AssertionError("should have raised TimeoutExpired")
+        msg = "should have raised TimeoutExpired"
+        raise AssertionError(msg)
 
 
 def test_run_exception(host_group: HostGroup) -> None:
@@ -58,7 +59,8 @@ def test_run_exception(host_group: HostGroup) -> None:
     except Exception:
         pass
     else:
-        raise AssertionError("should have raised Exception")
+        msg = "should have raised Exception"
+        raise AssertionError(msg)
 
 
 def test_run_function_exception(host_group: HostGroup) -> None:
@@ -70,4 +72,5 @@ def test_run_function_exception(host_group: HostGroup) -> None:
     except Exception:
         pass
     else:
-        raise AssertionError("should have raised Exception")
+        msg = "should have raised Exception"
+        raise AssertionError(msg)

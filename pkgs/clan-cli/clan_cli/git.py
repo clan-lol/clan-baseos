@@ -32,7 +32,8 @@ def commit_files(
     # check that the file is in the git repository
     for file_path in file_paths:
         if not Path(file_path).resolve().is_relative_to(repo_dir.resolve()):
-            raise ClanError(f"File {file_path} is not in the git repository {repo_dir}")
+            msg = f"File {file_path} is not in the git repository {repo_dir}"
+            raise ClanError(msg)
     # generate commit message if not provided
     if commit_message is None:
         commit_message = ""

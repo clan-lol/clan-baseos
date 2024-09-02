@@ -161,9 +161,8 @@ def _generate_facts_for_machine(
 
     if service and service not in machine.facts_data:
         services = list(machine.facts_data.keys())
-        raise ClanError(
-            f"Could not find service with name: {service}. The following services are available: {services}"
-        )
+        msg = f"Could not find service with name: {service}. The following services are available: {services}"
+        raise ClanError(msg)
 
     if service:
         machine_service_facts = {service: machine.facts_data[service]}

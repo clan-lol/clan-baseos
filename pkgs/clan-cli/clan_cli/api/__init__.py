@@ -85,8 +85,7 @@ class MethodRegistry:
     def register_abstract(self, fn: Callable[..., T]) -> Callable[..., T]:
         @wraps(fn)
         def wrapper(*args: Any, op_key: str, **kwargs: Any) -> ApiResponse[T]:
-            raise NotImplementedError(
-                f"""{fn.__name__} - The platform didn't implement this function.
+            msg = f"""{fn.__name__} - The platform didn't implement this function.
 
 ---
 # Example
@@ -103,16 +102,18 @@ def open_file(file_request: FileRequest) -> str | None:
 API.register(open_file)
 ---
                 """
-            )
+            raise NotImplementedError(msg)
 
         self.register(wrapper)
         return fn
 
     def register(self, fn: Callable[..., T]) -> Callable[..., T]:
         if fn.__name__ in self._registry:
-            raise ValueError(f"Function {fn.__name__} already registered")
+            msg = f"Function {fn.__name__} already registered"
+            raise ValueError(msg)
         if fn.__name__ in self._orig_signature:
-            raise ValueError(f"Function {fn.__name__} already registered")
+            msg = f"Function {fn.__name__} already registered"
+            raise ValueError(msg)
         # make copy of original function
         self._orig_signature[fn.__name__] = signature(fn)
 

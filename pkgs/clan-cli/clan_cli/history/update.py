@@ -33,7 +33,8 @@ def update_history() -> list[HistoryEntry]:
             flake = inspect_flake(uri.get_url(), uri.machine_name)
             flake.flake_url = flake.flake_url
             entry = HistoryEntry(
-                flake=flake, last_used=datetime.datetime.now().isoformat()
+                flake=flake,
+                last_used=datetime.datetime.now(tz=datetime.UTC).isoformat(),
             )
 
     write_history_file(logs)

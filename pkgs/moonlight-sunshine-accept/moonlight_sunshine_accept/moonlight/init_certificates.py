@@ -1,6 +1,7 @@
 import argparse
+import datetime
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 from cryptography import hazmat, x509
@@ -29,8 +30,10 @@ def generate_certificate(private_key: rsa.RSAPrivateKey) -> bytes:
         .issuer_name(issuer)
         .public_key(private_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.utcnow())
-        .not_valid_after(datetime.utcnow() + timedelta(days=365 * 20))
+        .not_valid_before(datetime.datetime.now(tz=datetime.UTC))
+        .not_valid_after(
+            datetime.datetime.now(tz=datetime.UTC) + timedelta(days=365 * 20)
+        )
         .add_extension(
             x509.SubjectAlternativeName([x509.DNSName("localhost")]),
             critical=False,

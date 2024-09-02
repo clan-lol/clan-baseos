@@ -34,4 +34,5 @@ class FactStore(FactStoreBase):
         fact_path = self.dir / service / name
         if fact_path.exists():
             return fact_path.read_bytes()
-        raise ClanError(f"Fact {name} for service {service} not found")
+        msg = f"Fact {name} for service {service} not found"
+        raise ClanError(msg)

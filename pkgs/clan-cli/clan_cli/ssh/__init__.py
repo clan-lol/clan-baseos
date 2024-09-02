@@ -295,7 +295,8 @@ class Host:
             elif stdout == subprocess.PIPE:
                 stdout_read, stdout_write = stack.enter_context(_pipe())
             else:
-                raise ClanError(f"unsupported value for stdout parameter: {stdout}")
+                msg = f"unsupported value for stdout parameter: {stdout}"
+                raise ClanError(msg)
 
             if stderr is None:
                 stderr_read = None
@@ -303,7 +304,8 @@ class Host:
             elif stderr == subprocess.PIPE:
                 stderr_read, stderr_write = stack.enter_context(_pipe())
             else:
-                raise ClanError(f"unsupported value for stderr parameter: {stderr}")
+                msg = f"unsupported value for stderr parameter: {stderr}"
+                raise ClanError(msg)
 
             env = os.environ.copy()
             env.update(extra_env)
@@ -355,7 +357,8 @@ class Host:
                 return subprocess.CompletedProcess(
                     cmd, ret, stdout=stdout_data, stderr=stderr_data
                 )
-        raise RuntimeError("unreachable")
+        msg = "unreachable"
+        raise RuntimeError(msg)
 
     def run_local(
         self,
@@ -624,9 +627,8 @@ class HostGroup:
                 )
                 errors += 1
         if errors > 0:
-            raise ClanError(
-                f"{errors} hosts failed with an error. Check the logs above"
-            )
+            msg = f"{errors} hosts failed with an error. Check the logs above"
+            raise ClanError(msg)
 
     def _run(
         self,
@@ -802,7 +804,8 @@ def parse_deployment_address(
             options[k] = v
     result = urllib.parse.urlsplit("//" + hostname)
     if not result.hostname:
-        raise Exception(f"Invalid hostname: {hostname}")
+        msg = f"Invalid hostname: {hostname}"
+        raise Exception(msg)
     hostname = result.hostname
     port = result.port
     meta = meta.copy()
