@@ -31,8 +31,8 @@ from typing import Any
 from clan_cli.api.modules import Frontmatter, extract_frontmatter, get_roles
 
 # Get environment variables
-CLAN_CORE_PATH = os.getenv("CLAN_CORE_PATH")
-CLAN_CORE_DOCS = os.getenv("CLAN_CORE_DOCS")
+CLAN_CORE_PATH = Path(os.environ["CLAN_CORE_PATH"])
+CLAN_CORE_DOCS = Path(os.environ["CLAN_CORE_DOCS"])
 CLAN_MODULES = os.environ.get("CLAN_MODULES")
 
 OUT = os.environ.get("out")
@@ -161,7 +161,7 @@ def produce_clan_core_docs() -> None:
 
     # A mapping of output file to content
     core_outputs: dict[str, str] = {}
-    with open(CLAN_CORE_DOCS) as f:
+    with CLAN_CORE_DOCS.open() as f:
         options: dict[str, dict[str, Any]] = json.load(f)
         module_name = "clan-core"
         for option_name, info in options.items():
@@ -189,7 +189,7 @@ def produce_clan_core_docs() -> None:
 
         for outfile, output in core_outputs.items():
             (Path(OUT) / outfile).parent.mkdir(parents=True, exist_ok=True)
-            with open(Path(OUT) / outfile, "w") as of:
+            with (Path(OUT) / outfile).open("w") as of:
                 of.write(output)
 
 
@@ -227,9 +227,7 @@ clan_modules_descr = """Clan modules are [NixOS modules](https://wiki.nixos.org/
 
 def produce_clan_modules_docs() -> None:
     if not CLAN_MODULES:
-        msg = (
-            f"Environment variables are not set correctly: $CLAN_MODULES={CLAN_MODULES}"
-        )
+        msg = f"Environment variables are not set correctly: $out={CLAN_MODULES}"
         raise ValueError(msg)
 
     if not CLAN_CORE_PATH:
@@ -240,7 +238,7 @@ def produce_clan_modules_docs() -> None:
         msg = f"Environment variables are not set correctly: $out={OUT}"
         raise ValueError(msg)
 
-    with open(CLAN_MODULES) as f:
+    with Path(CLAN_MODULES).open() as f:
         links: dict[str, str] = json.load(f)
 
     # with open(CLAN_MODULES_READMES) as readme:
@@ -258,9 +256,9 @@ def produce_clan_modules_docs() -> None:
     modules_index += '<div class="grid cards" markdown>\n\n'
 
     for module_name, options_file in links.items():
-        readme_file = Path(CLAN_CORE_PATH) / "clanModules" / module_name / "README.md"
+        readme_file = CLAN_CORE_PATH / "clanModules" / module_name / "README.md"
         print(module_name, readme_file)
-        with open(readme_file) as f:
+        with readme_file.open() as f:
             readme = f.read()
             frontmatter: Frontmatter
             frontmatter, readme_content = extract_frontmatter(readme, str(readme_file))
@@ -268,7 +266,7 @@ def produce_clan_modules_docs() -> None:
 
         modules_index += build_option_card(module_name, frontmatter)
 
-        with open(Path(options_file) / "share/doc/nixos/options.json") as f:
+        with (Path(options_file) / "share/doc/nixos/options.json").open() as f:
             options: dict[str, dict[str, Any]] = json.load(f)
             print(f"Rendering options for {module_name}...")
             output = module_header(module_name)
@@ -278,7 +276,7 @@ def produce_clan_modules_docs() -> None:
             output += f"{readme_content}\n"
 
             # get_roles(str) -> list[str] | None
-            roles = get_roles(str(Path(CLAN_CORE_PATH) / "clanModules" / module_name))
+            roles = get_roles(CLAN_CORE_PATH / "clanModules" / module_name)
             if roles:
                 output += render_roles(roles, module_name)
 
@@ -293,14 +291,14 @@ def produce_clan_modules_docs() -> None:
                 parents=True,
                 exist_ok=True,
             )
-            with open(outfile, "w") as of:
+            with outfile.open("w") as of:
                 of.write(output)
 
     modules_index += "</div>"
     modules_index += "\n"
     modules_outfile = Path(OUT) / "clanModules/index.md"
 
-    with open(modules_outfile, "w") as of:
+    with modules_outfile.open("w") as of:
         of.write(modules_index)
 
 

@@ -32,10 +32,9 @@ def listen(port: int, cert: str, uuid: str, state_file: str) -> bool:
 
         try:
             request = data.decode("utf-8")
-            body = request.split("\n")[-1]
-            print(body)
-            body = json.loads(f"{body}")
-            print(body)
+            raw_body = request.split("\n")[-1]
+            print(raw_body)
+            body = json.loads(raw_body)
 
             pair_type = body.get("type", "")
 
@@ -43,7 +42,7 @@ def listen(port: int, cert: str, uuid: str, state_file: str) -> bool:
                 print("Api request")
                 status = pair(body.get("pin", ""))
                 status = json.dumps(status)
-                response = f"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n\r\{status}\r\n"
+                response = f"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n\r\\{status}\r\n"
                 client_socket.sendall(response.encode("utf-8"))
 
             if pair_type == "native":
@@ -57,12 +56,12 @@ def listen(port: int, cert: str, uuid: str, state_file: str) -> bool:
                 encoded_cert = base64.urlsafe_b64encode(cert.encode("utf-8")).decode(
                     "utf-8"
                 )
-                json_body = {}
-                json_body["uuid"] = uuid
-                json_body["cert"] = encoded_cert
-                json_body["hostname"] = socket.gethostname()
-                json_body = json.dumps(json_body)
-                response = f"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n\r\{json_body}\r\n"
+                json_data = {}
+                json_data["uuid"] = uuid
+                json_data["cert"] = encoded_cert
+                json_data["hostname"] = socket.gethostname()
+                json_body = json.dumps(json_data)
+                response = f"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n\r\\{json_body}\r\n"
                 client_socket.sendall(response.encode("utf-8"))
                 # add_moonlight_client(decoded_cert, state_file, rec_uuid)
 

@@ -20,8 +20,7 @@ def parse_args() -> argparse.Namespace:
 
 def get_current_shell() -> str | None:
     if selected_shell_file.exists():
-        with open(selected_shell_file) as f:
-            return f.read().strip()
+        return selected_shell_file.read_text().strip()
     return None
 
 
@@ -57,7 +56,7 @@ def select_shell(shell: str) -> None:
         print(f"{shell} devshell already selected. No changes made.")
         sys.exit(0)
     else:
-        with open(selected_shell_file, "w") as f:
+        with selected_shell_file.open("w") as f:
             f.write(shell)
         print(f"{shell} devshell selected")
 

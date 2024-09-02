@@ -50,7 +50,7 @@ def private_key_to_pem(private_key: rsa.RSAPrivateKey) -> bytes:
     return pem_private_key
 
 
-def init_credentials() -> (str, str):
+def init_credentials() -> tuple[bytes, bytes]:
     private_key = generate_private_key()
     certificate = generate_certificate(private_key)
     private_key_pem = private_key_to_pem(private_key)
@@ -64,14 +64,12 @@ def uniqueid() -> str:
 def write_credentials(_args: argparse.Namespace) -> None:
     print("Writing sunshine credentials")
     pem_certificate, pem_private_key = init_credentials()
-    Path("credentials").mkdir(parents=True, exist_ok=True)
-    with open("credentials/cacert.pem", mode="wb") as file:
-        file.write(pem_certificate)
-    with open("credentials/cakey.pem", mode="wb") as file:
-        file.write(pem_private_key)
+    credentials_dir = Path("credentials")
+    credentials_dir.mkdir(parents=True, exist_ok=True)
+    (credentials_dir / "cacert.pem").write_bytes(pem_certificate)
+    (credentials_dir / "cakey.pem").write_bytes(pem_private_key)
     print("Generating sunshine UUID")
-    with open("uuid", mode="w") as file:
-        file.write(uniqueid())
+    Path("uuid").write_text(uniqueid())
 
 
 def register_initialization_parser(parser: argparse.ArgumentParser) -> None:

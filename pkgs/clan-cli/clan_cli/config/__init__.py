@@ -172,7 +172,7 @@ def get_or_set_option(args: argparse.Namespace) -> None:
                 args.flake, machine_name=args.machine, show_trace=args.show_trace
             )
         else:
-            with open(args.options_file) as f:
+            with args.options_file.open() as f:
                 options = json.load(f)
         # compute settings json file location
         if args.settings_file is None:

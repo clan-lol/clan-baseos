@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from clan_cli.inventory import (
     AdminConfig,
     ServiceAdmin,
@@ -25,7 +27,7 @@ def get_admin_service(base_url: str) -> ServiceAdmin | None:
 @API.register
 def set_admin_service(
     base_url: str,
-    allowed_keys: dict[str, str],
+    allowed_keys: dict[str, Path],
     instance_name: str = "admin",
     extra_machines: list[str] | None = None,
 ) -> None:
@@ -43,10 +45,10 @@ def set_admin_service(
 
     keys = {}
     for name, keyfile in allowed_keys.items():
-        if not keyfile.startswith("/"):
+        if not keyfile.is_absolute():
             msg = f"Keyfile '{keyfile}' must be an absolute path"
             raise ValueError(msg)
-        with open(keyfile) as f:
+        with keyfile.open() as f:
             pubkey = f.read()
             keys[name] = pubkey
 

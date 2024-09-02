@@ -21,7 +21,7 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
     if (clan_dir_result := get_clan_flake_toplevel_or_env()) is not None:
         flake = clan_dir_result
     else:
-        flake = Path(".")
+        flake = Path()
     cmd = nix_eval(
         [
             f"{flake}#nixosConfigurations.{machine}.config.clanCore.state",

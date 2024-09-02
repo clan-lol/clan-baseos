@@ -114,7 +114,7 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
     )
 
     parser.add_argument(
-        "path", type=Path, help="Path to the clan directory", default=Path(".")
+        "path", type=Path, help="Path to the clan directory", default=Path()
     )
 
     def create_flake_command(args: argparse.Namespace) -> None:
