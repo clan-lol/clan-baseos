@@ -18,8 +18,7 @@ class FactStore(FactStoreBase):
     def _var_path(self, generator_name: str, name: str, shared: bool) -> Path:
         if shared:
             return self.shared_folder / generator_name / name
-        else:
-            return self.per_machine_folder / generator_name / name
+        return self.per_machine_folder / generator_name / name
 
     def set(
         self, generator_name: str, name: str, value: bytes, shared: bool = False
@@ -30,9 +29,8 @@ class FactStore(FactStoreBase):
             fact_path.touch()
             fact_path.write_bytes(value)
             return fact_path
-        else:
-            msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
-            raise ClanError(msg)
+        msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
+        raise ClanError(msg)
 
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
         return self._var_path(generator_name, name, shared).exists()

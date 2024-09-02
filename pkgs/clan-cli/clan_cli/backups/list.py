@@ -30,12 +30,9 @@ def list_provider(machine: Machine, provider: str) -> list[Backup]:
         # TODO this should be a warning, only raise exception if no providers succeed
         msg = f"failed to list backups for provider {provider}: {proc.stdout}"
         raise ClanError(msg)
-    else:
-        parsed_json = json.loads(proc.stdout)
-        for archive in parsed_json:
-            results.append(
-                Backup(name=archive["name"], job_name=archive.get("job_name"))
-            )
+    parsed_json = json.loads(proc.stdout)
+    for archive in parsed_json:
+        results.append(Backup(name=archive["name"], job_name=archive.get("job_name")))
     return results
 
 

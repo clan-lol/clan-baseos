@@ -30,8 +30,7 @@ def help_hyperlink(description: str, url: str) -> str:
     if sys.argv[0].__contains__("docs.py"):
         return docs_hyperlink(description, url)
 
-    else:
-        return hyperlink_same_text_and_url(url)
+    return hyperlink_same_text_and_url(url)
 
 
 def docs_hyperlink(description: str, url: str) -> str:

@@ -104,25 +104,24 @@ class GObjApi:
         for m_name, m_signature in fn_signatures.items():
             if m_name not in overwrite_fns:
                 continue
-            else:
-                # check if the signature of the overriden method matches
-                # the implementation signature
-                exp_args = []
-                exp_return = m_signature.return_annotation
-                for param in dict(m_signature.parameters).values():
-                    exp_args.append(param.annotation)
-                exp_signature = (tuple(exp_args), exp_return)
+            # check if the signature of the overriden method matches
+            # the implementation signature
+            exp_args = []
+            exp_return = m_signature.return_annotation
+            for param in dict(m_signature.parameters).values():
+                exp_args.append(param.annotation)
+            exp_signature = (tuple(exp_args), exp_return)
 
-                # implementation signature
-                obj = dict(overwrite_fns[m_name].__dict__)
-                obj_type = obj["__orig_bases__"][0]
-                got_signature = obj_type.__args__
+            # implementation signature
+            obj = dict(overwrite_fns[m_name].__dict__)
+            obj_type = obj["__orig_bases__"][0]
+            got_signature = obj_type.__args__
 
-                if exp_signature != got_signature:
-                    log.error(f"Expected signature: {exp_signature}")
-                    log.error(f"Actual signature: {got_signature}")
-                    msg = f"Overwritten method '{m_name}' has different signature than the implementation"
-                    raise ValueError(msg)
+            if exp_signature != got_signature:
+                log.error(f"Expected signature: {exp_signature}")
+                log.error(f"Actual signature: {got_signature}")
+                msg = f"Overwritten method '{m_name}' has different signature than the implementation"
+                raise ValueError(msg)
 
     def get_obj(self, fn_name: str) -> type[ImplFunc]:
         result = self._obj_registry.get(fn_name, None)
@@ -146,11 +145,10 @@ class GObjApi:
                     self.thread = MethodExecutor(plain_fn, *args, **kwargs)
                     self.thread.start()
                     return GLib.SOURCE_CONTINUE
-                elif self.thread.finished:
+                if self.thread.finished:
                     result = self.thread.result
                     self.returns(method_name=fn_name, result=result)
                     return GLib.SOURCE_REMOVE
-                else:
-                    return GLib.SOURCE_CONTINUE
+                return GLib.SOURCE_CONTINUE
 
         return cast(type[ImplFunc], GenericFnRuntime)

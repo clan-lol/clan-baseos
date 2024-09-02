@@ -496,7 +496,7 @@ def test_secrets(
         # user2 is not in the group anymore
         with capture_output as output:
             cli.run(["secrets", "get", "--flake", str(test_flake.path), "key"])
-        print(output.out)
+    print(output.out)
 
     cli.run(
         [

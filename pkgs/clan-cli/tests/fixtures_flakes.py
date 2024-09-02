@@ -246,7 +246,7 @@ def test_flake_with_core(
 @pytest.fixture
 def test_local_democlan(
     monkeypatch: pytest.MonkeyPatch, temporary_home: Path
-) -> Iterator[FlakeForTest]:
+) -> FlakeForTest:
     democlan = os.getenv(key="DEMOCLAN_ROOT")
     if democlan is None:
         msg = (
@@ -258,7 +258,7 @@ def test_local_democlan(
         msg = f"DEMOCLAN_ROOT ({democlan_p}) is not a directory. This test requires the democlan directory to be present"
         raise Exception(msg)
 
-    yield FlakeForTest(democlan_p)
+    return FlakeForTest(democlan_p)
 
 
 @pytest.fixture

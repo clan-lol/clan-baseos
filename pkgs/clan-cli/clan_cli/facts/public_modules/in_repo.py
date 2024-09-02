@@ -24,9 +24,8 @@ class FactStore(FactStoreBase):
             fact_path.touch()
             fact_path.write_bytes(value)
             return fact_path
-        else:
-            msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
-            raise ClanError(msg)
+        msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
+        raise ClanError(msg)
 
     def exists(self, service: str, name: str) -> bool:
         fact_path = (

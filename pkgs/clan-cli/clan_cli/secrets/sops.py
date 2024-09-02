@@ -96,8 +96,7 @@ def default_sops_key_path() -> Path:
     raw_path = os.environ.get("SOPS_AGE_KEY_FILE")
     if raw_path:
         return Path(raw_path)
-    else:
-        return user_config_dir() / "sops" / "age" / "keys.txt"
+    return user_config_dir() / "sops" / "age" / "keys.txt"
 
 
 def ensure_sops_key(flake_dir: Path) -> SopsKey:
@@ -107,9 +106,8 @@ def ensure_sops_key(flake_dir: Path) -> SopsKey:
     path = default_sops_key_path()
     if path.exists():
         return ensure_user_or_machine(flake_dir, get_public_key(path.read_text()))
-    else:
-        msg = "No sops key found. Please generate one with 'clan secrets key generate'."
-        raise ClanError(msg)
+    msg = "No sops key found. Please generate one with 'clan secrets key generate'."
+    raise ClanError(msg)
 
 
 @contextmanager

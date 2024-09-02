@@ -175,8 +175,7 @@ class VMObject(GObject.Object):
         if self.progress_bar.is_visible():
             self.progress_bar.pulse()
             return GLib.SOURCE_CONTINUE
-        else:
-            return GLib.SOURCE_REMOVE
+        return GLib.SOURCE_REMOVE
 
     def __start(self) -> None:
         with self._create_machine() as machine:

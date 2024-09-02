@@ -40,19 +40,18 @@ def nix_build(flags: list[str], gcroot: Path | None = None) -> list[str]:
             )
             + flags
         )
-    else:
-        return (
-            nix_command(
-                [
-                    "build",
-                    "--no-link",
-                    "--print-out-paths",
-                    "--no-write-lock-file",
-                    "--show-trace",
-                ]
-            )
-            + flags
+    return (
+        nix_command(
+            [
+                "build",
+                "--no-link",
+                "--print-out-paths",
+                "--no-write-lock-file",
+                "--show-trace",
+            ]
         )
+        + flags
+    )
 
 
 def nix_add_to_gcroots(nix_path: Path, dest: Path) -> None:

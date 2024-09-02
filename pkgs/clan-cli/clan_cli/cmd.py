@@ -171,6 +171,5 @@ def run_no_stdout(
         cwd = Path.cwd()
     if logging.getLogger(__name__.split(".")[0]).isEnabledFor(logging.DEBUG):
         return run(cmd, env=env, log=log, check=check, error_msg=error_msg)
-    else:
-        log = Log.NONE
-        return run(cmd, env=env, log=log, check=check, error_msg=error_msg)
+    log = Log.NONE
+    return run(cmd, env=env, log=log, check=check, error_msg=error_msg)

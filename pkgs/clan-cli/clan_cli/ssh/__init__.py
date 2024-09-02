@@ -348,11 +348,10 @@ class Host:
                         raise subprocess.CalledProcessError(
                             ret, cmd=cmd, output=stdout_data, stderr=stderr_data
                         )
-                    else:
-                        cmdlog.warning(
-                            f"[Command failed: {ret}] {displayed_cmd}",
-                            extra={"command_prefix": self.command_prefix},
-                        )
+                    cmdlog.warning(
+                        f"[Command failed: {ret}] {displayed_cmd}",
+                        extra={"command_prefix": self.command_prefix},
+                    )
                 return subprocess.CompletedProcess(
                     cmd, ret, stdout=stdout_data, stderr=stderr_data
                 )

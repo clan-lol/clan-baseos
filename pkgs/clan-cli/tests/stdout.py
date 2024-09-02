@@ -1,11 +1,10 @@
 import types
 
 import pytest
-from pytest import CaptureFixture
 
 
 class CaptureOutput:
-    def __init__(self, capsys: CaptureFixture) -> None:
+    def __init__(self, capsys: pytest.CaptureFixture) -> None:
         self.capsys = capsys
         self.capsys_disabled = capsys.disabled()
         self.capsys_disabled.__enter__()
@@ -31,5 +30,5 @@ class CaptureOutput:
 
 
 @pytest.fixture
-def capture_output(capsys: CaptureFixture) -> CaptureOutput:
+def capture_output(capsys: pytest.CaptureFixture) -> CaptureOutput:
     return CaptureOutput(capsys)
