@@ -86,7 +86,6 @@ def dataclass_to_dict(obj: Any, *, use_alias: bool = True) -> Any:
 
 
 T = TypeVar("T", bound=dataclass)  # type: ignore
-G = TypeVar("G")  # type: ignore
 
 
 def is_union_type(type_hint: type | UnionType) -> bool:
@@ -121,7 +120,9 @@ def unwrap_none_type(type_hint: type | UnionType) -> type:
 JsonValue = str | float | dict[str, Any] | list[Any] | None
 
 
-def construct_value(t: type, field_value: JsonValue, loc: list[str] = []) -> Any:
+def construct_value(
+    t: type | UnionType, field_value: JsonValue, loc: list[str] = []
+) -> Any:
     """
     Construct a field value from a type hint and a field value.
     """
@@ -135,6 +136,7 @@ def construct_value(t: type, field_value: JsonValue, loc: list[str] = []) -> Any
     # If the field is another dataclass
     # Field_value must be a dictionary
     if is_dataclass(t) and isinstance(field_value, dict):
+        assert isinstance(t, type)
         return construct_dataclass(t, field_value)
 
     # If the field expects a path
@@ -250,7 +252,9 @@ def construct_dataclass(t: type[T], data: dict[str, Any], path: list[str] = []) 
     return t(**field_values)  # type: ignore
 
 
-def from_dict(t: type[G], data: dict[str, Any] | Any, path: list[str] = []) -> G:
+def from_dict(
+    t: type | UnionType, data: dict[str, Any] | Any, path: list[str] = []
+) -> Any:
     if is_dataclass(t):
         if not isinstance(data, dict):
             raise ClanError(f"{data} is not a dict. Expected {t}")

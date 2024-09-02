@@ -163,9 +163,7 @@ def test_generate_secret_var_password_store(
     temporary_home: Path,
 ) -> None:
     config = nested_dict()
-    my_generator = config["clan"]["core"]["vars"]["settings"]["secretStore"] = (
-        "password-store"
-    )
+    config["clan"]["core"]["vars"]["settings"]["secretStore"] = "password-store"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
     my_generator["script"] = "echo hello > $out/my_secret"
