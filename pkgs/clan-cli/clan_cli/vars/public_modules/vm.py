@@ -22,7 +22,12 @@ class FactStore(FactStoreBase):
         return fact_path.exists()
 
     def set(
-        self, service: str, name: str, value: bytes, shared: bool = False
+        self,
+        service: str,
+        name: str,
+        value: bytes,
+        shared: bool = False,
+        deployed: bool = True,
     ) -> Path | None:
         fact_path = self.dir / service / name
         fact_path.parent.mkdir(parents=True, exist_ok=True)

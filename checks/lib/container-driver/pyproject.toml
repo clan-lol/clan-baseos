@@ -15,7 +15,7 @@ find = {}
 [tool.setuptools.package-data]
 test_driver = ["py.typed"]
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 warn_redundant_casts = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true

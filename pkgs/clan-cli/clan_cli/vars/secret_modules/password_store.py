@@ -1,6 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import override
 
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
@@ -28,7 +29,6 @@ class SecretStore(SecretStoreBase):
         generator_name: str,
         name: str,
         value: bytes,
-        groups: list[str],
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
@@ -111,8 +111,7 @@ class SecretStore(SecretStoreBase):
         hashes.sort()
         return b"\n".join(hashes)
 
-    # FIXME: add this when we switch to python3.12
-    # @override
+    @override
     def update_check(self) -> bool:
         local_hash = self.generate_hash()
         remote_hash = self.machine.target_host.run(

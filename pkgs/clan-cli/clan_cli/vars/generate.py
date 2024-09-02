@@ -153,7 +153,6 @@ def execute_generator(
         files = machine.vars_generators[generator_name]["files"]
         for file_name, file in files.items():
             is_deployed = file["deploy"]
-            groups = machine.deployment["sops"]["defaultGroups"]
 
             secret_file = tmpdir_out / file_name
             if not secret_file.is_file():
@@ -165,7 +164,6 @@ def execute_generator(
                     generator_name,
                     file_name,
                     secret_file.read_bytes(),
-                    groups,
                     shared=is_shared,
                     deployed=is_deployed,
                 )
