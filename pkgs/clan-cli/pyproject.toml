@@ -64,25 +64,3 @@ ignore_missing_imports = true
 module = "setuptools.*"
 ignore_missing_imports = true
 
-[tool.ruff]
-target-version = "py311"
-line-length = 88
-lint.select = [
-  "A",
-  "ANN",
-  "ASYNC",
-  "B",
-  "C4",
-  "DTZ",
-  "E",
-  "EM",
-  "F",
-  "I",
-  "N",
-  "RUF",
-  "T10",
-  "TID",
-  "U",
-  "YTT",
-]
-lint.ignore = ["E501", "E402", "E731", "ANN101", "ANN401", "A003"]

@@ -14,27 +14,6 @@ find = {}
 
 [tool.setuptools.package-data]
 test_driver = ["py.typed"]
-
-[tool.ruff]
-target-version = "py311"
-line-length = 88
-
-lint.select = [
-  "A",
-  "ANN",
-  "B",
-  "C4",
-  "E",
-  "F",
-  "I",
-  "N",
-  "RUF",
-  "TID",
-  "T100",
-  "U",
-]
-lint.ignore = ["E501", "ANN101", "ANN401", "A003"]
-
 [tool.mypy]
 python_version = "3.11"
 warn_redundant_casts = true
