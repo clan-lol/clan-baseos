@@ -34,6 +34,7 @@ lint.select = [
   "RSE",
   "RUF",
   "SLF",
+  "SLOT",
   "T10",
   "TID",
   "U",
