@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import logging
 import sys
 from pathlib import Path
@@ -35,10 +36,8 @@ from .ssh import cli as ssh_cli
 log = logging.getLogger(__name__)
 
 argcomplete: ModuleType | None = None
-try:
+with contextlib.suppress(ImportError):
     import argcomplete  # type: ignore[no-redef]
-except ImportError:
-    pass
 
 
 def flake_path(arg: str) -> FlakeId:
@@ -83,8 +82,8 @@ def add_common_flags(parser: argparse.ArgumentParser) -> None:
 
 def register_common_flags(parser: argparse.ArgumentParser) -> None:
     has_subparsers = False
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
+    for action in parser._actions:  # noqa: SLF001
+        if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001
             for _choice, child_parser in action.choices.items():
                 has_subparsers = True
                 register_common_flags(child_parser)

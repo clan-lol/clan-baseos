@@ -80,10 +80,7 @@ class QEMUMonitorProtocol:
             self.__sock.listen(1)
 
     def __get_sock(self) -> socket.socket:
-        if isinstance(self.__address, tuple):
-            family = socket.AF_INET
-        else:
-            family = socket.AF_UNIX
+        family = socket.AF_INET if isinstance(self.__address, tuple) else socket.AF_UNIX
         return socket.socket(family, socket.SOCK_STREAM)
 
     def __negotiate_capabilities(self) -> dict[str, Any]:

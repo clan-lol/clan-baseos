@@ -12,7 +12,7 @@ def get_context() -> http.client.ssl.SSLContext:
     #     certfile="/home/kenji/.config/sunshine/credentials/cacert.pem",
     #     keyfile="/home/kenji/.config/sunshine/credentials/cakey.pem",
     # )
-    return http.client.ssl._create_unverified_context()
+    return http.client.ssl._create_unverified_context()  # noqa: SLF001
 
 
 def pair(pin: str) -> str:
@@ -42,7 +42,9 @@ def pair(pin: str) -> str:
 def restart() -> None:
     # Define the connection
     conn = http.client.HTTPSConnection(
-        "localhost", 47990, context=http.client.ssl._create_unverified_context()
+        "localhost",
+        47990,
+        context=http.client.ssl._create_unverified_context(),  # noqa: SLF001
     )
     user_and_pass = base64.b64encode(b"sunshine:sunshine").decode("ascii")
     headers = {

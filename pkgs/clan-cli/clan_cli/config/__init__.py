@@ -227,7 +227,7 @@ def find_option(
     regex = rf"({first}|<name>)"
     for elem in option_path[1:]:
         regex += rf"\.({elem}|<name>)"
-    for opt in options.keys():
+    for opt in options:
         if re.match(regex, opt):
             return opt, value
 

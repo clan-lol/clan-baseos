@@ -33,8 +33,8 @@ def test_list_modules(test_flake_with_core: FlakeForTest) -> None:
 
     assert len(modules_info.items()) > 1
     # Random test for those two modules
-    assert "borgbackup" in modules_info.keys()
-    assert "syncthing" in modules_info.keys()
+    assert "borgbackup" in modules_info
+    assert "syncthing" in modules_info
 
 
 @pytest.mark.impure

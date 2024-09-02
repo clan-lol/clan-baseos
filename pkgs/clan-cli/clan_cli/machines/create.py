@@ -27,7 +27,7 @@ def create_machine(flake: FlakeId, machine: Machine) -> None:
 
     full_inventory = load_inventory_eval(flake.path)
 
-    if machine.name in full_inventory.machines.keys():
+    if machine.name in full_inventory.machines:
         msg = f"Machine with the name {machine.name} already exists"
         raise ClanError(msg)
 

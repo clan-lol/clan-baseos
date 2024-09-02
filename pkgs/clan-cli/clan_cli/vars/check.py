@@ -37,9 +37,7 @@ def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
 
     log.debug(f"missing_secret_vars: {missing_secret_vars}")
     log.debug(f"missing_public_vars: {missing_public_vars}")
-    if missing_secret_vars or missing_public_vars:
-        return False
-    return True
+    return not (missing_secret_vars or missing_public_vars)
 
 
 def check_command(args: argparse.Namespace) -> None:

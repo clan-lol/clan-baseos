@@ -476,10 +476,7 @@ class Host:
         verbose_ssh: bool = False,
         tty: bool = False,
     ) -> list[str]:
-        if self.user is not None:
-            ssh_target = f"{self.user}@{self.host}"
-        else:
-            ssh_target = self.host
+        ssh_target = f"{self.user}@{self.host}" if self.user is not None else self.host
 
         ssh_opts = ["-A"] if self.forward_agent else []
 

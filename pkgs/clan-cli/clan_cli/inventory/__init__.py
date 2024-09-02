@@ -12,6 +12,7 @@ Operate on the returned inventory to make changes
 - save_inventory: To persist changes.
 """
 
+import contextlib
 import json
 from pathlib import Path
 
@@ -163,10 +164,8 @@ def init_inventory(directory: str, init: Inventory | None = None) -> None:
     inventory = None
     # Try reading the current flake
     if init is None:
-        try:
+        with contextlib.suppress(ClanCmdError):
             inventory = load_inventory_eval(directory)
-        except ClanCmdError:
-            pass
 
     if init is not None:
         inventory = init

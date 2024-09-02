@@ -1,3 +1,4 @@
+import contextlib
 import os
 import signal
 import subprocess
@@ -46,10 +47,8 @@ class Command:
         # We just kill all processes as quickly as possible because we don't
         # care about corrupted state and want to make tests fasts.
         for p in reversed(self.processes):
-            try:
+            with contextlib.suppress(OSError):
                 os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-            except OSError:
-                pass
 
 
 @pytest.fixture

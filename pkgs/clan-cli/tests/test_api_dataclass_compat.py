@@ -48,9 +48,7 @@ def find_dataclasses_in_directory(
                                 if (
                                     isinstance(deco, ast.Name)
                                     and deco.id == "dataclass"
-                                ):
-                                    dataclass_files.append((file_path, node.name))
-                                elif (
+                                ) or (
                                     isinstance(deco, ast.Call)
                                     and isinstance(deco.func, ast.Name)
                                     and deco.func.id == "dataclass"
