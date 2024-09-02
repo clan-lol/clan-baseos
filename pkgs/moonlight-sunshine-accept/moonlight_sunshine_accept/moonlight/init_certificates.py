@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -54,7 +53,7 @@ def private_key_to_pem(private_key: rsa.RSAPrivateKey) -> bytes:
     return pem_private_key
 
 
-def init_credentials() -> (str, str):
+def init_credentials() -> tuple[bytes, bytes]:
     private_key = generate_private_key()
     certificate = generate_certificate(private_key)
     private_key_pem = private_key_to_pem(private_key)
@@ -63,15 +62,11 @@ def init_credentials() -> (str, str):
 
 def write_credentials(_args: argparse.Namespace) -> None:
     pem_certificate, pem_private_key = init_credentials()
-    credentials_path = os.getcwd() + "credentials"
+    credentials_path = Path.cwd() / "credentials"
     Path(credentials_path).mkdir(parents=True, exist_ok=True)
 
-    cacaert_path = os.path.join(credentials_path, "cacert.pem")
-    with open(cacaert_path, mode="wb") as file:
-        file.write(pem_certificate)
-    cakey_path = os.path.join(credentials_path, "cakey.pem")
-    with open(cakey_path, mode="wb") as file:
-        file.write(pem_private_key)
+    (credentials_path / "cacert.pem").write_bytes(pem_certificate)
+    (credentials_path / "cakey.pem").write_bytes(pem_private_key)
     print("Finished writing moonlight credentials")
 
 

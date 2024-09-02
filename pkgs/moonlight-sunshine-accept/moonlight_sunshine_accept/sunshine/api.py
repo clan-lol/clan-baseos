@@ -3,7 +3,7 @@ import http.client
 import json
 
 
-def get_context() -> http.client.ssl.SSLContext:
+def get_context() -> http.client.ssl.SSLContext:  # type: ignore
     # context = http.client.ssl.create_default_context()
     # # context.load_cert_chain(
     # #     certfile="/var/lib/sunshine/sunshine.cert", keyfile="/var/lib/sunshine/sunshine.key"
@@ -12,7 +12,7 @@ def get_context() -> http.client.ssl.SSLContext:
     #     certfile="/home/kenji/.config/sunshine/credentials/cacert.pem",
     #     keyfile="/home/kenji/.config/sunshine/credentials/cakey.pem",
     # )
-    return http.client.ssl._create_unverified_context()  # noqa: SLF001
+    return http.client.ssl._create_unverified_context()  # type: ignore  # noqa: SLF001
 
 
 def pair(pin: str) -> str:
@@ -44,7 +44,7 @@ def restart() -> None:
     conn = http.client.HTTPSConnection(
         "localhost",
         47990,
-        context=http.client.ssl._create_unverified_context(),  # noqa: SLF001
+        context=http.client.ssl._create_unverified_context(),  # type: ignore # noqa: SLF001
     )
     user_and_pass = base64.b64encode(b"sunshine:sunshine").decode("ascii")
     headers = {
@@ -52,11 +52,8 @@ def restart() -> None:
         "Authorization": f"Basic {user_and_pass}",
     }
 
-    # Define the parameters
-    params = {}
-
     # Make the request
-    conn.request("POST", "/api/restart", params, headers)
+    conn.request("POST", "/api/restart", {}, headers)
 
     # Get and print the response
     # There wont be a response, because it is restarted

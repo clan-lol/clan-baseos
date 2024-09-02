@@ -3,21 +3,20 @@ import os
 import random
 import string
 from configparser import ConfigParser, DuplicateSectionError, NoOptionError
+from pathlib import Path
 
 
-def moonlight_config_dir() -> str:
-    return os.path.join(
-        os.path.expanduser("~"), ".config", "Moonlight Game Streaming Project"
-    )
+def moonlight_config_dir() -> Path:
+    return Path.home() / ".config" / "Moonlight Game Streaming Project"
 
 
-def moonlight_state_file() -> str:
-    return os.path.join(moonlight_config_dir(), "Moonlight.conf")
+def moonlight_state_file() -> Path:
+    return moonlight_config_dir() / "Moonlight.conf"
 
 
 def load_state() -> ConfigParser | None:
     try:
-        with open(moonlight_state_file()) as file:
+        with moonlight_state_file().open() as file:
             config = ConfigParser()
             config.read_file(file)
             print(config.sections())
@@ -65,8 +64,8 @@ def init_state(certificate: str, key: str) -> None:
         config.write(file)
 
 
-def write_state(data: ConfigParser) -> bool:
-    with open(moonlight_state_file(), "w") as file:
+def write_state(data: ConfigParser) -> None:
+    with moonlight_state_file().open("w") as file:
         data.write(file)
 
 
@@ -84,22 +83,24 @@ def add_sunshine_host_to_parser(
 
     new_host = no_hosts + 1
 
-    config.set("hosts", f"{new_host}\srvcert", convert_string_to_bytearray(certificate))
+    config.set(
+        "hosts", f"{new_host}\\srvcert", convert_string_to_bytearray(certificate)
+    )
     config.set("hosts", "size", str(new_host))
     config.set("hosts", f"{new_host}\\uuid", uuid)
-    config.set("hosts", f"{new_host}\hostname", hostname)
+    config.set("hosts", f"{new_host}\\hostname", hostname)
     config.set("hosts", f"{new_host}\\nvidiasv", "false")
-    config.set("hosts", f"{new_host}\customname", "false")
-    config.set("hosts", f"{new_host}\manualaddress", manual_host)
-    config.set("hosts", f"{new_host}\manualport", "47989")
+    config.set("hosts", f"{new_host}\\customname", "false")
+    config.set("hosts", f"{new_host}\\manualaddress", manual_host)
+    config.set("hosts", f"{new_host}\\manualport", "47989")
     config.set("hosts", f"{new_host}\\remoteport", "0")
     config.set("hosts", f"{new_host}\\remoteaddress", "")
-    config.set("hosts", f"{new_host}\localaddress", "")
-    config.set("hosts", f"{new_host}\localport", "0")
-    config.set("hosts", f"{new_host}\ipv6port", "0")
-    config.set("hosts", f"{new_host}\ipv6address", "")
+    config.set("hosts", f"{new_host}\\localaddress", "")
+    config.set("hosts", f"{new_host}\\localport", "0")
+    config.set("hosts", f"{new_host}\\ipv6port", "0")
+    config.set("hosts", f"{new_host}\\ipv6address", "")
     config.set(
-        "hosts", f"{new_host}\mac", convert_string_to_bytearray("\\xceop\\x8d\\xfc{")
+        "hosts", f"{new_host}\\mac", convert_string_to_bytearray("\\xceop\\x8d\\xfc{")
     )
     add_app(config, "Desktop", new_host, 1, 881448767)
     add_app(config, "Low Res Desktop", new_host, 2, 303580669)
@@ -114,7 +115,7 @@ def add_sunshine_host_to_parser(
 def add_app(
     config: ConfigParser, name: str, host_id: int, app_id: int, app_no: int
 ) -> None:
-    identifier = f"{host_id}\\apps\{app_id}\\"
+    identifier = f"{host_id}\\apps\\{app_id}\\"
     config.set("hosts", f"{identifier}appcollector", "false")
     config.set("hosts", f"{identifier}directlaunch", "false")
     config.set("hosts", f"{identifier}hdr", "false")

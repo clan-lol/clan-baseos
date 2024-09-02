@@ -4,8 +4,8 @@ import threading
 
 
 class MoonlightPairing:
-    def __init__(self) -> "MoonlightPairing":
-        self.process = None
+    def __init__(self) -> None:
+        self.process: subprocess.Popen | None = None
         self.output = ""
         self.found = threading.Event()
 
@@ -45,6 +45,8 @@ class MoonlightPairing:
             self.process.wait()
 
     def stream_output(self, target_string: str) -> None:
+        assert self.process is not None
+        assert self.process.stdout is not None
         for line in iter(self.process.stdout.readline, b""):
             line = line.decode()
             self.output += line

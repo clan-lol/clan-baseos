@@ -1,5 +1,6 @@
 import configparser
-import os
+from dataclasses import dataclass
+from pathlib import Path
 
 # address_family = both
 # channels = 5
@@ -11,26 +12,29 @@ import os
 PSEUDO_SECTION = "DEFAULT"
 
 
+@dataclass
 class Config:
+    config: configparser.ConfigParser
+    config_location: Path
     _instance = None
 
-    def __new__(cls, config_location: str | None = None) -> "Config":
+    def __new__(cls, config_location: Path | None = None) -> "Config":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance.config = configparser.ConfigParser()
             config = config_location or cls._instance.default_sunshine_config_file()
             cls._instance.config_location = config
-            with open(config) as f:
+            with config.open() as f:
                 config_string = f"[{PSEUDO_SECTION}]\n" + f.read()
                 print(config_string)
                 cls._instance.config.read_string(config_string)
         return cls._instance
 
-    def default_sunshine_config_dir(self) -> str:
-        return os.path.join(os.path.expanduser("~"), ".config", "sunshine")
+    def default_sunshine_config_dir(self) -> Path:
+        return Path.home() / ".config" / "sunshine"
 
-    def default_sunshine_config_file(self) -> str:
-        return os.path.join(self.default_sunshine_config_dir(), "sunshine.conf")
+    def default_sunshine_config_file(self) -> Path:
+        return self.default_sunshine_config_dir() / "sunshine.conf"
 
     def get_private_key(self) -> str:
         return self.config.get(PSEUDO_SECTION, "pkey")

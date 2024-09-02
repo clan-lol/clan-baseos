@@ -33,8 +33,7 @@ def send_join_request_api(host: str, port: int) -> bool:
 
     with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as s:
         s.connect((host, port))
-        json_body = {"type": "api", "pin": pin}
-        json_body = json.dumps(json_body)
+        json_body = json.dumps({"type": "api", "pin": pin})
         request = (
             f"POST / HTTP/1.1\r\n"
             f"Content-Type: application/json\r\n"
@@ -62,14 +61,15 @@ def send_join_request_native(host: str, port: int, cert: str) -> bool:
     with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as s:
         s.connect((host, port))
         encoded_cert = base64.urlsafe_b64encode(cert.encode("utf-8")).decode("utf-8")
-        json_body = {"type": "native", "uuid": uuid, "cert": encoded_cert}
-        json_body = json.dumps(json_body)
+        json_body_str = json.dumps(
+            {"type": "native", "uuid": uuid, "cert": encoded_cert}
+        )
         request = (
             f"POST / HTTP/1.1\r\n"
             f"Content-Type: application/json\r\n"
-            f"Content-Length: {len(json_body)}\r\n"
+            f"Content-Length: {len(json_body_str)}\r\n"
             f"Connection: close\r\n\r\n"
-            f"{json_body}"
+            f"{json_body_str}"
         )
         try:
             s.sendall(request.encode("utf-8"))
@@ -78,7 +78,7 @@ def send_join_request_native(host: str, port: int, cert: str) -> bool:
             lines = response.split("\n")
             body = "\n".join(lines[2:])[2:]
             print(body)
-            return body
+            return True
         except Exception as e:
             print(f"An error occurred: {e}")
     # TODO: fix
@@ -98,6 +98,7 @@ def send_join_request_native(host: str, port: int, cert: str) -> bool:
         print(f"Failed to decode JSON: {e}")
         pos = e.pos
         print(f"Failed to decode JSON: unexpected character {response[pos]}")
+    return False
 
 
 def join(args: argparse.Namespace) -> None:
@@ -113,6 +114,7 @@ def join(args: argparse.Namespace) -> None:
     # TODO: If cert is not provided parse from config
     # cert = args.cert
     cert = get_moonlight_certificate()
+    assert port is not None
     if send_join_request(host, port, cert):
         print(f"Successfully joined sunshine host: {host}")
     else:
