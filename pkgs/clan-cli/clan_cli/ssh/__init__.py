@@ -44,7 +44,7 @@ class CommandFormatter(logging.Formatter):
         colorcode = 0
         if record.levelno == logging.ERROR:
             colorcode = 31  # red
-        if record.levelno == logging.WARN:
+        if record.levelno == logging.WARNING:
             colorcode = 33  # yellow
 
         color, prefix_color, color_reset = "", "", ""
@@ -224,7 +224,6 @@ class Host:
                             cmdlog.info(
                                 line, extra={"command_prefix": self.command_prefix}
                             )
-                            pass
                         else:
                             cmdlog.error(
                                 line, extra={"command_prefix": self.command_prefix}

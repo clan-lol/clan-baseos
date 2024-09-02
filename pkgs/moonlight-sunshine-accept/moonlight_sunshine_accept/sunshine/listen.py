@@ -47,8 +47,6 @@ def listen(port: int, cert: str, uuid: str, state_file: str) -> bool:
                 client_socket.sendall(response.encode("utf-8"))
 
             if pair_type == "native":
-                pass
-
                 # url = unquote(data_str.split()[1])
                 # rec_uuid = parse_qs(urlparse(url).query).get("uuid", [""])[0]
                 # rec_cert = parse_qs(urlparse(url).query).get("cert", [""])[0]

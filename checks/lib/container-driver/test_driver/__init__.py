@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import time
+import types
 from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -95,10 +96,11 @@ class Machine:
     def get_unit_info(self, unit: str) -> dict[str, str]:
         proc = self.systemctl(f'--no-pager show "{unit}"')
         if proc.returncode != 0:
-            raise Exception(
+            msg = (
                 f'retrieving systemctl info for unit "{unit}"'
-                + f" failed with exit code {proc.returncode}"
+                f" failed with exit code {proc.returncode}"
             )
+            raise Exception(msg)
 
         line_pattern = re.compile(r"^([^=]+)=(.*)$")
 
@@ -311,7 +313,12 @@ class Driver:
     def __enter__(self) -> "Driver":
         return self
 
-    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
         for machine in self.machines:
             machine.release()
 

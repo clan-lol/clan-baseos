@@ -1,4 +1,4 @@
-from typing import Any
+import types
 
 import pytest
 from pytest import CaptureFixture
@@ -15,7 +15,12 @@ class CaptureOutput:
         self.capsys.readouterr()
         return self
 
-    def __exit__(self, exc_type: Any, exc_value: Any, exc_traceback: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
         res = self.capsys.readouterr()
         self.out = res.out
         self.err = res.err

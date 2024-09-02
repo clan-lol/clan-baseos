@@ -103,7 +103,6 @@ def initialize_certificates(
     finally:
         # Close the connection
         conn.close()
-    pass
 
 
 def calculate_digest(cert: str) -> str:
