@@ -19,7 +19,7 @@ def wayland_compositor() -> Generator[Popen, None, None]:
 GtkProc = NewType("GtkProc", Popen)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def app() -> Generator[GtkProc, None, None]:
     rapp = Popen([sys.executable, "-m", "clan_app"], text=True)
     yield GtkProc(rapp)

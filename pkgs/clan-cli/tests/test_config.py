@@ -143,7 +143,7 @@ def test_cast() -> None:
 
 
 @pytest.mark.parametrize(
-    "option,value,options,expected",
+    ("option", "value", "options", "expected"),
     [
         ("foo.bar", ["baz"], {"foo.bar": {"type": "str"}}, ("foo.bar", ["baz"])),
         ("foo.bar", ["baz"], {"foo": {"type": "attrs"}}, ("foo", {"bar": ["baz"]})),

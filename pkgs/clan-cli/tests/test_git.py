@@ -28,10 +28,9 @@ def test_commit_file(git_repo: Path) -> None:
 def test_commit_file_outside_git_raises_error(git_repo: Path) -> None:
     # create a file outside the git (a temporary file)
     with tempfile.NamedTemporaryFile() as tmp:
-        # commit the file
+
+        # this should not fail but skip the commit
         with pytest.raises(ClanError):
-            git.commit_file(Path(tmp.name), git_repo, "test commit")
-            # this should not fail but skip the commit
             git.commit_file(Path(tmp.name), git_repo, "test commit")
 
 
