@@ -43,5 +43,18 @@ ignore_missing_imports = true
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-lint.select = ["E", "F", "I", "U", "N", "RUF", "ANN", "A"]
+lint.select = [
+  "A",
+  "ANN",
+  "B",
+  "C4",
+  "E",
+  "F",
+  "I",
+  "N",
+  "RUF",
+  "TID",
+  "T100",
+  "U",
+]
 lint.ignore = ["E501", "E402", "N802", "ANN101", "ANN401", "A003"]

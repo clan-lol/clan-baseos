@@ -10,5 +10,18 @@ exclude = "clan_cli.nixpkgs"
 [tool.ruff]
 line-length = 88
 target-version = "py311"
-lint.select = [ "E", "F", "I", "U", "N", "RUF", "ANN", "A" ]
+lint.select = [
+  "A",
+  "ANN",
+  "B",
+  "C4",
+  "E",
+  "F",
+  "I",
+  "N",
+  "RUF",
+  "TID",
+  "T100",
+  "U",
+]
 lint.ignore = [ "E501", "ANN101", "ANN401", "A003"]
