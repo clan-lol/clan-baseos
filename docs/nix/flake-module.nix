@@ -23,7 +23,7 @@
 
       # Simply evaluated options (JSON)
       renderOptions =
-        pkgs.runCommand "renderOptions.py"
+        pkgs.runCommand "render-options"
           {
             # TODO: ruff does not splice properly in nativeBuildInputs
             depsBuildBuild = [ pkgs.ruff ];
@@ -34,12 +34,12 @@
             ];
           }
           ''
-            install ${./scripts/renderOptions.py} $out
-            patchShebangs --build $out
+            install -D -m755 ${./render_options}/__init__.py $out/bin/render-options
+            patchShebangs --build $out/bin/render-options
 
-            ruff format --check --diff $out
-            ruff check --line-length 88 $out
-            mypy --strict $out
+            ruff format --check --diff $out/bin/render-options
+            ruff check --line-length 88 $out/bin/render-options
+            mypy --strict $out/bin/render-options
           '';
 
       asciinema-player-js = pkgs.fetchurl {
@@ -70,7 +70,7 @@
             mkdir $out
 
             # The python script will place mkDocs files in the output directory
-            python3 ${renderOptions}
+            exec python3 ${renderOptions}/bin/render-options
           '';
     in
     {
