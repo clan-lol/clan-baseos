@@ -118,7 +118,7 @@ class WebExecutor(GObject.Object):
             # from_dict really takes Anything and returns an instance of the type/class
             reconciled_arguments[k] = from_dict(arg_class, v)
 
-        GLib.idle_add(fn_instance._async_run, reconciled_arguments)
+        GLib.idle_add(fn_instance.internal_async_run, reconciled_arguments)
 
     def on_result(self, source: ImplFunc, data: GResult) -> None:
         result = dataclass_to_dict(data.result)

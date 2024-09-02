@@ -64,11 +64,11 @@ class JoinList:
             cls._instance = cls.__new__(cls)
             cls.list_store = Gio.ListStore.new(JoinValue)
 
-            ClanStore.use().register_on_deep_change(cls._instance._rerender_join_list)
+            ClanStore.use().register_on_deep_change(cls._instance.rerender_join_list)
 
         return cls._instance
 
-    def _rerender_join_list(
+    def rerender_join_list(
         self, source: GKVStore, position: int, removed: int, added: int
     ) -> None:
         self.list_store.items_changed(

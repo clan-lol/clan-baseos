@@ -19,15 +19,12 @@ class Config:
             cls._instance = super().__new__(cls)
             cls._instance.config = configparser.ConfigParser()
             config = config_location or cls._instance.default_sunshine_config_file()
-            cls._instance._config_location = config
+            cls._instance.config_location = config
             with open(config) as f:
                 config_string = f"[{PSEUDO_SECTION}]\n" + f.read()
                 print(config_string)
                 cls._instance.config.read_string(config_string)
         return cls._instance
-
-    def config_location(self) -> str:
-        return self._config_location
 
     def default_sunshine_config_dir(self) -> str:
         return os.path.join(os.path.expanduser("~"), ".config", "sunshine")

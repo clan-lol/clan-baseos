@@ -50,7 +50,7 @@ class ImplFunc(GObject.Object, Generic[P, B]):
         msg = "Method 'async_run' must be implemented"
         raise NotImplementedError(msg)
 
-    def _async_run(self, data: Any) -> bool:
+    def internal_async_run(self, data: Any) -> bool:
         result = GLib.SOURCE_REMOVE
         try:
             result = self.async_run(**data)

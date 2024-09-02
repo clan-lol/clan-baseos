@@ -174,12 +174,12 @@ def get_subcommands(
     positional_options: list[Option] = []
     subcommands: list[Subcommand] = []
 
-    for action in parser._actions:
-        if isinstance(action, argparse._HelpAction):
+    for action in parser._actions:  # noqa: SLF001
+        if isinstance(action, argparse._HelpAction):  # noqa: SLF001
             # Pseudoaction that holds the help message
             continue
 
-        if isinstance(action, argparse._SubParsersAction):
+        if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001
             continue  # Subparsers handled separately
 
         option_strings = ", ".join(action.option_strings)
@@ -204,8 +204,8 @@ def get_subcommands(
                 )
             )
 
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
+    for action in parser._actions:  # noqa: SLF001
+        if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001
             subparsers: dict[str, argparse.ArgumentParser] = action.choices
 
             for name, subparser in subparsers.items():
@@ -252,8 +252,8 @@ def collect_commands() -> list[Category]:
 
     result: list[Category] = []
 
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
+    for action in parser._actions:  # noqa: SLF001
+        if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001
             subparsers: dict[str, argparse.ArgumentParser] = action.choices
             for name, subparser in subparsers.items():
                 if str(subparser.description).startswith("WIP"):

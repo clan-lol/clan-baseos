@@ -83,8 +83,8 @@ def add_common_flags(parser: argparse.ArgumentParser) -> None:
 
 def register_common_flags(parser: argparse.ArgumentParser) -> None:
     has_subparsers = False
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
+    for action in parser._actions:  # noqa: SLF001
+        if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001
             for _choice, child_parser in action.choices.items():
                 has_subparsers = True
                 register_common_flags(child_parser)
