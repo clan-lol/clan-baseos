@@ -13,6 +13,7 @@ import errno
 import json
 import logging
 import socket
+import types
 from typing import Any
 
 
@@ -153,7 +154,12 @@ class QEMUMonitorProtocol:
         # Implement context manager enter function.
         return self
 
-    def __exit__(self, exc_type: Any, exc_value: Any, exc_traceback: Any) -> bool:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
         # Implement context manager exit function.
         self.close()
         return False

@@ -267,7 +267,7 @@ class VMObject(GObject.Object):
 
     def start(self) -> None:
         if self.is_running():
-            log.warn("VM is already running. Ignoring start request")
+            log.warning("VM is already running. Ignoring start request")
             self.emit("vm_status_changed", self)
             return
         log.debug(f"VM state dir {self.log_dir.name}")
