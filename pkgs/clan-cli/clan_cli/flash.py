@@ -48,7 +48,7 @@ def list_possible_keymaps() -> list[str]:
 
     keymap_files = []
 
-    for root, _, files in os.walk(keymaps_dir):
+    for _root, _, files in os.walk(keymaps_dir):
         for file in files:
             if file.endswith(".map.gz"):
                 # Remove '.map.gz' ending
@@ -93,8 +93,10 @@ def flash_machine(
     dry_run: bool,
     write_efi_boot_entries: bool,
     debug: bool,
-    extra_args: list[str] = [],
+    extra_args: list[str] | None = None,
 ) -> None:
+    if extra_args is None:
+        extra_args = []
     system_config_nix: dict[str, Any] = {}
 
     if system_config.wifi_settings:
@@ -125,7 +127,9 @@ def flash_machine(
             try:
                 root_keys.append(key_path.read_text())
             except OSError as e:
-                raise ClanError(f"Cannot read SSH public key file: {key_path}: {e}")
+                raise ClanError(
+                    f"Cannot read SSH public key file: {key_path}: {e}"
+                ) from e
         system_config_nix["users"] = {
             "users": {"root": {"openssh": {"authorizedKeys": {"keys": root_keys}}}}
         }

@@ -209,7 +209,7 @@ def generate_machine_hardware_info(
             "Invalid hardware-configuration.nix file",
             description="The hardware-configuration.nix file is invalid. Please check the file and try again.",
             location=f"{__name__} {hw_file}",
-        )
+        ) from e
 
     return HardwareReport(report_type)
 

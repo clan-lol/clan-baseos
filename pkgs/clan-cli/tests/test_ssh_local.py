@@ -27,7 +27,7 @@ def test_timeout() -> None:
     except Exception:
         pass
     else:
-        assert False, "should have raised TimeoutExpired"
+        raise AssertionError("should have raised TimeoutExpired")
 
 
 def test_run_function() -> None:
@@ -45,7 +45,7 @@ def test_run_exception() -> None:
     except Exception:
         pass
     else:
-        assert False, "should have raised Exception"
+        raise AssertionError("should have raised Exception")
 
 
 def test_run_function_exception() -> None:
@@ -57,7 +57,7 @@ def test_run_function_exception() -> None:
     except Exception:
         pass
     else:
-        assert False, "should have raised Exception"
+        raise AssertionError("should have raised Exception")
 
 
 def test_run_local_non_shell() -> None:

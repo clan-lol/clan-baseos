@@ -156,7 +156,7 @@ def get_subcommands(
     parser: argparse.ArgumentParser,
     to: list[Category],
     level: int = 0,
-    prefix: list[str] = [],
+    prefix: list[str] | None = None,
 ) -> tuple[list[Option], list[Option], list[Subcommand]]:
     """
     Generate Markdown documentation for an argparse.ArgumentParser instance including its subcommands.
@@ -168,6 +168,8 @@ def get_subcommands(
 
     # Document each argument
     # --flake --option --debug, etc.
+    if prefix is None:
+        prefix = []
     flag_options: list[Option] = []
     positional_options: list[Option] = []
     subcommands: list[Subcommand] = []

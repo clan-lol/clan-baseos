@@ -33,12 +33,12 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
     try:
         proc = run_no_stdout(cmd)
         res = proc.stdout.strip()
-    except ClanCmdError:
+    except ClanCmdError as e:
         raise ClanError(
             "Clan might not have meta attributes",
             location=f"show_clan {uri}",
             description="Evaluation failed on clanInternals.meta attribute",
-        )
+        ) from e
 
     state = json.loads(res)
     if service:

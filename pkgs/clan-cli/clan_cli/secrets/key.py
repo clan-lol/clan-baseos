@@ -22,10 +22,12 @@ def extract_public_key(filepath: Path) -> str:
                 if line.startswith("# public key:"):
                     # Extract and return the public key part after the prefix
                     return line.strip().split(": ")[1]
-    except FileNotFoundError:
-        raise ClanError(f"The file at {filepath} was not found.")
-    except Exception as e:
-        raise ClanError(f"An error occurred while extracting the public key: {e}")
+    except FileNotFoundError as e:
+        raise ClanError(f"The file at {filepath} was not found.") from e
+    except OSError as e:
+        raise ClanError(
+            f"An error occurred while extracting the public key: {e}"
+        ) from e
 
     raise ClanError(f"Could not find the public key in the file at {filepath}.")
 

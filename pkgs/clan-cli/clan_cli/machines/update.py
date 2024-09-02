@@ -82,7 +82,7 @@ def upload_sources(
     except (json.JSONDecodeError, OSError) as e:
         raise ClanError(
             f"failed to parse output of {shlex.join(cmd)}: {e}\nGot: {proc.stdout}"
-        )
+        ) from e
 
 
 @API.register
@@ -180,7 +180,7 @@ def update(args: argparse.Namespace) -> None:
                 if machine.deployment.get("requireExplicitUpdate", False):
                     continue
                 try:
-                    machine.build_host
+                    machine.build_host  # noqa: B018
                 except ClanError:  # check if we have a build host set
                     ignored_machines.append(machine)
                     continue

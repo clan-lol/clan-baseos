@@ -94,8 +94,10 @@ def qemu_command(
     virtiofsd_socket: Path,
     qmp_socket_file: Path,
     qga_socket_file: Path,
-    portmap: list[tuple[int, int]] = [],
+    portmap: list[tuple[int, int]] | None = None,
 ) -> QemuCommand:
+    if portmap is None:
+        portmap = []
     kernel_cmdline = [
         (Path(nixos_config["toplevel"]) / "kernel-params").read_text(),
         f'init={nixos_config["toplevel"]}/init',

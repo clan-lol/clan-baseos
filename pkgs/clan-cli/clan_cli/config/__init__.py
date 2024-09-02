@@ -44,7 +44,9 @@ def map_type(nix_type: str) -> Any:
 
 
 # merge two dicts recursively
-def merge(a: dict, b: dict, path: list[str] = []) -> dict:
+def merge(a: dict, b: dict, path: list[str] | None = None) -> dict:
+    if path is None:
+        path = []
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
@@ -98,10 +100,10 @@ def cast(value: Any, input_type: Any, opt_description: str) -> Any:
             if len(value) > 1:
                 raise ClanError(f"Too many values for {opt_description}")
             return input_type(value[0])
-    except ValueError:
+    except ValueError as e:
         raise ClanError(
             f"Invalid type for option {opt_description} (expected {input_type.__name__})"
-        )
+        ) from e
 
 
 def options_for_machine(

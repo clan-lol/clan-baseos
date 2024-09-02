@@ -18,8 +18,10 @@ def machine_schema(
     flake_dir: Path,
     config: dict[str, Any],
     clan_imports: list[str] | None = None,
-    option_path: list[str] = ["clan"],
+    option_path: list[str] | None = None,
 ) -> dict[str, Any]:
+    if option_path is None:
+        option_path = ["clan"]
     # use nix eval to lib.evalModules .#nixosConfigurations.<machine_name>.options.clan
     with NamedTemporaryFile(mode="w", dir=flake_dir) as clan_machine_settings_file:
         env = os.environ.copy()

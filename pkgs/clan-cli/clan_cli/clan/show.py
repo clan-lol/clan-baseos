@@ -31,7 +31,7 @@ def show_clan_meta(uri: str | Path) -> Meta:
             "Evaluation failed on meta attribute",
             location=f"show_clan {uri}",
             description=str(e.cmd),
-        )
+        ) from e
 
     clan_meta = json.loads(res)
 

@@ -114,7 +114,7 @@ def load_inventory_eval(flake_dir: str | Path) -> Inventory:
         inventory = from_dict(Inventory, data)
         return inventory
     except json.JSONDecodeError as e:
-        raise ClanError(f"Error decoding inventory from flake: {e}")
+        raise ClanError(f"Error decoding inventory from flake: {e}") from e
 
 
 def load_inventory_json(
@@ -134,7 +134,7 @@ def load_inventory_json(
                 inventory = from_dict(Inventory, res)
             except json.JSONDecodeError as e:
                 # Error decoding the inventory file
-                raise ClanError(f"Error decoding inventory file: {e}")
+                raise ClanError(f"Error decoding inventory file: {e}") from e
 
     if not inventory_file.exists():
         # Copy over the meta from the flake if the inventory is not initialized

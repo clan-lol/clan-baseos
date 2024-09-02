@@ -30,7 +30,7 @@ def inspect_dataclass_fields(t: type) -> dict[TypeVar, type]:
 
     type_params = origin.__parameters__
     # Create a map from type parameters to actual type arguments
-    type_map = dict(zip(type_params, type_args))
+    type_map = dict(zip(type_params, type_args, strict=False))
 
     return type_map
 
@@ -67,7 +67,11 @@ def apply_annotations(schema: dict[str, Any], annotations: list[Any]) -> dict[st
     return schema
 
 
-def type_to_dict(t: Any, scope: str = "", type_map: dict[TypeVar, type] = {}) -> dict:
+def type_to_dict(
+    t: Any, scope: str = "", type_map: dict[TypeVar, type] | None = None
+) -> dict:
+    if type_map is None:
+        type_map = {}
     if t is None:
         return {"type": "null"}
 

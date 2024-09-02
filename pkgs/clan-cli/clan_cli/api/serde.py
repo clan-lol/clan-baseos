@@ -121,11 +121,13 @@ JsonValue = str | float | dict[str, Any] | list[Any] | None
 
 
 def construct_value(
-    t: type | UnionType, field_value: JsonValue, loc: list[str] = []
+    t: type | UnionType, field_value: JsonValue, loc: list[str] | None = None
 ) -> Any:
     """
     Construct a field value from a type hint and a field value.
     """
+    if loc is None:
+        loc = []
     if t is None and field_value:
         raise ClanError(f"Expected None but got: {field_value}", location=f"{loc}")
 
@@ -203,11 +205,15 @@ def construct_value(
         raise ClanError(f"Unhandled field type {t} with value {field_value}")
 
 
-def construct_dataclass(t: type[T], data: dict[str, Any], path: list[str] = []) -> T:
+def construct_dataclass(
+    t: type[T], data: dict[str, Any], path: list[str] | None = None
+) -> T:
     """
     type t MUST be a dataclass
     Dynamically instantiate a data class from a dictionary, handling nested data classes.
     """
+    if path is None:
+        path = []
     if not is_dataclass(t):
         raise ClanError(f"{t.__name__} is not a dataclass")
 
@@ -253,8 +259,10 @@ def construct_dataclass(t: type[T], data: dict[str, Any], path: list[str] = []) 
 
 
 def from_dict(
-    t: type | UnionType, data: dict[str, Any] | Any, path: list[str] = []
+    t: type | UnionType, data: dict[str, Any] | Any, path: list[str] | None = None
 ) -> Any:
+    if path is None:
+        path = []
     if is_dataclass(t):
         if not isinstance(data, dict):
             raise ClanError(f"{data} is not a dict. Expected {t}")

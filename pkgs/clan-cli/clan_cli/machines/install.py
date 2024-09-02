@@ -29,8 +29,10 @@ def install_nixos(
     debug: bool = False,
     password: str | None = None,
     no_reboot: bool = False,
-    extra_args: list[str] = [],
+    extra_args: list[str] | None = None,
 ) -> None:
+    if extra_args is None:
+        extra_args = []
     secret_facts_module = importlib.import_module(machine.secret_facts_module)
     log.info(f"installing {machine.name}")
     secret_facts_store = secret_facts_module.SecretStore(machine=machine)
