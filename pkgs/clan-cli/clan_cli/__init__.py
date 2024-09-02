@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import logging
 import sys
 from pathlib import Path
@@ -35,10 +36,8 @@ from .ssh import cli as ssh_cli
 log = logging.getLogger(__name__)
 
 argcomplete: ModuleType | None = None
-try:
+with contextlib.suppress(ImportError):
     import argcomplete  # type: ignore[no-redef]
-except ImportError:
-    pass
 
 
 def flake_path(arg: str) -> FlakeId:

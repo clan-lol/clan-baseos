@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import json
 import subprocess
 import threading
@@ -17,10 +18,8 @@ We target a maximum of 1second on our average machine.
 
 
 argcomplete: ModuleType | None = None
-try:
+with contextlib.suppress(ImportError):
     import argcomplete  # type: ignore[no-redef]
-except ImportError:
-    pass
 
 
 # The default completion timeout for commands
@@ -211,10 +210,7 @@ def complete_secrets(
     from .clan_uri import FlakeId
     from .secrets.secrets import ListSecretsOptions, list_secrets
 
-    if (clan_dir_result := clan_dir(None)) is not None:
-        flake = clan_dir_result
-    else:
-        flake = "."
+    flake = clan_dir_result if (clan_dir_result := clan_dir(None)) is not None else "."
 
     options = ListSecretsOptions(
         flake=FlakeId(flake),
@@ -237,10 +233,7 @@ def complete_users(
 
     from .secrets.users import list_users
 
-    if (clan_dir_result := clan_dir(None)) is not None:
-        flake = clan_dir_result
-    else:
-        flake = "."
+    flake = clan_dir_result if (clan_dir_result := clan_dir(None)) is not None else "."
 
     users = list_users(Path(flake))
 
@@ -258,10 +251,7 @@ def complete_groups(
 
     from .secrets.groups import list_groups
 
-    if (clan_dir_result := clan_dir(None)) is not None:
-        flake = clan_dir_result
-    else:
-        flake = "."
+    flake = clan_dir_result if (clan_dir_result := clan_dir(None)) is not None else "."
 
     groups_list = list_groups(Path(flake))
     groups = [group.name for group in groups_list]

@@ -47,11 +47,8 @@ class FlakeId:
 
         """
         x = urllib.parse.urlparse(str(self.loc))
-        if x.scheme == "" or "file" in x.scheme:
-            # See above *file* or empty are the only local schemas
-            return True
-
-        return False
+        # See above *file* or empty are the only local schemas
+        return x.scheme == "" or "file" in x.scheme
 
     def is_remote(self) -> bool:
         return not self.is_local()

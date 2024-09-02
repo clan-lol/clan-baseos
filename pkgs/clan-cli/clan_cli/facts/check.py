@@ -16,10 +16,7 @@ def check_secrets(machine: Machine, service: None | str = None) -> bool:
 
     missing_secret_facts = []
     missing_public_facts = []
-    if service:
-        services = [service]
-    else:
-        services = list(machine.facts_data.keys())
+    services = [service] if service else list(machine.facts_data.keys())
     for service in services:
         for secret_fact in machine.facts_data[service]["secret"]:
             if isinstance(secret_fact, str):
@@ -41,9 +38,7 @@ def check_secrets(machine: Machine, service: None | str = None) -> bool:
 
     log.debug(f"missing_secret_facts: {missing_secret_facts}")
     log.debug(f"missing_public_facts: {missing_public_facts}")
-    if missing_secret_facts or missing_public_facts:
-        return False
-    return True
+    return not (missing_secret_facts or missing_public_facts)
 
 
 def check_command(args: argparse.Namespace) -> None:

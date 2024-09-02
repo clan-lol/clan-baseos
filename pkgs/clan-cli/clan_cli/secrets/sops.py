@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO
@@ -196,10 +196,8 @@ def encrypt_file(
                 with open(meta_path, "w") as f_meta:
                     json.dump(meta, f_meta, indent=2)
             finally:
-                try:
+                with suppress(OSError):
                     os.remove(f.name)
-                except OSError:
-                    pass
 
 
 def decrypt_file(secret_path: Path) -> str:

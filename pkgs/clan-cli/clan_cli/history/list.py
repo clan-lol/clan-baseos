@@ -9,7 +9,7 @@ def list_history_command(args: argparse.Namespace) -> None:
     res: dict[str, list[HistoryEntry]] = {}
     for history_entry in list_history():
         url = str(history_entry.flake.flake_url)
-        if res.get(url, None) is None:
+        if res.get(url) is None:
             res[url] = []
         res[url].append(history_entry)
 

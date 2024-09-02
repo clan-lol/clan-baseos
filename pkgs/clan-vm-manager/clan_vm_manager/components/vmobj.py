@@ -279,7 +279,7 @@ class VMObject(GObject.Object):
 
         if not self._log_file:
             try:
-                self._log_file = open(proc.out_file)
+                self._log_file = open(proc.out_file)  # noqa: SIM115
             except Exception as ex:
                 log.exception(ex)
                 self._log_file = None

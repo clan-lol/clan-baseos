@@ -166,10 +166,7 @@ def find_reachable_host_from_deploy_json(deploy_json: dict[str, str]) -> str:
     host = None
     for addr in deploy_json["addrs"]:
         if is_reachable(addr):
-            if is_ipv6(addr):
-                host = f"[{addr}]"
-            else:
-                host = addr
+            host = f"[{addr}]" if is_ipv6(addr) else addr
             break
     if not host:
         msg = f"""

@@ -15,10 +15,7 @@ def send_join_request(host: str, port: int, cert: str) -> bool:
         response = send_join_request_api(host, port)
         if response:
             return response
-    if send_join_request_native(host, port, cert):
-        return True
-
-    return False
+    return bool(send_join_request_native(host, port, cert))
 
 
 # This is the preferred join method, but sunshines pin mechanism

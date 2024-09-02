@@ -1,3 +1,4 @@
+import contextlib
 import os
 import random
 import string
@@ -72,10 +73,8 @@ def write_state(data: ConfigParser) -> bool:
 def add_sunshine_host_to_parser(
     config: ConfigParser, hostname: str, manual_host: str, certificate: str, uuid: str
 ) -> bool:
-    try:
+    with contextlib.suppress(DuplicateSectionError):
         config.add_section("hosts")
-    except DuplicateSectionError:
-        pass
 
     # amount of hosts
     try:

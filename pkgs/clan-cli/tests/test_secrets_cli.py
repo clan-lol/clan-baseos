@@ -492,10 +492,13 @@ def test_secrets(
             "user2",
         ]
     )
-    with pytest.raises(ClanError), use_key(age_keys[2].privkey, monkeypatch):
+    with (
+        pytest.raises(ClanError),
+        use_key(age_keys[2].privkey, monkeypatch),
+        capture_output as output,
+    ):
         # user2 is not in the group anymore
-        with capture_output as output:
-            cli.run(["secrets", "get", "--flake", str(test_flake.path), "key"])
+        cli.run(["secrets", "get", "--flake", str(test_flake.path), "key"])
     print(output.out)
 
     cli.run(
