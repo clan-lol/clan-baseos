@@ -84,7 +84,8 @@ def remove_secret(flake_dir: Path, user: str, secret: str) -> None:
 
 def list_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     lst = list_users(args.flake.path)
     if len(lst) > 0:
         print("\n".join(lst))
@@ -92,31 +93,36 @@ def list_command(args: argparse.Namespace) -> None:
 
 def add_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     add_user(args.flake.path, args.user, args.key, args.force)
 
 
 def get_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     print(get_user(args.flake.path, args.user))
 
 
 def remove_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     remove_user(args.flake.path, args.user)
 
 
 def add_secret_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     add_secret(args.flake.path, args.user, args.secret)
 
 
 def remove_secret_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     remove_secret(args.flake.path, args.user, args.secret)
 
 

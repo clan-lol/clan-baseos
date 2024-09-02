@@ -23,7 +23,8 @@ def import_sops(args: argparse.Namespace) -> None:
     try:
         file.read_text()
     except OSError as e:
-        raise ClanError(f"Could not read file {file}: {e}") from e
+        msg = f"Could not read file {file}: {e}"
+        raise ClanError(msg) from e
     if file_type == ".yaml":
         cmd = ["sops"]
         if args.input_type:

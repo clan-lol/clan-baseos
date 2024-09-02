@@ -3,13 +3,12 @@ from pathlib import Path
 
 import pytest
 from age_keys import SopsSetup
+from clan_cli.nix import nix_eval, run
 from fixtures_flakes import generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
 from helpers.vms import qga_connect, run_vm_in_thread, wait_vm_down
 from root import CLAN_CORE
-
-from clan_cli.nix import nix_eval, run
 
 
 @pytest.mark.impure
@@ -42,7 +41,7 @@ def test_vm_deployment(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -57,7 +56,7 @@ def test_vm_deployment(
             )
         ).stdout.strip()
     )
-    assert sops_secrets != dict()
+    assert sops_secrets != {}
     my_secret_path = run(
         nix_eval(
             [

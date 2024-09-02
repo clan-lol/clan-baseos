@@ -2,7 +2,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from clan_cli.custom_logger import setup_logging
 from clan_cli.nix import nix_shell
 

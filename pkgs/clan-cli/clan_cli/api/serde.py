@@ -129,7 +129,8 @@ def construct_value(
     if loc is None:
         loc = []
     if t is None and field_value:
-        raise ClanError(f"Expected None but got: {field_value}", location=f"{loc}")
+        msg = f"Expected None but got: {field_value}"
+        raise ClanError(msg, location=f"{loc}")
 
     if is_type_in_union(t, type(None)) and field_value is None:
         # Sometimes the field value is None, which is valid if the type hint allows None
@@ -145,8 +146,11 @@ def construct_value(
     # Field_value must be a string
     elif is_type_in_union(t, Path):
         if not isinstance(field_value, str):
+            msg = (
+                f"Expected string, cannot construct pathlib.Path() from: {field_value} "
+            )
             raise ClanError(
-                f"Expected string, cannot construct pathlib.Path() from: {field_value} ",
+                msg,
                 location=f"{loc}",
             )
 
@@ -155,7 +159,8 @@ def construct_value(
     # Trivial values
     elif t is str:
         if not isinstance(field_value, str):
-            raise ClanError(f"Expected string, got {field_value}", location=f"{loc}")
+            msg = f"Expected string, got {field_value}"
+            raise ClanError(msg, location=f"{loc}")
 
         return field_value
 
@@ -178,7 +183,8 @@ def construct_value(
     # dict
     elif get_origin(t) is list:
         if not isinstance(field_value, list):
-            raise ClanError(f"Expected list, got {field_value}", location=f"{loc}")
+            msg = f"Expected list, got {field_value}"
+            raise ClanError(msg, location=f"{loc}")
 
         return [construct_value(get_args(t)[0], item) for item in field_value]
     elif get_origin(t) is dict and isinstance(field_value, dict):
@@ -189,9 +195,8 @@ def construct_value(
     elif get_origin(t) is Literal:
         valid_values = get_args(t)
         if field_value not in valid_values:
-            raise ClanError(
-                f"Expected one of {valid_values}, got {field_value}", location=f"{loc}"
-            )
+            msg = f"Expected one of {valid_values}, got {field_value}"
+            raise ClanError(msg, location=f"{loc}")
         return field_value
 
     elif get_origin(t) is Annotated:
@@ -202,7 +207,8 @@ def construct_value(
 
     # Unhandled
     else:
-        raise ClanError(f"Unhandled field type {t} with value {field_value}")
+        msg = f"Unhandled field type {t} with value {field_value}"
+        raise ClanError(msg)
 
 
 def construct_dataclass(
@@ -215,7 +221,8 @@ def construct_dataclass(
     if path is None:
         path = []
     if not is_dataclass(t):
-        raise ClanError(f"{t.__name__} is not a dataclass")
+        msg = f"{t.__name__} is not a dataclass"
+        raise ClanError(msg)
 
     # Attempt to create an instance of the data_class#
     field_values: dict[str, Any] = {}
@@ -251,9 +258,8 @@ def construct_dataclass(
     for field_name in required:
         if field_name not in field_values:
             formatted_path = " ".join(path)
-            raise ClanError(
-                f"Default value missing for: '{field_name}' in {t} {formatted_path}, got Value: {data}"
-            )
+            msg = f"Default value missing for: '{field_name}' in {t} {formatted_path}, got Value: {data}"
+            raise ClanError(msg)
 
     return t(**field_values)  # type: ignore
 
@@ -265,7 +271,8 @@ def from_dict(
         path = []
     if is_dataclass(t):
         if not isinstance(data, dict):
-            raise ClanError(f"{data} is not a dict. Expected {t}")
+            msg = f"{data} is not a dict. Expected {t}"
+            raise ClanError(msg)
         return construct_dataclass(t, data, path)  # type: ignore
     else:
         return construct_value(t, data, path)

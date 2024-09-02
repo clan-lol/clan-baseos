@@ -54,7 +54,8 @@ def list_history() -> list[HistoryEntry]:
             parsed[i] = _merge_dicts(p, p.get("settings", {}))
         logs = [HistoryEntry(**p) for p in parsed]
     except (json.JSONDecodeError, TypeError) as ex:
-        raise ClanError(f"History file at {user_history_file()} is corrupted") from ex
+        msg = f"History file at {user_history_file()} is corrupted"
+        raise ClanError(msg) from ex
 
     return logs
 
@@ -63,7 +64,7 @@ def new_history_entry(url: str, machine: str) -> HistoryEntry:
     flake = inspect_flake(url, machine)
     return HistoryEntry(
         flake=flake,
-        last_used=datetime.datetime.now().isoformat(),
+        last_used=datetime.datetime.now(tz=datetime.UTC).isoformat(),
     )
 
 
@@ -93,7 +94,7 @@ def _add_maschine_to_history_list(
             new_entry.flake.flake_url == str(uri_path)
             and new_entry.flake.flake_attr == uri_machine
         ):
-            new_entry.last_used = datetime.datetime.now().isoformat()
+            new_entry.last_used = datetime.datetime.now(tz=datetime.UTC).isoformat()
             return new_entry
 
     new_entry = new_history_entry(uri_path, uri_machine)

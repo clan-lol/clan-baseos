@@ -12,11 +12,9 @@ def validate_hostname(hostname: str) -> bool:
 
 def machine_name_type(arg_value: str) -> str:
     if len(arg_value) > 63:
-        raise argparse.ArgumentTypeError(
-            "Machine name must be less than 63 characters long"
-        )
+        msg = "Machine name must be less than 63 characters long"
+        raise argparse.ArgumentTypeError(msg)
     if not VALID_HOSTNAME.match(arg_value):
-        raise argparse.ArgumentTypeError(
-            "Invalid character in machine name. Allowed characters are a-z, 0-9, ., and -. Must not start with a number"
-        )
+        msg = "Invalid character in machine name. Allowed characters are a-z, 0-9, ., and -. Must not start with a number"
+        raise argparse.ArgumentTypeError(msg)
     return arg_value

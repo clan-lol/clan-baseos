@@ -80,9 +80,8 @@ def upload_sources(
     try:
         return json.loads(proc.stdout)["path"]
     except (json.JSONDecodeError, OSError) as e:
-        raise ClanError(
-            f"failed to parse output of {shlex.join(cmd)}: {e}\nGot: {proc.stdout}"
-        ) from e
+        msg = f"failed to parse output of {shlex.join(cmd)}: {e}\nGot: {proc.stdout}"
+        raise ClanError(msg) from e
 
 
 @API.register
@@ -96,7 +95,8 @@ def update_machines(base_path: str, machines: list[InventoryMachine]) -> None:
             flake=FlakeId(base_path),
         )
         if not machine.deploy.targetHost:
-            raise ClanError(f"'TargetHost' is not set for machine '{machine.name}'")
+            msg = f"'TargetHost' is not set for machine '{machine.name}'"
+            raise ClanError(msg)
         # Copy targetHost to machine
         m.target_host_address = machine.deploy.targetHost
         group_machines.append(m)
@@ -161,7 +161,8 @@ def deploy_machine(machines: MachineGroup) -> None:
 
 def update(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     machines = []
     if len(args.machines) == 1 and args.target_host is not None:
         machine = Machine(

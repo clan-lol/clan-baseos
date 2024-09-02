@@ -132,7 +132,8 @@ def install_command(args: argparse.Namespace) -> None:
         json_ssh_deploy = json.loads(qrcode_scan(args.png))
 
     if not json_ssh_deploy and not args.target_host:
-        raise ClanError("No target host provided, please provide a target host.")
+        msg = "No target host provided, please provide a target host."
+        raise ClanError(msg)
 
     if json_ssh_deploy:
         target_host = f"root@{find_reachable_host_from_deploy_json(json_ssh_deploy)}"
@@ -171,13 +172,12 @@ def find_reachable_host_from_deploy_json(deploy_json: dict[str, str]) -> str:
                 host = addr
             break
     if not host:
-        raise ClanError(
-            f"""
+        msg = f"""
             Could not reach any of the host addresses provided in the json string.
             Please doublecheck if they are reachable from your machine.
             Try `ping [ADDR]` with one of the addresses: {deploy_json['addrs']}
             """
-        )
+        raise ClanError(msg)
     return host
 
 

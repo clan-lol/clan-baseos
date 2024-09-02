@@ -96,7 +96,8 @@ def remove_secret(flake_dir: Path, machine: str, secret: str) -> None:
 
 def list_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     lst = list_sops_machines(args.flake.path)
     if len(lst) > 0:
         print("\n".join(lst))
@@ -104,31 +105,36 @@ def list_command(args: argparse.Namespace) -> None:
 
 def add_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     add_machine(args.flake.path, args.machine, args.key, args.force)
 
 
 def get_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     print(get_machine(args.flake.path, args.machine))
 
 
 def remove_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     remove_machine(args.flake.path, args.machine)
 
 
 def add_secret_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     add_secret(args.flake.path, args.machine, args.secret)
 
 
 def remove_secret_command(args: argparse.Namespace) -> None:
     if args.flake is None:
-        raise ClanError("Could not find clan flake toplevel directory")
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     remove_secret(args.flake.path, args.machine, args.secret)
 
 

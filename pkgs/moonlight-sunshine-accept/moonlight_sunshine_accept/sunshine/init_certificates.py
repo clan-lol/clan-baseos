@@ -29,8 +29,8 @@ def generate_certificate(private_key: rsa.RSAPrivateKey) -> bytes:
         .issuer_name(issuer)
         .public_key(private_key.public_key())
         .serial_number(61093384576940497812448570031200738505731293357)
-        .not_valid_before(datetime.datetime(2024, 2, 27))
-        .not_valid_after(datetime.datetime(2044, 2, 22))
+        .not_valid_before(datetime.datetime(2024, 2, 27, tzinfo=datetime.UTC))
+        .not_valid_after(datetime.datetime(2044, 2, 22, tzinfo=datetime.UTC))
         .add_extension(
             x509.SubjectAlternativeName([x509.DNSName("localhost")]),
             critical=False,

@@ -44,7 +44,8 @@ class ClanStore:
 
     # Make sure the VMS class is used as a singleton
     def __init__(self) -> None:
-        raise RuntimeError("Call use() instead")
+        msg = "Call use() instead"
+        raise RuntimeError(msg)
 
     @classmethod
     def use(cls: Any) -> "ClanStore":

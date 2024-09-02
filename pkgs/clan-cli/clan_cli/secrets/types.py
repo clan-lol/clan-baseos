@@ -14,9 +14,8 @@ VALID_USER_NAME = re.compile(r"^[a-z_]([a-z0-9_-]{0,31})?$")
 
 def secret_name_type(arg_value: str) -> str:
     if not VALID_SECRET_NAME.match(arg_value):
-        raise argparse.ArgumentTypeError(
-            "Invalid character in secret name. Allowed characters are a-z, A-Z, 0-9, ., -, and _"
-        )
+        msg = "Invalid character in secret name. Allowed characters are a-z, A-Z, 0-9, ., -, and _"
+        raise argparse.ArgumentTypeError(msg)
     return arg_value
 
 
@@ -28,22 +27,19 @@ def public_or_private_age_key_type(arg_value: str) -> str:
     if arg_value.startswith("AGE-SECRET-KEY-"):
         return get_public_key(arg_value)
     if not arg_value.startswith("age1"):
-        raise ClanError(
-            f"Please provide an age key starting with age1, got: '{arg_value}'"
-        )
+        msg = f"Please provide an age key starting with age1, got: '{arg_value}'"
+        raise ClanError(msg)
     return arg_value
 
 
 def group_or_user_name_type(what: str) -> Callable[[str], str]:
     def name_type(arg_value: str) -> str:
         if len(arg_value) > 32:
-            raise argparse.ArgumentTypeError(
-                f"{what.capitalize()} name must be less than 32 characters long"
-            )
+            msg = f"{what.capitalize()} name must be less than 32 characters long"
+            raise argparse.ArgumentTypeError(msg)
         if not VALID_USER_NAME.match(arg_value):
-            raise argparse.ArgumentTypeError(
-                f"Invalid character in {what} name. Allowed characters are a-z, 0-9, -, and _. Must start with a letter or _"
-            )
+            msg = f"Invalid character in {what} name. Allowed characters are a-z, 0-9, -, and _. Must start with a letter or _"
+            raise argparse.ArgumentTypeError(msg)
         return arg_value
 
     return name_type

@@ -2,8 +2,6 @@ import json
 from typing import TYPE_CHECKING
 
 import pytest
-from fixtures_flakes import FlakeForTest
-
 from clan_cli.api.modules import list_modules
 from clan_cli.clan_uri import FlakeId
 from clan_cli.inventory import (
@@ -19,13 +17,13 @@ from clan_cli.inventory import (
 )
 from clan_cli.machines.create import create_machine
 from clan_cli.nix import nix_eval, run_no_stdout
+from fixtures_flakes import FlakeForTest
 
 if TYPE_CHECKING:
     from age_keys import KeyPair
 
-from helpers import cli
-
 from clan_cli.machines.facts import machine_get_fact
+from helpers import cli
 
 
 @pytest.mark.with_core

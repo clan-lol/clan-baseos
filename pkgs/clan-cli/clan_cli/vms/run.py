@@ -60,7 +60,8 @@ def build_vm(
         vm_data["secrets_dir"] = str(secrets_dir)
         return vm_data
     except json.JSONDecodeError as e:
-        raise ClanError(f"Failed to parse vm config: {e}") from e
+        msg = f"Failed to parse vm config: {e}"
+        raise ClanError(msg) from e
 
 
 def get_secrets(
@@ -208,7 +209,7 @@ def run_command(
 
     vm: VmConfig = inspect_vm(machine=machine_obj)
 
-    portmap = [(h, g) for h, g in (p.split(":") for p in args.publish)]
+    portmap = [p.split(":") for p in args.publish]
 
     run_vm(vm, nix_options=args.option, portmap=portmap)
 

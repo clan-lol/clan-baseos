@@ -1,9 +1,8 @@
 import logging
 import shlex
 
-from clan_cli.custom_logger import get_caller
-
 from clan_app import main
+from clan_cli.custom_logger import get_caller
 
 log = logging.getLogger(__name__)
 

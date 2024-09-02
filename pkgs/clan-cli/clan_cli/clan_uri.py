@@ -74,7 +74,8 @@ class ClanURI:
         if uri.startswith("clan://"):
             nested_uri = uri[7:]
         else:
-            raise ClanError(f"Invalid uri: expected clan://, got {uri}")
+            msg = f"Invalid uri: expected clan://, got {uri}"
+            raise ClanError(msg)
 
         # Parse the URI into components
         # url://netloc/path;parameters?query#fragment

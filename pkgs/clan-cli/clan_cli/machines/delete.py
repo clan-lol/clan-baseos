@@ -15,7 +15,8 @@ def delete_machine(flake: FlakeId, name: str) -> None:
 
     machine = inventory.machines.pop(name, None)
     if machine is None:
-        raise ClanError(f"Machine {name} does not exist")
+        msg = f"Machine {name} does not exist"
+        raise ClanError(msg)
 
     save_inventory(inventory, flake.path, f"Delete machine {name}")
 

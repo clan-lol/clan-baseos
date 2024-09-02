@@ -1,10 +1,9 @@
 from typing import TYPE_CHECKING
 
 import pytest
+from clan_cli.ssh import HostGroup
 from fixtures_flakes import FlakeForTest
 from helpers import cli
-
-from clan_cli.ssh import HostGroup
 
 if TYPE_CHECKING:
     from age_keys import KeyPair

@@ -67,9 +67,9 @@ class SecretStore(SecretStoreBase):
             value,
             add_machines=[self.machine.name],
             add_groups=groups,
-            meta=dict(
-                deploy=deployed,
-            ),
+            meta={
+                "deploy": deployed,
+            },
         )
         return path
 

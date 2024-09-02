@@ -59,7 +59,8 @@ def replace_key(
         final["optional"] = True
 
     if local_dep:
-        raise Exception(f"Unhandled keys in inherited dependency {key}: {local_dep}")
+        msg = f"Unhandled keys in inherited dependency {key}: {local_dep}"
+        raise Exception(msg)
 
     table[key] = final
 
@@ -92,7 +93,8 @@ def main() -> None:
     if "workspace" not in top_cargo_toml:
         # If top_cargo_toml is not a workspace manifest, then this script was probably
         # ran on something that does not actually use workspace dependencies
-        raise Exception(f"{sys.argv[2]} is not a workspace manifest.")
+        msg = f"{sys.argv[2]} is not a workspace manifest."
+        raise Exception(msg)
 
     crate_manifest = load_file(sys.argv[1])
     workspace_manifest = top_cargo_toml["workspace"]

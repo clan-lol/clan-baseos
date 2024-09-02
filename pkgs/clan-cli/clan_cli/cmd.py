@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import select
@@ -5,7 +6,7 @@ import shlex
 import subprocess
 import sys
 import weakref
-from datetime import datetime, timedelta
+from datetime import timedelta
 from enum import Enum
 from pathlib import Path
 from typing import IO, Any
@@ -116,7 +117,7 @@ def run(
         )
     else:
         glog.debug(f"$: {shlex.join(cmd)} \nCaller: {get_caller()}")
-    tstart = datetime.now()
+    tstart = datetime.datetime.now(tz=datetime.UTC)
 
     # Start the subprocess
     process = subprocess.Popen(
@@ -132,7 +133,7 @@ def run(
         process.communicate(input)
     else:
         process.wait()
-    tend = datetime.now()
+    tend = datetime.datetime.now(tz=datetime.UTC)
 
     global TIME_TABLE
     TIME_TABLE.add(shlex.join(cmd), tend - tstart)

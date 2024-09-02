@@ -5,11 +5,10 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import pytest
+from clan_cli.errors import ClanError
 from fixtures_flakes import FlakeForTest
 from helpers import cli
 from stdout import CaptureOutput
-
-from clan_cli.errors import ClanError
 
 if TYPE_CHECKING:
     from age_keys import KeyPair

@@ -29,7 +29,7 @@ class GKVStore(GObject.GObject, Gio.ListModel, Generic[K, V]):
         self.gtype = gtype
         self.key_gen = key_gen
         # From Python 3.7 onwards dictionaries are ordered by default
-        self._items: dict[K, V] = dict()
+        self._items: dict[K, V] = {}
 
     ##################################
     #                                #
@@ -76,9 +76,11 @@ class GKVStore(GObject.GObject, Gio.ListModel, Generic[K, V]):
         )
         key = self.key_gen(item)
         if key in self._items:
-            raise ValueError("Key already exists in the dictionary")
+            msg = "Key already exists in the dictionary"
+            raise ValueError(msg)
         if position < 0 or position > len(self._items):
-            raise IndexError("Index out of range")
+            msg = "Index out of range"
+            raise IndexError(msg)
 
         # Temporary storage for items to be reinserted
         temp_list = [(k, self._items[k]) for k in list(self.keys())[position:]]
@@ -91,7 +93,7 @@ class GKVStore(GObject.GObject, Gio.ListModel, Generic[K, V]):
         self._items[key] = item
 
         # Reinsert the items
-        for i, (k, v) in enumerate(temp_list):
+        for _i, (k, v) in enumerate(temp_list):
             self._items[k] = v
 
         # Notify the model of the changes
@@ -100,7 +102,8 @@ class GKVStore(GObject.GObject, Gio.ListModel, Generic[K, V]):
     def insert_sorted(
         self, item: V, compare_func: Callable[[V, V, Any], int], user_data: Any
     ) -> None:
-        raise NotImplementedError("insert_sorted is not implemented in GKVStore")
+        msg = "insert_sorted is not implemented in GKVStore"
+        raise NotImplementedError(msg)
 
     def remove(self, position: int) -> None:
         if position < 0 or position >= self.get_n_items():
@@ -114,10 +117,12 @@ class GKVStore(GObject.GObject, Gio.ListModel, Generic[K, V]):
         self.items_changed(0, len(self._items), 0)
 
     def sort(self, compare_func: Callable[[V, V, Any], int], user_data: Any) -> None:
-        raise NotImplementedError("sort is not implemented in GKVStore")
+        msg = "sort is not implemented in GKVStore"
+        raise NotImplementedError(msg)
 
     def splice(self, position: int, n_removals: int, additions: list[V]) -> None:
-        raise NotImplementedError("splice is not implemented in GKVStore")
+        msg = "splice is not implemented in GKVStore"
+        raise NotImplementedError(msg)
 
     ##################################
     #                                #

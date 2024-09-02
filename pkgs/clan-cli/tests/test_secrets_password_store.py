@@ -2,16 +2,15 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from fixtures_flakes import FlakeForTest
-from helpers import cli
-from helpers.validator import is_valid_ssh_key
-
 from clan_cli.clan_uri import FlakeId
 from clan_cli.facts.secret_modules.password_store import SecretStore
 from clan_cli.machines.facts import machine_get_fact
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh import HostGroup
+from fixtures_flakes import FlakeForTest
+from helpers import cli
+from helpers.validator import is_valid_ssh_key
 
 
 @pytest.mark.impure

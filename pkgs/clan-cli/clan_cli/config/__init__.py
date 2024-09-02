@@ -40,7 +40,8 @@ def map_type(nix_type: str) -> Any:
         subtype = nix_type.removeprefix("list of ")
         return list[map_type(subtype)]  # type: ignore
     else:
-        raise ClanError(f"Unknown type {nix_type}")
+        msg = f"Unknown type {nix_type}"
+        raise ClanError(msg)
 
 
 # merge two dicts recursively
@@ -79,7 +80,8 @@ def cast(value: Any, input_type: Any, opt_description: str) -> Any:
             elif value[0] in ["false", "False", "no", "n", "0"]:
                 return False
             else:
-                raise ClanError(f"Invalid value {value} for boolean")
+                msg = f"Invalid value {value} for boolean"
+                raise ClanError(msg)
         # handle lists
         elif get_origin(input_type) is list:
             subtype = input_type.__args__[0]
@@ -87,9 +89,8 @@ def cast(value: Any, input_type: Any, opt_description: str) -> Any:
         # handle dicts
         elif get_origin(input_type) is dict:
             if not isinstance(value, dict):
-                raise ClanError(
-                    f"Cannot set {opt_description} directly. Specify a suboption like {opt_description}.<name>"
-                )
+                msg = f"Cannot set {opt_description} directly. Specify a suboption like {opt_description}.<name>"
+                raise ClanError(msg)
             subtype = input_type.__args__[1]
             return {k: cast(v, subtype, opt_description) for k, v in value.items()}
         elif str(input_type) == "str | None":
@@ -98,12 +99,12 @@ def cast(value: Any, input_type: Any, opt_description: str) -> Any:
             return value[0]
         else:
             if len(value) > 1:
-                raise ClanError(f"Too many values for {opt_description}")
+                msg = f"Too many values for {opt_description}"
+                raise ClanError(msg)
             return input_type(value[0])
     except ValueError as e:
-        raise ClanError(
-            f"Invalid type for option {opt_description} (expected {input_type.__name__})"
-        ) from e
+        msg = f"Invalid type for option {opt_description} (expected {input_type.__name__})"
+        raise ClanError(msg) from e
 
 
 def options_for_machine(
@@ -237,7 +238,8 @@ def find_option(
     # element of the option path and find matching parent option
     # (see examples above for why this is needed)
     if len(option_path) == 1:
-        raise ClanError(f"Option {option_description} not found")
+        msg = f"Option {option_description} not found"
+        raise ClanError(msg)
     option_path_parent = option_path[:-1]
     attr_prefix = option_path[-1]
     return find_option(

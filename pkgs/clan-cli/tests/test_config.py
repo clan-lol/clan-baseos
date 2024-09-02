@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from clan_cli import config
 from clan_cli.config import parsing
 from clan_cli.errors import ClanError
@@ -10,21 +9,21 @@ example_options = f"{Path(config.__file__).parent}/jsonschema/options.json"
 
 
 def test_walk_jsonschema_all_types() -> None:
-    schema = dict(
-        type="object",
-        properties=dict(
-            array=dict(
-                type="array",
-                items=dict(
-                    type="string",
-                ),
-            ),
-            boolean=dict(type="boolean"),
-            integer=dict(type="integer"),
-            number=dict(type="number"),
-            string=dict(type="string"),
-        ),
-    )
+    schema = {
+        "type": "object",
+        "properties": {
+            "array": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                },
+            },
+            "boolean": {"type": "boolean"},
+            "integer": {"type": "integer"},
+            "number": {"type": "number"},
+            "string": {"type": "string"},
+        },
+    }
     expected = {
         "array": list[str],
         "boolean": bool,
@@ -36,19 +35,19 @@ def test_walk_jsonschema_all_types() -> None:
 
 
 def test_walk_jsonschema_nested() -> None:
-    schema = dict(
-        type="object",
-        properties=dict(
-            name=dict(
-                type="object",
-                properties=dict(
-                    first=dict(type="string"),
-                    last=dict(type="string"),
-                ),
-            ),
-            age=dict(type="integer"),
-        ),
-    )
+    schema = {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "object",
+                "properties": {
+                    "first": {"type": "string"},
+                    "last": {"type": "string"},
+                },
+            },
+            "age": {"type": "integer"},
+        },
+    }
     expected = {
         "age": int,
         "name.first": str,
@@ -59,16 +58,16 @@ def test_walk_jsonschema_nested() -> None:
 
 # test walk_jsonschema with dynamic attributes (e.g. "additionalProperties")
 def test_walk_jsonschema_dynamic_attrs() -> None:
-    schema = dict(
-        type="object",
-        properties=dict(
-            age=dict(type="integer"),
-            users=dict(
-                type="object",
-                additionalProperties=dict(type="string"),
-            ),
-        ),
-    )
+    schema = {
+        "type": "object",
+        "properties": {
+            "age": {"type": "integer"},
+            "users": {
+                "type": "object",
+                "additionalProperties": {"type": "string"},
+            },
+        },
+    }
     expected = {
         "age": int,
         "users.<name>": str,  # <name> is a placeholder for any string
@@ -77,41 +76,41 @@ def test_walk_jsonschema_dynamic_attrs() -> None:
 
 
 def test_type_from_schema_path_simple() -> None:
-    schema = dict(
-        type="boolean",
-    )
+    schema = {
+        "type": "boolean",
+    }
     assert parsing.type_from_schema_path(schema, []) is bool
 
 
 def test_type_from_schema_path_nested() -> None:
-    schema = dict(
-        type="object",
-        properties=dict(
-            name=dict(
-                type="object",
-                properties=dict(
-                    first=dict(type="string"),
-                    last=dict(type="string"),
-                ),
-            ),
-            age=dict(type="integer"),
-        ),
-    )
+    schema = {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "object",
+                "properties": {
+                    "first": {"type": "string"},
+                    "last": {"type": "string"},
+                },
+            },
+            "age": {"type": "integer"},
+        },
+    }
     assert parsing.type_from_schema_path(schema, ["age"]) is int
     assert parsing.type_from_schema_path(schema, ["name", "first"]) is str
 
 
 def test_type_from_schema_path_dynamic_attrs() -> None:
-    schema = dict(
-        type="object",
-        properties=dict(
-            age=dict(type="integer"),
-            users=dict(
-                type="object",
-                additionalProperties=dict(type="string"),
-            ),
-        ),
-    )
+    schema = {
+        "type": "object",
+        "properties": {
+            "age": {"type": "integer"},
+            "users": {
+                "type": "object",
+                "additionalProperties": {"type": "string"},
+            },
+        },
+    }
     assert parsing.type_from_schema_path(schema, ["age"]) is int
     assert parsing.type_from_schema_path(schema, ["users", "foo"]) is str
 

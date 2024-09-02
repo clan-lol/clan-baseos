@@ -58,7 +58,8 @@ class QgaSession:
             self.sock.send(status_payload)
             result = self.get_response()
             if "error" in result and result["error"]["desc"].startswith("PID"):
-                raise Exception("PID could not be found")
+                msg = "PID could not be found"
+                raise Exception(msg)
             if result["return"]["exited"]:
                 break
             sleep(0.1)
@@ -75,7 +76,6 @@ class QgaSession:
             else base64.b64decode(result["return"]["err-data"]).decode("utf-8")
         )
         if check and exitcode != 0:
-            raise Exception(
-                f"Command on guest failed\nCommand: {cmd}\nExitcode {exitcode}\nStdout: {stdout}\nStderr: {stderr}"
-            )
+            msg = f"Command on guest failed\nCommand: {cmd}\nExitcode {exitcode}\nStdout: {stdout}\nStderr: {stderr}"
+            raise Exception(msg)
         return exitcode, stdout, stderr

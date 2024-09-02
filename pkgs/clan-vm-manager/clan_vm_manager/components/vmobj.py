@@ -1,3 +1,4 @@
+import datetime
 import logging
 import multiprocessing as mp
 import os
@@ -7,7 +8,6 @@ import time
 import weakref
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from datetime import datetime
 from pathlib import Path
 from typing import IO, ClassVar
 
@@ -181,7 +181,7 @@ class VMObject(GObject.Object):
     def __start(self) -> None:
         with self._create_machine() as machine:
             # Start building VM
-            tstart = datetime.now()
+            tstart = datetime.datetime.now(tz=datetime.UTC)
             log.info(f"Building VM {self.get_id()}")
             log_dir = Path(str(self.log_dir.name))
 
@@ -219,7 +219,7 @@ class VMObject(GObject.Object):
 
             # Wait for the build to finish then hide the progress bar
             self.build_process.proc.join()
-            tend = datetime.now()
+            tend = datetime.datetime.now(tz=datetime.UTC)
             log.info(f"VM {self.get_id()} build took {tend - tstart}s")
             self.progress_bar.hide()
 
@@ -312,9 +312,9 @@ class VMObject(GObject.Object):
     def __stop(self) -> None:
         log.info(f"Stopping VM {self.get_id()}")
 
-        start_time = datetime.now()
+        start_time = datetime.datetime.now(tz=datetime.UTC)
         while self.is_running():
-            diff = datetime.now() - start_time
+            diff = datetime.datetime.now(tz=datetime.UTC) - start_time
             if diff.seconds > self.KILL_TIMEOUT:
                 log.error(
                     f"VM {self.get_id()} has not stopped after {self.KILL_TIMEOUT}s. Killing it"

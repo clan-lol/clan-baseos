@@ -5,11 +5,6 @@ from tempfile import TemporaryDirectory
 
 import pytest
 from age_keys import SopsSetup
-from fixtures_flakes import generate_flake
-from helpers import cli
-from helpers.nixos_config import nested_dict
-from root import CLAN_CORE
-
 from clan_cli.clan_uri import FlakeId
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
@@ -17,17 +12,21 @@ from clan_cli.vars.check import check_vars
 from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
 from clan_cli.vars.secret_modules import password_store, sops
+from fixtures_flakes import generate_flake
+from helpers import cli
+from helpers.nixos_config import nested_dict
+from root import CLAN_CORE
 
 
 def test_get_subgraph() -> None:
     from clan_cli.vars.generate import _get_subgraph
 
-    graph = dict(
-        a={"b", "c"},
-        b={"c"},
-        c=set(),
-        d=set(),
-    )
+    graph = {
+        "a": {"b", "c"},
+        "b": {"c"},
+        "c": set(),
+        "d": set(),
+    }
     assert _get_subgraph(graph, "a") == {
         "a": {"b", "c"},
         "b": {"c"},
@@ -39,16 +38,16 @@ def test_get_subgraph() -> None:
 def test_dependencies_as_files() -> None:
     from clan_cli.vars.generate import dependencies_as_dir
 
-    decrypted_dependencies = dict(
-        gen_1=dict(
-            var_1a=b"var_1a",
-            var_1b=b"var_1b",
-        ),
-        gen_2=dict(
-            var_2a=b"var_2a",
-            var_2b=b"var_2b",
-        ),
-    )
+    decrypted_dependencies = {
+        "gen_1": {
+            "var_1a": b"var_1a",
+            "var_1b": b"var_1b",
+        },
+        "gen_2": {
+            "var_2a": b"var_2a",
+            "var_2b": b"var_2b",
+        },
+    }
     with TemporaryDirectory() as tmpdir:
         dep_tmpdir = Path(tmpdir)
         dependencies_as_dir(decrypted_dependencies, dep_tmpdir)
@@ -76,7 +75,7 @@ def test_generate_public_var(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
@@ -105,7 +104,7 @@ def test_generate_secret_var_sops(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -140,7 +139,7 @@ def test_generate_secret_var_sops_with_default_group(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -170,7 +169,7 @@ def test_generate_secret_var_password_store(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     gnupghome = temporary_home / "gpg"
@@ -237,7 +236,7 @@ def test_generate_secret_for_multiple_machines(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(machine1=machine1_config, machine2=machine2_config),
+        machine_configs={"machine1": machine1_config, "machine2": machine2_config},
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -282,7 +281,7 @@ def test_dependant_generators(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
@@ -320,7 +319,7 @@ def test_prompt(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     monkeypatch.setattr("sys.stdin", StringIO(input_value))
@@ -358,7 +357,7 @@ def test_share_flag(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs=dict(my_machine=config),
+        machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()

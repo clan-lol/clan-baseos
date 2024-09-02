@@ -47,7 +47,8 @@ class ImplFunc(GObject.Object, Generic[P, B]):
         self.connect("returns", fn)
 
     def async_run(self, *args: P.args, **kwargs: P.kwargs) -> bool:
-        raise NotImplementedError("Method 'async_run' must be implemented")
+        msg = "Method 'async_run' must be implemented"
+        raise NotImplementedError(msg)
 
     def _async_run(self, data: Any) -> bool:
         result = GLib.SOURCE_REMOVE
@@ -56,8 +57,7 @@ class ImplFunc(GObject.Object, Generic[P, B]):
         except Exception as e:
             log.exception(e)
             # TODO: send error to js
-        finally:
-            return result
+        return result
 
 
 # TODO: Reimplement this such that it uses a multiprocessing.Array of type ctypes.c_char
@@ -93,7 +93,8 @@ class GObjApi:
         fn_name = obj.__name__
 
         if fn_name in self._obj_registry:
-            raise ValueError(f"Function '{fn_name}' already registered")
+            msg = f"Function '{fn_name}' already registered"
+            raise ValueError(msg)
         self._obj_registry[fn_name] = obj
 
     def check_signature(self, fn_signatures: dict[str, inspect.Signature]) -> None:
@@ -120,9 +121,8 @@ class GObjApi:
                 if exp_signature != got_signature:
                     log.error(f"Expected signature: {exp_signature}")
                     log.error(f"Actual signature: {got_signature}")
-                    raise ValueError(
-                        f"Overwritten method '{m_name}' has different signature than the implementation"
-                    )
+                    msg = f"Overwritten method '{m_name}' has different signature than the implementation"
+                    raise ValueError(msg)
 
     def get_obj(self, fn_name: str) -> type[ImplFunc]:
         result = self._obj_registry.get(fn_name, None)
@@ -131,7 +131,8 @@ class GObjApi:
 
         plain_fn = self._methods.get(fn_name, None)
         if plain_fn is None:
-            raise ValueError(f"Method '{fn_name}' not found in Api")
+            msg = f"Method '{fn_name}' not found in Api"
+            raise ValueError(msg)
 
         class GenericFnRuntime(ImplFunc[..., Any]):
             def __init__(self) -> None:

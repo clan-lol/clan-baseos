@@ -9,10 +9,9 @@ from .uri import parse_moonlight_uri
 
 
 def send_join_request(host: str, port: int, cert: str) -> bool:
-    tries = 0
     max_tries = 3
     response = False
-    for tries in range(max_tries):
+    for _tries in range(max_tries):
         response = send_join_request_api(host, port)
         if response:
             return response

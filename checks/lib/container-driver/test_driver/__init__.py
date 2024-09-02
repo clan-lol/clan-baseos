@@ -32,7 +32,8 @@ def retry(fn: Callable, timeout: int = 900) -> None:
         time.sleep(1)
 
     if not fn(True):
-        raise Exception(f"action timed out after {timeout} seconds")
+        msg = f"action timed out after {timeout} seconds"
+        raise Exception(msg)
 
 
 class Machine:
@@ -75,7 +76,8 @@ class Machine:
             if line.startswith("systemd[1]: Startup finished in"):
                 break
         else:
-            raise RuntimeError(f"Failed to start container {self.name}")
+            msg = f"Failed to start container {self.name}"
+            raise RuntimeError(msg)
         childs = (
             Path(f"/proc/{self.process.pid}/task/{self.process.pid}/children")
             .read_text()
@@ -86,8 +88,9 @@ class Machine:
         ), f"Expected exactly one child process for systemd-nspawn, got {childs}"
         try:
             return int(childs[0])
-        except ValueError:
-            raise RuntimeError(f"Failed to parse child process id {childs[0]}")
+        except ValueError as e:
+            msg = f"Failed to parse child process id {childs[0]}"
+            raise RuntimeError(msg) from e
 
     def get_unit_info(self, unit: str) -> dict[str, str]:
         proc = self.systemctl(f'--no-pager show "{unit}"')
@@ -202,16 +205,16 @@ class Machine:
             info = self.get_unit_info(unit)
             state = info["ActiveState"]
             if state == "failed":
-                raise Exception(f'unit "{unit}" reached state "{state}"')
+                msg = f'unit "{unit}" reached state "{state}"'
+                raise Exception(msg)
 
             if state == "inactive":
                 proc = self.systemctl("list-jobs --full 2>&1")
                 if "No jobs" in proc.stdout:
                     info = self.get_unit_info(unit)
                     if info["ActiveState"] == state:
-                        raise Exception(
-                            f'unit "{unit}" is inactive and there are no pending jobs'
-                        )
+                        msg = f'unit "{unit}" is inactive and there are no pending jobs'
+                        raise Exception(msg)
 
             return state == "active"
 
@@ -220,7 +223,8 @@ class Machine:
     def succeed(self, command: str, timeout: int | None = None) -> str:
         res = self.execute(command, timeout=timeout)
         if res.returncode != 0:
-            raise RuntimeError(f"Failed to run command {command}")
+            msg = f"Failed to run command {command}"
+            raise RuntimeError(msg)
         return res.stdout
 
     def shutdown(self) -> None:
@@ -260,7 +264,8 @@ class Driver:
         for container in containers:
             name_match = re.match(r".*-nixos-system-(.+)-(.+)", container.name)
             if not name_match:
-                raise ValueError(f"Unable to extract hostname from {container.name}")
+                msg = f"Unable to extract hostname from {container.name}"
+                raise ValueError(msg)
             name = name_match.group(1)
             self.machines.append(
                 Machine(
@@ -276,12 +281,12 @@ class Driver:
             machine.start()
 
     def test_symbols(self) -> dict[str, Any]:
-        general_symbols = dict(
-            start_all=self.start_all,
-            machines=self.machines,
-            driver=self,
-            Machine=Machine,  # for typing
-        )
+        general_symbols = {
+            "start_all": self.start_all,
+            "machines": self.machines,
+            "driver": self,
+            "Machine": Machine,  # for typing
+        }
         machine_symbols = {pythonize_name(m.name): m for m in self.machines}
         # If there's exactly one machine, make it available under the name
         # "machine", even if it's not called that.
@@ -289,7 +294,7 @@ class Driver:
             (machine_symbols["machine"],) = self.machines
         print(
             "additionally exposed symbols:\n    "
-            + ", ".join(map(lambda m: m.name, self.machines))
+            + ", ".join(m.name for m in self.machines)
             + ",\n    "
             + ", ".join(list(general_symbols.keys()))
         )
@@ -319,9 +324,11 @@ def writeable_dir(arg: str) -> Path:
     """
     path = Path(arg)
     if not path.is_dir():
-        raise argparse.ArgumentTypeError(f"{path} is not a directory")
+        msg = f"{path} is not a directory"
+        raise argparse.ArgumentTypeError(msg)
     if not os.access(path, os.W_OK):
-        raise argparse.ArgumentTypeError(f"{path} is not a writeable directory")
+        msg = f"{path} is not a writeable directory"
+        raise argparse.ArgumentTypeError(msg)
     return path
 
 

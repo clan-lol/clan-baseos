@@ -42,7 +42,7 @@ def update_secrets(
         changed_files.extend(
             update_keys(
                 secret_path,
-                list(sorted(collect_keys_for_path(secret_path))),
+                sorted(collect_keys_for_path(secret_path)),
             )
         )
     return changed_files
@@ -69,7 +69,7 @@ def collect_keys_for_type(folder: Path) -> set[str]:
 
 
 def collect_keys_for_path(path: Path) -> set[str]:
-    keys = set([])
+    keys = set()
     keys.update(collect_keys_for_type(path / "machines"))
     keys.update(collect_keys_for_type(path / "users"))
     groups = path / "groups"
@@ -99,7 +99,7 @@ def encrypt_secret(
     if add_users is None:
         add_users = []
     key = ensure_sops_key(flake_dir)
-    recipient_keys = set([])
+    recipient_keys = set()
 
     files_to_commit = []
     for user in add_users:
@@ -146,7 +146,7 @@ def encrypt_secret(
         )
 
     secret_path = secret_path / "secret"
-    encrypt_file(secret_path, value, list(sorted(recipient_keys)), meta)
+    encrypt_file(secret_path, value, sorted(recipient_keys), meta)
     files_to_commit.append(secret_path)
     commit_files(
         files_to_commit,
@@ -158,7 +158,8 @@ def encrypt_secret(
 def remove_secret(flake_dir: Path, secret: str) -> None:
     path = sops_secrets_folder(flake_dir) / secret
     if not path.exists():
-        raise ClanError(f"Secret '{secret}' does not exist")
+        msg = f"Secret '{secret}' does not exist"
+        raise ClanError(msg)
     shutil.rmtree(path)
     commit_files(
         [path],
@@ -215,9 +216,8 @@ def allow_member(
     user_target = group_folder / name
     if user_target.exists():
         if not user_target.is_symlink():
-            raise ClanError(
-                f"Cannot add user '{name}' to {group_folder.parent.name} secret. {user_target} exists but is not a symlink"
-            )
+            msg = f"Cannot add user '{name}' to {group_folder.parent.name} secret. {user_target} exists but is not a symlink"
+            raise ClanError(msg)
         os.remove(user_target)
 
     user_target.symlink_to(os.path.relpath(source, user_target.parent))
@@ -226,7 +226,7 @@ def allow_member(
         changed.extend(
             update_keys(
                 group_folder.parent,
-                list(sorted(collect_keys_for_path(group_folder.parent))),
+                sorted(collect_keys_for_path(group_folder.parent)),
             )
         )
     return changed
@@ -242,9 +242,8 @@ def disallow_member(group_folder: Path, name: str) -> list[Path]:
     keys = collect_keys_for_path(group_folder.parent)
 
     if len(keys) < 2:
-        raise ClanError(
-            f"Cannot remove {name} from {group_folder.parent.name}. No keys left. Use 'clan secrets remove {name}' to remove the secret."
-        )
+        msg = f"Cannot remove {name} from {group_folder.parent.name}. No keys left. Use 'clan secrets remove {name}' to remove the secret."
+        raise ClanError(msg)
     os.remove(target)
 
     if len(os.listdir(group_folder)) == 0:
@@ -254,7 +253,7 @@ def disallow_member(group_folder: Path, name: str) -> list[Path]:
         os.rmdir(group_folder.parent)
 
     return update_keys(
-        target.parent.parent, list(sorted(collect_keys_for_path(group_folder.parent)))
+        target.parent.parent, sorted(collect_keys_for_path(group_folder.parent))
     )
 
 
@@ -295,7 +294,8 @@ def decrypt_secret(flake_dir: Path, secret_path: Path) -> str:
     ensure_sops_key(flake_dir)
     path = secret_path / "secret"
     if not path.exists():
-        raise ClanError(f"Secret '{secret_path!s}' does not exist")
+        msg = f"Secret '{secret_path!s}' does not exist"
+        raise ClanError(msg)
     return decrypt_file(path)
 
 
@@ -332,9 +332,11 @@ def rename_command(args: argparse.Namespace) -> None:
     old_path = sops_secrets_folder(flake_dir) / args.secret
     new_path = sops_secrets_folder(flake_dir) / args.new_name
     if not old_path.exists():
-        raise ClanError(f"Secret '{args.secret}' does not exist")
+        msg = f"Secret '{args.secret}' does not exist"
+        raise ClanError(msg)
     if new_path.exists():
-        raise ClanError(f"Secret '{args.new_name}' already exists")
+        msg = f"Secret '{args.new_name}' already exists"
+        raise ClanError(msg)
     os.rename(old_path, new_path)
     commit_files(
         [old_path, new_path],

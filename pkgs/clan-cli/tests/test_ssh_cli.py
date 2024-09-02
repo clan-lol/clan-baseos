@@ -1,13 +1,12 @@
 import os
 import sys
 
+import clan_cli
 import pytest
 import pytest_subprocess.fake_process
+from clan_cli.ssh import cli
 from pytest_subprocess import utils
 from stdout import CaptureOutput
-
-import clan_cli
-from clan_cli.ssh import cli
 
 
 def test_no_args(

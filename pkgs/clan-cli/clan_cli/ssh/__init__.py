@@ -222,12 +222,12 @@ class Host:
                     for line in lines:
                         if not is_err:
                             cmdlog.info(
-                                line, extra=dict(command_prefix=self.command_prefix)
+                                line, extra={"command_prefix": self.command_prefix}
                             )
                             pass
                         else:
                             cmdlog.error(
-                                line, extra=dict(command_prefix=self.command_prefix)
+                                line, extra={"command_prefix": self.command_prefix}
                             )
                     print_buf = ""
                 last_output = time.time()
@@ -248,7 +248,7 @@ class Host:
                 elapsed_msg = time.strftime("%H:%M:%S", time.gmtime(elapsed))
                 cmdlog.warn(
                     f"still waiting for '{displayed_cmd}' to finish... ({elapsed_msg} elapsed)",
-                    extra=dict(command_prefix=self.command_prefix),
+                    extra={"command_prefix": self.command_prefix},
                 )
 
             def handle_fd(fd: IO[Any] | None, readlist: list[IO[Any]]) -> str:
@@ -295,7 +295,8 @@ class Host:
             elif stdout == subprocess.PIPE:
                 stdout_read, stdout_write = stack.enter_context(_pipe())
             else:
-                raise ClanError(f"unsupported value for stdout parameter: {stdout}")
+                msg = f"unsupported value for stdout parameter: {stdout}"
+                raise ClanError(msg)
 
             if stderr is None:
                 stderr_read = None
@@ -303,7 +304,8 @@ class Host:
             elif stderr == subprocess.PIPE:
                 stderr_read, stderr_write = stack.enter_context(_pipe())
             else:
-                raise ClanError(f"unsupported value for stderr parameter: {stderr}")
+                msg = f"unsupported value for stderr parameter: {stderr}"
+                raise ClanError(msg)
 
             env = os.environ.copy()
             env.update(extra_env)
@@ -350,12 +352,13 @@ class Host:
                     else:
                         cmdlog.warning(
                             f"[Command failed: {ret}] {displayed_cmd}",
-                            extra=dict(command_prefix=self.command_prefix),
+                            extra={"command_prefix": self.command_prefix},
                         )
                 return subprocess.CompletedProcess(
                     cmd, ret, stdout=stdout_data, stderr=stderr_data
                 )
-        raise RuntimeError("unreachable")
+        msg = "unreachable"
+        raise RuntimeError(msg)
 
     def run_local(
         self,
@@ -386,9 +389,7 @@ class Host:
             cmd = [cmd]
             shell = True
         displayed_cmd = " ".join(cmd)
-        cmdlog.info(
-            f"$ {displayed_cmd}", extra=dict(command_prefix=self.command_prefix)
-        )
+        cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
         return self._run(
             cmd,
             displayed_cmd,
@@ -446,9 +447,7 @@ class Host:
             displayed_cmd += " ".join(cmd)
         else:
             displayed_cmd += cmd
-        cmdlog.info(
-            f"$ {displayed_cmd}", extra=dict(command_prefix=self.command_prefix)
-        )
+        cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
 
         bash_cmd = export_cmd
         bash_args = []
@@ -624,13 +623,12 @@ class HostGroup:
             if e:
                 cmdlog.error(
                     f"failed with: {e}",
-                    extra=dict(command_prefix=result.host.command_prefix),
+                    extra={"command_prefix": result.host.command_prefix},
                 )
                 errors += 1
         if errors > 0:
-            raise ClanError(
-                f"{errors} hosts failed with an error. Check the logs above"
-            )
+            msg = f"{errors} hosts failed with an error. Check the logs above"
+            raise ClanError(msg)
 
     def _run(
         self,
@@ -653,19 +651,19 @@ class HostGroup:
             fn = self._run_local if local else self._run_remote
             thread = Thread(
                 target=fn,
-                kwargs=dict(
-                    results=results,
-                    cmd=cmd,
-                    host=host,
-                    stdout=stdout,
-                    stderr=stderr,
-                    extra_env=extra_env,
-                    cwd=cwd,
-                    check=check,
-                    timeout=timeout,
-                    verbose_ssh=verbose_ssh,
-                    tty=tty,
-                ),
+                kwargs={
+                    "results": results,
+                    "cmd": cmd,
+                    "host": host,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                    "extra_env": extra_env,
+                    "cwd": cwd,
+                    "check": check,
+                    "timeout": timeout,
+                    "verbose_ssh": verbose_ssh,
+                    "tty": tty,
+                },
             )
             thread.start()
             threads.append(thread)
@@ -806,7 +804,8 @@ def parse_deployment_address(
             options[k] = v
     result = urllib.parse.urlsplit("//" + hostname)
     if not result.hostname:
-        raise Exception(f"Invalid hostname: {hostname}")
+        msg = f"Invalid hostname: {hostname}"
+        raise Exception(msg)
     hostname = result.hostname
     port = result.port
     meta = meta.copy()

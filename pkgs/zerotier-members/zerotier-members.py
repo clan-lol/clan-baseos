@@ -59,9 +59,8 @@ def compute_member_id(ipv6_addr: str) -> str:
 def get_network_id() -> str:
     p = Path("/etc/zerotier/network-id")
     if not p.exists():
-        raise ClanError(
-            f"{p} file not found. Have you enabled the zerotier controller on this host?"
-        )
+        msg = f"{p} file not found. Have you enabled the zerotier controller on this host?"
+        raise ClanError(msg)
     return p.read_text().strip()
 
 
@@ -81,9 +80,8 @@ def allow_member(args: argparse.Namespace) -> None:
     )
     resp = conn.getresponse()
     if resp.status != 200:
-        raise ClanError(
-            f"the zerotier daemon returned this error: {resp.status} {resp.reason}"
-        )
+        msg = f"the zerotier daemon returned this error: {resp.status} {resp.reason}"
+        raise ClanError(msg)
     print(resp.status, resp.reason)
 
 
@@ -97,8 +95,9 @@ def list_members(args: argparse.Namespace) -> None:
             data = json.load(f)
             try:
                 member_id = data["id"]
-            except KeyError:
-                raise ClanError(f"error: {member} does not contain an id")
+            except KeyError as e:
+                msg = f"error: {member} does not contain an id"
+                raise ClanError(msg) from e
             print(
                 member_id,
                 compute_zerotier_ip(network_id, data["id"]),

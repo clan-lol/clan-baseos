@@ -121,15 +121,6 @@ python3.pkgs.buildPythonApplication rec {
             ${pythonWithTestDeps}/bin/python -m pytest -s -m "not impure" ./tests
             touch $out
           '';
-
-      clan-vm-manager-no-breakpoints = runCommand "clan-vm-manager-no-breakpoints" { } ''
-        if grep --include \*.py -Rq "breakpoint()" ${source}; then
-          echo "breakpoint() found in ${source}:"
-          grep --include \*.py -Rn "breakpoint()" ${source}
-          exit 1
-        fi
-        touch $out
-      '';
     };
   };
 

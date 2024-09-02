@@ -42,12 +42,15 @@ def subtype_from_schema(schema: dict[str, Any]) -> type:
             sub_type = subtype_from_schema(schema["additionalProperties"])
             return dict[str, sub_type]  # type: ignore
         elif "properties" in schema:
-            raise ClanError("Nested dicts are not supported")
+            msg = "Nested dicts are not supported"
+            raise ClanError(msg)
         else:
-            raise ClanError("Unknown object type")
+            msg = "Unknown object type"
+            raise ClanError(msg)
     elif schema["type"] == "array":
         if "items" not in schema:
-            raise ClanError("Untyped arrays are not supported")
+            msg = "Untyped arrays are not supported"
+            raise ClanError(msg)
         sub_type = subtype_from_schema(schema["items"])
         return list[sub_type]  # type: ignore
     else:
@@ -71,9 +74,11 @@ def type_from_schema_path(
             subtype = type_from_schema_path(schema["additionalProperties"], path[1:])
             return subtype
         else:
-            raise ClanError(f"Unknown type for path {path}")
+            msg = f"Unknown type for path {path}"
+            raise ClanError(msg)
     else:
-        raise ClanError(f"Unknown type for path {path}")
+        msg = f"Unknown type for path {path}"
+        raise ClanError(msg)
 
 
 def options_types_from_schema(schema: dict[str, Any]) -> dict[str, type]:
@@ -86,9 +91,8 @@ def options_types_from_schema(schema: dict[str, Any]) -> dict[str, type]:
             if "additionalProperties" in value:
                 sub_type = value["additionalProperties"].get("type")
                 if sub_type not in type_map:
-                    raise ClanError(
-                        f"Unsupported object type {sub_type} (field {name})"
-                    )
+                    msg = f"Unsupported object type {sub_type} (field {name})"
+                    raise ClanError(msg)
                 result[f"{name}.<name>"] = type_map[sub_type]
                 continue
             # handle properties
@@ -98,10 +102,12 @@ def options_types_from_schema(schema: dict[str, Any]) -> dict[str, type]:
             continue
         elif type_ == "array":
             if "items" not in value:
-                raise ClanError(f"Untyped arrays are not supported (field: {name})")
+                msg = f"Untyped arrays are not supported (field: {name})"
+                raise ClanError(msg)
             sub_type = value["items"].get("type")
             if sub_type not in type_map:
-                raise ClanError(f"Unsupported list type {sub_type} (field {name})")
+                msg = f"Unsupported list type {sub_type} (field {name})"
+                raise ClanError(msg)
             sub_type_: type = type_map[sub_type]
             result[name] = list[sub_type_]  # type: ignore
             continue

@@ -20,16 +20,16 @@ log = logging.getLogger(__name__)
 def create_machine(flake: FlakeId, machine: Machine) -> None:
     hostname_regex = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)$"
     if not re.match(hostname_regex, machine.name):
-        raise ClanError(
-            "Machine name must be a valid hostname", location="Create Machine"
-        )
+        msg = "Machine name must be a valid hostname"
+        raise ClanError(msg, location="Create Machine")
 
     inventory = load_inventory_json(flake.path)
 
     full_inventory = load_inventory_eval(flake.path)
 
     if machine.name in full_inventory.machines.keys():
-        raise ClanError(f"Machine with the name {machine.name} already exists")
+        msg = f"Machine with the name {machine.name} already exists"
+        raise ClanError(msg)
 
     print(f"Define machine {machine.name}", machine)
 

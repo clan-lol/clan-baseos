@@ -7,13 +7,11 @@ hosts = HostGroup([Host("some_host")])
 
 def test_run_environment() -> None:
     p2 = hosts.run_local(
-        "echo $env_var", extra_env=dict(env_var="true"), stdout=subprocess.PIPE
+        "echo $env_var", extra_env={"env_var": "true"}, stdout=subprocess.PIPE
     )
     assert p2[0].result.stdout == "true\n"
 
-    p3 = hosts.run_local(
-        ["env"], extra_env=dict(env_var="true"), stdout=subprocess.PIPE
-    )
+    p3 = hosts.run_local(["env"], extra_env={"env_var": "true"}, stdout=subprocess.PIPE)
     assert "env_var=true" in p3[0].result.stdout
 
 
@@ -27,7 +25,8 @@ def test_timeout() -> None:
     except Exception:
         pass
     else:
-        raise AssertionError("should have raised TimeoutExpired")
+        msg = "should have raised TimeoutExpired"
+        raise AssertionError(msg)
 
 
 def test_run_function() -> None:
@@ -45,7 +44,8 @@ def test_run_exception() -> None:
     except Exception:
         pass
     else:
-        raise AssertionError("should have raised Exception")
+        msg = "should have raised Exception"
+        raise AssertionError(msg)
 
 
 def test_run_function_exception() -> None:
@@ -57,7 +57,8 @@ def test_run_function_exception() -> None:
     except Exception:
         pass
     else:
-        raise AssertionError("should have raised Exception")
+        msg = "should have raised Exception"
+        raise AssertionError(msg)
 
 
 def test_run_local_non_shell() -> None:

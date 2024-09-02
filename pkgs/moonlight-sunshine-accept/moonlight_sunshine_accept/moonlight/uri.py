@@ -10,7 +10,8 @@ def parse_moonlight_uri(uri: str) -> (str, str):
     print(uri)
     parsed = urlparse(uri)
     if parsed.scheme != "moonlight":
-        raise ValueError(f"Invalid moonlight URI: {uri}")
+        msg = f"Invalid moonlight URI: {uri}"
+        raise ValueError(msg)
     hostname = parsed.hostname
     port = parsed.port
     return (hostname, port)
