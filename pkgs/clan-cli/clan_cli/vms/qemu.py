@@ -5,9 +5,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
+from clan_cli.errors import ClanError
 from clan_cli.qemu.qmp import QEMUMonitorProtocol
 
-from ..errors import ClanError
 from .inspect import VmConfig
 
 
@@ -94,8 +94,10 @@ def qemu_command(
     virtiofsd_socket: Path,
     qmp_socket_file: Path,
     qga_socket_file: Path,
-    portmap: list[tuple[int, int]] = [],
+    portmap: list[tuple[int, int]] | None = None,
 ) -> QemuCommand:
+    if portmap is None:
+        portmap = []
     kernel_cmdline = [
         (Path(nixos_config["toplevel"]) / "kernel-params").read_text(),
         f'init={nixos_config["toplevel"]}/init',

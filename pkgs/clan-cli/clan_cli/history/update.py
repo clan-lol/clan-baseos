@@ -3,11 +3,11 @@ import argparse
 import datetime
 
 from clan_cli.clan.inspect import inspect_flake
+from clan_cli.clan_uri import ClanURI
+from clan_cli.errors import ClanCmdError
+from clan_cli.locked_open import write_history_file
+from clan_cli.nix import nix_metadata
 
-from ..clan_uri import ClanURI
-from ..errors import ClanCmdError
-from ..locked_open import write_history_file
-from ..nix import nix_metadata
 from .add import HistoryEntry, list_history
 
 

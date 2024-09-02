@@ -7,13 +7,13 @@ from typing import Literal
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
+from clan_cli.cmd import run, run_no_stdout
+from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.git import commit_file
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_config, nix_eval, nix_shell
 
-from ..cmd import run, run_no_stdout
-from ..completions import add_dynamic_completer, complete_machines
-from ..machines.machines import Machine
-from ..nix import nix_config, nix_eval, nix_shell
 from .types import machine_name_type
 
 log = logging.getLogger(__name__)
@@ -209,7 +209,7 @@ def generate_machine_hardware_info(
             "Invalid hardware-configuration.nix file",
             description="The hardware-configuration.nix file is invalid. Please check the file and try again.",
             location=f"{__name__} {hw_file}",
-        )
+        ) from e
 
     return HardwareReport(report_type)
 

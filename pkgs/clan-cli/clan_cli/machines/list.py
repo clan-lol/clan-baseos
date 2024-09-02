@@ -73,7 +73,7 @@ def list_nixos_machines(flake_url: str | Path) -> list[str]:
         data = json.loads(res)
         return data
     except json.JSONDecodeError as e:
-        raise ClanError(f"Error decoding machines from flake: {e}")
+        raise ClanError(f"Error decoding machines from flake: {e}") from e
 
 
 @dataclass

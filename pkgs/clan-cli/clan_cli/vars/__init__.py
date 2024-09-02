@@ -1,7 +1,8 @@
 # !/usr/bin/env python3
 import argparse
 
-from ..hyperlink import help_hyperlink
+from clan_cli.hyperlink import help_hyperlink
+
 from .check import register_check_parser
 from .generate import register_generate_parser
 from .list import register_list_parser

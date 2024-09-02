@@ -2,10 +2,10 @@ import argparse
 import logging
 import re
 
-from ..api import API
-from ..clan_uri import FlakeId
-from ..errors import ClanError
-from ..inventory import (
+from clan_cli.api import API
+from clan_cli.clan_uri import FlakeId
+from clan_cli.errors import ClanError
+from clan_cli.inventory import (
     Machine,
     MachineDeploy,
     load_inventory_eval,

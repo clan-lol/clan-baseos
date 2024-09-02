@@ -4,7 +4,8 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from ..errors import ClanError
+from clan_cli.errors import ClanError
+
 from .sops import get_public_key
 
 VALID_SECRET_NAME = re.compile(r"^[a-zA-Z0-9._-]+$")

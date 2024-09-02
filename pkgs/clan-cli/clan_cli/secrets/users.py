@@ -1,13 +1,10 @@
 import argparse
 from pathlib import Path
 
-from ..completions import (
-    add_dynamic_completer,
-    complete_secrets,
-    complete_users,
-)
-from ..errors import ClanError
-from ..git import commit_files
+from clan_cli.completions import add_dynamic_completer, complete_secrets, complete_users
+from clan_cli.errors import ClanError
+from clan_cli.git import commit_files
+
 from . import secrets
 from .folders import list_objects, remove_object, sops_secrets_folder, sops_users_folder
 from .secrets import update_secrets

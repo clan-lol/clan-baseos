@@ -53,15 +53,10 @@ class FlakeForTest(NamedTuple):
 def generate_flake(
     temporary_home: Path,
     flake_template: Path,
-    substitutions: dict[str, str] = {
-        "__CHANGE_ME__": "_test_vm_persistence",
-        "git+https://git.clan.lol/clan/clan-core": "path://" + str(CLAN_CORE),
-        "https://git.clan.lol/clan/clan-core/archive/main.tar.gz": "path://"
-        + str(CLAN_CORE),
-    },
+    substitutions: dict[str, str] | None = None,
     # define the machines directly including their config
-    machine_configs: dict[str, dict] = {},
-    inventory: dict[str, dict] = {},
+    machine_configs: dict[str, dict] | None = None,
+    inventory: dict[str, dict] | None = None,
 ) -> FlakeForTest:
     """
     Creates a clan flake with the given name.
@@ -82,6 +77,17 @@ def generate_flake(
     """
 
     # copy the template to a new temporary location
+    if inventory is None:
+        inventory = {}
+    if machine_configs is None:
+        machine_configs = {}
+    if substitutions is None:
+        substitutions = {
+            "__CHANGE_ME__": "_test_vm_persistence",
+            "git+https://git.clan.lol/clan/clan-core": "path://" + str(CLAN_CORE),
+            "https://git.clan.lol/clan/clan-core/archive/main.tar.gz": "path://"
+            + str(CLAN_CORE),
+        }
     flake = temporary_home / "flake"
     shutil.copytree(flake_template, flake)
     sp.run(["chmod", "+w", "-R", str(flake)], check=True)
@@ -136,15 +142,19 @@ def create_flake(
     flake_template: str | Path,
     clan_core_flake: Path | None = None,
     # names referring to pre-defined machines from ../machines
-    machines: list[str] = [],
+    machines: list[str] | None = None,
     # alternatively specify the machines directly including their config
-    machine_configs: dict[str, dict] = {},
+    machine_configs: dict[str, dict] | None = None,
     remote: bool = False,
 ) -> Iterator[FlakeForTest]:
     """
     Creates a flake with the given name and machines.
     The machine names map to the machines in ./test_machines
     """
+    if machine_configs is None:
+        machine_configs = {}
+    if machines is None:
+        machines = []
     if isinstance(flake_template, Path):
         template_path = flake_template
     else:

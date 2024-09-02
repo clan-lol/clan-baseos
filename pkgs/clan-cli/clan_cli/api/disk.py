@@ -1,4 +1,3 @@
-from clan_cli.api import API
 from clan_cli.inventory import (
     ServiceMeta,
     ServiceSingleDisk,
@@ -9,6 +8,8 @@ from clan_cli.inventory import (
     load_inventory_json,
     save_inventory,
 )
+
+from . import API
 
 
 def get_instance_name(machine_name: str) -> str:

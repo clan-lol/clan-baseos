@@ -7,13 +7,14 @@ from contextlib import ExitStack
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..cmd import Log, run
-from ..completions import add_dynamic_completer, complete_machines
-from ..dirs import module_root, user_cache_dir, vm_state_dir
-from ..errors import ClanError
-from ..facts.generate import generate_facts
-from ..machines.machines import Machine
-from ..nix import nix_shell
+from clan_cli.cmd import Log, run
+from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.dirs import module_root, user_cache_dir, vm_state_dir
+from clan_cli.errors import ClanError
+from clan_cli.facts.generate import generate_facts
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_shell
+
 from .inspect import VmConfig, inspect_vm
 from .qemu import qemu_command
 from .virtiofsd import start_virtiofsd
@@ -38,9 +39,11 @@ def facts_to_nixos_config(facts: dict[str, dict[str, bytes]]) -> dict:
 
 # TODO move this to the Machines class
 def build_vm(
-    machine: Machine, tmpdir: Path, nix_options: list[str] = []
+    machine: Machine, tmpdir: Path, nix_options: list[str] | None = None
 ) -> dict[str, str]:
     # TODO pass prompt here for the GTK gui
+    if nix_options is None:
+        nix_options = []
     secrets_dir = get_secrets(machine, tmpdir)
 
     public_facts_module = importlib.import_module(machine.public_facts_module)
@@ -57,7 +60,7 @@ def build_vm(
         vm_data["secrets_dir"] = str(secrets_dir)
         return vm_data
     except json.JSONDecodeError as e:
-        raise ClanError(f"Failed to parse vm config: {e}")
+        raise ClanError(f"Failed to parse vm config: {e}") from e
 
 
 def get_secrets(
@@ -107,9 +110,13 @@ def run_vm(
     *,
     cachedir: Path | None = None,
     socketdir: Path | None = None,
-    nix_options: list[str] = [],
-    portmap: list[tuple[int, int]] = [],
+    nix_options: list[str] | None = None,
+    portmap: list[tuple[int, int]] | None = None,
 ) -> None:
+    if portmap is None:
+        portmap = []
+    if nix_options is None:
+        nix_options = []
     with ExitStack() as stack:
         machine = Machine(name=vm.machine_name, flake=vm.flake_url)
         log.debug(f"Creating VM for {machine}")

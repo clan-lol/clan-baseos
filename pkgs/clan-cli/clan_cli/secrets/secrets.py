@@ -8,17 +8,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
-from .. import tty
-from ..clan_uri import FlakeId
-from ..completions import (
+from clan_cli import tty
+from clan_cli.clan_uri import FlakeId
+from clan_cli.completions import (
     add_dynamic_completer,
     complete_groups,
     complete_machines,
     complete_secrets,
     complete_users,
 )
-from ..errors import ClanError
-from ..git import commit_files
+from clan_cli.errors import ClanError
+from clan_cli.git import commit_files
+
 from .folders import (
     list_objects,
     sops_groups_folder,
@@ -84,11 +85,19 @@ def encrypt_secret(
     flake_dir: Path,
     secret_path: Path,
     value: IO[str] | str | bytes | None,
-    add_users: list[str] = [],
-    add_machines: list[str] = [],
-    add_groups: list[str] = [],
-    meta: dict = {},
+    add_users: list[str] | None = None,
+    add_machines: list[str] | None = None,
+    add_groups: list[str] | None = None,
+    meta: dict | None = None,
 ) -> None:
+    if meta is None:
+        meta = {}
+    if add_groups is None:
+        add_groups = []
+    if add_machines is None:
+        add_machines = []
+    if add_users is None:
+        add_users = []
     key = ensure_sops_key(flake_dir)
     recipient_keys = set([])
 

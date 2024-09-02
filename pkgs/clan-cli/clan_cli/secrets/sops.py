@@ -9,10 +9,11 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO
 
-from ..cmd import Log, run
-from ..dirs import user_config_dir
-from ..errors import ClanError
-from ..nix import nix_shell
+from clan_cli.cmd import Log, run
+from clan_cli.dirs import user_config_dir
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_shell
+
 from .folders import sops_machines_folder, sops_users_folder
 
 
@@ -146,8 +147,10 @@ def encrypt_file(
     secret_path: Path,
     content: IO[str] | str | bytes | None,
     pubkeys: list[str],
-    meta: dict = {},
+    meta: dict | None = None,
 ) -> None:
+    if meta is None:
+        meta = {}
     folder = secret_path.parent
     folder.mkdir(parents=True, exist_ok=True)
 
@@ -224,10 +227,10 @@ def write_key(path: Path, publickey: str, overwrite: bool) -> None:
         if not overwrite:
             flags |= os.O_EXCL
         fd = os.open(path / "key.json", flags)
-    except FileExistsError:
+    except FileExistsError as e:
         raise ClanError(
             f"{path.name} already exists in {path}. Use --force to overwrite."
-        )
+        ) from e
     with os.fdopen(fd, "w") as f:
         json.dump({"publickey": publickey, "type": "age"}, f, indent=2)
 
@@ -237,7 +240,7 @@ def read_key(path: Path) -> str:
         try:
             key = json.load(f)
         except json.JSONDecodeError as e:
-            raise ClanError(f"Failed to decode {path.name}: {e}")
+            raise ClanError(f"Failed to decode {path.name}: {e}") from e
     if key["type"] != "age":
         raise ClanError(
             f"{path.name} is not an age key but {key['type']}. This is not supported"

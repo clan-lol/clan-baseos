@@ -152,7 +152,7 @@ API.register(open_file)
     def to_json_schema(self) -> dict[str, Any]:
         from typing import get_type_hints
 
-        from clan_cli.api.util import type_to_dict
+        from .util import type_to_dict
 
         api_schema: dict[str, Any] = {
             "$comment": "An object containing API methods. ",

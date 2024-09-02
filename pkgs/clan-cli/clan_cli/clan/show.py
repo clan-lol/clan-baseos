@@ -5,11 +5,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from clan_cli.api import API
+from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.inventory import Meta
-
-from ..cmd import run_no_stdout
-from ..nix import nix_eval
+from clan_cli.nix import nix_eval
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ def show_clan_meta(uri: str | Path) -> Meta:
             "Evaluation failed on meta attribute",
             location=f"show_clan {uri}",
             description=str(e.cmd),
-        )
+        ) from e
 
     clan_meta = json.loads(res)
 

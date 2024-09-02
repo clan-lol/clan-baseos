@@ -1,12 +1,12 @@
 import argparse
 import shutil
 
-from ..api import API
-from ..clan_uri import FlakeId
-from ..completions import add_dynamic_completer, complete_machines
-from ..dirs import specific_machine_dir
-from ..errors import ClanError
-from ..inventory import load_inventory_json, save_inventory
+from clan_cli.api import API
+from clan_cli.clan_uri import FlakeId
+from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.dirs import specific_machine_dir
+from clan_cli.errors import ClanError
+from clan_cli.inventory import load_inventory_json, save_inventory
 
 
 @API.register

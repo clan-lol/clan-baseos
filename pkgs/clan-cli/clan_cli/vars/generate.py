@@ -10,17 +10,17 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from clan_cli.cmd import run
-
-from ..completions import (
+from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
     complete_services_for_machine,
 )
-from ..errors import ClanError
-from ..git import commit_files
-from ..machines.inventory import get_all_machines, get_selected_machines
-from ..machines.machines import Machine
-from ..nix import nix_shell
+from clan_cli.errors import ClanError
+from clan_cli.git import commit_files
+from clan_cli.machines.inventory import get_all_machines, get_selected_machines
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_shell
+
 from .check import check_vars
 from .public_modules import FactStoreBase
 from .secret_modules import SecretStoreBase

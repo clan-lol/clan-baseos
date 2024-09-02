@@ -6,11 +6,10 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 from clan_cli.clan_uri import FlakeId
-
-from ..cmd import run_no_stdout
-from ..errors import ClanError
-from ..nix import nix_build, nix_config, nix_eval, nix_metadata
-from ..ssh import Host, parse_deployment_address
+from clan_cli.cmd import run_no_stdout
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata
+from clan_cli.ssh import Host, parse_deployment_address
 
 log = logging.getLogger(__name__)
 
@@ -134,12 +133,14 @@ class Machine:
         attr: str,
         extra_config: None | dict = None,
         impure: bool = False,
-        nix_options: list[str] = [],
+        nix_options: list[str] | None = None,
     ) -> str | Path:
         """
         Build the machine and return the path to the result
         accepts a secret store and a facts store # TODO
         """
+        if nix_options is None:
+            nix_options = []
         config = nix_config()
         system = config["system"]
 
@@ -217,12 +218,14 @@ class Machine:
         refresh: bool = False,
         extra_config: None | dict = None,
         impure: bool = False,
-        nix_options: list[str] = [],
+        nix_options: list[str] | None = None,
     ) -> str:
         """
         eval a nix attribute of the machine
         @attr: the attribute to get
         """
+        if nix_options is None:
+            nix_options = []
         if attr in self._eval_cache and not refresh and extra_config is None:
             return self._eval_cache[attr]
 
@@ -239,13 +242,15 @@ class Machine:
         refresh: bool = False,
         extra_config: None | dict = None,
         impure: bool = False,
-        nix_options: list[str] = [],
+        nix_options: list[str] | None = None,
     ) -> Path:
         """
         build a nix attribute of the machine
         @attr: the attribute to get
         """
 
+        if nix_options is None:
+            nix_options = []
         if attr in self._build_cache and not refresh and extra_config is None:
             return self._build_cache[attr]
 

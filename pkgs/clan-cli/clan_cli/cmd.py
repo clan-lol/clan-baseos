@@ -29,28 +29,28 @@ def handle_output(process: subprocess.Popen, log: Log) -> tuple[str, str]:
     stderr_buf = b""
 
     while len(rlist) != 0:
-        r, _, _ = select.select(rlist, [], [], 0.1)
-        if len(r) == 0:  # timeout in select
+        readlist, _, _ = select.select(rlist, [], [], 0.1)
+        if len(readlist) == 0:  # timeout in select
             if process.poll() is None:
                 continue
             # Process has exited
             break
 
-        def handle_fd(fd: IO[Any] | None) -> bytes:
-            if fd and fd in r:
+        def handle_fd(fd: IO[Any] | None, readlist: list[IO[Any]]) -> bytes:
+            if fd and fd in readlist:
                 read = os.read(fd.fileno(), 4096)
                 if len(read) != 0:
                     return read
                 rlist.remove(fd)
             return b""
 
-        ret = handle_fd(process.stdout)
+        ret = handle_fd(process.stdout, readlist)
         if ret and log in [Log.STDOUT, Log.BOTH]:
             sys.stdout.buffer.write(ret)
             sys.stdout.flush()
 
         stdout_buf += ret
-        ret = handle_fd(process.stderr)
+        ret = handle_fd(process.stderr, readlist)
 
         if ret and log in [Log.STDERR, Log.BOTH]:
             sys.stderr.buffer.write(ret)
@@ -103,11 +103,13 @@ def run(
     *,
     input: bytes | None = None,  # noqa: A002
     env: dict[str, str] | None = None,
-    cwd: Path = Path.cwd(),
+    cwd: Path | None = None,
     log: Log = Log.STDERR,
     check: bool = True,
     error_msg: str | None = None,
 ) -> CmdOut:
+    if cwd is None:
+        cwd = Path.cwd()
     if input:
         glog.debug(
             f"""$: echo "{input.decode('utf-8', 'replace')}" | {shlex.join(cmd)} \nCaller: {get_caller()}"""
@@ -155,7 +157,7 @@ def run_no_stdout(
     cmd: list[str],
     *,
     env: dict[str, str] | None = None,
-    cwd: Path = Path.cwd(),
+    cwd: Path | None = None,
     log: Log = Log.STDERR,
     check: bool = True,
     error_msg: str | None = None,
@@ -164,6 +166,8 @@ def run_no_stdout(
     Like run, but automatically suppresses stdout, if not in DEBUG log level.
     If in DEBUG log level the stdout of commands will be shown.
     """
+    if cwd is None:
+        cwd = Path.cwd()
     if logging.getLogger(__name__.split(".")[0]).isEnabledFor(logging.DEBUG):
         return run(cmd, env=env, log=log, check=check, error_msg=error_msg)
     else:

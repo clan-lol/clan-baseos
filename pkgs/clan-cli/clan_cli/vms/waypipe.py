@@ -4,8 +4,8 @@ import subprocess
 import time
 from collections.abc import Iterator
 
-from ..errors import ClanError
-from ..nix import nix_shell
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_shell
 
 VMADDR_CID_HYPERVISOR = 2
 

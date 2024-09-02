@@ -6,7 +6,7 @@ import socket
 import subprocess
 from pathlib import Path
 
-from ..nix import nix_shell
+from clan_cli.nix import nix_shell
 
 log = logging.getLogger(__name__)
 
@@ -15,9 +15,11 @@ def ssh(
     host: str,
     user: str = "root",
     password: str | None = None,
-    ssh_args: list[str] = [],
+    ssh_args: list[str] | None = None,
     torify: bool = False,
 ) -> None:
+    if ssh_args is None:
+        ssh_args = []
     packages = ["nixpkgs#openssh"]
     if torify:
         packages.append("nixpkgs#tor")

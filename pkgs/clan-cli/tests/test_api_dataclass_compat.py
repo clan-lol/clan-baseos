@@ -11,7 +11,7 @@ from clan_cli.errors import ClanError
 
 
 def find_dataclasses_in_directory(
-    directory: Path, exclude_paths: list[str] = []
+    directory: Path, exclude_paths: list[str] | None = None
 ) -> list[tuple[str, str]]:
     """
     Find all dataclass classes in all Python files within a nested directory.
@@ -22,6 +22,8 @@ def find_dataclasses_in_directory(
     Returns:
         List[Tuple[str, str]]: A list of tuples containing the file path and the dataclass name.
     """
+    if exclude_paths is None:
+        exclude_paths = []
     dataclass_files = []
 
     excludes = [os.path.join(directory, d) for d in exclude_paths]
@@ -144,4 +146,4 @@ Help:
 --------------------------------------------------------------------------------
 """,
                 location=__file__,
-            )
+            ) from e

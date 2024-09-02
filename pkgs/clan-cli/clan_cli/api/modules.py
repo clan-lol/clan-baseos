@@ -55,7 +55,7 @@ def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatte
                 f"Error parsing TOML frontmatter: {e}",
                 description=f"Invalid TOML frontmatter. {err_scope}",
                 location="extract_frontmatter",
-            )
+            ) from e
 
         return Frontmatter(**frontmatter_parsed), remaining_content
 
@@ -97,12 +97,12 @@ def get_modules(base_path: str) -> dict[str, str]:
     try:
         proc = run_no_stdout(cmd)
         res = proc.stdout.strip()
-    except ClanCmdError:
+    except ClanCmdError as e:
         raise ClanError(
             "clanInternals might not have clanModules attributes",
             location=f"list_modules {base_path}",
             description="Evaluation failed on clanInternals.clanModules attribute",
-        )
+        ) from e
     modules: dict[str, str] = json.loads(res)
     return modules
 

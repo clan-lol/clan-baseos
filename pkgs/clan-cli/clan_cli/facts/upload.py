@@ -4,10 +4,10 @@ import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..cmd import Log, run
-from ..completions import add_dynamic_completer, complete_machines
-from ..machines.machines import Machine
-from ..nix import nix_shell
+from clan_cli.cmd import Log, run
+from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_shell
 
 log = logging.getLogger(__name__)
 
