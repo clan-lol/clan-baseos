@@ -1,4 +1,3 @@
-import os
 import random
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -43,7 +42,7 @@ def graphics_options(vm: VmConfig) -> GraphicOptions:
           #"-chardev", "socket,id=vgpu,path=/tmp/vgpu.sock",
         ], cid)
         # fmt: on
-    if not os.path.exists("/run/opengl-driver"):
+    if not Path("/run/opengl-driver").exists():
         display_options = [
             "-vga",
             "none",

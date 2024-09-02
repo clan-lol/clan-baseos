@@ -34,7 +34,7 @@ def clan_key_safe(flake_url: str) -> str:
 def find_toplevel(top_level_files: list[str]) -> Path | None:
     """Returns the path to the toplevel of the clan flake"""
     for project_file in top_level_files:
-        initial_path = Path(os.getcwd())
+        initial_path = Path.cwd()
         path = Path(initial_path)
         while path.parent != path:
             if (path / project_file).exists():
@@ -56,30 +56,30 @@ def clan_templates() -> Path:
 
 def user_config_dir() -> Path:
     if sys.platform == "win32":
-        return Path(os.getenv("APPDATA", os.path.expanduser("~\\AppData\\Roaming\\")))
+        return Path(os.getenv("APPDATA", Path("~\\AppData\\Roaming\\").expanduser()))
     if sys.platform == "darwin":
-        return Path(os.path.expanduser("~/Library/Application Support/"))
-    return Path(os.getenv("XDG_CONFIG_HOME", os.path.expanduser("~/.config")))
+        return Path("~/Library/Application Support/").expanduser()
+    return Path(os.getenv("XDG_CONFIG_HOME", Path("~/.config").expanduser()))
 
 
 def user_data_dir() -> Path:
     if sys.platform == "win32":
         return Path(
-            os.getenv("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local\\"))
+            Path(os.getenv("LOCALAPPDATA", Path("~\\AppData\\Local\\").expanduser()))
         )
     if sys.platform == "darwin":
-        return Path(os.path.expanduser("~/Library/Application Support/"))
-    return Path(os.getenv("XDG_DATA_HOME", os.path.expanduser("~/.local/share")))
+        return Path("~/Library/Application Support/").expanduser()
+    return Path(os.getenv("XDG_DATA_HOME", Path("~/.local/share").expanduser()))
 
 
 def user_cache_dir() -> Path:
     if sys.platform == "win32":
         return Path(
-            os.getenv("LOCALAPPDATA", os.path.expanduser("~\\AppData\\Local\\"))
+            Path(os.getenv("LOCALAPPDATA", Path("~\\AppData\\Local\\").expanduser()))
         )
     if sys.platform == "darwin":
-        return Path(os.path.expanduser("~/Library/Caches/"))
-    return Path(os.getenv("XDG_CACHE_HOME", os.path.expanduser("~/.cache")))
+        return Path("~/Library/Caches/").expanduser()
+    return Path(os.getenv("XDG_CACHE_HOME", Path("~/.cache").expanduser()))
 
 
 def user_gcroot_dir() -> Path:

@@ -42,5 +42,5 @@ def remove_object(path: Path, name: str) -> list[Path]:
         msg = f"{name} not found in {path}"
         raise ClanError(msg) from e
     if not os.listdir(path):
-        os.rmdir(path)
+        path.rmdir()
     return paths_to_commit

@@ -185,7 +185,7 @@ def generate_machine_hardware_info(
         hw_file.replace(backup_file)
         print(f"Backed up existing {hw_file} to {backup_file}")
 
-    with open(hw_file, "w") as f:
+    with hw_file.open("w") as f:
         f.write(out.stdout)
         print(f"Successfully generated: {hw_file}")
 

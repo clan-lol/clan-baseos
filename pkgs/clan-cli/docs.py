@@ -313,7 +313,7 @@ def build_command_reference() -> None:
         markdown += "</div>"
         markdown += "\n"
 
-    with open(folder / "index.md", "w") as f:
+    with (folder / "index.md").open("w") as f:
         f.write(markdown)
 
     # Each top level category is a separate file
@@ -374,7 +374,7 @@ def build_command_reference() -> None:
         files[folder / f"{filename}.md"] = markdown
 
     for fname, content in files.items():
-        with open(fname, "w") as f:
+        with fname.open("w") as f:
             f.write(content)
 
 

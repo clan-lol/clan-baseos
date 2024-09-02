@@ -12,7 +12,7 @@ from clan_cli.errors import ClanError
 
 def find_dataclasses_in_directory(
     directory: Path, exclude_paths: list[str] | None = None
-) -> list[tuple[str, str]]:
+) -> list[tuple[Path, str]]:
     """
     Find all dataclass classes in all Python files within a nested directory.
 
@@ -26,42 +26,41 @@ def find_dataclasses_in_directory(
         exclude_paths = []
     dataclass_files = []
 
-    excludes = [os.path.join(directory, d) for d in exclude_paths]
+    excludes = [directory / d for d in exclude_paths]
 
     for root, _, files in os.walk(directory, topdown=False):
         for file in files:
             if not file.endswith(".py"):
                 continue
 
-            file_path = os.path.join(root, file)
+            file_path = Path(root) / file
 
             if file_path in excludes:
                 print(f"Skipping dataclass check for file: {file_path}")
                 continue
 
-            with open(file_path, encoding="utf-8") as f:
-                try:
-                    tree = ast.parse(f.read(), filename=file_path)
-                    for node in ast.walk(tree):
-                        if isinstance(node, ast.ClassDef):
-                            for deco in node.decorator_list:
-                                if (
-                                    isinstance(deco, ast.Name)
-                                    and deco.id == "dataclass"
-                                ) or (
-                                    isinstance(deco, ast.Call)
-                                    and isinstance(deco.func, ast.Name)
-                                    and deco.func.id == "dataclass"
-                                ):
-                                    dataclass_files.append((file_path, node.name))
-                except (SyntaxError, UnicodeDecodeError) as e:
-                    print(f"Error parsing {file_path}: {e}")
+            python_code = file_path.read_text()
+            try:
+                tree = ast.parse(python_code, filename=file_path)
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ClassDef):
+                        for deco in node.decorator_list:
+                            if (
+                                isinstance(deco, ast.Name) and deco.id == "dataclass"
+                            ) or (
+                                isinstance(deco, ast.Call)
+                                and isinstance(deco.func, ast.Name)
+                                and deco.func.id == "dataclass"
+                            ):
+                                dataclass_files.append((file_path, node.name))
+            except (SyntaxError, UnicodeDecodeError) as e:
+                print(f"Error parsing {file_path}: {e}")
 
     return dataclass_files
 
 
 def load_dataclass_from_file(
-    file_path: str, class_name: str, root_dir: str
+    file_path: Path, class_name: str, root_dir: str
 ) -> type | None:
     """
     Load a dataclass from a given file path.

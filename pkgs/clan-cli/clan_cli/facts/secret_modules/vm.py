@@ -1,4 +1,3 @@
-import os
 import shutil
 from pathlib import Path
 
@@ -30,6 +29,6 @@ class SecretStore(SecretStoreBase):
         return (self.dir / service / name).exists()
 
     def upload(self, output_dir: Path) -> None:
-        if os.path.exists(output_dir):
+        if output_dir.exists():
             shutil.rmtree(output_dir)
         shutil.copytree(self.dir, output_dir)

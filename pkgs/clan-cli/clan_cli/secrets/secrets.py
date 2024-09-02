@@ -218,7 +218,7 @@ def allow_member(
         if not user_target.is_symlink():
             msg = f"Cannot add user '{name}' to {group_folder.parent.name} secret. {user_target} exists but is not a symlink"
             raise ClanError(msg)
-        os.remove(user_target)
+        user_target.unlink()
 
     user_target.symlink_to(os.path.relpath(source, user_target.parent))
     changed = [user_target]
@@ -244,13 +244,13 @@ def disallow_member(group_folder: Path, name: str) -> list[Path]:
     if len(keys) < 2:
         msg = f"Cannot remove {name} from {group_folder.parent.name}. No keys left. Use 'clan secrets remove {name}' to remove the secret."
         raise ClanError(msg)
-    os.remove(target)
+    target.unlink()
 
     if len(os.listdir(group_folder)) == 0:
-        os.rmdir(group_folder)
+        group_folder.rmdir()
 
     if len(os.listdir(group_folder.parent)) == 0:
-        os.rmdir(group_folder.parent)
+        group_folder.parent.rmdir()
 
     return update_keys(
         target.parent.parent, sorted(collect_keys_for_path(group_folder.parent))
@@ -337,7 +337,7 @@ def rename_command(args: argparse.Namespace) -> None:
     if new_path.exists():
         msg = f"Secret '{args.new_name}' already exists"
         raise ClanError(msg)
-    os.rename(old_path, new_path)
+    old_path.rename(new_path)
     commit_files(
         [old_path, new_path],
         flake_dir,

@@ -82,7 +82,7 @@ def config_for_machine(flake_dir: Path, machine_name: str) -> dict:
     settings_path = machine_settings_file(flake_dir, machine_name)
     if not settings_path.exists():
         return {}
-    with open(settings_path) as f:
+    with settings_path.open() as f:
         return json.load(f)
 
 
@@ -102,7 +102,7 @@ def set_config_for_machine(flake_dir: Path, machine_name: str, config: dict) -> 
     # write the config to a json file located at {flake}/machines/{machine_name}/settings.json
     settings_path = machine_settings_file(flake_dir, machine_name)
     settings_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(settings_path, "w") as f:
+    with settings_path.open("w") as f:
         json.dump(config, f)
 
     if flake_dir is not None:

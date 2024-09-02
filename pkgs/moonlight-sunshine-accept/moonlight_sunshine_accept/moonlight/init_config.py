@@ -1,22 +1,15 @@
 import argparse
+from pathlib import Path
 
 from .state import init_state
 
 
-def read_file(file_path: str) -> str:
-    with open(file_path) as file:
-        return file.read()
-
-
 def init_config(args: argparse.Namespace) -> None:
-    key = read_file(args.key)
-    certificate = read_file(args.certificate)
-
-    init_state(certificate, key)
+    init_state(args.certificate.read_text(), args.key.read_text())
     print("Finished initializing moonlight state.")
 
 
 def register_config_initialization_parser(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--certificate")
-    parser.add_argument("--key")
+    parser.add_argument("--certificate", type=Path)
+    parser.add_argument("--key", type=Path)
     parser.set_defaults(func=init_config)

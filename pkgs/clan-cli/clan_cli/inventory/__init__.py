@@ -130,7 +130,7 @@ def load_inventory_json(
 
     inventory_file = get_path(flake_dir)
     if inventory_file.exists():
-        with open(inventory_file) as f:
+        with inventory_file.open() as f:
             try:
                 res = json.load(f)
                 inventory = from_dict(Inventory, res)
@@ -153,7 +153,7 @@ def save_inventory(inventory: Inventory, flake_dir: str | Path, message: str) ->
     """
     inventory_file = get_path(flake_dir)
 
-    with open(inventory_file, "w") as f:
+    with inventory_file.open("w") as f:
         json.dump(dataclass_to_dict(inventory), f, indent=2)
 
     commit_file(inventory_file, Path(flake_dir), commit_message=message)

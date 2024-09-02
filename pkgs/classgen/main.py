@@ -3,6 +3,7 @@ import argparse
 import json
 from collections.abc import Callable
 from functools import partial
+from pathlib import Path
 from typing import Any
 
 
@@ -309,11 +310,11 @@ def generate_dataclass(schema: dict[str, Any], class_name: str = root_class) -> 
 def run_gen(args: argparse.Namespace) -> None:
     print(f"Converting {args.input} to {args.output}")
     dataclass_code = ""
-    with open(args.input) as f:
+    with args.input.open() as f:
         schema = json.load(f)
         dataclass_code = generate_dataclass(schema)
 
-    with open(args.output, "w") as f:
+    with args.output.open("w") as f:
         f.write(
             """# DON NOT EDIT THIS FILE MANUALLY. IT IS GENERATED.
 #
@@ -330,8 +331,8 @@ from typing import Any\n\n
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("input", help="Input JSON schema file")
-    parser.add_argument("output", help="Output Python file")
+    parser.add_argument("input", help="Input JSON schema file", type=Path)
+    parser.add_argument("output", help="Output Python file", type=Path)
     parser.set_defaults(func=run_gen)
 
     args = parser.parse_args()

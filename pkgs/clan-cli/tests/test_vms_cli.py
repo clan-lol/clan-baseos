@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -13,7 +12,7 @@ from stdout import CaptureOutput
 if TYPE_CHECKING:
     from age_keys import KeyPair
 
-no_kvm = not os.path.exists("/dev/kvm")
+no_kvm = not Path("/dev/kvm").exists()
 
 
 @pytest.mark.impure

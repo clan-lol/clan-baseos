@@ -1,5 +1,4 @@
 import contextlib
-import os
 import random
 import string
 from configparser import ConfigParser, DuplicateSectionError, NoOptionError
@@ -45,12 +44,12 @@ def convert_bytearray_to_string(byte_array: str) -> str:
 # this must be created before moonlight is first run
 def init_state(certificate: str, key: str) -> None:
     print("Initializing moonlight state.")
-    os.makedirs(moonlight_config_dir(), exist_ok=True)
+    moonlight_config_dir().mkdir(parents=True, exist_ok=True)
     print("Initialized moonlight config directory.")
 
     print("Writing moonlight state file.")
     # write the initial bootstrap config file
-    with open(moonlight_state_file(), "w") as file:
+    with moonlight_state_file().open("w") as file:
         config = ConfigParser()
         # bytearray ojbects are not supported by ConfigParser,
         # so we need to adjust them ourselves

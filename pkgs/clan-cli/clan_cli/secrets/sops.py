@@ -172,13 +172,11 @@ def encrypt_file(
         with NamedTemporaryFile(delete=False) as f:
             try:
                 if isinstance(content, str):
-                    with open(f.name, "w") as fd:
-                        fd.write(content)
+                    Path(f.name).write_text(content)
                 elif isinstance(content, bytes):
-                    with open(f.name, "wb") as fd:
-                        fd.write(content)
+                    Path(f.name).write_bytes(content)
                 elif isinstance(content, io.IOBase):
-                    with open(f.name, "w") as fd:
+                    with Path(f.name).open("w") as fd:
                         shutil.copyfileobj(content, fd)
                 else:
                     msg = f"Invalid content type: {type(content)}"
@@ -191,13 +189,13 @@ def encrypt_file(
                 # atomic copy of the encrypted file
                 with NamedTemporaryFile(dir=folder, delete=False) as f2:
                     shutil.copyfile(f.name, f2.name)
-                    os.rename(f2.name, secret_path)
+                    Path(f2.name).rename(secret_path)
                 meta_path = secret_path.parent / "meta.json"
-                with open(meta_path, "w") as f_meta:
+                with meta_path.open("w") as f_meta:
                     json.dump(meta, f_meta, indent=2)
             finally:
                 with suppress(OSError):
-                    os.remove(f.name)
+                    Path(f.name).unlink()
 
 
 def decrypt_file(secret_path: Path) -> str:
@@ -214,7 +212,7 @@ def get_meta(secret_path: Path) -> dict:
     meta_path = secret_path.parent / "meta.json"
     if not meta_path.exists():
         return {}
-    with open(meta_path) as f:
+    with meta_path.open() as f:
         return json.load(f)
 
 
@@ -233,7 +231,7 @@ def write_key(path: Path, publickey: str, overwrite: bool) -> None:
 
 
 def read_key(path: Path) -> str:
-    with open(path / "key.json") as f:
+    with Path(path / "key.json").open() as f:
         try:
             key = json.load(f)
         except json.JSONDecodeError as e:

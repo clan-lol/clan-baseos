@@ -273,8 +273,7 @@ class ClanList(Gtk.Box):
 
         logs.set_title(f"""📄<span weight="normal"> {name}</span>""")
         # initial message. Streaming happens automatically when the file is changed by the build process
-        with open(vm.build_process.out_file) as f:
-            logs.set_message(f.read())
+        logs.set_message(vm.build_process.out_file.read_text())
 
         views.set_visible_child_name("logs")
 

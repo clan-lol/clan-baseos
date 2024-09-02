@@ -21,6 +21,7 @@
 
 import os
 import sys
+import tempfile
 from collections.abc import Callable
 from typing import Any, ClassVar
 
@@ -884,14 +885,8 @@ class Win32Implementation(BaseImplementation):
             # No custom icons present, fall back to default icons
             ico_buffer = self._load_ico_buffer(icon_name, icon_size)
 
-        try:
-            import tempfile
-
-            file_handle = tempfile.NamedTemporaryFile(delete=False)
-
-            with file_handle:
-                file_handle.write(ico_buffer)
-
+        with tempfile.NamedTemporaryFile(delete=False) as file_handle:
+            file_handle.write(ico_buffer)
             return windll.user32.LoadImageA(
                 0,
                 encode_path(file_handle.name),
@@ -900,9 +895,6 @@ class Win32Implementation(BaseImplementation):
                 icon_size,
                 self.LR_LOADFROMFILE,
             )
-
-        finally:
-            os.remove(file_handle.name)
 
     def _destroy_h_icon(self):
         from ctypes import windll

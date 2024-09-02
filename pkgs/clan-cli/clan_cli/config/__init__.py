@@ -2,7 +2,6 @@
 import argparse
 import json
 import logging
-import os
 import re
 from pathlib import Path
 from typing import Any, get_origin
@@ -285,8 +284,8 @@ def set_option(
     current[option_path_store[-1]] = casted
 
     # check if there is an existing config file
-    if os.path.exists(settings_file):
-        with open(settings_file) as f:
+    if settings_file.exists():
+        with settings_file.open() as f:
             current_config = json.load(f)
     else:
         current_config = {}
@@ -294,7 +293,7 @@ def set_option(
     # merge and save the new config file
     new_config = merge(current_config, result)
     settings_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(settings_file, "w") as f:
+    with settings_file.open("w") as f:
         json.dump(new_config, f, indent=2)
         print(file=f)  # add newline at the end of the file to make git happy
 
