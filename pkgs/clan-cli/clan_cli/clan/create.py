@@ -5,12 +5,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from clan_cli.api import API
+from clan_cli.cmd import CmdOut, run
+from clan_cli.dirs import clan_templates
+from clan_cli.errors import ClanError
 from clan_cli.inventory import Inventory, init_inventory
-
-from ..cmd import CmdOut, run
-from ..dirs import clan_templates
-from ..errors import ClanError
-from ..nix import nix_command, nix_shell
+from clan_cli.nix import nix_command, nix_shell
 
 
 @dataclass

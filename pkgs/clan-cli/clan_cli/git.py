@@ -1,11 +1,9 @@
 from pathlib import Path
 
-# from clan_cli.dirs import find_git_repo_root
-from clan_cli.errors import ClanError
-from clan_cli.nix import run_cmd
-
 from .cmd import Log, run
+from .errors import ClanError
 from .locked_open import locked_open
+from .nix import run_cmd
 
 
 def commit_file(

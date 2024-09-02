@@ -3,7 +3,7 @@
 import argparse
 import json
 
-from clan_cli.api import API
+from . import API
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Debug the API.")

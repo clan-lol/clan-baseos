@@ -7,13 +7,14 @@ from contextlib import ExitStack
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from ..cmd import Log, run
-from ..completions import add_dynamic_completer, complete_machines
-from ..dirs import module_root, user_cache_dir, vm_state_dir
-from ..errors import ClanError
-from ..facts.generate import generate_facts
-from ..machines.machines import Machine
-from ..nix import nix_shell
+from clan_cli.cmd import Log, run
+from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.dirs import module_root, user_cache_dir, vm_state_dir
+from clan_cli.errors import ClanError
+from clan_cli.facts.generate import generate_facts
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_shell
+
 from .inspect import VmConfig, inspect_vm
 from .qemu import qemu_command
 from .virtiofsd import start_virtiofsd

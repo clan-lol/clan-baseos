@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from ..cmd import run
-from ..errors import ClanError
-from ..nix import nix_eval
+from clan_cli.cmd import run
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_eval
 
 script_dir = Path(__file__).parent
 

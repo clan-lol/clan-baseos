@@ -9,10 +9,11 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO
 
-from ..cmd import Log, run
-from ..dirs import user_config_dir
-from ..errors import ClanError
-from ..nix import nix_shell
+from clan_cli.cmd import Log, run
+from clan_cli.dirs import user_config_dir
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_shell
+
 from .folders import sops_machines_folder, sops_users_folder
 
 

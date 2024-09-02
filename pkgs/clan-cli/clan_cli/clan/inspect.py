@@ -2,14 +2,20 @@ import argparse
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..clan_uri import FlakeId
-from ..cmd import run
-from ..dirs import machine_gcroot
-from ..errors import ClanError
-from ..machines.list import list_nixos_machines
-from ..machines.machines import Machine
-from ..nix import nix_add_to_gcroots, nix_build, nix_config, nix_eval, nix_metadata
-from ..vms.inspect import VmConfig, inspect_vm
+from clan_cli.clan_uri import FlakeId
+from clan_cli.cmd import run
+from clan_cli.dirs import machine_gcroot
+from clan_cli.errors import ClanError
+from clan_cli.machines.list import list_nixos_machines
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import (
+    nix_add_to_gcroots,
+    nix_build,
+    nix_config,
+    nix_eval,
+    nix_metadata,
+)
+from clan_cli.vms.inspect import VmConfig, inspect_vm
 
 
 @dataclass

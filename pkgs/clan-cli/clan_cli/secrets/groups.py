@@ -2,17 +2,17 @@ import argparse
 import os
 from pathlib import Path
 
-from clan_cli.git import commit_files
-
-from ..completions import (
+from clan_cli.completions import (
     add_dynamic_completer,
     complete_groups,
     complete_machines,
     complete_secrets,
     complete_users,
 )
-from ..errors import ClanError
-from ..machines.types import machine_name_type, validate_hostname
+from clan_cli.errors import ClanError
+from clan_cli.git import commit_files
+from clan_cli.machines.types import machine_name_type, validate_hostname
+
 from . import secrets
 from .folders import (
     sops_groups_folder,

@@ -8,17 +8,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
-from .. import tty
-from ..clan_uri import FlakeId
-from ..completions import (
+from clan_cli import tty
+from clan_cli.clan_uri import FlakeId
+from clan_cli.completions import (
     add_dynamic_completer,
     complete_groups,
     complete_machines,
     complete_secrets,
     complete_users,
 )
-from ..errors import ClanError
-from ..git import commit_files
+from clan_cli.errors import ClanError
+from clan_cli.git import commit_files
+
 from .folders import (
     list_objects,
     sops_groups_folder,

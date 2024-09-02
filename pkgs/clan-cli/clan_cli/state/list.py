@@ -3,15 +3,15 @@ import json
 import logging
 from pathlib import Path
 
-from ..cmd import run_no_stdout
-from ..completions import (
+from clan_cli.cmd import run_no_stdout
+from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
     complete_state_services_for_machine,
 )
-from ..dirs import get_clan_flake_toplevel_or_env
-from ..errors import ClanCmdError, ClanError
-from ..nix import nix_eval
+from clan_cli.dirs import get_clan_flake_toplevel_or_env
+from clan_cli.errors import ClanCmdError, ClanError
+from clan_cli.nix import nix_eval
 
 log = logging.getLogger(__name__)
 

@@ -7,17 +7,17 @@ import sys
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
+from clan_cli.cmd import run
+from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.errors import ClanError
+from clan_cli.facts.generate import generate_facts
+from clan_cli.facts.upload import upload_secrets
+from clan_cli.inventory import Machine as InventoryMachine
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_command, nix_metadata
+from clan_cli.ssh import HostKeyCheck
+from clan_cli.vars.generate import generate_vars
 
-from ..cmd import run
-from ..completions import add_dynamic_completer, complete_machines
-from ..errors import ClanError
-from ..facts.generate import generate_facts
-from ..facts.upload import upload_secrets
-from ..inventory import Machine as InventoryMachine
-from ..machines.machines import Machine
-from ..nix import nix_command, nix_metadata
-from ..ssh import HostKeyCheck
-from ..vars.generate import generate_vars
 from .inventory import get_all_machines, get_selected_machines
 from .machine_group import MachineGroup
 

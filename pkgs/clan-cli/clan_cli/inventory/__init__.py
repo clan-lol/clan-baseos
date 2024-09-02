@@ -16,11 +16,11 @@ import json
 from pathlib import Path
 
 from clan_cli.api import API, dataclass_to_dict, from_dict
+from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.git import commit_file
+from clan_cli.nix import nix_eval
 
-from ..cmd import run_no_stdout
-from ..nix import nix_eval
 from .classes import (
     AdminConfig,
     Inventory,

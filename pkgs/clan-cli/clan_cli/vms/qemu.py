@@ -5,9 +5,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
+from clan_cli.errors import ClanError
 from clan_cli.qemu.qmp import QEMUMonitorProtocol
 
-from ..errors import ClanError
 from .inspect import VmConfig
 
 

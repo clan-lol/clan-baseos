@@ -3,13 +3,13 @@ import json
 import subprocess
 from dataclasses import dataclass
 
-from ..completions import (
+from clan_cli.completions import (
     add_dynamic_completer,
     complete_backup_providers_for_machine,
     complete_machines,
 )
-from ..errors import ClanError
-from ..machines.machines import Machine
+from clan_cli.errors import ClanError
+from clan_cli.machines.machines import Machine
 
 
 @dataclass

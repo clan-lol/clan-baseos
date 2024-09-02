@@ -18,7 +18,7 @@ from shlex import quote
 from threading import Thread
 from typing import IO, Any, Generic, TypeVar
 
-from ..errors import ClanError
+from clan_cli.errors import ClanError
 
 # https://no-color.org
 DISABLE_COLOR = not sys.stderr.isatty() or os.environ.get("NO_COLOR", "") != ""

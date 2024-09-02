@@ -8,14 +8,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from clan_cli.api import API
-
-from ..clan_uri import FlakeId
-from ..cmd import Log, run
-from ..completions import add_dynamic_completer, complete_machines
-from ..facts.generate import generate_facts
-from ..machines.machines import Machine
-from ..nix import nix_shell
-from ..ssh.cli import is_ipv6, is_reachable, qrcode_scan
+from clan_cli.clan_uri import FlakeId
+from clan_cli.cmd import Log, run
+from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.facts.generate import generate_facts
+from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_shell
+from clan_cli.ssh.cli import is_ipv6, is_reachable, qrcode_scan
 
 log = logging.getLogger(__name__)
 

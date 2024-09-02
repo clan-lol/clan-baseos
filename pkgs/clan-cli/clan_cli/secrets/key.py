@@ -2,9 +2,9 @@ import argparse
 import logging
 from pathlib import Path
 
+from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
-from ..errors import ClanError
 from .secrets import update_secrets
 from .sops import default_sops_key_path, generate_private_key, get_public_key
 

@@ -2,8 +2,8 @@ import argparse
 import importlib
 import logging
 
-from ..completions import add_dynamic_completer, complete_machines
-from ..machines.machines import Machine
+from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.machines.machines import Machine
 
 log = logging.getLogger(__name__)
 

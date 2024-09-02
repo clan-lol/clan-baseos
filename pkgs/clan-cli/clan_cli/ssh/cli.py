@@ -6,7 +6,7 @@ import socket
 import subprocess
 from pathlib import Path
 
-from ..nix import nix_shell
+from clan_cli.nix import nix_shell
 
 log = logging.getLogger(__name__)
 

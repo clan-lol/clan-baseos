@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
 
-from ..clan_uri import FlakeId
-from ..cmd import run
-from ..nix import nix_build, nix_config
+from clan_cli.clan_uri import FlakeId
+from clan_cli.cmd import run
+from clan_cli.nix import nix_build, nix_config
+
 from .machines import Machine
 
 

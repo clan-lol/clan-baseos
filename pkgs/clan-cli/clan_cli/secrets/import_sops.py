@@ -3,15 +3,16 @@ import json
 import sys
 from pathlib import Path
 
-from ..cmd import run
-from ..completions import (
+from clan_cli.cmd import run
+from clan_cli.completions import (
     add_dynamic_completer,
     complete_groups,
     complete_machines,
     complete_users,
 )
-from ..errors import ClanError
-from ..nix import nix_shell
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_shell
+
 from .secrets import encrypt_secret, sops_secrets_folder
 
 

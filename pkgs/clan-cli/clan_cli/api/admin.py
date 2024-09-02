@@ -1,4 +1,3 @@
-from clan_cli.api import API
 from clan_cli.inventory import (
     AdminConfig,
     ServiceAdmin,
@@ -8,6 +7,8 @@ from clan_cli.inventory import (
     load_inventory_eval,
     save_inventory,
 )
+
+from . import API
 
 
 @API.register

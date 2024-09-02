@@ -1,10 +1,15 @@
 import argparse
 from pathlib import Path
 
-from ..completions import add_dynamic_completer, complete_machines, complete_secrets
-from ..errors import ClanError
-from ..git import commit_files
-from ..machines.types import machine_name_type, validate_hostname
+from clan_cli.completions import (
+    add_dynamic_completer,
+    complete_machines,
+    complete_secrets,
+)
+from clan_cli.errors import ClanError
+from clan_cli.git import commit_files
+from clan_cli.machines.types import machine_name_type, validate_hostname
+
 from . import secrets
 from .folders import (
     list_objects,

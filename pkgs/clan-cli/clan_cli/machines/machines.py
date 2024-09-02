@@ -6,11 +6,10 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 from clan_cli.clan_uri import FlakeId
-
-from ..cmd import run_no_stdout
-from ..errors import ClanError
-from ..nix import nix_build, nix_config, nix_eval, nix_metadata
-from ..ssh import Host, parse_deployment_address
+from clan_cli.cmd import run_no_stdout
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata
+from clan_cli.ssh import Host, parse_deployment_address
 
 log = logging.getLogger(__name__)
 

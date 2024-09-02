@@ -7,12 +7,11 @@ import logging
 from typing import Any
 
 from clan_cli.clan.inspect import FlakeConfig, inspect_flake
+from clan_cli.clan_uri import ClanURI
+from clan_cli.dirs import user_history_file
+from clan_cli.errors import ClanError
+from clan_cli.locked_open import read_history_file, write_history_file
 from clan_cli.machines.list import list_nixos_machines
-
-from ..clan_uri import ClanURI
-from ..dirs import user_history_file
-from ..errors import ClanError
-from ..locked_open import read_history_file, write_history_file
 
 log = logging.getLogger(__name__)
 
