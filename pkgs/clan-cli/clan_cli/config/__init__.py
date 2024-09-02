@@ -22,26 +22,25 @@ log = logging.getLogger(__name__)
 def map_type(nix_type: str) -> Any:
     if nix_type == "boolean":
         return bool
-    elif nix_type in [
+    if nix_type in [
         "integer",
         "signed integer",
         "16 bit unsigned integer; between 0 and 65535 (both inclusive)",
     ]:
         return int
-    elif nix_type.startswith("string"):
+    if nix_type.startswith("string"):
         return str
-    elif nix_type.startswith("null or "):
+    if nix_type.startswith("null or "):
         subtype = nix_type.removeprefix("null or ")
         return map_type(subtype) | None
-    elif nix_type.startswith("attribute set of"):
+    if nix_type.startswith("attribute set of"):
         subtype = nix_type.removeprefix("attribute set of ")
         return dict[str, map_type(subtype)]  # type: ignore
-    elif nix_type.startswith("list of"):
+    if nix_type.startswith("list of"):
         subtype = nix_type.removeprefix("list of ")
         return list[map_type(subtype)]  # type: ignore
-    else:
-        msg = f"Unknown type {nix_type}"
-        raise ClanError(msg)
+    msg = f"Unknown type {nix_type}"
+    raise ClanError(msg)
 
 
 # merge two dicts recursively
@@ -77,31 +76,29 @@ def cast(value: Any, input_type: Any, opt_description: str) -> Any:
         if isinstance(input_type, bool):
             if value[0] in ["true", "True", "yes", "y", "1"]:
                 return True
-            elif value[0] in ["false", "False", "no", "n", "0"]:
+            if value[0] in ["false", "False", "no", "n", "0"]:
                 return False
-            else:
-                msg = f"Invalid value {value} for boolean"
-                raise ClanError(msg)
+            msg = f"Invalid value {value} for boolean"
+            raise ClanError(msg)
         # handle lists
-        elif get_origin(input_type) is list:
+        if get_origin(input_type) is list:
             subtype = input_type.__args__[0]
             return [cast([x], subtype, opt_description) for x in value]
         # handle dicts
-        elif get_origin(input_type) is dict:
+        if get_origin(input_type) is dict:
             if not isinstance(value, dict):
                 msg = f"Cannot set {opt_description} directly. Specify a suboption like {opt_description}.<name>"
                 raise ClanError(msg)
             subtype = input_type.__args__[1]
             return {k: cast(v, subtype, opt_description) for k, v in value.items()}
-        elif str(input_type) == "str | None":
+        if str(input_type) == "str | None":
             if value[0] in ["null", "None"]:
                 return None
             return value[0]
-        else:
-            if len(value) > 1:
-                msg = f"Too many values for {opt_description}"
-                raise ClanError(msg)
-            return input_type(value[0])
+        if len(value) > 1:
+            msg = f"Too many values for {opt_description}"
+            raise ClanError(msg)
+        return input_type(value[0])
     except ValueError as e:
         msg = f"Invalid type for option {opt_description} (expected {input_type.__name__})"
         raise ClanError(msg) from e

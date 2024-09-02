@@ -101,7 +101,7 @@ def main() -> None:
 
     if "workspace" in crate_manifest:
         print(f"{sys.argv[1]} is a workspace manifest, skipping", file=sys.stderr)
-        return
+        return None
 
     changed = False
 

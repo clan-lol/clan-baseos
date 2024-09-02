@@ -39,6 +39,7 @@ def convert_bytearray_to_string(byte_array: str) -> str:
     if byte_array.startswith('"@ByteArray(') and byte_array.endswith(')"'):
         byte_array = byte_array[12:-2]
         return byte_array.replace("\\n", "\n")
+    return byte_array
 
 
 # this must be created before moonlight is first run

@@ -19,23 +19,22 @@ def map_json_type(
         return res
     if isinstance(json_type, dict):
         return map_json_type(json_type.get("type"))
-    elif json_type == "string":
+    if json_type == "string":
         return {"str"}
-    elif json_type == "integer":
+    if json_type == "integer":
         return {"int"}
-    elif json_type == "boolean":
+    if json_type == "boolean":
         return {"bool"}
-    elif json_type == "array":
+    if json_type == "array":
         assert nested_types, f"Array type not found for {parent}"
         return {f"""list[{" | ".join(nested_types)}]"""}
-    elif json_type == "object":
+    if json_type == "object":
         assert nested_types, f"dict type not found for {parent}"
         return {f"""dict[str, {" | ".join(nested_types)}]"""}
-    elif json_type == "null":
+    if json_type == "null":
         return {"None"}
-    else:
-        msg = f"Python type not found for {json_type}"
-        raise ValueError(msg)
+    msg = f"Python type not found for {json_type}"
+    raise ValueError(msg)
 
 
 known_classes = set()
@@ -116,12 +115,12 @@ def field_def_from_default_value(
             field_types=field_types | {"None"},
             default="None",
         )
-    elif isinstance(default_value, list):
+    if isinstance(default_value, list):
         return finalize_field(
             field_types=field_types,
             default_factory="list",
         )
-    elif isinstance(default_value, dict):
+    if isinstance(default_value, dict):
         serialised_types = " | ".join(field_types)
         if serialised_types == nested_class_name:
             return finalize_field(
@@ -129,28 +128,26 @@ def field_def_from_default_value(
                 default_factory=nested_class_name,
             )
 
-        elif "dict[str," in serialised_types:
+        if "dict[str," in serialised_types:
             return finalize_field(
                 field_types=field_types,
                 default_factory="dict",
             )
-        else:
-            return finalize_field(
-                field_types=field_types,
-                default_factory="dict",
-                type_apendix=" | dict[str,Any]",
-            )
-    elif default_value == "‹name›":
+        return finalize_field(
+            field_types=field_types,
+            default_factory="dict",
+            type_apendix=" | dict[str,Any]",
+        )
+    if default_value == "‹name›":
         return None
-    elif isinstance(default_value, str):
+    if isinstance(default_value, str):
         return finalize_field(
             field_types=field_types,
             default=f"'{default_value}'",
         )
-    else:
-        # Other default values unhandled yet.
-        msg = f"Unhandled default value for field '{field_name}' - default value: {default_value}"
-        raise ValueError(msg)
+    # Other default values unhandled yet.
+    msg = f"Unhandled default value for field '{field_name}' - default value: {default_value}"
+    raise ValueError(msg)
 
 
 def get_field_def(

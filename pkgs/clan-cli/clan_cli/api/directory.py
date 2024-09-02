@@ -56,7 +56,8 @@ def get_directory(current_path: str) -> Directory:
     directory = Directory(path=str(curr_dir))
 
     if not curr_dir.is_dir():
-        raise ClanError()
+        msg = f"Path {curr_dir} is not a directory"
+        raise ClanError(msg)
 
     with os.scandir(curr_dir.resolve()) as it:
         for entry in it:

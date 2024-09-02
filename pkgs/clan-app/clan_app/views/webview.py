@@ -67,9 +67,7 @@ class WebExecutor(GObject.Object):
         if self.content_uri.startswith("http://") and uri.startswith(self.content_uri):
             log.debug(f"Allow navigation request: {uri}")
             return False
-        elif self.content_uri.startswith("file://") and uri.startswith(
-            self.content_uri
-        ):
+        if self.content_uri.startswith("file://") and uri.startswith(self.content_uri):
             log.debug(f"Allow navigation request: {uri}")
             return False
         log.warning(

@@ -10,9 +10,8 @@ def is_valid_age_key(secret_key: str) -> bool:
 
     if result.returncode == 0:
         return True
-    else:
-        msg = f"Invalid age key: {secret_key}"
-        raise ValueError(msg)
+    msg = f"Invalid age key: {secret_key}"
+    raise ValueError(msg)
 
 
 def is_valid_ssh_key(secret_key: str, ssh_pub: str) -> bool:
@@ -30,6 +29,5 @@ def is_valid_ssh_key(secret_key: str, ssh_pub: str) -> bool:
                 msg = f"Expected '{ssh_pub}' got '{result.stdout}' for ssh key: {secret_key}"
                 raise ValueError(msg)
             return True
-        else:
-            msg = f"Invalid ssh key: {secret_key}"
-            raise ValueError(msg)
+        msg = f"Invalid ssh key: {secret_key}"
+        raise ValueError(msg)

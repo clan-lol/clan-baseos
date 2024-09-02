@@ -110,11 +110,10 @@ class Machine:
     def flake_dir(self) -> Path:
         if self.flake.is_local():
             return self.flake.path
-        elif self.flake.is_remote():
+        if self.flake.is_remote():
             return Path(nix_metadata(self.flake.url)["path"])
-        else:
-            msg = f"Unsupported flake url: {self.flake}"
-            raise ClanError(msg)
+        msg = f"Unsupported flake url: {self.flake}"
+        raise ClanError(msg)
 
     @property
     def target_host(self) -> Host:
@@ -218,12 +217,11 @@ class Machine:
         if method == "eval":
             output = run_no_stdout(nix_eval(args)).stdout.strip()
             return output
-        elif method == "build":
+        if method == "build":
             outpath = run_no_stdout(nix_build(args)).stdout.strip()
             return Path(outpath)
-        else:
-            msg = f"Unknown method {method}"
-            raise ValueError(msg)
+        msg = f"Unknown method {method}"
+        raise ValueError(msg)
 
     def eval_nix(
         self,
@@ -246,9 +244,8 @@ class Machine:
         if isinstance(output, str):
             self._eval_cache[attr] = output
             return output
-        else:
-            msg = "eval_nix returned not a string"
-            raise ClanError(msg)
+        msg = "eval_nix returned not a string"
+        raise ClanError(msg)
 
     def build_nix(
         self,
@@ -272,6 +269,5 @@ class Machine:
         if isinstance(output, Path):
             self._build_cache[attr] = output
             return output
-        else:
-            msg = "build_nix returned not a Path"
-            raise ClanError(msg)
+        msg = "build_nix returned not a Path"
+        raise ClanError(msg)

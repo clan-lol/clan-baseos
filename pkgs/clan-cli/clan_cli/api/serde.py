@@ -71,16 +71,15 @@ def dataclass_to_dict(obj: Any, *, use_alias: bool = True) -> Any:
                 if not field.name.startswith("_")
                 and getattr(obj, field.name) is not None  # type: ignore
             }
-        elif isinstance(obj, list | tuple):
+        if isinstance(obj, list | tuple):
             return [_to_dict(item) for item in obj]
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             return {sanitize_string(k): _to_dict(v) for k, v in obj.items()}
-        elif isinstance(obj, Path):
+        if isinstance(obj, Path):
             return sanitize_string(str(obj))
-        elif isinstance(obj, str):
+        if isinstance(obj, str):
             return sanitize_string(obj)
-        else:
-            return obj
+        return obj
 
     return _to_dict(obj)
 
@@ -144,7 +143,7 @@ def construct_value(
 
     # If the field expects a path
     # Field_value must be a string
-    elif is_type_in_union(t, Path):
+    if is_type_in_union(t, Path):
         if not isinstance(field_value, str):
             msg = (
                 f"Expected string, cannot construct pathlib.Path() from: {field_value} "
@@ -157,22 +156,22 @@ def construct_value(
         return Path(field_value)
 
     # Trivial values
-    elif t is str:
+    if t is str:
         if not isinstance(field_value, str):
             msg = f"Expected string, got {field_value}"
             raise ClanError(msg, location=f"{loc}")
 
         return field_value
 
-    elif t is int and not isinstance(field_value, str):
+    if t is int and not isinstance(field_value, str):
         return int(field_value)  # type: ignore
-    elif t is float and not isinstance(field_value, str):
+    if t is float and not isinstance(field_value, str):
         return float(field_value)  # type: ignore
-    elif t is bool and isinstance(field_value, bool):
+    if t is bool and isinstance(field_value, bool):
         return field_value  # type: ignore
 
     # Union types construct the first non-None type
-    elif is_union_type(t):
+    if is_union_type(t):
         # Unwrap the union type
         inner = unwrap_none_type(t)
         # Construct the field value
@@ -181,34 +180,33 @@ def construct_value(
     # Nested types
     # list
     # dict
-    elif get_origin(t) is list:
+    if get_origin(t) is list:
         if not isinstance(field_value, list):
             msg = f"Expected list, got {field_value}"
             raise ClanError(msg, location=f"{loc}")
 
         return [construct_value(get_args(t)[0], item) for item in field_value]
-    elif get_origin(t) is dict and isinstance(field_value, dict):
+    if get_origin(t) is dict and isinstance(field_value, dict):
         return {
             key: construct_value(get_args(t)[1], value)
             for key, value in field_value.items()
         }
-    elif get_origin(t) is Literal:
+    if get_origin(t) is Literal:
         valid_values = get_args(t)
         if field_value not in valid_values:
             msg = f"Expected one of {valid_values}, got {field_value}"
             raise ClanError(msg, location=f"{loc}")
         return field_value
 
-    elif get_origin(t) is Annotated:
+    if get_origin(t) is Annotated:
         (base_type,) = get_args(t)
         return construct_value(base_type, field_value)
 
     # elif get_origin(t) is Union:
 
     # Unhandled
-    else:
-        msg = f"Unhandled field type {t} with value {field_value}"
-        raise ClanError(msg)
+    msg = f"Unhandled field type {t} with value {field_value}"
+    raise ClanError(msg)
 
 
 def construct_dataclass(
@@ -274,5 +272,4 @@ def from_dict(
             msg = f"{data} is not a dict. Expected {t}"
             raise ClanError(msg)
         return construct_dataclass(t, data, path)  # type: ignore
-    else:
-        return construct_value(t, data, path)
+    return construct_value(t, data, path)

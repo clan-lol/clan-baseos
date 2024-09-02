@@ -112,7 +112,7 @@ def type_to_dict(
             "additionalProperties": False,
         }
 
-    elif type(t) is UnionType:
+    if type(t) is UnionType:
         return {
             "oneOf": [type_to_dict(arg, scope, type_map) for arg in t.__args__],
         }
@@ -126,7 +126,7 @@ def type_to_dict(
             raise JSchemaTypeError(msg)
         return type_to_dict(type_map.get(t), scope, type_map)
 
-    elif hasattr(t, "__origin__"):  # Check if it's a generic type
+    if hasattr(t, "__origin__"):  # Check if it's a generic type
         origin = get_origin(t)
         args = get_args(t)
 
@@ -136,41 +136,40 @@ def type_to_dict(
             msg = f"{scope} Unhandled Type: "
             raise JSchemaTypeError(msg, origin)
 
-        elif origin is Literal:
+        if origin is Literal:
             # Handle Literal values for enums in JSON Schema
             return {
                 "type": "string",
                 "enum": list(args),  # assumes all args are strings
             }
 
-        elif origin is Annotated:
+        if origin is Annotated:
             base_type, *metadata = get_args(t)
             schema = type_to_dict(base_type, scope)  # Generate schema for the base type
             return apply_annotations(schema, metadata)
 
-        elif origin is Union:
+        if origin is Union:
             union_types = [type_to_dict(arg, scope, type_map) for arg in t.__args__]
             return {
                 "oneOf": union_types,
             }
 
-        elif origin in {list, set, frozenset}:
+        if origin in {list, set, frozenset}:
             return {
                 "type": "array",
                 "items": type_to_dict(t.__args__[0], scope, type_map),
             }
 
-        elif issubclass(origin, dict):
+        if issubclass(origin, dict):
             value_type = t.__args__[1]
             if value_type is Any:
                 return {"type": "object", "additionalProperties": True}
-            else:
-                return {
-                    "type": "object",
-                    "additionalProperties": type_to_dict(value_type, scope, type_map),
-                }
+            return {
+                "type": "object",
+                "additionalProperties": type_to_dict(value_type, scope, type_map),
+            }
         # Generic dataclass with type parameters
-        elif dataclasses.is_dataclass(origin):
+        if dataclasses.is_dataclass(origin):
             # This behavior should mimic the scoping of typeVars in dataclasses
             # Once type_to_dict() encounters a TypeVar, it will look up the type in the type_map
             # When type_to_dict() returns the map goes out of scope.
@@ -182,7 +181,7 @@ def type_to_dict(
         msg = f"{scope} - Error api type not yet supported {t!s}"
         raise JSchemaTypeError(msg)
 
-    elif isinstance(t, type):
+    if isinstance(t, type):
         if t is str:
             return {"type": "string"}
         if t is int:
@@ -211,6 +210,5 @@ def type_to_dict(
 
         msg = f"{scope} - Error primitive type not supported {t!s}"
         raise JSchemaTypeError(msg)
-    else:
-        msg = f"{scope} - Error type not supported {t!s}"
-        raise JSchemaTypeError(msg)
+    msg = f"{scope} - Error type not supported {t!s}"
+    raise JSchemaTypeError(msg)

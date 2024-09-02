@@ -43,39 +43,38 @@ def graphics_options(vm: VmConfig) -> GraphicOptions:
           #"-chardev", "socket,id=vgpu,path=/tmp/vgpu.sock",
         ], cid)
         # fmt: on
+    if not os.path.exists("/run/opengl-driver"):
+        display_options = [
+            "-vga",
+            "none",
+            "-display",
+            "gtk,gl=on",
+            "-device",
+            "virtio-gpu-gl",
+            "-display",
+            "spice-app,gl=on",
+        ]
     else:
-        if not os.path.exists("/run/opengl-driver"):
-            display_options = [
-                "-vga",
-                "none",
-                "-display",
-                "gtk,gl=on",
-                "-device",
-                "virtio-gpu-gl",
-                "-display",
-                "spice-app,gl=on",
-            ]
-        else:
-            display_options = ["-display", "spice-app"]
+        display_options = ["-display", "spice-app"]
 
-        # fmt: off
-        return GraphicOptions([
-            *common,
-            *display_options,
-            "-device", "virtio-serial-pci",
-            "-chardev", "spicevmc,id=vdagent0,name=vdagent",
-            "-device", "virtserialport,chardev=vdagent0,name=com.redhat.spice.0",
-            "-device", "qemu-xhci,id=spicepass",
-            "-chardev", "spicevmc,id=usbredirchardev1,name=usbredir",
-            "-device", "usb-redir,chardev=usbredirchardev1,id=usbredirdev1",
-            "-chardev", "spicevmc,id=usbredirchardev2,name=usbredir",
-            "-device", "usb-redir,chardev=usbredirchardev2,id=usbredirdev2",
-            "-chardev", "spicevmc,id=usbredirchardev3,name=usbredir",
-            "-device", "usb-redir,chardev=usbredirchardev3,id=usbredirdev3",
-            "-device", "pci-ohci,id=smartpass",
-            "-device", "usb-ccid",
-            "-chardev", "spicevmc,id=ccid,name=smartcard",
-        ], None)
+    # fmt: off
+    return GraphicOptions([
+        *common,
+        *display_options,
+        "-device", "virtio-serial-pci",
+        "-chardev", "spicevmc,id=vdagent0,name=vdagent",
+        "-device", "virtserialport,chardev=vdagent0,name=com.redhat.spice.0",
+        "-device", "qemu-xhci,id=spicepass",
+        "-chardev", "spicevmc,id=usbredirchardev1,name=usbredir",
+        "-device", "usb-redir,chardev=usbredirchardev1,id=usbredirdev1",
+        "-chardev", "spicevmc,id=usbredirchardev2,name=usbredir",
+        "-device", "usb-redir,chardev=usbredirchardev2,id=usbredirdev2",
+        "-chardev", "spicevmc,id=usbredirchardev3,name=usbredir",
+        "-device", "usb-redir,chardev=usbredirchardev3,id=usbredirdev3",
+        "-device", "pci-ohci,id=smartpass",
+        "-device", "usb-ccid",
+        "-chardev", "spicevmc,id=ccid,name=smartcard",
+    ], None)
         # fmt: on
 
 

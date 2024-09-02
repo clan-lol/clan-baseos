@@ -24,8 +24,7 @@ def create_backup(machine: Machine, provider: str | None = None) -> None:
             if proc.returncode != 0:
                 msg = "failed to start backup"
                 raise ClanError(msg)
-            else:
-                print("successfully started backup")
+            print("successfully started backup")
     else:
         if provider not in backup_scripts["providers"]:
             msg = f"provider {provider} not found"
@@ -36,8 +35,7 @@ def create_backup(machine: Machine, provider: str | None = None) -> None:
         if proc.returncode != 0:
             msg = "failed to start backup"
             raise ClanError(msg)
-        else:
-            print("successfully started backup")
+        print("successfully started backup")
 
 
 def create_command(args: argparse.Namespace) -> None:

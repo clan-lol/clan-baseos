@@ -53,8 +53,7 @@ def show_clan_meta(uri: str | Path) -> Meta:
                     description="Icon path must be a URL or a relative path.",
                 )
 
-            else:
-                icon_path = str((Path(uri) / meta_icon).resolve())
+            icon_path = str((Path(uri) / meta_icon).resolve())
         else:
             msg = "Invalid schema"
             raise ClanError(

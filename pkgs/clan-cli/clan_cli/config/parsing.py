@@ -41,20 +41,18 @@ def subtype_from_schema(schema: dict[str, Any]) -> type:
         if "additionalProperties" in schema:
             sub_type = subtype_from_schema(schema["additionalProperties"])
             return dict[str, sub_type]  # type: ignore
-        elif "properties" in schema:
+        if "properties" in schema:
             msg = "Nested dicts are not supported"
             raise ClanError(msg)
-        else:
-            msg = "Unknown object type"
-            raise ClanError(msg)
-    elif schema["type"] == "array":
+        msg = "Unknown object type"
+        raise ClanError(msg)
+    if schema["type"] == "array":
         if "items" not in schema:
             msg = "Untyped arrays are not supported"
             raise ClanError(msg)
         sub_type = subtype_from_schema(schema["items"])
         return list[sub_type]  # type: ignore
-    else:
-        return type_map[schema["type"]]
+    return type_map[schema["type"]]
 
 
 def type_from_schema_path(
@@ -66,19 +64,17 @@ def type_from_schema_path(
         full_path = path
     if len(path) == 0:
         return subtype_from_schema(schema)
-    elif schema["type"] == "object":
+    if schema["type"] == "object":
         if "properties" in schema:
             subtype = type_from_schema_path(schema["properties"][path[0]], path[1:])
             return subtype
-        elif "additionalProperties" in schema:
+        if "additionalProperties" in schema:
             subtype = type_from_schema_path(schema["additionalProperties"], path[1:])
             return subtype
-        else:
-            msg = f"Unknown type for path {path}"
-            raise ClanError(msg)
-    else:
         msg = f"Unknown type for path {path}"
         raise ClanError(msg)
+    msg = f"Unknown type for path {path}"
+    raise ClanError(msg)
 
 
 def options_types_from_schema(schema: dict[str, Any]) -> dict[str, type]:
@@ -100,7 +96,7 @@ def options_types_from_schema(schema: dict[str, Any]) -> dict[str, type]:
             for sub_name, sub_type in sub_result.items():
                 result[f"{name}.{sub_name}"] = sub_type
             continue
-        elif type_ == "array":
+        if type_ == "array":
             if "items" not in value:
                 msg = f"Untyped arrays are not supported (field: {name})"
                 raise ClanError(msg)

@@ -29,10 +29,13 @@ lint.select = [
   "PIE",
   "PT",
   "PYI",
+  "Q",
+  "RET",
+  "RSE",
   "RUF",
   "T10",
   "TID",
   "U",
   "YTT",
 ]
-lint.ignore = ["E501", "E402", "E731", "ANN101", "ANN401", "A003"]
+lint.ignore = ["E501", "E402", "E731", "ANN101", "ANN401", "A003", "RET504"]

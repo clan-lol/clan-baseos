@@ -9,7 +9,7 @@ class ClanJSONEncoder(json.JSONEncoder):
         if hasattr(o, "to_json") and callable(o.to_json):
             return o.to_json()
         # Check if the object is a dataclass
-        elif dataclasses.is_dataclass(o):
+        if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
         # Otherwise, use the default serialization
         return super().default(o)

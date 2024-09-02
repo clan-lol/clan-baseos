@@ -88,8 +88,7 @@ def trim_path_to_three_levels(path: str) -> str:
     parts = path.split(os.path.sep)
     if len(parts) > 4:
         return os.path.sep.join(parts[-4:])
-    else:
-        return path
+    return path
 
 
 PROFS = ProfilerStore()
@@ -116,5 +115,4 @@ def profile(func: Callable) -> Callable:
 
     if os.getenv("PERF", "0") == "1":
         return wrapper
-    else:
-        return func
+    return func

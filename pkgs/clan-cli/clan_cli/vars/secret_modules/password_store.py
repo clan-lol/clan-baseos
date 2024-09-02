@@ -21,8 +21,7 @@ class SecretStore(SecretStoreBase):
     def _var_path(self, generator_name: str, name: str, shared: bool) -> Path:
         if shared:
             return Path(f"shared/{generator_name}/{name}")
-        else:
-            return Path(f"machines/{self.machine.name}/{generator_name}/{name}")
+        return Path(f"machines/{self.machine.name}/{generator_name}/{name}")
 
     def set(
         self,
