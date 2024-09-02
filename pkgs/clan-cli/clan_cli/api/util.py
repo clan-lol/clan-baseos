@@ -92,7 +92,7 @@ def type_to_dict(
                     required.add(pn)
 
             elif pv.get("oneOf") is not None:
-                if "null" not in [i["type"] for i in pv.get("oneOf", [])]:
+                if "null" not in [i.get("type") for i in pv.get("oneOf", [])]:
                     required.add(pn)
 
         required_fields = {

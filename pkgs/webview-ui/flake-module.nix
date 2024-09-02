@@ -19,7 +19,7 @@
 
         preBuild = ''
           mkdir -p api
-          cat ${config.packages.clan-ts-api} > api/index.ts
+          cp -r ${config.packages.clan-ts-api}/* api
         '';
       };
       devShells.webview-ui = pkgs.mkShell {
@@ -50,7 +50,8 @@
 
 
           mkdir -p ./app/api
-          cat ${config.packages.clan-ts-api} > ./app/api/index.ts
+          cp -r ${config.packages.clan-ts-api}/* app/api
+          chmod -R +w app/api
         '';
       };
     };
