@@ -38,4 +38,4 @@ lint.select = [
   "U",
   "YTT",
 ]
-lint.ignore = ["E501", "E402", "E731", "ANN101", "ANN401", "A003", "RET504"]
+lint.ignore = ["E501", "E402", "E731", "ANN101", "ANN401", "A003", "RET504", "PT001", "PT023"]
