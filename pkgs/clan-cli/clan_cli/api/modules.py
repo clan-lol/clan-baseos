@@ -176,7 +176,7 @@ def set_service_instance(
 
     if module_name not in service_keys:
         msg = f"{module_name} is not a valid Service attribute. Expected one of {', '.join(service_keys)}."
-        raise ValueError(msg)
+        raise ClanError(msg)
 
     inventory = load_inventory_json(base_path)
     target_type = get_args(get_type_hints(Service)[module_name])[1]

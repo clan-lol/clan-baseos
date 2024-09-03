@@ -1,5 +1,7 @@
 from urllib.parse import urlparse
 
+from moonlight_sunshine_accept.errors import Error
+
 
 def parse_moonlight_uri(uri: str) -> tuple[str, int | None]:
     print(uri)
@@ -11,10 +13,10 @@ def parse_moonlight_uri(uri: str) -> tuple[str, int | None]:
     parsed = urlparse(uri)
     if parsed.scheme != "moonlight":
         msg = f"Invalid moonlight URI: {uri}"
-        raise ValueError(msg)
+        raise Error(msg)
     hostname = parsed.hostname
     if hostname is None:
         msg = f"Invalid moonlight URI: {uri}"
-        raise ValueError
+        raise Error(msg)
     port = parsed.port
     return (hostname, port)

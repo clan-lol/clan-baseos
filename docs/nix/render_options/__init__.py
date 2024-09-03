@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from clan_cli.api.modules import Frontmatter, extract_frontmatter, get_roles
+from clan_cli.errors import ClanError
 
 # Get environment variables
 CLAN_CORE_PATH = Path(os.environ["CLAN_CORE_PATH"])
@@ -153,11 +154,11 @@ options_head = "\n## Module Options\n"
 def produce_clan_core_docs() -> None:
     if not CLAN_CORE_DOCS:
         msg = f"Environment variables are not set correctly: $CLAN_CORE_DOCS={CLAN_CORE_DOCS}"
-        raise ValueError(msg)
+        raise ClanError(msg)
 
     if not OUT:
         msg = f"Environment variables are not set correctly: $out={OUT}"
-        raise ValueError(msg)
+        raise ClanError(msg)
 
     # A mapping of output file to content
     core_outputs: dict[str, str] = {}
@@ -228,15 +229,15 @@ clan_modules_descr = """Clan modules are [NixOS modules](https://wiki.nixos.org/
 def produce_clan_modules_docs() -> None:
     if not CLAN_MODULES:
         msg = f"Environment variables are not set correctly: $out={CLAN_MODULES}"
-        raise ValueError(msg)
+        raise ClanError(msg)
 
     if not CLAN_CORE_PATH:
         msg = f"Environment variables are not set correctly: $CLAN_CORE_PATH={CLAN_CORE_PATH}"
-        raise ValueError(msg)
+        raise ClanError(msg)
 
     if not OUT:
         msg = f"Environment variables are not set correctly: $out={OUT}"
-        raise ValueError(msg)
+        raise ClanError(msg)
 
     with Path(CLAN_MODULES).open() as f:
         links: dict[str, str] = json.load(f)

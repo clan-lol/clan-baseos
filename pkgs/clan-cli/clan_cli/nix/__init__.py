@@ -146,7 +146,7 @@ def run_cmd(programs: list[str], cmd: list[str]) -> list[str]:
     for program in programs:
         if not Programs.is_allowed(program):
             msg = f"Program not allowed: {program}"
-            raise ValueError(msg)
+            raise ClanError(msg)
     if os.environ.get("IN_NIX_SANDBOX"):
         return cmd
     missing_packages = [

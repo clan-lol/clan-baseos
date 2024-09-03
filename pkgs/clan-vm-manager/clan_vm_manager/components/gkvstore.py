@@ -5,6 +5,7 @@ from typing import Any, Generic, TypeVar
 import gi
 
 gi.require_version("Gio", "2.0")
+from clan_cli.errors import ClanError
 from gi.repository import Gio, GObject
 
 log = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ class GKVStore(GObject.GObject, Gio.ListModel, Generic[K, V]):
         key = self.key_gen(item)
         if key in self._items:
             msg = "Key already exists in the dictionary"
-            raise ValueError(msg)
+            raise ClanError(msg)
         if position < 0 or position > len(self._items):
             msg = "Index out of range"
             raise IndexError(msg)

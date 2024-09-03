@@ -110,10 +110,10 @@ API.register(open_file)
     def register(self, fn: Callable[..., T]) -> Callable[..., T]:
         if fn.__name__ in self._registry:
             msg = f"Function {fn.__name__} already registered"
-            raise ValueError(msg)
+            raise ClanError(msg)
         if fn.__name__ in self._orig_signature:
             msg = f"Function {fn.__name__} already registered"
-            raise ValueError(msg)
+            raise ClanError(msg)
         # make copy of original function
         self._orig_signature[fn.__name__] = signature(fn)
 
