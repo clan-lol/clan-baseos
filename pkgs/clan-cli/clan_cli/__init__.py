@@ -16,10 +16,8 @@ __all__ = ["directory", "mdns_discovery", "modules", "update", "disk", "admin", 
 from . import (
     backups,
     clan,
-    facts,
     flash,
     history,
-    machines,
     secrets,
     state,
     vars,
@@ -29,7 +27,9 @@ from .clan_uri import FlakeId
 from .custom_logger import setup_logging
 from .dirs import get_clan_flake_toplevel_or_env
 from .errors import ClanCmdError, ClanError
+from .facts import cli as facts
 from .hyperlink import help_hyperlink
+from .machines import cli as machines
 from .profiler import profile
 from .ssh import cli as ssh_cli
 
