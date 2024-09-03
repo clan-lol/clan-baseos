@@ -4,7 +4,7 @@ import { BackButton } from "@/src/components/BackButton";
 import { FileInput } from "@/src/components/FileInput";
 import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
-import { createForm, getValue, reset } from "@modular-forms/solid";
+import { createForm, FieldValues, getValue, reset } from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
 import { createQuery } from "@tanstack/solid-query";
 import { createSignal, For, Show, Switch, Match } from "solid-js";
@@ -608,8 +608,75 @@ export const MachineDetails = () => {
         when={query.data}
         fallback={<span class="loading loading-lg"></span>}
       >
-        {(data) => <MachineForm initialData={data()} />}
+        {(data) => (
+          <>
+            <MachineForm initialData={data()} />
+            <MachineWifi
+              base_url={activeURI() || ""}
+              machine_name={data().machine.name}
+            />
+          </>
+        )}
       </Show>
     </div>
   );
 };
+
+interface WifiForm extends FieldValues {
+  ssid: string;
+  password: string;
+}
+
+interface MachineWifiProps {
+  base_url: string;
+  machine_name: string;
+}
+function MachineWifi(props: MachineWifiProps) {
+  const [formStore, { Form, Field }] = createForm<WifiForm>();
+
+  const handleSubmit = async (values: WifiForm) => {
+    console.log("submitting", values);
+    const r = await callApi("set_iwd_service_for_machine", {
+      base_url: props.base_url,
+      machine_name: props.machine_name,
+      networks: {
+        [values.ssid]: { ssid: values.ssid, password: values.password },
+      },
+    });
+  };
+  return (
+    <div>
+      <h1>MachineWifi</h1>
+      <Form onSubmit={handleSubmit}>
+        <Field name="ssid">
+          {(field, props) => (
+            <TextInput
+              formStore={formStore}
+              inputProps={props}
+              label="Name"
+              value={field.value ?? ""}
+              error={field.error}
+              required
+            />
+          )}
+        </Field>
+        <Field name="password">
+          {(field, props) => (
+            <TextInput
+              formStore={formStore}
+              inputProps={props}
+              label="Password"
+              value={field.value ?? ""}
+              error={field.error}
+              type="password"
+              required
+            />
+          )}
+        </Field>
+        <button class="btn" type="submit">
+          <span>Submit</span>
+        </button>
+      </Form>
+    </div>
+  );
+}

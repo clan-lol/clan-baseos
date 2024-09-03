@@ -75,7 +75,7 @@ def get_user_name(flake_dir: Path, user: str) -> str:
         print(f"{flake_dir / user} already exists")
 
 
-def ensure_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey:
+def maybe_get_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey | None:
     key = SopsKey(pub_key, username="")
     folders = [sops_users_folder(flake_dir), sops_machines_folder(flake_dir)]
 
@@ -88,8 +88,15 @@ def ensure_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey:
                     key.username = user.name
                     return key
 
-    msg = f"Your sops key is not yet added to the repository. Please add it with 'clan secrets users add youruser {pub_key}' (replace youruser with your user name)"
-    raise ClanError(msg)
+    return None
+
+
+def ensure_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey:
+    key = maybe_get_user_or_machine(flake_dir, pub_key)
+    if not key:
+        msg = f"Your sops key is not yet added to the repository. Please add it with 'clan secrets users add youruser {pub_key}' (replace youruser with your user name)"
+        raise ClanError(msg)
+    return key
 
 
 def default_sops_key_path() -> Path:
@@ -99,15 +106,30 @@ def default_sops_key_path() -> Path:
     return user_config_dir() / "sops" / "age" / "keys.txt"
 
 
-def ensure_sops_key(flake_dir: Path) -> SopsKey:
+def maybe_get_public_key() -> str | None:
     key = os.environ.get("SOPS_AGE_KEY")
     if key:
-        return ensure_user_or_machine(flake_dir, get_public_key(key))
+        return get_public_key(key)
     path = default_sops_key_path()
     if path.exists():
-        return ensure_user_or_machine(flake_dir, get_public_key(path.read_text()))
-    msg = "No sops key found. Please generate one with 'clan secrets key generate'."
-    raise ClanError(msg)
+        return get_public_key(path.read_text())
+
+    return None
+
+
+def maybe_get_sops_key(flake_dir: Path) -> SopsKey | None:
+    pub_key = maybe_get_public_key()
+    if pub_key:
+        return maybe_get_user_or_machine(flake_dir, pub_key)
+    return None
+
+
+def ensure_sops_key(flake_dir: Path) -> SopsKey:
+    pub_key = maybe_get_public_key()
+    if not pub_key:
+        msg = "No sops key found. Please generate one with 'clan secrets key generate'."
+        raise ClanError(msg)
+    return ensure_user_or_machine(flake_dir, pub_key)
 
 
 @contextmanager
