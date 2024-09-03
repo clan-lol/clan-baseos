@@ -17,11 +17,15 @@ class FactStore(FactStoreBase):
         self.dir = vm_state_dir(str(machine.flake), machine.name) / "facts"
         log.debug(f"FactStore initialized with dir {self.dir}")
 
+    @property
+    def store_name(self) -> str:
+        return "vm"
+
     def exists(self, service: str, name: str, shared: bool = False) -> bool:
         fact_path = self.dir / service / name
         return fact_path.exists()
 
-    def set(
+    def _set(
         self,
         service: str,
         name: str,

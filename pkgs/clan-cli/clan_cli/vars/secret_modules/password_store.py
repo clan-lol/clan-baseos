@@ -14,6 +14,10 @@ class SecretStore(SecretStoreBase):
         self.machine = machine
 
     @property
+    def store_name(self) -> str:
+        return "password_store"
+
+    @property
     def _password_store_dir(self) -> str:
         return os.environ.get(
             "PASSWORD_STORE_DIR", f"{os.environ['HOME']}/.password-store"
@@ -24,7 +28,7 @@ class SecretStore(SecretStoreBase):
             return Path(f"shared/{generator_name}/{name}")
         return Path(f"machines/{self.machine.name}/{generator_name}/{name}")
 
-    def set(
+    def _set(
         self,
         generator_name: str,
         name: str,
@@ -62,6 +66,8 @@ class SecretStore(SecretStoreBase):
         ).stdout
 
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
+        if not super().exists(generator_name, name, shared):
+            return False
         return (
             Path(self._password_store_dir)
             / f"{self._var_path(generator_name, name, shared)}.gpg"

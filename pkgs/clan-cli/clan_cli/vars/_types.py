@@ -1,4 +1,5 @@
 # !/usr/bin/env python3
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,30 +26,80 @@ class StoreBase(ABC):
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
 
+    @property
     @abstractmethod
-    def exists(self, service: str, name: str, shared: bool = False) -> bool:
+    def store_name(self) -> str:
         pass
 
     # get a single fact
     @abstractmethod
-    def get(self, service: str, name: str, shared: bool = False) -> bytes:
+    def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
         pass
 
     @abstractmethod
-    def set(
+    def _set(
         self,
-        service: str,
+        generator_name: str,
         name: str,
         value: bytes,
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
-        pass
+        """
+        override this method to implement the actual creation of the file
+        """
 
     @property
     @abstractmethod
     def is_secret_store(self) -> bool:
         pass
+
+    def directory(
+        self, generator_name: str, var_name: str, shared: bool = False
+    ) -> Path:
+        if shared:
+            base_path = self.machine.flake_dir / "vars" / "shared"
+        else:
+            base_path = (
+                self.machine.flake_dir / "vars" / "per-machine" / self.machine.name
+            )
+        return base_path / generator_name / var_name
+
+    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
+        directory = self.directory(generator_name, name, shared)
+        if not (directory / "meta.json").exists():
+            return False
+        with (directory / "meta.json").open() as f:
+            meta = json.load(f)
+        # check if is secret, as secret and public store names could collide (eg. 'vm')
+        if meta.get("secret") != self.is_secret_store:
+            return False
+        return meta.get("store") == self.store_name
+
+    def set(
+        self,
+        generator_name: str,
+        var_name: str,
+        value: bytes,
+        shared: bool = False,
+        deployed: bool = True,
+    ) -> Path | None:
+        directory = self.directory(generator_name, var_name, shared)
+        # delete directory
+        if directory.exists():
+            for f in directory.glob("*"):
+                f.unlink()
+        # re-create directory
+        directory.mkdir(parents=True, exist_ok=True)
+        new_file = self._set(generator_name, var_name, value, shared, deployed)
+        meta = {
+            "deployed": deployed,
+            "secret": self.is_secret_store,
+            "store": self.store_name,
+        }
+        with (directory / "meta.json").open("w") as file:
+            json.dump(meta, file, indent=2)
+        return new_file
 
     def get_all(self) -> list[Var]:
         all_vars = []

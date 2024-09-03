@@ -13,7 +13,11 @@ class SecretStore(SecretStoreBase):
         self.dir = vm_state_dir(str(machine.flake), machine.name) / "secrets"
         self.dir.mkdir(parents=True, exist_ok=True)
 
-    def set(
+    @property
+    def store_name(self) -> str:
+        return "vm"
+
+    def _set(
         self,
         service: str,
         name: str,
@@ -29,9 +33,6 @@ class SecretStore(SecretStoreBase):
     def get(self, service: str, name: str, shared: bool = False) -> bytes:
         secret_file = self.dir / service / name
         return secret_file.read_bytes()
-
-    def exists(self, service: str, name: str, shared: bool = False) -> bool:
-        return (self.dir / service / name).exists()
 
     def upload(self, output_dir: Path) -> None:
         if output_dir.exists():
