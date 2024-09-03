@@ -45,7 +45,7 @@ def list_possible_keymaps() -> list[str]:
 
     if not keymaps_dir.exists():
         msg = f"Keymaps directory '{keymaps_dir}' does not exist."
-        raise FileNotFoundError(msg)
+        raise ClanError(msg)
 
     keymap_files = []
 
@@ -67,7 +67,7 @@ def list_possible_languages() -> list[str]:
 
     if not locale_file.exists():
         msg = f"Locale file '{locale_file}' does not exist."
-        raise FileNotFoundError(msg)
+        raise ClanError(msg)
 
     with locale_file.open() as f:
         lines = f.readlines()
