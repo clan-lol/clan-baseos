@@ -134,6 +134,18 @@ API.register(open_file)
                         )
                     ],
                 )
+            except Exception as e:
+                return ErrorDataClass(
+                    op_key=op_key,
+                    status="error",
+                    errors=[
+                        ApiError(
+                            message=str(e),
+                            description="An unexpected error occurred",
+                            location=[fn.__name__],
+                        )
+                    ],
+                )
 
         # @wraps preserves all metadata of fn
         # we need to update the annotation, because our wrapper changes the return type

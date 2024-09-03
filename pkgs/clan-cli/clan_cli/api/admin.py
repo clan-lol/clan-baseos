@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from clan_cli.inventory import (
     AdminConfig,
     ServiceAdmin,
@@ -27,7 +25,7 @@ def get_admin_service(base_url: str) -> ServiceAdmin | None:
 @API.register
 def set_admin_service(
     base_url: str,
-    allowed_keys: dict[str, Path],
+    allowed_keys: dict[str, str],
     instance_name: str = "admin",
     extra_machines: list[str] | None = None,
 ) -> None:
@@ -43,24 +41,15 @@ def set_admin_service(
         msg = "At least one key must be provided to ensure access"
         raise ValueError(msg)
 
-    keys = {}
-    for name, keyfile in allowed_keys.items():
-        if not keyfile.is_absolute():
-            msg = f"Keyfile '{keyfile}' must be an absolute path"
-            raise ValueError(msg)
-        with keyfile.open() as f:
-            pubkey = f.read()
-            keys[name] = pubkey
-
     instance = ServiceAdmin(
         meta=ServiceMeta(name=instance_name),
         roles=ServiceAdminRole(
             default=ServiceAdminRoleDefault(
-                config=AdminConfig(allowedKeys=keys),
                 machines=extra_machines,
                 tags=["all"],
             )
         ),
+        config=AdminConfig(allowedKeys=allowed_keys),
     )
 
     inventory.services.admin[instance_name] = instance
