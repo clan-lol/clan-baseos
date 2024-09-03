@@ -36,22 +36,16 @@ class SecretStore(SecretStoreBase):
         )
         add_machine(self.machine.flake_dir, self.machine.name, pub_key, False)
 
+    @property
+    def store_name(self) -> str:
+        return "sops"
+
     def secret_path(
         self, generator_name: str, secret_name: str, shared: bool = False
     ) -> Path:
-        if shared:
-            base_path = self.machine.flake_dir / "sops" / "vars" / "shared"
-        else:
-            base_path = (
-                self.machine.flake_dir
-                / "sops"
-                / "vars"
-                / "per-machine"
-                / self.machine.name
-            )
-        return base_path / generator_name / secret_name
+        return self.directory(generator_name, secret_name, shared=shared)
 
-    def set(
+    def _set(
         self,
         generator_name: str,
         name: str,
@@ -66,9 +60,6 @@ class SecretStore(SecretStoreBase):
             value,
             add_machines=[self.machine.name],
             add_groups=self.machine.deployment["sops"]["defaultGroups"],
-            meta={
-                "deploy": deployed,
-            },
         )
         return path
 
@@ -76,11 +67,6 @@ class SecretStore(SecretStoreBase):
         return decrypt_secret(
             self.machine.flake_dir, self.secret_path(generator_name, name, shared)
         ).encode("utf-8")
-
-    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
-        return has_secret(
-            self.secret_path(generator_name, name, shared),
-        )
 
     def upload(self, output_dir: Path) -> None:
         key_name = f"{self.machine.name}-age.key"

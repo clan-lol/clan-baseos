@@ -10,17 +10,12 @@ class FactStore(FactStoreBase):
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
         self.works_remotely = False
-        self.per_machine_folder = (
-            self.machine.flake_dir / "vars" / "per-machine" / self.machine.name
-        )
-        self.shared_folder = self.machine.flake_dir / "vars" / "shared"
 
-    def _var_path(self, generator_name: str, name: str, shared: bool) -> Path:
-        if shared:
-            return self.shared_folder / generator_name / name
-        return self.per_machine_folder / generator_name / name
+    @property
+    def store_name(self) -> str:
+        return "in_repo"
 
-    def set(
+    def _set(
         self,
         generator_name: str,
         name: str,
@@ -29,17 +24,14 @@ class FactStore(FactStoreBase):
         deployed: bool = True,
     ) -> Path | None:
         if self.machine.flake.is_local():
-            fact_path = self._var_path(generator_name, name, shared)
-            fact_path.parent.mkdir(parents=True, exist_ok=True)
-            fact_path.touch()
-            fact_path.write_bytes(value)
-            return fact_path
+            file_path = self.directory(generator_name, name, shared) / "value"
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.touch()
+            file_path.write_bytes(value)
+            return file_path
         msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
         raise ClanError(msg)
 
-    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
-        return self._var_path(generator_name, name, shared).exists()
-
     # get a single fact
     def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
-        return self._var_path(generator_name, name, shared).read_bytes()
+        return (self.directory(generator_name, name, shared) / "value").read_bytes()

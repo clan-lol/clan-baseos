@@ -18,14 +18,19 @@ let
 
   metaData = sopsFile: if pathExists (metaFile sopsFile) then importJSON (metaFile sopsFile) else { };
 
-  toDeploy = secret: (metaData secret.sopsFile).deploy or true;
+  isSopsSecret =
+    secret:
+    let
+      meta = metaData secret.sopsFile;
+    in
+    meta.store or null == "sops" && meta.deployed or true && meta.secret or true;
 
-  varsDirMachines = config.clan.core.clanDir + "/sops/vars/per-machine/${machineName}";
-  varsDirShared = config.clan.core.clanDir + "/sops/vars/shared";
+  varsDirMachines = config.clan.core.clanDir + "/vars/per-machine/${machineName}";
+  varsDirShared = config.clan.core.clanDir + "/vars/shared";
 
   vars' = (listVars varsDirMachines) ++ (listVars varsDirShared);
 
-  vars = lib.filter (secret: toDeploy secret) vars';
+  vars = lib.filter isSopsSecret vars';
 in
 {
   config.clan.core.vars.settings = lib.mkIf (config.clan.core.vars.settings.secretStore == "sops") {

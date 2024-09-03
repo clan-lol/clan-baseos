@@ -88,10 +88,7 @@ def encrypt_secret(
     add_users: list[str] | None = None,
     add_machines: list[str] | None = None,
     add_groups: list[str] | None = None,
-    meta: dict | None = None,
 ) -> None:
-    if meta is None:
-        meta = {}
     if add_groups is None:
         add_groups = []
     if add_machines is None:
@@ -146,7 +143,7 @@ def encrypt_secret(
         )
 
     secret_path = secret_path / "secret"
-    encrypt_file(secret_path, value, sorted(recipient_keys), meta)
+    encrypt_file(secret_path, value, sorted(recipient_keys))
     files_to_commit.append(secret_path)
     commit_files(
         files_to_commit,

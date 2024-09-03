@@ -145,10 +145,7 @@ def encrypt_file(
     secret_path: Path,
     content: IO[str] | str | bytes | None,
     pubkeys: list[str],
-    meta: dict | None = None,
 ) -> None:
-    if meta is None:
-        meta = {}
     folder = secret_path.parent
     folder.mkdir(parents=True, exist_ok=True)
 
@@ -190,9 +187,6 @@ def encrypt_file(
                 with NamedTemporaryFile(dir=folder, delete=False) as f2:
                     shutil.copyfile(f.name, f2.name)
                     Path(f2.name).rename(secret_path)
-                meta_path = secret_path.parent / "meta.json"
-                with meta_path.open("w") as f_meta:
-                    json.dump(meta, f_meta, indent=2)
             finally:
                 with suppress(OSError):
                     Path(f.name).unlink()
