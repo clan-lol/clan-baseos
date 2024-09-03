@@ -265,6 +265,18 @@ def test_none_or_string() -> None:
     assert checked3 is None
 
 
+def test_roundtrip_escape() -> None:
+    assert from_dict(str, "\\n") == "\n"
+    assert dataclass_to_dict("\n") == "\\n"
+
+    # Test that the functions are inverses of each other
+    # f(g(x)) == x
+    # and
+    # g(f(x)) == x
+    assert from_dict(str, dataclass_to_dict("\n")) == "\n"
+    assert dataclass_to_dict(from_dict(str, "\\n")) == "\\n"
+
+
 def test_path_field() -> None:
     @dataclass
     class Person:

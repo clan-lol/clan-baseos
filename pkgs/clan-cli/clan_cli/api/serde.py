@@ -155,13 +155,12 @@ def construct_value(
 
         return Path(field_value)
 
-    # Trivial values
     if t is str:
         if not isinstance(field_value, str):
             msg = f"Expected string, got {field_value}"
             raise ClanError(msg, location=f"{loc}")
 
-        return field_value
+        return json.loads(f'"{field_value}"')
 
     if t is int and not isinstance(field_value, str):
         return int(field_value)  # type: ignore
