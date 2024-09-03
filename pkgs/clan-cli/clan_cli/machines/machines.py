@@ -140,7 +140,7 @@ class Machine:
 
     def nix(
         self,
-        method: str,
+        method: Literal["eval", "build"],
         attr: str,
         extra_config: None | dict = None,
         impure: bool = False,
@@ -217,11 +217,7 @@ class Machine:
         if method == "eval":
             output = run_no_stdout(nix_eval(args)).stdout.strip()
             return output
-        if method == "build":
-            outpath = run_no_stdout(nix_build(args)).stdout.strip()
-            return Path(outpath)
-        msg = f"Unknown method {method}"
-        raise ValueError(msg)
+        return Path(run_no_stdout(nix_build(args)).stdout.strip())
 
     def eval_nix(
         self,
