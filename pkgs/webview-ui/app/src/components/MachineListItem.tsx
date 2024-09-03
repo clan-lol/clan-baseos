@@ -1,11 +1,11 @@
 import { createSignal, Show } from "solid-js";
-import { callApi, SuccessData } from "../api";
+import { callApi, SuccessQuery } from "../api";
 import { Menu } from "./Menu";
 import { activeURI } from "../App";
 import toast from "solid-toast";
 import { A, useNavigate } from "@solidjs/router";
 
-type MachineDetails = SuccessData<"list_inventory_machines">["data"][string];
+type MachineDetails = SuccessQuery<"list_inventory_machines">["data"][string];
 
 interface MachineListItemProps {
   name: string;

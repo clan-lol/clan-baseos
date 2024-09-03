@@ -1,4 +1,4 @@
-import { callApi, SuccessData } from "@/src/api";
+import { callApi, SuccessData, SuccessQuery } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { FileInput } from "@/src/components/FileInput";
@@ -11,15 +11,14 @@ import { createSignal, For, Show, Switch, Match } from "solid-js";
 import toast from "solid-toast";
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type MachineFormInterface = {
-  name: string;
-  description: string;
-  targetHost?: string;
+type MachineFormInterface = MachineType & {
   sshKey?: File;
   disk?: string;
 };
 
-type Disks = SuccessData<"show_block_devices">["data"]["blockdevices"];
+type MachineType = SuccessData<"get_inventory_machine_details">;
+
+type Disks = SuccessQuery<"show_block_devices">["data"]["blockdevices"];
 
 /**
  * Opens the custom file dialog
@@ -50,7 +49,7 @@ type InstallForm = { disk?: string };
 
 interface InstallMachineProps {
   name?: string;
-  targetHost?: string;
+  targetHost?: string | null;
   sshKey?: File;
   disks: Disks;
 }
@@ -296,17 +295,19 @@ const InstallMachine = (props: InstallMachineProps) => {
 };
 
 interface MachineDetailsProps {
-  initialData: MachineFormInterface;
+  initialData: MachineType;
 }
 const MachineForm = (props: MachineDetailsProps) => {
-  const [formStore, { Form, Field }] = createForm<MachineFormInterface>({
-    initialValues: props.initialData,
-  });
+  const [formStore, { Form, Field }] =
+    // TODO: retrieve the correct initial values from API
+    createForm<MachineFormInterface>({
+      initialValues: props.initialData,
+    });
 
   const sshKey = () => getValue(formStore, "sshKey");
-  const targetHost = () => getValue(formStore, "targetHost");
+  const targetHost = () => getValue(formStore, "machine.deploy.targetHost");
   const machineName = () =>
-    getValue(formStore, "name") || props.initialData.name;
+    getValue(formStore, "machine.name") || props.initialData.machine.name;
 
   const onlineStatusQuery = createQuery(() => ({
     queryKey: [activeURI(), "machine", targetHost(), "check_machine_online"],
@@ -361,14 +362,8 @@ const MachineForm = (props: MachineDetailsProps) => {
 
     const machine_response = await callApi("set_machine", {
       flake_url: curr_uri,
-      machine_name: props.initialData.name,
-      machine: {
-        name: values.name,
-        description: values.description,
-        deploy: {
-          targetHost: values.targetHost,
-        },
-      },
+      machine_name: props.initialData.machine.name,
+      machine: values.machine,
     });
     if (machine_response.status === "error") {
       toast.error(
@@ -445,7 +440,7 @@ const MachineForm = (props: MachineDetailsProps) => {
             </div>
           </div>
           <div class="my-2 w-full text-2xl">Details</div>
-          <Field name="name">
+          <Field name="machine.name">
             {(field, props) => (
               <TextInput
                 formStore={formStore}
@@ -458,7 +453,7 @@ const MachineForm = (props: MachineDetailsProps) => {
               />
             )}
           </Field>
-          <Field name="description">
+          <Field name="machine.description">
             {(field, props) => (
               <TextInput
                 formStore={formStore}
@@ -478,7 +473,7 @@ const MachineForm = (props: MachineDetailsProps) => {
               Connection Settings
             </div>
             <div class="collapse-content">
-              <Field name="targetHost">
+              <Field name="machine.deploy.targetHost">
                 {(field, props) => (
                   <TextInput
                     formStore={formStore}
@@ -558,7 +553,7 @@ const MachineForm = (props: MachineDetailsProps) => {
               <InstallMachine
                 name={machineName()}
                 sshKey={sshKey()}
-                targetHost={getValue(formStore, "targetHost")}
+                targetHost={getValue(formStore, "machine.deploy.targetHost")}
                 disks={remoteDiskQuery.data?.blockdevices || []}
               />
             </div>
@@ -613,13 +608,7 @@ export const MachineDetails = () => {
         when={query.data}
         fallback={<span class="loading loading-lg"></span>}
       >
-        <MachineForm
-          initialData={{
-            name: query.data?.machine.name ?? "",
-            description: query.data?.machine.description ?? "",
-            targetHost: query.data?.machine.deploy.targetHost ?? "",
-          }}
-        />
+        {(data) => <MachineForm initialData={data()} />}
       </Show>
     </div>
   );
