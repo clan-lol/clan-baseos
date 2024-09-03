@@ -25,6 +25,8 @@ from clan_cli.nix import nix_eval
 from .classes import (
     AdminConfig,
     Inventory,
+    IwdConfig,
+    IwdConfigNetwork,
     # Machine classes
     Machine,
     MachineDeploy,
@@ -40,6 +42,10 @@ from .classes import (
     ServiceBorgbackupRole,
     ServiceBorgbackupRoleClient,
     ServiceBorgbackupRoleServer,
+    # IWD
+    ServiceIwd,
+    ServiceIwdRole,
+    ServiceIwdRoleDefault,
     ServiceMeta,
     # Single Disk service
     ServiceSingleDisk,
@@ -73,6 +79,12 @@ __all__ = [
     "ServiceAdminRole",
     "ServiceAdminRoleDefault",
     "AdminConfig",
+    # IWD service,
+    "ServiceIwd",
+    "ServiceIwdRole",
+    "ServiceIwdRoleDefault",
+    "IwdConfig",
+    "IwdConfigNetwork",
 ]
 
 

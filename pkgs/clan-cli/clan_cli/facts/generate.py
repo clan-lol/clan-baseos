@@ -68,7 +68,7 @@ def generate_service_facts(
     secret_facts_store: SecretStoreBase,
     public_facts_store: FactStoreBase,
     tmpdir: Path,
-    prompt: Callable[[str], str],
+    prompt: Callable[[str, str], str],
 ) -> bool:
     service_dir = tmpdir / service
     # check if all secrets exist and generate them if at least one is missing
@@ -93,7 +93,9 @@ def generate_service_facts(
     else:
         generator = machine.facts_data[service]["generator"]["finalScript"]
         if machine.facts_data[service]["generator"]["prompt"]:
-            prompt_value = prompt(machine.facts_data[service]["generator"]["prompt"])
+            prompt_value = prompt(
+                service, machine.facts_data[service]["generator"]["prompt"]
+            )
             env["prompt_value"] = prompt_value
     if sys.platform == "linux":
         cmd = bubblewrap_cmd(generator, facts_dir, secrets_dir)
@@ -137,7 +139,7 @@ def generate_service_facts(
     return True
 
 
-def prompt_func(text: str) -> str:
+def prompt_func(service: str, text: str) -> str:
     print(f"{text}: ")
     return read_multiline_input()
 
@@ -147,7 +149,7 @@ def _generate_facts_for_machine(
     service: str | None,
     regenerate: bool,
     tmpdir: Path,
-    prompt: Callable[[str], str] = prompt_func,
+    prompt: Callable[[str, str], str] = prompt_func,
 ) -> bool:
     local_temp = tmpdir / machine.name
     local_temp.mkdir()
@@ -189,7 +191,7 @@ def generate_facts(
     machines: list[Machine],
     service: str | None,
     regenerate: bool,
-    prompt: Callable[[str], str] = prompt_func,
+    prompt: Callable[[str, str], str] = prompt_func,
 ) -> bool:
     was_regenerated = False
     with TemporaryDirectory() as tmp:

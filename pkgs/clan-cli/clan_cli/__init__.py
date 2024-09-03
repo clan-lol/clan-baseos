@@ -6,20 +6,18 @@ from pathlib import Path
 from types import ModuleType
 
 # These imports are unused, but necessary for @API.register to run once.
-from .api import admin, directory, disk, mdns_discovery, modules
+from .api import admin, directory, disk, iwd, mdns_discovery, modules
 from .arg_actions import AppendOptionAction
 from .clan import show, update
 
 # API endpoints that are not used in the cli.
-__all__ = ["directory", "mdns_discovery", "modules", "update", "disk", "admin"]
+__all__ = ["directory", "mdns_discovery", "modules", "update", "disk", "admin", "iwd"]
 
 from . import (
     backups,
     clan,
-    facts,
     flash,
     history,
-    machines,
     secrets,
     state,
     vars,
@@ -29,7 +27,9 @@ from .clan_uri import FlakeId
 from .custom_logger import setup_logging
 from .dirs import get_clan_flake_toplevel_or_env
 from .errors import ClanCmdError, ClanError
+from .facts import cli as facts
 from .hyperlink import help_hyperlink
+from .machines import cli as machines
 from .profiler import profile
 from .ssh import cli as ssh_cli
 
