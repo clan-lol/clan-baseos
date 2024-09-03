@@ -1,6 +1,7 @@
 import { FieldValues, FormStore, ResponseData } from "@modular-forms/solid";
-import { Show, type JSX } from "solid-js";
+import { createEffect, Show, type JSX } from "solid-js";
 import cx from "classnames";
+import { createECDH } from "crypto";
 
 interface TextInputProps<T extends FieldValues, R extends ResponseData> {
   formStore: FormStore<T, R>;
@@ -22,6 +23,12 @@ interface TextInputProps<T extends FieldValues, R extends ResponseData> {
 export function TextInput<T extends FieldValues, R extends ResponseData>(
   props: TextInputProps<T, R>,
 ) {
+  const value = () => props.value;
+
+  createEffect(() => {
+    console.log("rendering text input", props.value);
+  });
+
   return (
     <label
       class={cx("form-control w-full", props.class)}
@@ -46,7 +53,7 @@ export function TextInput<T extends FieldValues, R extends ResponseData>(
         {props.inlineLabel}
         <input
           {...props.inputProps}
-          value={props.value}
+          value={value()}
           type={props.type ? props.type : "text"}
           class="grow"
           classList={{
