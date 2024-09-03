@@ -67,7 +67,6 @@ nav:
           - reference/clanModules/golem-provider.md
           - reference/clanModules/index.md
           - reference/clanModules/iwd.md
-          - reference/clanModules/installer.md
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
           - reference/clanModules/matrix-synapse.md
