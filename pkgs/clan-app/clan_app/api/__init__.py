@@ -54,8 +54,8 @@ class ImplFunc(GObject.Object, Generic[P, B]):
         result = GLib.SOURCE_REMOVE
         try:
             result = self.async_run(**data)
-        except Exception as e:
-            log.exception(e)
+        except Exception:
+            log.exception("Error in async_run")
             # TODO: send error to js
         return result
 
@@ -78,8 +78,8 @@ class MethodExecutor(threading.Thread):
     def run(self) -> None:
         try:
             self.result = self.function(*self.args, **self.kwargs)
-        except Exception as e:
-            log.exception(e)
+        except Exception:
+            log.exception("Error in MethodExecutor")
         finally:
             self.finished = True
 

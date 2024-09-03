@@ -56,10 +56,11 @@ def generate_private_key(out_file: Path | None = None) -> tuple[str, str]:
         if out_file:
             out_file.parent.mkdir(parents=True, exist_ok=True)
             out_file.write_text(res)
-        return private_key, pubkey
     except subprocess.CalledProcessError as e:
         msg = "Failed to generate private sops key"
         raise ClanError(msg) from e
+    else:
+        return private_key, pubkey
 
 
 def get_user_name(flake_dir: Path, user: str) -> str:

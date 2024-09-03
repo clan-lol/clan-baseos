@@ -10,6 +10,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 import pytest
+from fixture_error import FixtureError
 
 if TYPE_CHECKING:
     from command import Command
@@ -134,5 +135,5 @@ def sshd(
             rc = proc.poll()
             if rc is not None:
                 msg = f"sshd processes was terminated with {rc}"
-                raise Exception(msg)
+                raise FixtureError(msg)
             time.sleep(0.1)

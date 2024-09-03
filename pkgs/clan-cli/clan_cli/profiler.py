@@ -108,9 +108,9 @@ def profile(func: Callable) -> Callable:
             profiler.enable()
             res = func(*args, **kwargs)
             profiler.disable()
-        except Exception as ex:
+        except Exception:
             profiler.disable()
-            raise ex
+            raise
         return res
 
     if os.getenv("PERF", "0") == "1":

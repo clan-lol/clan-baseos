@@ -4,6 +4,8 @@ import socket
 from pathlib import Path
 from time import sleep
 
+from clan_cli.errors import ClanError
+
 
 # qga is almost like qmp, but not quite, because:
 #   - server doesn't send initial message
@@ -16,9 +18,10 @@ class QgaSession:
         for _ in range(100):
             try:
                 self.sock.connect(str(socket_file))
-                return
             except ConnectionRefusedError:
                 sleep(0.1)
+            else:
+                return
         self.sock.connect(str(socket_file))
 
     def get_response(self) -> dict:
@@ -59,7 +62,7 @@ class QgaSession:
             result = self.get_response()
             if "error" in result and result["error"]["desc"].startswith("PID"):
                 msg = "PID could not be found"
-                raise Exception(msg)
+                raise ClanError(msg)
             if result["return"]["exited"]:
                 break
             sleep(0.1)
@@ -77,5 +80,5 @@ class QgaSession:
         )
         if check and exitcode != 0:
             msg = f"Command on guest failed\nCommand: {cmd}\nExitcode {exitcode}\nStdout: {stdout}\nStderr: {stderr}"
-            raise Exception(msg)
+            raise ClanError(msg)
         return exitcode, stdout, stderr

@@ -60,10 +60,11 @@ class EmptySplash(Gtk.Box):
     def load_image(self, file_path: str) -> GdkPixbuf.Pixbuf | None:
         try:
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(file_path)
-            return pixbuf
-        except Exception as e:
-            log.error(f"Failed to load image: {e}")
+        except Exception:
+            log.exception("Failed to load image")
             return None
+        else:
+            return pixbuf
 
     def _on_join(self, button: Gtk.Button, entry: Gtk.Entry) -> None:
         """

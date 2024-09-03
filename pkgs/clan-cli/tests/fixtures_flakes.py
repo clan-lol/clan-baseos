@@ -10,6 +10,7 @@ from typing import NamedTuple
 
 import pytest
 from clan_cli.dirs import nixpkgs_source
+from fixture_error import FixtureError
 from root import CLAN_CORE
 
 log = logging.getLogger(__name__)
@@ -226,7 +227,7 @@ def test_flake(
         if git_proc.returncode != 0:
             log.error(git_proc.stderr.decode())
             msg = "git diff on ./sops is not empty. This should not happen as all changes should be committed"
-            raise Exception(msg)
+            raise FixtureError(msg)
 
 
 @pytest.fixture
@@ -235,7 +236,7 @@ def test_flake_with_core(
 ) -> Iterator[FlakeForTest]:
     if not (CLAN_CORE / "flake.nix").exists():
         msg = "clan-core flake not found. This test requires the clan-core flake to be present"
-        raise Exception(msg)
+        raise FixtureError(msg)
     yield from create_flake(
         temporary_home,
         "test_flake_with_core",
@@ -252,11 +253,11 @@ def test_local_democlan(
         msg = (
             "DEMOCLAN_ROOT not set. This test requires the democlan flake to be present"
         )
-        raise Exception(msg)
+        raise FixtureError(msg)
     democlan_p = Path(democlan).resolve()
     if not democlan_p.is_dir():
         msg = f"DEMOCLAN_ROOT ({democlan_p}) is not a directory. This test requires the democlan directory to be present"
-        raise Exception(msg)
+        raise FixtureError(msg)
 
     return FlakeForTest(democlan_p)
 
@@ -267,7 +268,7 @@ def test_flake_with_core_and_pass(
 ) -> Iterator[FlakeForTest]:
     if not (CLAN_CORE / "flake.nix").exists():
         msg = "clan-core flake not found. This test requires the clan-core flake to be present"
-        raise Exception(msg)
+        raise FixtureError(msg)
     yield from create_flake(
         temporary_home,
         "test_flake_with_core_and_pass",
@@ -281,7 +282,7 @@ def test_flake_minimal(
 ) -> Iterator[FlakeForTest]:
     if not (CLAN_CORE / "flake.nix").exists():
         msg = "clan-core flake not found. This test requires the clan-core flake to be present"
-        raise Exception(msg)
+        raise FixtureError(msg)
     yield from create_flake(
         temporary_home,
         CLAN_CORE / "templates" / "minimal",

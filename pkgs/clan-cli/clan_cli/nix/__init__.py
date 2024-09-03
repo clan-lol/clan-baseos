@@ -6,6 +6,7 @@ from typing import Any
 
 from clan_cli.cmd import run, run_no_stdout
 from clan_cli.dirs import nixpkgs_flake, nixpkgs_source
+from clan_cli.errors import ClanError
 
 
 def nix_command(flags: list[str]) -> list[str]:

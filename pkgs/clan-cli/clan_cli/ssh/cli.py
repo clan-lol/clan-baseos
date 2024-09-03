@@ -82,9 +82,10 @@ def is_reachable(host: str) -> bool:
     try:
         sock.connect((host, 22))
         sock.close()
-        return True
     except OSError:
         return False
+    else:
+        return True
 
 
 def connect_ssh_from_json(ssh_data: dict[str, str]) -> None:

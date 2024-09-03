@@ -16,6 +16,8 @@ import socket
 import types
 from typing import Any
 
+from clan_cli.errors import ClanError
+
 
 class QMPError(Exception):
     """
@@ -159,7 +161,6 @@ class QEMUMonitorProtocol:
     ) -> None:
         # Implement context manager exit function.
         self.close()
-        return False
 
     def connect(self, negotiate: bool = True) -> dict[str, Any] | None:
         """
@@ -211,7 +212,7 @@ class QEMUMonitorProtocol:
         except OSError as err:
             if err.errno == errno.EPIPE:
                 return None
-            raise err
+            raise
         resp = self.__json_read()
         self.logger.debug("<<< %s", resp)
         return resp
@@ -242,7 +243,7 @@ class QEMUMonitorProtocol:
         """
         ret = self.cmd(cmd, kwds)
         if "error" in ret:
-            raise Exception(ret["error"]["desc"])
+            raise ClanError(ret["error"]["desc"])
         return ret["return"]
 
     def pull_event(self, wait: bool | float = False) -> dict[str, Any] | None:

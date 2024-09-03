@@ -200,7 +200,7 @@ def generate_machine_hardware_info(
     try:
         show_machine_hardware_platform(clan_dir, machine_name)
     except ClanCmdError as e:
-        log.error(e)
+        log.exception("Failed to evaluate hardware-configuration.nix")
         # Restore the backup file
         print(f"Restoring backup file {backup_file}")
         if backup_file:

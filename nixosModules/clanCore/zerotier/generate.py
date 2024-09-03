@@ -28,9 +28,10 @@ def try_bind_port(port: int) -> bool:
         try:
             tcp.bind(("127.0.0.1", port))
             udp.bind(("127.0.0.1", port))
-            return True
         except OSError:
             return False
+        else:
+            return True
 
 
 def try_connect_port(port: int) -> bool:

@@ -72,10 +72,11 @@ def list_nixos_machines(flake_url: str | Path) -> list[str]:
     try:
         res = proc.stdout.strip()
         data = json.loads(res)
-        return data
     except json.JSONDecodeError as e:
         msg = f"Error decoding machines from flake: {e}"
         raise ClanError(msg) from e
+    else:
+        return data
 
 
 @dataclass
@@ -123,10 +124,10 @@ def check_machine_online(
         proc = run_no_stdout(cmd)
         if proc.returncode != 0:
             return "Offline"
-
-        return "Online"
     except ClanCmdError:
         return "Offline"
+    else:
+        return "Online"
 
 
 def list_command(args: argparse.Namespace) -> None:
