@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 # TODO get also secret facts
-def get_all_vars(machine: Machine) -> list[Var]:
+def all_vars(machine: Machine) -> list[Var]:
     public_vars_module = importlib.import_module(machine.public_vars_module)
     public_vars_store = public_vars_module.FactStore(machine=machine)
     secret_vars_module = importlib.import_module(machine.secret_vars_module)
@@ -24,19 +24,19 @@ def stringify_vars(_vars: list[Var]) -> str:
 
 
 def stringify_all_vars(machine: Machine) -> str:
-    return stringify_vars(get_all_vars(machine))
+    return stringify_vars(all_vars(machine))
 
 
-def get_command(args: argparse.Namespace) -> None:
+def list_command(args: argparse.Namespace) -> None:
     machine = Machine(name=args.machine, flake=args.flake)
     print(stringify_all_vars(machine))
 
 
 def register_list_parser(parser: argparse.ArgumentParser) -> None:
-    machines_parser = parser.add_argument(
+    machines_arg = parser.add_argument(
         "machine",
-        help="The machine to print facts for",
+        help="The machine to print vars for",
     )
-    add_dynamic_completer(machines_parser, complete_machines)
+    add_dynamic_completer(machines_arg, complete_machines)
 
-    parser.set_defaults(func=get_command)
+    parser.set_defaults(func=list_command)
