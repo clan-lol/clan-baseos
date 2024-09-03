@@ -1,4 +1,4 @@
-import { callApi, SuccessData } from "@/src/api";
+import { callApi, SuccessQuery } from "@/src/api";
 import { BackButton } from "@/src/components/BackButton";
 import { useParams } from "@solidjs/router";
 import { createQuery } from "@tanstack/solid-query";
@@ -17,7 +17,7 @@ import {
 } from "@modular-forms/solid";
 import { TextInput } from "@/src/components/TextInput";
 
-type AdminData = SuccessData<"get_admin_service">["data"];
+type AdminData = SuccessQuery<"get_admin_service">["data"];
 
 interface ClanDetailsProps {
   admin: AdminData;
