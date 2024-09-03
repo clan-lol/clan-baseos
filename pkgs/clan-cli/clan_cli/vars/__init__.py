@@ -5,6 +5,7 @@ from clan_cli.hyperlink import help_hyperlink
 
 from .check import register_check_parser
 from .generate import register_generate_parser
+from .get import register_get_parser
 from .list import register_list_parser
 from .upload import register_upload_parser
 
@@ -64,6 +65,25 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
         formatter_class=argparse.RawTextHelpFormatter,
     )
     register_list_parser(list_parser)
+
+    get_parser = subparser.add_parser(
+        "get",
+        help="get a specific var",
+        epilog=(
+            f"""
+This subcommand allows getting a specific var for a specific machine.
+
+Examples:
+
+    $ clan vars get my-server zerotier/vpn-ip
+    Will get the var for the specified machine.
+
+For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
+        """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    register_get_parser(get_parser)
 
     parser_generate = subparser.add_parser(
         "generate",

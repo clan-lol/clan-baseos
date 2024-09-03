@@ -12,14 +12,36 @@ class Var:
     store: "StoreBase"
     generator: str
     name: str
+    id: str
     secret: bool
     shared: bool
     deployed: bool
 
+    @property
+    def value(self) -> bytes:
+        if not self.store.exists(self.generator, self.name, self.shared):
+            msg = f"Var {self.id} has not been generated yet"
+            raise ValueError(msg)
+        # try decode the value or return <binary blob>
+        return self.store.get(self.generator, self.name, self.shared)
+
+    @property
+    def printable_value(self) -> str:
+        try:
+            return self.value.decode()
+        except UnicodeDecodeError:
+            return "<binary blob>"
+
+    @property
+    def exists(self) -> bool:
+        return self.store.exists(self.generator, self.name, self.shared)
+
     def __str__(self) -> str:
         if self.secret:
-            return f"{self.generator}/{self.name}: ********"
-        return f"{self.generator}/{self.name}: {self.store.get(self.generator, self.name, self.shared).decode()}"
+            return f"{self.id}: ********"
+        if self.store.exists(self.generator, self.name, self.shared):
+            return f"{self.id}: {self.printable_value}"
+        return f"{self.id}: <not set>"
 
 
 class StoreBase(ABC):
@@ -113,6 +135,7 @@ class StoreBase(ABC):
                         store=self,
                         generator=gen_name,
                         name=f_name,
+                        id=f"{gen_name}/{f_name}",
                         secret=file["secret"],
                         shared=generator["share"],
                         deployed=file["deploy"],
