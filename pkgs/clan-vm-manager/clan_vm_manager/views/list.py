@@ -6,6 +6,7 @@ from typing import Any, TypeVar
 
 import gi
 from clan_cli.clan_uri import ClanURI
+from clan_cli.errors import ClanError
 
 from clan_vm_manager.components.gkvstore import GKVStore
 from clan_vm_manager.components.interfaces import ClanConfig
@@ -259,7 +260,7 @@ class ClanList(Gtk.Box):
         vm = ClanStore.use().set_logging_vm(target)
         if vm is None:
             msg = f"VM {target} not found"
-            raise ValueError(msg)
+            raise ClanError(msg)
 
         views = ViewStack.use().view
         # Reset the logs view
@@ -267,7 +268,7 @@ class ClanList(Gtk.Box):
 
         if logs is None:
             msg = "Logs view not found"
-            raise ValueError(msg)
+            raise ClanError(msg)
 
         name = vm.machine.name if vm.machine else "Unknown"
 

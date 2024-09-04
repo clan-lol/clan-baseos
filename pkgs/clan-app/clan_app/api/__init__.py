@@ -11,6 +11,7 @@ from typing import (
     cast,
 )
 
+from clan_cli.errors import ClanError
 from gi.repository import GLib, GObject
 
 log = logging.getLogger(__name__)
@@ -54,8 +55,8 @@ class ImplFunc(GObject.Object, Generic[P, B]):
         result = GLib.SOURCE_REMOVE
         try:
             result = self.async_run(**data)
-        except Exception as e:
-            log.exception(e)
+        except Exception:
+            log.exception("Error in async_run")
             # TODO: send error to js
         return result
 
@@ -78,8 +79,8 @@ class MethodExecutor(threading.Thread):
     def run(self) -> None:
         try:
             self.result = self.function(*self.args, **self.kwargs)
-        except Exception as e:
-            log.exception(e)
+        except Exception:
+            log.exception("Error in MethodExecutor")
         finally:
             self.finished = True
 
@@ -94,7 +95,7 @@ class GObjApi:
 
         if fn_name in self._obj_registry:
             msg = f"Function '{fn_name}' already registered"
-            raise ValueError(msg)
+            raise ClanError(msg)
         self._obj_registry[fn_name] = obj
 
     def check_signature(self, fn_signatures: dict[str, inspect.Signature]) -> None:
@@ -121,7 +122,7 @@ class GObjApi:
                 log.error(f"Expected signature: {exp_signature}")
                 log.error(f"Actual signature: {got_signature}")
                 msg = f"Overwritten method '{m_name}' has different signature than the implementation"
-                raise ValueError(msg)
+                raise ClanError(msg)
 
     def get_obj(self, fn_name: str) -> type[ImplFunc]:
         result = self._obj_registry.get(fn_name, None)
@@ -131,7 +132,7 @@ class GObjApi:
         plain_fn = self._methods.get(fn_name, None)
         if plain_fn is None:
             msg = f"Method '{fn_name}' not found in Api"
-            raise ValueError(msg)
+            raise ClanError(msg)
 
         class GenericFnRuntime(ImplFunc[..., Any]):
             def __init__(self) -> None:

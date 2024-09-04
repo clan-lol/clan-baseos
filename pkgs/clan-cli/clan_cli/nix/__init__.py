@@ -6,6 +6,7 @@ from typing import Any
 
 from clan_cli.cmd import run, run_no_stdout
 from clan_cli.dirs import nixpkgs_flake, nixpkgs_source
+from clan_cli.errors import ClanError
 
 
 def nix_command(flags: list[str]) -> list[str]:
@@ -145,7 +146,7 @@ def run_cmd(programs: list[str], cmd: list[str]) -> list[str]:
     for program in programs:
         if not Programs.is_allowed(program):
             msg = f"Program not allowed: {program}"
-            raise ValueError(msg)
+            raise ClanError(msg)
     if os.environ.get("IN_NIX_SANDBOX"):
         return cmd
     missing_packages = [

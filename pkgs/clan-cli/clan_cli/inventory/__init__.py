@@ -125,10 +125,11 @@ def load_inventory_eval(flake_dir: str | Path) -> Inventory:
         res = proc.stdout.strip()
         data = json.loads(res)
         inventory = from_dict(Inventory, data)
-        return inventory
     except json.JSONDecodeError as e:
         msg = f"Error decoding inventory from flake: {e}"
         raise ClanError(msg) from e
+    else:
+        return inventory
 
 
 def load_inventory_json(

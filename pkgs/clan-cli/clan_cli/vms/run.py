@@ -58,10 +58,11 @@ def build_vm(
     try:
         vm_data = json.loads(Path(nixos_config_file).read_text())
         vm_data["secrets_dir"] = str(secrets_dir)
-        return vm_data
     except json.JSONDecodeError as e:
         msg = f"Failed to parse vm config: {e}"
         raise ClanError(msg) from e
+    else:
+        return vm_data
 
 
 def get_secrets(

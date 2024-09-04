@@ -280,8 +280,8 @@ class VMObject(GObject.Object):
         if not self._log_file:
             try:
                 self._log_file = Path(proc.out_file).open()  # noqa: SIM115
-            except Exception as ex:
-                log.exception(ex)
+            except Exception:
+                log.exception(f"Failed to open log file {proc.out_file}")
                 self._log_file = None
                 return GLib.SOURCE_REMOVE
 

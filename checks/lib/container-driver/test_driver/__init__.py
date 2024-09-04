@@ -10,6 +10,10 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 
+class Error(Exception):
+    pass
+
+
 def prepare_machine_root(machinename: str, root: Path) -> None:
     root.mkdir(parents=True, exist_ok=True)
     root.joinpath("etc").mkdir(parents=True, exist_ok=True)
@@ -34,7 +38,7 @@ def retry(fn: Callable, timeout: int = 900) -> None:
 
     if not fn(True):
         msg = f"action timed out after {timeout} seconds"
-        raise Exception(msg)
+        raise Error(msg)
 
 
 class Machine:
@@ -100,7 +104,7 @@ class Machine:
                 f'retrieving systemctl info for unit "{unit}"'
                 f" failed with exit code {proc.returncode}"
             )
-            raise Exception(msg)
+            raise Error(msg)
 
         line_pattern = re.compile(r"^([^=]+)=(.*)$")
 
@@ -208,7 +212,7 @@ class Machine:
             state = info["ActiveState"]
             if state == "failed":
                 msg = f'unit "{unit}" reached state "{state}"'
-                raise Exception(msg)
+                raise Error(msg)
 
             if state == "inactive":
                 proc = self.systemctl("list-jobs --full 2>&1")
@@ -216,7 +220,7 @@ class Machine:
                     info = self.get_unit_info(unit)
                     if info["ActiveState"] == state:
                         msg = f'unit "{unit}" is inactive and there are no pending jobs'
-                        raise Exception(msg)
+                        raise Error(msg)
 
             return state == "active"
 
@@ -267,7 +271,7 @@ class Driver:
             name_match = re.match(r".*-nixos-system-(.+)-(.+)", container.name)
             if not name_match:
                 msg = f"Unable to extract hostname from {container.name}"
-                raise ValueError(msg)
+                raise Error(msg)
             name = name_match.group(1)
             self.machines.append(
                 Machine(

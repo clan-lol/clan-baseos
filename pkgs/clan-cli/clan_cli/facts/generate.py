@@ -203,8 +203,8 @@ def generate_facts(
                 was_regenerated |= _generate_facts_for_machine(
                     machine, service, regenerate, tmpdir, prompt
                 )
-            except (OSError, ClanError) as exc:
-                log.error(f"Failed to generate facts for {machine.name}: {exc}")
+            except (OSError, ClanError):
+                log.exception(f"Failed to generate facts for {machine.name}")
                 errors += 1
             if errors > 0:
                 msg = (

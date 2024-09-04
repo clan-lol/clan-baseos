@@ -751,7 +751,7 @@ class HostGroup:
         """
         threads = []
         results: list[HostResult[T]] = [
-            HostResult(h, Exception(f"No result set for thread {i}"))
+            HostResult(h, ClanError(f"No result set for thread {i}"))
             for (i, h) in enumerate(self.hosts)
         ]
         for i, host in enumerate(self.hosts):
@@ -800,7 +800,7 @@ def parse_deployment_address(
     result = urllib.parse.urlsplit("//" + hostname)
     if not result.hostname:
         msg = f"Invalid hostname: {hostname}"
-        raise Exception(msg)
+        raise ClanError(msg)
     hostname = result.hostname
     port = result.port
     meta = meta.copy()

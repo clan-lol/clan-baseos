@@ -28,9 +28,10 @@ def try_bind_port(port: int) -> bool:
         try:
             tcp.bind(("127.0.0.1", port))
             udp.bind(("127.0.0.1", port))
-            return True
         except OSError:
             return False
+        else:
+            return True
 
 
 def try_connect_port(port: int) -> bool:
@@ -216,7 +217,7 @@ def main() -> None:
         case "network":
             if args.network_id is None:
                 msg = "network_id parameter is required"
-                raise ValueError(msg)
+                raise ClanError(msg)
             controller = create_network_controller()
             identity = controller.identity
             network_id = controller.networkid
@@ -226,7 +227,7 @@ def main() -> None:
             network_id = args.network_id
         case _:
             msg = f"unknown mode {args.mode}"
-            raise ValueError(msg)
+            raise ClanError(msg)
     ip = compute_zerotier_ip(network_id, identity)
 
     args.identity_secret.write_text(identity.private)

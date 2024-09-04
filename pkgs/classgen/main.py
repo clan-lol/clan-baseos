@@ -1,10 +1,15 @@
 # ruff: noqa: RUF001
 import argparse
 import json
+import sys
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 from typing import Any
+
+
+class Error(Exception):
+    pass
 
 
 # Function to map JSON schemas and types to Python types
@@ -35,7 +40,7 @@ def map_json_type(
     if json_type == "null":
         return {"None"}
     msg = f"Python type not found for {json_type}"
-    raise ValueError(msg)
+    raise Error(msg)
 
 
 known_classes = set()
@@ -98,7 +103,7 @@ def field_def_from_default_type(
             Or report this problem to the clan team. So the class generator can be improved.
             #################################################
             """
-        raise ValueError(msg)
+        raise Error(msg)
 
     return None
 
@@ -148,7 +153,7 @@ def field_def_from_default_value(
         )
     # Other default values unhandled yet.
     msg = f"Unhandled default value for field '{field_name}' - default value: {default_value}"
-    raise ValueError(msg)
+    raise Error(msg)
 
 
 def get_field_def(
@@ -200,7 +205,7 @@ def generate_dataclass(schema: dict[str, Any], class_name: str = root_class) -> 
 
         if (prop_type is None) and (not union_variants):
             msg = f"Type not found for property {prop} {prop_info}"
-            raise ValueError(msg)
+            raise Error(msg)
 
         if union_variants:
             field_types = map_json_type(union_variants)
@@ -337,7 +342,11 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    args.func(args)
+    try:
+        args.func(args)
+    except Error as e:
+        print(e)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,10 @@ import subprocess
 import tempfile
 
 
+class Error(Exception):
+    pass
+
+
 def is_valid_age_key(secret_key: str) -> bool:
     # Run the age-keygen command with the -y flag to check the key format
     result = subprocess.run(
@@ -11,7 +15,7 @@ def is_valid_age_key(secret_key: str) -> bool:
     if result.returncode == 0:
         return True
     msg = f"Invalid age key: {secret_key}"
-    raise ValueError(msg)
+    raise Error(msg)
 
 
 def is_valid_ssh_key(secret_key: str, ssh_pub: str) -> bool:
@@ -27,7 +31,7 @@ def is_valid_ssh_key(secret_key: str, ssh_pub: str) -> bool:
         if result.returncode == 0:
             if result.stdout != ssh_pub:
                 msg = f"Expected '{ssh_pub}' got '{result.stdout}' for ssh key: {secret_key}"
-                raise ValueError(msg)
+                raise Error(msg)
             return True
         msg = f"Invalid ssh key: {secret_key}"
-        raise ValueError(msg)
+        raise Error(msg)

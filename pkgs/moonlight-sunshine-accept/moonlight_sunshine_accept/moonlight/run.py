@@ -23,21 +23,23 @@ class MoonlightPairing:
             )
             thread.start()
             print("Thread started")
-            return True
         except Exception as e:
             print(
                 "Error occurred while starting the process: ", str(e), file=sys.stderr
             )
             return False
+        else:
+            return True
 
     def check(self, host: str) -> bool:
         try:
             result = subprocess.run(
                 ["moonlight", "list", "localhost", host], check=True
             )
-            return result.returncode == 0
         except subprocess.CalledProcessError:
             return False
+        else:
+            return result.returncode == 0
 
     def terminate(self) -> None:
         if self.process:

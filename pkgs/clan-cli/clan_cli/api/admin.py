@@ -1,3 +1,4 @@
+from clan_cli.errors import ClanError
 from clan_cli.inventory import (
     AdminConfig,
     ServiceAdmin,
@@ -39,7 +40,7 @@ def set_admin_service(
 
     if not allowed_keys:
         msg = "At least one key must be provided to ensure access"
-        raise ValueError(msg)
+        raise ClanError(msg)
 
     instance = ServiceAdmin(
         meta=ServiceMeta(name=instance_name),

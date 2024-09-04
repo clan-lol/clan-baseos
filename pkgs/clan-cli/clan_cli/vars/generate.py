@@ -259,7 +259,7 @@ def generate_vars(
                 machine, generator_name, regenerate
             )
         except Exception as exc:
-            log.error(f"Failed to generate facts for {machine.name}: {exc}")
+            log.exception(f"Failed to generate facts for {machine.name}")
             errors += [exc]
         if len(errors) > 0:
             msg = f"Failed to generate facts for {len(errors)} hosts. Check the logs above"

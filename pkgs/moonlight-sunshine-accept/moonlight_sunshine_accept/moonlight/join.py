@@ -48,11 +48,12 @@ def send_join_request_api(host: str, port: int) -> bool:
             body = response.split("\n")[-1]
             print(body)
             moonlight.terminate()
-            return True
         except Exception as e:
             print(f"An error occurred: {e}")
             moonlight.terminate()
             return False
+        else:
+            return True
 
 
 def send_join_request_native(host: str, port: int, cert: str) -> bool:
@@ -78,9 +79,10 @@ def send_join_request_native(host: str, port: int, cert: str) -> bool:
             lines = response.split("\n")
             body = "\n".join(lines[2:])[2:]
             print(body)
-            return True
         except Exception as e:
             print(f"An error occurred: {e}")
+        else:
+            return True
     # TODO: fix
     try:
         print(f"response: {response}")
