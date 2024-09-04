@@ -409,3 +409,30 @@ def test_prompt_create_file(
     assert sops_store.exists("my_generator", "prompt1")
     assert not sops_store.exists("my_generator", "prompt2")
     assert sops_store.get("my_generator", "prompt1").decode() == "input1"
+
+
+@pytest.mark.impure
+def test_api_get_prompts(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    from clan_cli.vars.list import get_prompts
+
+    config = nested_dict()
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["prompts"]["prompt1"]["type"] = "line"
+    my_generator["files"]["prompt1"]["secret"] = False
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+    )
+    monkeypatch.chdir(flake.path)
+    monkeypatch.setattr("sys.stdin", StringIO("input1"))
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    api_prompts = get_prompts(machine)
+    assert len(api_prompts) == 1
+    assert api_prompts[0].name == "my_generator"
+    assert api_prompts[0].prompts[0].name == "prompt1"
+    assert api_prompts[0].prompts[0].previous_value == "input1"
