@@ -7,6 +7,7 @@ from .check import register_check_parser
 from .generate import register_generate_parser
 from .get import register_get_parser
 from .list import register_list_parser
+from .set import register_set_parser
 from .upload import register_upload_parser
 
 
@@ -84,6 +85,25 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
         formatter_class=argparse.RawTextHelpFormatter,
     )
     register_get_parser(get_parser)
+
+    set_parser = subparser.add_parser(
+        "set",
+        help="set a specific var",
+        epilog=(
+            f"""
+This subcommand allows setting a specific var for a specific machine.
+
+Examples:
+
+    $ clan vars set my-server zerotier/vpn-ip
+    Will set the var for the specified machine.
+
+For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
+        """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    register_set_parser(set_parser)
 
     parser_generate = subparser.add_parser(
         "generate",

@@ -13,14 +13,15 @@ from .list import all_vars
 log = logging.getLogger(__name__)
 
 
-def get_var(machine: Machine, var_id: str) -> Var | None:
+def get_var(machine: Machine, var_id: str) -> Var:
     vars_ = all_vars(machine)
     results = []
     for var in vars_:
         if var_id in var.id:
             results.append(var)
     if len(results) == 0:
-        return None
+        msg = f"No var found for search string: {var_id}"
+        raise ClanError(msg)
     if len(results) > 1:
         error = (
             f"Found multiple vars for {var_id}:\n  - "
@@ -29,28 +30,33 @@ def get_var(machine: Machine, var_id: str) -> Var | None:
         )
         raise ClanError(error)
     # we have exactly one result at this point
-    result = results[0]
-    if var_id == result.id:
-        return result
-    msg = f"Did you mean: {result.id}"
+    var = results[0]
+    if var_id == var.id:
+        return var
+    msg = f"Did you mean: {var.id}"
     raise ClanError(msg)
 
 
-def get_command(
-    machine: str, var_id: str, flake: FlakeId, quiet: bool, **kwargs: dict
-) -> None:
+def get_command(machine: str, var_id: str, flake: FlakeId) -> None:
     _machine = Machine(name=machine, flake=flake)
     var = get_var(_machine, var_id)
-    if var is None:
-        msg = f"No var found for search string: {var_id}"
-        raise ClanError(msg)
     if not var.exists:
         msg = f"Var {var.id} has not been generated yet"
         raise ClanError(msg)
-    if quiet:
+    if sys.stdout.isatty():
         sys.stdout.buffer.write(var.value)
     else:
-        print(f"{var.id}: {var.printable_value}")
+        print(var.printable_value)
+
+
+def _get_command(
+    args: argparse.Namespace,
+) -> None:
+    get_command(
+        machine=args.machine,
+        var_id=args.var_id,
+        flake=args.flake,
+    )
 
 
 def register_get_parser(parser: argparse.ArgumentParser) -> None:
@@ -65,10 +71,4 @@ def register_get_parser(parser: argparse.ArgumentParser) -> None:
         help="The var id to get the value for. Example: ssh-keys/pubkey",
     )
 
-    parser.add_argument(
-        "--quiet",
-        "-q",
-        help="Only print the value of the var",
-        action="store_true",
-    )
-    parser.set_defaults(func=lambda args: get_command(**vars(args)))
+    parser.set_defaults(func=_get_command)
