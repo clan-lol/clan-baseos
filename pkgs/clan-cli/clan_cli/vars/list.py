@@ -6,17 +6,20 @@ from clan_cli.api import API
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.machines.machines import Machine
 
-from ._types import Generator, Prompt, StoreBase, Var
+from ._types import Generator, GeneratorUpdate, Prompt, Var
+from .generate import execute_generator
+from .public_modules import FactStoreBase
+from .secret_modules import SecretStoreBase
 
 log = logging.getLogger(__name__)
 
 
-def public_store(machine: Machine) -> StoreBase:
+def public_store(machine: Machine) -> FactStoreBase:
     public_vars_module = importlib.import_module(machine.public_vars_module)
     return public_vars_module.FactStore(machine=machine)
 
 
-def secret_store(machine: Machine) -> StoreBase:
+def secret_store(machine: Machine) -> SecretStoreBase:
     secret_vars_module = importlib.import_module(machine.secret_vars_module)
     return secret_vars_module.SecretStore(machine=machine)
 
@@ -63,6 +66,20 @@ def get_prompts(machine: Machine) -> list[Generator]:
 
         generators.append(gen)
     return generators
+
+
+# TODO: Ensure generator dependencies are met (executed in correct order etc.)
+@API.register
+def set_prompts(machine: Machine, updates: list[GeneratorUpdate]) -> None:
+    for update in updates:
+        execute_generator(
+            machine,
+            update.generator,
+            regenerate=True,
+            secret_vars_store=secret_store(machine),
+            public_vars_store=public_store(machine),
+            prompt_values=update.prompt_values,
+        )
 
 
 def stringify_vars(_vars: list[Var]) -> str:

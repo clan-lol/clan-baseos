@@ -12,7 +12,7 @@ from .prompt import prompt
 log = logging.getLogger(__name__)
 
 
-def get_command(machine: str, var_id: str, flake: FlakeId) -> None:
+def set_command(machine: str, var_id: str, flake: FlakeId) -> None:
     _machine = Machine(name=machine, flake=flake)
     var = get_var(_machine, var_id)
     if sys.stdin.isatty():
@@ -22,8 +22,8 @@ def get_command(machine: str, var_id: str, flake: FlakeId) -> None:
     var.set(new_value)
 
 
-def _get_command(args: argparse.Namespace) -> None:
-    get_command(args.machine, args.var_id, args.flake)
+def _set_command(args: argparse.Namespace) -> None:
+    set_command(args.machine, args.var_id, args.flake)
 
 
 def register_set_parser(parser: argparse.ArgumentParser) -> None:
@@ -38,4 +38,4 @@ def register_set_parser(parser: argparse.ArgumentParser) -> None:
         help="The var id for which to set the value. Example: ssh-keys/pubkey",
     )
 
-    parser.set_defaults(func=_get_command)
+    parser.set_defaults(func=_set_command)

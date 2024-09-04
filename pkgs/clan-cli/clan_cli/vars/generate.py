@@ -99,6 +99,7 @@ def execute_generator(
     regenerate: bool,
     secret_vars_store: SecretStoreBase,
     public_vars_store: FactStoreBase,
+    prompt_values: dict[str, str] | None = None,
 ) -> bool:
     # check if all secrets exist and generate them if at least one is missing
     needs_regeneration = not check_vars(machine, generator_name=generator_name)
@@ -116,6 +117,20 @@ def execute_generator(
     decrypted_dependencies = decrypt_dependencies(
         machine, generator_name, secret_vars_store, public_vars_store, shared=is_shared
     )
+
+    def get_prompt_value(prompt_name: str) -> str:
+        if prompt_values:
+            try:
+                return prompt_values[prompt_name]
+            except KeyError as e:
+                msg = f"prompt value for '{prompt_name}' in generator {generator_name} not provided"
+                raise ClanError(msg) from e
+        description = machine.vars_generators[generator_name]["prompts"][prompt_name][
+            "description"
+        ]
+        _type = machine.vars_generators[generator_name]["prompts"][prompt_name]["type"]
+        return prompt(description, _type)
+
     env = os.environ.copy()
     with TemporaryDirectory() as tmp:
         tmpdir = Path(tmp)
@@ -133,11 +148,9 @@ def execute_generator(
         if machine.vars_generators[generator_name]["prompts"]:
             tmpdir_prompts.mkdir()
             env["prompts"] = str(tmpdir_prompts)
-            for prompt_name, prompt_ in machine.vars_generators[generator_name][
-                "prompts"
-            ].items():
+            for prompt_name in machine.vars_generators[generator_name]["prompts"]:
                 prompt_file = tmpdir_prompts / prompt_name
-                value = prompt(prompt_["description"], prompt_["type"])
+                value = get_prompt_value(prompt_name)
                 prompt_file.write_text(value)
 
         if sys.platform == "linux":
