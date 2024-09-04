@@ -120,6 +120,21 @@ in
               type = attrsOf (
                 submodule (prompt: {
                   options = options {
+                    createFile = {
+                      description = ''
+                        Whether the prompted value should be stored in a file with the same name as the prompt.
+
+                        If enabled, the behavior is equivalent to the following configuration:
+                        ```nix
+                        {
+                          files.<name>.secret = true;
+                          script = "cp $prompts/<name> $out/<name>";
+                        }
+                        ```
+                      '';
+                      type = bool;
+                      default = true;
+                    };
                     description = {
                       description = ''
                         The description of the prompted value
@@ -165,6 +180,7 @@ in
                 The script should produce the files specified in the 'files' attribute under $out.
               '';
               type = either str path;
+              default = "";
             };
             finalScript = {
               description = ''

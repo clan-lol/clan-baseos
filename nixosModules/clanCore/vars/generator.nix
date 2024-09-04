@@ -4,13 +4,32 @@
   pkgs,
   ...
 }:
+let
+  inherit (lib)
+    attrNames
+    concatMapStrings
+    genAttrs
+    filterAttrs
+    makeBinPath
+    mkOptionDefault
+    optionalString
+    ;
+
+  promptToFile = name: ''
+    cat "$prompts/${name}" > "$out/${name}"
+  '';
+
+  promptsToFilesScript = concatMapStrings promptToFile;
+
+  filePromptNames = attrNames (filterAttrs (_name: prompt: prompt.createFile) config.prompts);
+in
 {
-  finalScript = lib.mkOptionDefault ''
+  finalScript = mkOptionDefault ''
     set -eu -o pipefail
 
-    export PATH="${lib.makeBinPath config.runtimeInputs}:${pkgs.coreutils}/bin"
+    export PATH="${makeBinPath config.runtimeInputs}:${pkgs.coreutils}/bin"
 
-    ${lib.optionalString (pkgs.stdenv.hostPlatform.isLinux) ''
+    ${optionalString (pkgs.stdenv.hostPlatform.isLinux) ''
       # prepare sandbox user on platforms where this is supported
       mkdir -p /etc
 
@@ -31,6 +50,9 @@
       ::1 localhost
       EOF
     ''}
+    ${promptsToFilesScript filePromptNames}
     ${config.script}
   '';
+
+  files = genAttrs filePromptNames (_name: { });
 }

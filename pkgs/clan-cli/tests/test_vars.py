@@ -314,6 +314,7 @@ def test_prompt(
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["prompts"]["prompt1"]["description"] = "dream2nix"
+    my_generator["prompts"]["prompt1"]["createFile"] = False
     my_generator["prompts"]["prompt1"]["type"] = prompt_type
     my_generator["script"] = "cat $prompts/prompt1 > $out/my_value"
     flake = generate_flake(
@@ -378,3 +379,33 @@ def test_share_flag(
     assert not in_repo_store.exists("shared_generator", "my_value", shared=False)
     assert in_repo_store.exists("unshared_generator", "my_value", shared=False)
     assert not in_repo_store.exists("unshared_generator", "my_value", shared=True)
+
+
+@pytest.mark.impure
+def test_prompt_create_file(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+    sops_setup: SopsSetup,
+) -> None:
+    """
+    Test that the createFile flag in the prompt configuration works as expected
+    """
+    config = nested_dict()
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["prompts"]["prompt1"]["createFile"] = True
+    my_generator["prompts"]["prompt2"]["createFile"] = False
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+    )
+    monkeypatch.chdir(flake.path)
+    sops_setup.init()
+    monkeypatch.setattr("sys.stdin", StringIO("input1\ninput2\n"))
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    sops_store = sops.SecretStore(
+        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    )
+    assert sops_store.exists("my_generator", "prompt1")
+    assert not sops_store.exists("my_generator", "prompt2")
+    assert sops_store.get("my_generator", "prompt1").decode() == "input1"
