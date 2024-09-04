@@ -436,3 +436,46 @@ def test_api_get_prompts(
     assert api_prompts[0].name == "my_generator"
     assert api_prompts[0].prompts[0].name == "prompt1"
     assert api_prompts[0].prompts[0].previous_value == "input1"
+
+
+@pytest.mark.impure
+def test_api_set_prompts(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    from clan_cli.vars._types import GeneratorUpdate
+    from clan_cli.vars.list import set_prompts
+
+    config = nested_dict()
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["prompts"]["prompt1"]["type"] = "line"
+    my_generator["files"]["prompt1"]["secret"] = False
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+    )
+    monkeypatch.chdir(flake.path)
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    set_prompts(
+        machine,
+        [
+            GeneratorUpdate(
+                generator="my_generator",
+                prompt_values={"prompt1": "input1"},
+            )
+        ],
+    )
+    store = in_repo.FactStore(machine)
+    assert store.exists("my_generator", "prompt1")
+    assert store.get("my_generator", "prompt1").decode() == "input1"
+    set_prompts(
+        machine,
+        [
+            GeneratorUpdate(
+                generator="my_generator",
+                prompt_values={"prompt1": "input2"},
+            )
+        ],
+    )
+    assert store.get("my_generator", "prompt1").decode() == "input2"

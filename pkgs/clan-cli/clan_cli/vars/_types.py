@@ -26,6 +26,12 @@ class Generator:
 
 
 @dataclass
+class GeneratorUpdate:
+    generator: str
+    prompt_values: dict[str, str]
+
+
+@dataclass
 class Var:
     _store: "StoreBase"
     generator: str
