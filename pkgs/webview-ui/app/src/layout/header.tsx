@@ -64,11 +64,18 @@ export const Header = (props: HeaderProps) => {
         </span>
       </div>
       <div class="flex-none">
-        <span class="tooltip tooltip-bottom" data-tip="Settings">
-          <button class="link" onClick={() => navigate("/clan")}>
-            <span class="material-icons">settings</span>
-          </button>
-        </span>
+        <Show when={activeURI()}>
+          {(d) => (
+            <span class="tooltip tooltip-bottom" data-tip="Clan Settings">
+              <button
+                class="link"
+                onClick={() => navigate(`/clans/${window.btoa(d())}`)}
+              >
+                <span class="material-icons">settings</span>
+              </button>
+            </span>
+          )}
+        </Show>
       </div>
     </div>
   );

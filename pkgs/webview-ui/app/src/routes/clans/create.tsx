@@ -15,7 +15,7 @@ type CreateForm = Meta & {
   template: string;
 };
 
-export const ClanForm = () => {
+export const CreateClan = () => {
   const [formStore, { Form, Field }] = createForm<CreateForm>({
     initialValues: {
       name: "",

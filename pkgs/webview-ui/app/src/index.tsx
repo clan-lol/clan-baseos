@@ -7,15 +7,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import { MachineDetails } from "./routes/machines/[name]/view";
 import { Layout } from "./layout/layout";
 import { MachineListView } from "./routes/machines/view";
-import { CreateClan } from "./routes/clan/view";
-import { Settings } from "./routes/settings";
-import { EditClanForm } from "./routes/clan/editClan";
+import { ClanList, CreateClan, ClanDetails } from "./routes/clans";
 import { Flash } from "./routes/flash/view";
 import { CreateMachine } from "./routes/machines/create";
 import { HostList } from "./routes/hosts/view";
 import { Welcome } from "./routes/welcome";
 import { Toaster } from "solid-toast";
-import { Details } from "./routes/clan/details";
 
 const client = new QueryClient();
 
@@ -74,7 +71,7 @@ export const routes: AppRoute[] = [
       {
         path: "/",
         label: "Overview",
-        component: () => <Settings />,
+        component: () => <ClanList />,
       },
       {
         path: "/create",
@@ -85,7 +82,7 @@ export const routes: AppRoute[] = [
         path: "/:id",
         label: "Details",
         hidden: true,
-        component: () => <Details />,
+        component: () => <ClanDetails />,
       },
     ],
   },

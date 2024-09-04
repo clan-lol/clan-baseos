@@ -4,39 +4,14 @@ import { createSignal, For, Match, Setter, Show, Switch } from "solid-js";
 import { createQuery } from "@tanstack/solid-query";
 import { useFloating } from "@/src/floating";
 import { autoUpdate, flip, hide, offset, shift } from "@floating-ui/dom";
-import { EditClanForm } from "../clan/editClan";
 import { useNavigate, A } from "@solidjs/router";
-import { fileURLToPath } from "url";
+import { registerClan } from "@/src/hooks";
 
-export const registerClan = async () => {
-  try {
-    const loc = await callApi("open_file", {
-      file_request: { mode: "select_folder" },
-    });
-    if (loc.status === "success" && loc.data) {
-      const data = loc.data[0];
-      setClanList((s) => {
-        const res = new Set([...s, data]);
-        return Array.from(res);
-      });
-      setActiveURI(data);
-      // setRoute((r) => {
-      //   if (r === "welcome") return "machines";
-      //   return r;
-      // });
-      return data;
-    }
-  } catch (e) {
-    //
-  }
-};
-
-interface ClanDetailsProps {
+interface ClanItemProps {
   clan_dir: string;
-  setEditURI: Setter<string | null>;
 }
-const ClanDetails = (props: ClanDetailsProps) => {
-  const { clan_dir, setEditURI } = props;
+const ClanItem = (props: ClanItemProps) => {
+  const { clan_dir } = props;
 
   const details = createQuery(() => ({
     queryKey: [clan_dir, "meta"],
@@ -46,7 +21,7 @@ const ClanDetails = (props: ClanDetailsProps) => {
       return result.data;
     },
   }));
-
+  const navigate = useNavigate();
   const [reference, setReference] = createSignal<HTMLElement>();
   const [floating, setFloating] = createSignal<HTMLElement>();
 
@@ -87,10 +62,8 @@ const ClanDetails = (props: ClanDetailsProps) => {
       <div class="stat-figure text-primary">
         <div class="join">
           <button
-            class=" join-item btn-sm"
-            onClick={() => {
-              setEditURI(clan_dir);
-            }}
+            class="join-item btn-sm"
+            onClick={() => navigate(`/clans/${window.btoa(clan_dir)}`)}
           >
             <span class="material-icons">edit</span>
           </button>
@@ -157,62 +130,37 @@ const ClanDetails = (props: ClanDetailsProps) => {
   );
 };
 
-export const Settings = () => {
-  const [editURI, setEditURI] = createSignal<string | null>(null);
-
+export const ClanList = () => {
   const navigate = useNavigate();
   return (
     <div class="card card-normal">
-      <Switch>
-        <Match when={editURI()}>
-          {(uri) => (
-            <EditClanForm
-              directory={uri}
-              done={() => {
-                setEditURI(null);
-              }}
-            />
-          )}
-        </Match>
-        <Match when={!editURI()}>
-          <div class="card-body">
-            <div class="label">
-              <div class="label-text text-2xl text-neutral">
-                Registered Clans
-              </div>
-              <div class="flex gap-2">
-                <span class="tooltip tooltip-top" data-tip="Register clan">
-                  <button
-                    class="btn btn-square btn-ghost"
-                    onClick={() => {
-                      registerClan();
-                    }}
-                  >
-                    <span class="material-icons">post_add</span>
-                  </button>
-                </span>
-                <span class="tooltip tooltip-top" data-tip="Create new clan">
-                  <button
-                    class="btn btn-square btn-ghost"
-                    onClick={() => {
-                      navigate("create");
-                    }}
-                  >
-                    <span class="material-icons">add</span>
-                  </button>
-                </span>
-              </div>
-            </div>
-            <div class="stats stats-vertical shadow">
-              <For each={clanList()}>
-                {(value) => (
-                  <ClanDetails clan_dir={value} setEditURI={setEditURI} />
-                )}
-              </For>
-            </div>
+      <div class="card-body">
+        <div class="label">
+          <div class="label-text text-2xl text-neutral">Registered Clans</div>
+          <div class="flex gap-2">
+            <span class="tooltip tooltip-top" data-tip="Register clan">
+              <button class="btn btn-square btn-ghost" onClick={registerClan}>
+                <span class="material-icons">post_add</span>
+              </button>
+            </span>
+            <span class="tooltip tooltip-top" data-tip="Create new clan">
+              <button
+                class="btn btn-square btn-ghost"
+                onClick={() => {
+                  navigate("create");
+                }}
+              >
+                <span class="material-icons">add</span>
+              </button>
+            </span>
           </div>
-        </Match>
-      </Switch>
+        </div>
+        <div class="stats stats-vertical shadow">
+          <For each={clanList()}>
+            {(value) => <ClanItem clan_dir={value} />}
+          </For>
+        </div>
+      </div>
     </div>
   );
 };
