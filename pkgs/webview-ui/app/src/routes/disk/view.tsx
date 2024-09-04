@@ -16,10 +16,6 @@ export function DiskView() {
       }
     },
   }));
-  createEffect(() => {
-    // Example debugging the data
-    console.log(query);
-  });
   return (
     <div>
       <h1>Configure Disk</h1>

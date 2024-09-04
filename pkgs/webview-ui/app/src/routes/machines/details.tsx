@@ -4,48 +4,40 @@ import { BackButton } from "@/src/components/BackButton";
 import { FileInput } from "@/src/components/FileInput";
 import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
-import { createForm, FieldValues, getValue, reset } from "@modular-forms/solid";
+import { selectSshKeys } from "@/src/hooks";
+import {
+  createForm,
+  FieldValues,
+  getValue,
+  reset,
+  setValue,
+} from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
-import { createQuery } from "@tanstack/solid-query";
-import { createSignal, For, Show, Switch, Match } from "solid-js";
+import { createQuery, QueryObserver } from "@tanstack/solid-query";
+import {
+  createSignal,
+  For,
+  Show,
+  Switch,
+  Match,
+  JSXElement,
+  createEffect,
+  createMemo,
+} from "solid-js";
 import toast from "solid-toast";
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type MachineFormInterface = MachineType & {
+type MachineFormInterface = MachineData & {
   sshKey?: File;
   disk?: string;
 };
 
-type MachineType = SuccessData<"get_inventory_machine_details">;
+type MachineData = SuccessData<"get_inventory_machine_details">;
 
 type Disks = SuccessQuery<"show_block_devices">["data"]["blockdevices"];
 
-/**
- * Opens the custom file dialog
- * Returns a native FileList to allow interaction with the native input type="file"
- */
-const selectSshKeys = async (): Promise<FileList> => {
-  const dataTransfer = new DataTransfer();
-
-  const response = await callApi("open_file", {
-    file_request: {
-      title: "Select SSH Key",
-      mode: "open_file",
-      initial_folder: "~/.ssh",
-    },
-  });
-  if (response.status === "success" && response.data) {
-    // Add synthetic files to the DataTransfer object
-    // FileList cannot be instantiated directly.
-    response.data.forEach((filename) => {
-      dataTransfer.items.add(new File([], filename));
-    });
-  }
-  return dataTransfer.files;
-};
-
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type InstallForm = { disk?: string };
+interface InstallForm extends FieldValues {
+  disk?: string;
+}
 
 interface InstallMachineProps {
   name?: string;
@@ -295,7 +287,11 @@ const InstallMachine = (props: InstallMachineProps) => {
 };
 
 interface MachineDetailsProps {
-  initialData: MachineType;
+  initialData: MachineData;
+  modules: {
+    name: string;
+    component: JSXElement;
+  }[];
 }
 const MachineForm = (props: MachineDetailsProps) => {
   const [formStore, { Form, Field }] =
@@ -363,7 +359,13 @@ const MachineForm = (props: MachineDetailsProps) => {
     const machine_response = await callApi("set_machine", {
       flake_url: curr_uri,
       machine_name: props.initialData.machine.name,
-      machine: values.machine,
+      machine: {
+        ...values.machine,
+        // TODO: Remove this workaround
+        tags: Array.from(
+          values.machine.tags || props.initialData.machine.tags || [],
+        ),
+      },
     });
     if (machine_response.status === "error") {
       toast.error(
@@ -416,30 +418,33 @@ const MachineForm = (props: MachineDetailsProps) => {
     }
   };
   return (
-    <div class="flex w-full justify-center">
-      <div class="m-2 w-full max-w-xl">
-        <Form onSubmit={handleSubmit}>
-          <div class="flex w-full justify-center p-2">
-            <div
-              class="avatar placeholder"
-              classList={{
-                online: onlineStatusQuery.data === "Online",
-                offline: onlineStatusQuery.data === "Offline",
-              }}
-            >
-              <div class="w-24 rounded-full bg-neutral text-neutral-content">
-                <Show
-                  when={onlineStatusQuery.isFetching}
-                  fallback={
-                    <span class="material-icons text-4xl">devices</span>
-                  }
-                >
-                  <span class="loading loading-bars loading-sm justify-self-end"></span>
-                </Show>
-              </div>
+    <>
+      <Form onSubmit={handleSubmit}>
+        <figure>
+          <div
+            class="avatar placeholder"
+            classList={{
+              online: onlineStatusQuery.data === "Online",
+              offline: onlineStatusQuery.data === "Offline",
+            }}
+          >
+            <div class="w-24 rounded-full bg-neutral text-neutral-content">
+              <Show
+                when={onlineStatusQuery.isFetching}
+                fallback={<span class="material-icons text-4xl">devices</span>}
+              >
+                <span class="loading loading-bars loading-sm justify-self-end"></span>
+              </Show>
             </div>
           </div>
-          <div class="my-2 w-full text-2xl">Details</div>
+        </figure>
+        <div class="card-body">
+          <span class="text-xl text-primary">General</span>
+          {/*
+          <Field name="machine.tags" type="string[]">
+            {(field, props) => field.value}
+          </Field> */}
+
           <Field name="machine.name">
             {(field, props) => (
               <TextInput
@@ -520,18 +525,34 @@ const MachineForm = (props: MachineDetailsProps) => {
             </div>
           </div>
 
-          <div class="my-2 w-full">
-            <button
-              class="btn btn-primary btn-wide"
-              type="submit"
-              disabled={!formStore.dirty}
-            >
-              Save
-            </button>
-          </div>
-        </Form>
-        <div class="my-2 w-full text-2xl">Remote Interactions</div>
-        <div class="my-2 flex w-full flex-col gap-2">
+          {
+            <div class="card-actions justify-end">
+              <button
+                class="btn btn-primary"
+                type="submit"
+                disabled={formStore.submitting || !formStore.dirty}
+              >
+                Save
+              </button>
+            </div>
+          }
+        </div>
+      </Form>
+
+      <div class="card-body">
+        <For each={props.modules}>
+          {(module) => (
+            <>
+              <div class="divider"></div>
+              <span class="text-xl text-primary">{module.name}</span>
+              {module.component}
+            </>
+          )}
+        </For>
+        <div class="divider"></div>
+
+        <span class="text-xl text-primary">Actions</span>
+        <div class="my-4 flex flex-col gap-6">
           <span class="max-w-md text-neutral">
             Installs the system for the first time. Used to bootstrap the remote
             device.
@@ -575,13 +596,15 @@ const MachineForm = (props: MachineDetailsProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
+type WifiData = SuccessData<"get_iwd_service">;
+
 export const MachineDetails = () => {
   const params = useParams();
-  const query = createQuery(() => ({
+  const genericQuery = createQuery(() => ({
     queryKey: [
       activeURI(),
       "machine",
@@ -601,19 +624,61 @@ export const MachineDetails = () => {
     },
   }));
 
+  const wifiQuery = createQuery(() => ({
+    queryKey: [activeURI(), "machine", params.id, "get_iwd_service"],
+    queryFn: async () => {
+      const curr = activeURI();
+      if (curr) {
+        const result = await callApi("get_iwd_service", {
+          base_url: curr,
+          machine_name: params.id,
+        });
+        if (result.status === "error") throw new Error("Failed to fetch data");
+        return Object.entries(result.data?.config?.networks || {}).map(
+          ([name, value]) => ({ name, ssid: value.ssid }),
+        );
+      }
+    },
+  }));
+
   return (
-    <div class="p-2">
+    <div class="card">
       <BackButton />
       <Show
-        when={query.data}
+        when={genericQuery.data}
         fallback={<span class="loading loading-lg"></span>}
       >
         {(data) => (
           <>
-            <MachineForm initialData={data()} />
-            <MachineWifi
-              base_url={activeURI() || ""}
-              machine_name={data().machine.name}
+            <MachineForm
+              initialData={data()}
+              modules={[
+                {
+                  component: (
+                    <Show
+                      when={!wifiQuery.isLoading}
+                      fallback={
+                        <div>
+                          <span class="loading loading-lg"></span>
+                        </div>
+                      }
+                    >
+                      <Switch>
+                        <Match when={wifiQuery.data}>
+                          {(d) => (
+                            <WifiModule
+                              initialData={d()}
+                              base_url={activeURI() || ""}
+                              machine_name={data().machine.name}
+                            />
+                          )}
+                        </Match>
+                      </Switch>
+                    </Show>
+                  ),
+                  name: "Wifi",
+                },
+              ]}
             />
           </>
         )}
@@ -622,61 +687,128 @@ export const MachineDetails = () => {
   );
 };
 
+interface Wifi extends FieldValues {
+  name: string;
+  ssid?: string;
+  password?: string;
+}
+
 interface WifiForm extends FieldValues {
-  ssid: string;
-  password: string;
+  networks: Wifi[];
 }
 
 interface MachineWifiProps {
   base_url: string;
   machine_name: string;
+  initialData: Wifi[];
 }
-function MachineWifi(props: MachineWifiProps) {
-  const [formStore, { Form, Field }] = createForm<WifiForm>();
+function WifiModule(props: MachineWifiProps) {
+  // You can use formData to initialize your form fields:
+  // const initialFormState = formData();
+
+  const [formStore, { Form, Field }] = createForm<WifiForm>({
+    initialValues: {
+      networks: props.initialData,
+    },
+  });
+
+  const [nets, setNets] = createSignal<1[]>(
+    new Array(props.initialData.length || 1).fill(1),
+  );
 
   const handleSubmit = async (values: WifiForm) => {
-    console.log("submitting", values);
+    const networks = values.networks
+      .filter((i) => i.ssid)
+      .reduce(
+        (acc, curr) => ({
+          ...acc,
+          [curr.ssid || ""]: { ssid: curr.ssid, password: curr.password },
+        }),
+        {},
+      );
+
+    console.log("submitting", values, networks);
     const r = await callApi("set_iwd_service_for_machine", {
       base_url: props.base_url,
       machine_name: props.machine_name,
-      networks: {
-        [values.ssid]: { ssid: values.ssid, password: values.password },
-      },
+      networks: networks,
     });
+    if (r.status === "error") {
+      toast.error("Failed to set wifi");
+    }
+    if (r.status === "success") {
+      toast.success("Wifi set successfully");
+    }
   };
+
   return (
-    <div>
-      <h1>MachineWifi</h1>
-      <Form onSubmit={handleSubmit}>
-        <Field name="ssid">
-          {(field, props) => (
-            <TextInput
-              formStore={formStore}
-              inputProps={props}
-              label="Name"
-              value={field.value ?? ""}
-              error={field.error}
-              required
-            />
-          )}
-        </Field>
-        <Field name="password">
-          {(field, props) => (
-            <TextInput
-              formStore={formStore}
-              inputProps={props}
-              label="Password"
-              value={field.value ?? ""}
-              error={field.error}
-              type="password"
-              required
-            />
-          )}
-        </Field>
-        <button class="btn" type="submit">
-          <span>Submit</span>
-        </button>
-      </Form>
-    </div>
+    <Form onSubmit={handleSubmit}>
+      <span class="text-neutral">Preconfigure wireless networks</span>
+      <For each={nets()}>
+        {(_, idx) => (
+          <div class="flex gap-4">
+            <Field name={`networks.${idx()}.ssid`}>
+              {(field, props) => (
+                <TextInput
+                  formStore={formStore}
+                  inputProps={props}
+                  label="Name"
+                  value={field.value ?? ""}
+                  error={field.error}
+                  required
+                />
+              )}
+            </Field>
+            <Field name={`networks.${idx()}.password`}>
+              {(field, props) => (
+                <TextInput
+                  formStore={formStore}
+                  inputProps={props}
+                  label="Password"
+                  value={field.value ?? ""}
+                  error={field.error}
+                  type="password"
+                  required
+                />
+              )}
+            </Field>
+            <button class="btn btn-ghost self-end">
+              <span
+                class="material-icons"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setNets((c) => c.filter((_, i) => i !== idx()));
+                  setValue(formStore, `networks.${idx()}.ssid`, undefined);
+                  setValue(formStore, `networks.${idx()}.password`, undefined);
+                }}
+              >
+                delete
+              </span>
+            </button>
+          </div>
+        )}
+      </For>
+      <button
+        class="btn btn-ghost btn-sm my-1 flex items-center justify-center"
+        onClick={(e) => {
+          e.preventDefault();
+          setNets([...nets(), 1]);
+        }}
+      >
+        <span class="material-icons">add</span>
+        Add Network
+      </button>
+      {
+        <div class="card-actions mt-4 justify-end">
+          <button
+            class="btn btn-primary"
+            type="submit"
+            disabled={formStore.submitting || !formStore.dirty}
+          >
+            Save
+          </button>
+        </div>
+      }
+    </Form>
   );
 }
