@@ -5,10 +5,12 @@ import shutil
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO
 
+from clan_cli.api import API
 from clan_cli.cmd import Log, run
 from clan_cli.dirs import user_config_dir
 from clan_cli.errors import ClanError
@@ -17,10 +19,10 @@ from clan_cli.nix import nix_shell
 from .folders import sops_machines_folder, sops_users_folder
 
 
+@dataclass
 class SopsKey:
-    def __init__(self, pubkey: str, username: str) -> None:
-        self.pubkey = pubkey
-        self.username = username
+    pubkey: str
+    username: str
 
 
 def get_public_key(privkey: str) -> str:
@@ -92,6 +94,7 @@ def maybe_get_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey | None:
     return None
 
 
+@API.register
 def ensure_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey:
     key = maybe_get_user_or_machine(flake_dir, pub_key)
     if not key:
@@ -107,6 +110,7 @@ def default_sops_key_path() -> Path:
     return user_config_dir() / "sops" / "age" / "keys.txt"
 
 
+@API.register
 def maybe_get_public_key() -> str | None:
     key = os.environ.get("SOPS_AGE_KEY")
     if key:
