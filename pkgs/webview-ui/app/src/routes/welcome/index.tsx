@@ -1,5 +1,5 @@
-import { setActiveURI, setClanList } from "@/src/App";
-import { registerClan } from "../settings";
+import { setActiveURI } from "@/src/App";
+import { registerClan } from "@/src/hooks";
 import { useNavigate } from "@solidjs/router";
 
 export const Welcome = () => {
