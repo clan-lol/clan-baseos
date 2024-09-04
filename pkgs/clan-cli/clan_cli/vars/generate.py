@@ -3,7 +3,6 @@ import importlib
 import logging
 import os
 import sys
-from getpass import getpass
 from graphlib import TopologicalSorter
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -22,6 +21,7 @@ from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 
 from .check import check_vars
+from .prompt import prompt
 from .public_modules import FactStoreBase
 from .secret_modules import SecretStoreBase
 
@@ -133,11 +133,11 @@ def execute_generator(
         if machine.vars_generators[generator_name]["prompts"]:
             tmpdir_prompts.mkdir()
             env["prompts"] = str(tmpdir_prompts)
-            for prompt_name, prompt in machine.vars_generators[generator_name][
+            for prompt_name, prompt_ in machine.vars_generators[generator_name][
                 "prompts"
             ].items():
                 prompt_file = tmpdir_prompts / prompt_name
-                value = prompt_func(prompt["description"], prompt["type"])
+                value = prompt(prompt_["description"], prompt_["type"])
                 prompt_file.write_text(value)
 
         if sys.platform == "linux":
@@ -182,21 +182,6 @@ def execute_generator(
         f"Update facts/secrets for service {generator_name} in machine {machine.name}",
     )
     return True
-
-
-def prompt_func(description: str, input_type: str) -> str:
-    if input_type == "line":
-        result = input(f"Enter the value for {description}: ")
-    elif input_type == "multiline":
-        print(f"Enter the value for {description} (Finish with Ctrl-D): ")
-        result = sys.stdin.read()
-    elif input_type == "hidden":
-        result = getpass(f"Enter the value for {description} (hidden): ")
-    else:
-        msg = f"Unknown input type: {input_type} for prompt {description}"
-        raise ClanError(msg)
-    log.info("Input received. Processing...")
-    return result
 
 
 def _get_subgraph(graph: dict[str, set], vertex: str) -> dict[str, set]:

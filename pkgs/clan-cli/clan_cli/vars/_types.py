@@ -1,5 +1,6 @@
 # !/usr/bin/env python3
 import json
+import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +32,9 @@ class Var:
             return self.value.decode()
         except UnicodeDecodeError:
             return "<binary blob>"
+
+    def set(self, value: bytes) -> None:
+        self.store.set(self.generator, self.name, value, self.shared, self.deployed)
 
     @property
     def exists(self) -> bool:
@@ -109,8 +113,7 @@ class StoreBase(ABC):
         directory = self.directory(generator_name, var_name, shared)
         # delete directory
         if directory.exists():
-            for f in directory.glob("*"):
-                f.unlink()
+            shutil.rmtree(directory)
         # re-create directory
         directory.mkdir(parents=True, exist_ok=True)
         new_file = self._set(generator_name, var_name, value, shared, deployed)
