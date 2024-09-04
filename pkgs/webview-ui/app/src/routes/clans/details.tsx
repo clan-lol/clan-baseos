@@ -68,7 +68,7 @@ const EditClanForm = (props: EditClanFormProps) => {
           <>
             <figure class="p-1">
               <div class="flex flex-col items-center">
-                <div class="text-3xl text-primary">{curr_name()}'s</div>
+                <div class="text-3xl text-primary">{curr_name()}</div>
                 <div class="text-secondary">Wide settings</div>
               </div>
             </figure>
@@ -257,11 +257,9 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
                               class="absolute -ml-4 size-full cursor-pointer opacity-0"
                               type="file"
                               onInput={async (e) => {
-                                console.log(e.target.files);
                                 if (!e.target.files) return;
 
                                 const content = await e.target.files[0].text();
-                                console.log(content);
                                 setValue(
                                   formStore,
                                   `allowedKeys.${idx()}.value`,

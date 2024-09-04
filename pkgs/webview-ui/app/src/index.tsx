@@ -4,12 +4,14 @@ import { RouteDefinition, Router } from "@solidjs/router";
 
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
-import { MachineDetails } from "./routes/machines/[name]/view";
+import {
+  MachineDetails,
+  MachineListView,
+  CreateMachine,
+} from "./routes/machines";
 import { Layout } from "./layout/layout";
-import { MachineListView } from "./routes/machines/view";
 import { ClanList, CreateClan, ClanDetails } from "./routes/clans";
 import { Flash } from "./routes/flash/view";
-import { CreateMachine } from "./routes/machines/create";
 import { HostList } from "./routes/hosts/view";
 import { Welcome } from "./routes/welcome";
 import { Toaster } from "solid-toast";

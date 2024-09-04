@@ -28,14 +28,23 @@ def instance_name(machine_name: str) -> str:
 
 
 @API.register
-def get_iwd_service(base_url: str, machine_name: str) -> ServiceIwd | None:
+def get_iwd_service(base_url: str, machine_name: str) -> ServiceIwd:
     """
     Return the admin service of a clan.
 
     There is only one admin service. This might be changed in the future
     """
     inventory = load_inventory_eval(base_url)
-    return inventory.services.iwd.get(instance_name(machine_name))
+    service_config = inventory.services.iwd.get(instance_name(machine_name))
+    if service_config:
+        return service_config
+
+    # Empty service
+    return ServiceIwd(
+        meta=ServiceMeta(name="wifi_0"),
+        roles=ServiceIwdRole(default=ServiceIwdRoleDefault(machines=[machine_name])),
+        config=IwdConfig(networks={}),
+    )
 
 
 @dataclass

@@ -25,10 +25,6 @@ export function TextInput<T extends FieldValues, R extends ResponseData>(
 ) {
   const value = () => props.value;
 
-  createEffect(() => {
-    console.log("rendering text input", props.value);
-  });
-
   return (
     <label
       class={cx("form-control w-full", props.class)}
