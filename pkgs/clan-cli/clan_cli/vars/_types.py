@@ -9,8 +9,25 @@ from clan_cli.machines.machines import Machine
 
 
 @dataclass
+class Prompt:
+    name: str
+    description: str
+    type: str
+    has_file: bool
+    generator: str
+    previous_value: str | None = None
+
+
+@dataclass
+class Generator:
+    name: str
+    share: bool
+    prompts: list[Prompt]
+
+
+@dataclass
 class Var:
-    store: "StoreBase"
+    _store: "StoreBase"
     generator: str
     name: str
     id: str
@@ -20,11 +37,11 @@ class Var:
 
     @property
     def value(self) -> bytes:
-        if not self.store.exists(self.generator, self.name, self.shared):
+        if not self._store.exists(self.generator, self.name, self.shared):
             msg = f"Var {self.id} has not been generated yet"
             raise ValueError(msg)
         # try decode the value or return <binary blob>
-        return self.store.get(self.generator, self.name, self.shared)
+        return self._store.get(self.generator, self.name, self.shared)
 
     @property
     def printable_value(self) -> str:
@@ -34,16 +51,16 @@ class Var:
             return "<binary blob>"
 
     def set(self, value: bytes) -> None:
-        self.store.set(self.generator, self.name, value, self.shared, self.deployed)
+        self._store.set(self.generator, self.name, value, self.shared, self.deployed)
 
     @property
     def exists(self) -> bool:
-        return self.store.exists(self.generator, self.name, self.shared)
+        return self._store.exists(self.generator, self.name, self.shared)
 
     def __str__(self) -> str:
         if self.secret:
             return f"{self.id}: ********"
-        if self.store.exists(self.generator, self.name, self.shared):
+        if self._store.exists(self.generator, self.name, self.shared):
             return f"{self.id}: {self.printable_value}"
         return f"{self.id}: <not set>"
 
@@ -135,7 +152,7 @@ class StoreBase(ABC):
                     continue
                 all_vars.append(
                     Var(
-                        store=self,
+                        _store=self,
                         generator=gen_name,
                         name=f_name,
                         id=f"{gen_name}/{f_name}",

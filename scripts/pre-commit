@@ -15,7 +15,7 @@ unstash() {
 }
 git stash push --quiet --keep-index --message "pre-commit"
 trap unstash EXIT
-nix fmt
+treefmt
 {
   changed=$(git diff --name-only --exit-code);
   status=$?;

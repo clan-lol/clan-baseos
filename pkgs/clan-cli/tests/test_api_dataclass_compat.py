@@ -119,7 +119,6 @@ def test_all_dataclasses() -> None:
     # - API includes Type Generic wrappers, that are not known in the init file.
     excludes = [
         "api/__init__.py",
-        "vars/_types.py",
     ]
 
     cli_path = Path("clan_cli").resolve()

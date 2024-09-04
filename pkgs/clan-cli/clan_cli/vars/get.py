@@ -8,13 +8,13 @@ from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
 
 from ._types import Var
-from .list import all_vars
+from .list import get_vars
 
 log = logging.getLogger(__name__)
 
 
 def get_var(machine: Machine, var_id: str) -> Var:
-    vars_ = all_vars(machine)
+    vars_ = get_vars(machine)
     results = []
     for var in vars_:
         if var_id in var.id:
