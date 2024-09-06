@@ -7,7 +7,7 @@ from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.machines.machines import Machine
 from clan_cli.vars.get import get_var
 
-from .prompt import prompt
+from .prompt import ask
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def set_command(machine: str, var_id: str, flake: FlakeId) -> None:
     _machine = Machine(name=machine, flake=flake)
     var = get_var(_machine, var_id)
     if sys.stdin.isatty():
-        new_value = prompt(var.id, "hidden").encode("utf-8")
+        new_value = ask(var.id, "hidden").encode("utf-8")
     else:
         new_value = sys.stdin.buffer.read()
     var.set(new_value)

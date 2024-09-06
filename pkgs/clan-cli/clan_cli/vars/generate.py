@@ -20,7 +20,7 @@ from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 
 from .check import check_vars
-from .prompt import prompt
+from .prompt import ask
 from .public_modules import FactStoreBase
 from .secret_modules import SecretStoreBase
 
@@ -98,8 +98,9 @@ def execute_generator(
     regenerate: bool,
     secret_vars_store: SecretStoreBase,
     public_vars_store: FactStoreBase,
-    prompt_values: dict[str, str] | None = None,
+    prompt_values: dict[str, str] | None,
 ) -> bool:
+    prompt_values = {} if prompt_values is None else prompt_values
     # check if all secrets exist and generate them if at least one is missing
     needs_regeneration = not check_vars(machine, generator_name=generator_name)
     log.debug(f"{generator_name} needs_regeneration: {needs_regeneration}")
@@ -118,17 +119,11 @@ def execute_generator(
     )
 
     def get_prompt_value(prompt_name: str) -> str:
-        if prompt_values:
-            try:
-                return prompt_values[prompt_name]
-            except KeyError as e:
-                msg = f"prompt value for '{prompt_name}' in generator {generator_name} not provided"
-                raise ClanError(msg) from e
-        description = machine.vars_generators[generator_name]["prompts"][prompt_name][
-            "description"
-        ]
-        _type = machine.vars_generators[generator_name]["prompts"][prompt_name]["type"]
-        return prompt(description, _type)
+        try:
+            return prompt_values[prompt_name]
+        except KeyError as e:
+            msg = f"prompt value for '{prompt_name}' in generator {generator_name} not provided"
+            raise ClanError(msg) from e
 
     env = os.environ.copy()
     with TemporaryDirectory() as tmp:
@@ -265,14 +260,20 @@ def _required_generators(
     return list(sorter.static_order())
 
 
-def _generate_vars_for_machine(
+def _ask_prompts(
     machine: Machine,
-    generator_name: str | None,
-    regenerate: bool,
-) -> bool:
-    return _generate_vars_for_machine_multi(
-        machine, [generator_name] if generator_name else [], regenerate
-    )
+    generator_names: list[str],
+) -> dict[str, dict[str, str]]:
+    prompt_values: dict[str, dict[str, str]] = {}
+    for generator in generator_names:
+        prompts = machine.vars_generators[generator]["prompts"]
+        for prompt_name, _prompt in prompts.items():
+            if generator not in prompt_values:
+                prompt_values[generator] = {}
+            prompt_values[generator][prompt_name] = ask(
+                _prompt["description"], _prompt["type"]
+            )
+    return prompt_values
 
 
 def _generate_vars_for_machine_multi(
@@ -291,11 +292,24 @@ def _generate_vars_for_machine_multi(
             regenerate=regenerate,
             secret_vars_store=machine.secret_vars_store,
             public_vars_store=machine.public_vars_store,
+            prompt_values=_ask_prompts(machine, [generator_name]).get(
+                generator_name, {}
+            ),
         )
     if machine_updated:
         # flush caches to make sure the new secrets are available in evaluation
         machine.flush_caches()
     return machine_updated
+
+
+def _generate_vars_for_machine(
+    machine: Machine,
+    generator_name: str | None,
+    regenerate: bool,
+) -> bool:
+    return _generate_vars_for_machine_multi(
+        machine, [generator_name] if generator_name else [], regenerate
+    )
 
 
 def generate_vars(
