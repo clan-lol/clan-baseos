@@ -7,7 +7,7 @@ from clan_cli.errors import ClanError
 log = logging.getLogger(__name__)
 
 
-def prompt(description: str, input_type: str) -> str:
+def ask(description: str, input_type: str) -> str:
     if input_type == "line":
         result = input(f"Enter the value for {description}: ")
     elif input_type == "multiline":
