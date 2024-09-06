@@ -29,7 +29,7 @@ if ! check_remote "$remoteUpstream"; then
   exit 1
 fi
 
-nix fmt -- --fail-on-change --no-cache
+treefmt --fail-on-change --no-cache
 
 upstream_url=$(git remote get-url "$remoteUpstream")
 set -x
