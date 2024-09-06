@@ -42,6 +42,7 @@ def test_vm_deployment(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
+        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -65,8 +66,8 @@ def test_vm_deployment(
         )
     ).stdout.strip()
     assert "no-such-path" not in my_secret_path
-    run_vm_in_thread("my_machine")
-    qga = qga_connect("my_machine")
+    vm = run_vm_in_thread("my_machine")
+    qga = qga_connect("my_machine", vm)
     # check my_secret is deployed
     _, out, _ = qga.run("cat /run/secrets/vars/my_generator/my_secret", check=True)
     assert out == "hello\n"
@@ -81,4 +82,4 @@ def test_vm_deployment(
     )
     assert returncode != 0
     qga.exec_cmd("poweroff")
-    wait_vm_down("my_machine")
+    wait_vm_down("my_machine", vm)
