@@ -20,7 +20,6 @@ from . import (
     history,
     secrets,
     state,
-    vars,
     vms,
 )
 from .clan_uri import FlakeId
@@ -32,6 +31,7 @@ from .hyperlink import help_hyperlink
 from .machines import cli as machines
 from .profiler import profile
 from .ssh import cli as ssh_cli
+from .vars import cli as vars_cli
 
 log = logging.getLogger(__name__)
 
@@ -293,7 +293,7 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
-    vars.register_parser(parser_vars)
+    vars_cli.register_parser(parser_vars)
 
     parser_machine = subparsers.add_parser(
         "machines",

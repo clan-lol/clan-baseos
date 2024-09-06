@@ -1,6 +1,8 @@
+import importlib
 import json
 import logging
 from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Literal
@@ -10,6 +12,8 @@ from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanError
 from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata
 from clan_cli.ssh import Host, parse_deployment_address
+from clan_cli.vars.public_modules import FactStoreBase
+from clan_cli.vars.secret_modules import SecretStoreBase
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +93,16 @@ class Machine:
     @property
     def public_vars_module(self) -> str:
         return self.deployment["vars"]["publicModule"]
+
+    @cached_property
+    def secret_vars_store(self) -> SecretStoreBase:
+        module = importlib.import_module(self.secret_vars_module)
+        return module.SecretStore(machine=self)
+
+    @cached_property
+    def public_vars_store(self) -> FactStoreBase:
+        module = importlib.import_module(self.public_vars_module)
+        return module.FactStore(machine=self)
 
     @property
     def facts_data(self) -> dict[str, dict[str, Any]]:

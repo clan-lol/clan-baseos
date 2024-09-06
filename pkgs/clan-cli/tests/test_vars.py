@@ -27,12 +27,12 @@ def test_get_subgraph() -> None:
         "c": set(),
         "d": set(),
     }
-    assert _get_subgraph(graph, "a") == {
+    assert _get_subgraph(graph, ["a"]) == {
         "a": {"b", "c"},
         "b": {"c"},
         "c": set(),
     }
-    assert _get_subgraph(graph, "b") == {"b": {"c"}, "c": set()}
+    assert _get_subgraph(graph, ["b"]) == {"b": {"c"}, "c": set()}
 
 
 def test_dependencies_as_files() -> None:

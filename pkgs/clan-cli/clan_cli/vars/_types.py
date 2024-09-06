@@ -1,11 +1,10 @@
-# !/usr/bin/env python3
 import json
 import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
-from clan_cli.machines.machines import Machine
+from clan_cli.machines import machines
 
 
 @dataclass
@@ -18,6 +17,7 @@ class Prompt:
     previous_value: str | None = None
 
 
+# TODO: add flag 'pending' generator needs to be executed
 @dataclass
 class Generator:
     name: str
@@ -72,7 +72,7 @@ class Var:
 
 
 class StoreBase(ABC):
-    def __init__(self, machine: Machine) -> None:
+    def __init__(self, machine: "machines.Machine") -> None:
         self.machine = machine
 
     @property
