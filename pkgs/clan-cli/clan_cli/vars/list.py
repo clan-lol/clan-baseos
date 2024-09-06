@@ -85,7 +85,6 @@ def set_prompts(machine: Machine, updates: list[GeneratorUpdate]) -> None:
         execute_generator(
             machine,
             update.generator,
-            regenerate=True,
             secret_vars_store=secret_store(machine),
             public_vars_store=public_store(machine),
             prompt_values=update.prompt_values,

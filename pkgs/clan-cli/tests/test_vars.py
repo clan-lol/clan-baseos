@@ -1,4 +1,5 @@
 import subprocess
+from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -16,23 +17,6 @@ from fixtures_flakes import generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
 from root import CLAN_CORE
-
-
-def test_get_subgraph() -> None:
-    from clan_cli.vars.generate import _get_subgraph
-
-    graph = {
-        "a": {"b", "c"},
-        "b": {"c"},
-        "c": set(),
-        "d": set(),
-    }
-    assert _get_subgraph(graph, ["a"]) == {
-        "a": {"b", "c"},
-        "b": {"c"},
-        "c": set(),
-    }
-    assert _get_subgraph(graph, ["b"]) == {"b": {"c"}, "c": set()}
 
 
 def test_dependencies_as_files() -> None:
@@ -61,6 +45,34 @@ def test_dependencies_as_files() -> None:
         assert (dep_tmpdir / "gen_1" / "var_1b").stat().st_mode & 0o777 == 0o600
         assert (dep_tmpdir / "gen_2" / "var_2a").stat().st_mode & 0o777 == 0o600
         assert (dep_tmpdir / "gen_2" / "var_2b").stat().st_mode & 0o777 == 0o600
+
+
+def test_required_generators() -> None:
+    from clan_cli.vars.graph import all_missing_closure, requested_closure
+
+    @dataclass
+    class Generator:
+        dependencies: list[str]
+        exists: bool  # result is already on disk
+
+    generators = {
+        "gen_1": Generator([], True),
+        "gen_2": Generator(["gen_1"], False),
+        "gen_2a": Generator(["gen_2"], False),
+        "gen_2b": Generator(["gen_2"], True),
+    }
+
+    assert requested_closure(["gen_1"], generators) == [
+        "gen_1",
+        "gen_2",
+        "gen_2a",
+        "gen_2b",
+    ]
+    assert requested_closure(["gen_2"], generators) == ["gen_2", "gen_2a", "gen_2b"]
+    assert requested_closure(["gen_2a"], generators) == ["gen_2", "gen_2a", "gen_2b"]
+    assert requested_closure(["gen_2b"], generators) == ["gen_2", "gen_2a", "gen_2b"]
+
+    assert all_missing_closure(generators) == ["gen_2", "gen_2a", "gen_2b"]
 
 
 @pytest.mark.impure

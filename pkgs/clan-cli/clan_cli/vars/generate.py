@@ -2,7 +2,6 @@ import argparse
 import logging
 import os
 import sys
-from graphlib import TopologicalSorter
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -19,7 +18,10 @@ from clan_cli.machines.inventory import get_all_machines, get_selected_machines
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 
-from .check import check_vars
+from .graph import (
+    minimal_closure,
+    requested_closure,
+)
 from .prompt import ask
 from .public_modules import FactStoreBase
 from .secret_modules import SecretStoreBase
@@ -95,17 +97,10 @@ def dependencies_as_dir(
 def execute_generator(
     machine: Machine,
     generator_name: str,
-    regenerate: bool,
     secret_vars_store: SecretStoreBase,
     public_vars_store: FactStoreBase,
-    prompt_values: dict[str, str] | None,
-) -> bool:
-    prompt_values = {} if prompt_values is None else prompt_values
-    # check if all secrets exist and generate them if at least one is missing
-    needs_regeneration = not check_vars(machine, generator_name=generator_name)
-    log.debug(f"{generator_name} needs_regeneration: {needs_regeneration}")
-    if not (needs_regeneration or regenerate):
-        return False
+    prompt_values: dict[str, str],
+) -> None:
     if not isinstance(machine.flake, Path):
         msg = f"flake is not a Path: {machine.flake}"
         msg += "fact/secret generation is only supported for local flakes"
@@ -188,76 +183,6 @@ def execute_generator(
         machine.flake_dir,
         f"Update facts/secrets for service {generator_name} in machine {machine.name}",
     )
-    return True
-
-
-def _get_subgraph(graph: dict[str, set], vertices: list[str]) -> dict[str, set]:
-    visited = set()
-    queue = vertices
-    while queue:
-        vertex = queue.pop(0)
-        if vertex not in visited:
-            visited.add(vertex)
-            queue.extend(graph[vertex] - visited)
-    return {k: v for k, v in graph.items() if k in visited}
-
-
-def _dependency_graph(
-    machine: Machine, entry_nodes: None | list[str] = None
-) -> dict[str, set]:
-    graph = {
-        gen_name: set(generator["dependencies"])
-        for gen_name, generator in machine.vars_generators.items()
-    }
-    if entry_nodes:
-        return _get_subgraph(graph, entry_nodes)
-    return graph
-
-
-def _reverse_dependency_graph(
-    machine: Machine, entry_nodes: None | list[str] = None
-) -> dict[str, set]:
-    graph = _dependency_graph(machine)
-    reverse_graph: dict[str, set] = {gen_name: set() for gen_name in graph}
-    for gen_name, dependencies in graph.items():
-        for dep in dependencies:
-            reverse_graph[dep].add(gen_name)
-    if entry_nodes:
-        return _get_subgraph(reverse_graph, entry_nodes)
-    return reverse_graph
-
-
-def _required_generators(
-    machine: Machine,
-    desired_generators: list[str],
-) -> list[str]:
-    """
-    Receives list fo desired generators to update and returns list of required generators to update.
-
-    This is needed because some generators might depend on others, so we need to update them first.
-    The returned list is sorted topologically.
-    """
-
-    dependency_graph = _dependency_graph(machine)
-    # extract sub-graph if specific generators selected
-    dependency_graph = _get_subgraph(dependency_graph, desired_generators)
-
-    # check if all dependencies actually exist
-    for gen_name, dependencies in dependency_graph.items():
-        for dep in dependencies:
-            if dep not in dependency_graph:
-                msg = f"Generator {gen_name} has a dependency on {dep}, which does not exist"
-                raise ClanError(msg)
-
-    # ensure that all dependents are regenerated as well as their vars might depend on the current generator
-    reverse_dependency_graph = _reverse_dependency_graph(machine, desired_generators)
-    final_graph = _dependency_graph(
-        machine, entry_nodes=list(reverse_dependency_graph.keys())
-    )
-
-    # process generators in topological order (dependencies first)
-    sorter = TopologicalSorter(final_graph)
-    return list(sorter.static_order())
 
 
 def _ask_prompts(
@@ -276,30 +201,26 @@ def _ask_prompts(
     return prompt_values
 
 
-def _generate_vars_for_machine_multi(
+def get_closure(
     machine: Machine,
-    generator_names: list[str],
+    generator_name: str | None,
     regenerate: bool,
-) -> bool:
-    machine_updated = False
+) -> list[str]:
+    from .graph import Generator, all_missing_closure, full_closure
 
-    generators_to_update = _required_generators(machine, generator_names)
-    for generator_name in generators_to_update:
-        assert generator_name is not None
-        machine_updated |= execute_generator(
-            machine=machine,
-            generator_name=generator_name,
-            regenerate=regenerate,
-            secret_vars_store=machine.secret_vars_store,
-            public_vars_store=machine.public_vars_store,
-            prompt_values=_ask_prompts(machine, [generator_name]).get(
-                generator_name, {}
-            ),
-        )
-    if machine_updated:
-        # flush caches to make sure the new secrets are available in evaluation
-        machine.flush_caches()
-    return machine_updated
+    vars_generators = machine.vars_generators
+    generators: dict[str, Generator] = {
+        name: Generator(name, generator["dependencies"], _machine=machine)
+        for name, generator in vars_generators.items()
+    }
+    if generator_name is None:  # all generators selected
+        if regenerate:
+            return full_closure(generators)
+        return all_missing_closure(generators)
+    # specific generator selected
+    if regenerate:
+        return requested_closure([generator_name], generators)
+    return minimal_closure([generator_name], generators)
 
 
 def _generate_vars_for_machine(
@@ -307,9 +228,21 @@ def _generate_vars_for_machine(
     generator_name: str | None,
     regenerate: bool,
 ) -> bool:
-    return _generate_vars_for_machine_multi(
-        machine, [generator_name] if generator_name else [], regenerate
-    )
+    closure = get_closure(machine, generator_name, regenerate)
+    if len(closure) == 0:
+        return False
+    prompt_values = _ask_prompts(machine, closure)
+    for gen_name in closure:
+        execute_generator(
+            machine,
+            gen_name,
+            machine.secret_vars_store,
+            machine.public_vars_store,
+            prompt_values.get(gen_name, {}),
+        )
+    # flush caches to make sure the new secrets are available in evaluation
+    machine.flush_caches()
+    return True
 
 
 def generate_vars(
@@ -324,6 +257,7 @@ def generate_vars(
             was_regenerated |= _generate_vars_for_machine(
                 machine, generator_name, regenerate
             )
+            machine.flush_caches()
         except Exception as exc:
             log.exception(f"Failed to generate facts for {machine.name}")
             errors += [exc]
