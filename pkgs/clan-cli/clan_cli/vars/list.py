@@ -30,8 +30,10 @@ def get_vars(machine: Machine) -> list[Var]:
     return pub_store.get_all() + sec_store.get_all()
 
 
-def _get_prompt_value(
-    machine: Machine, generator: Generator, prompt: Prompt
+def _get_previous_value(
+    machine: Machine,
+    generator: Generator,
+    prompt: Prompt,
 ) -> str | None:
     if not prompt.has_file:
         return None
@@ -40,10 +42,16 @@ def _get_prompt_value(
         return pub_store.get(
             generator.name, prompt.name, shared=generator.share
         ).decode()
+    sec_store = secret_store(machine)
+    if sec_store.exists(generator.name, prompt.name, shared=generator.share):
+        return sec_store.get(
+            generator.name, prompt.name, shared=generator.share
+        ).decode()
     return None
 
 
 @API.register
+# TODO: use machine_name
 def get_prompts(machine: Machine) -> list[Generator]:
     generators = []
     for gen_name, generator in machine.vars_generators.items():
@@ -61,7 +69,7 @@ def get_prompts(machine: Machine) -> list[Generator]:
                 has_file=prompt["createFile"],
                 generator=gen_name,
             )
-            prompt.previous_value = _get_prompt_value(machine, gen, prompt)
+            prompt.previous_value = _get_previous_value(machine, gen, prompt)
             prompts.append(prompt)
 
         generators.append(gen)
@@ -69,6 +77,8 @@ def get_prompts(machine: Machine) -> list[Generator]:
 
 
 # TODO: Ensure generator dependencies are met (executed in correct order etc.)
+# TODO: for missing prompts, default to existing values
+# TODO: raise error if mandatory prompt not provided
 @API.register
 def set_prompts(machine: Machine, updates: list[GeneratorUpdate]) -> None:
     for update in updates:

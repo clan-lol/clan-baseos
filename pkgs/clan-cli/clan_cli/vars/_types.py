@@ -18,6 +18,7 @@ class Prompt:
     previous_value: str | None = None
 
 
+# TODO: add flag 'pending' generator needs to be executed
 @dataclass
 class Generator:
     name: str
