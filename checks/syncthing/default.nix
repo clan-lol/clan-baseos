@@ -14,6 +14,10 @@
           {
             clan.core.machineName = "introducer";
             clan.core.clanDir = ./.;
+            clan.core.machine = {
+              id = "df97124f09da48e3a22d77ce30ee8da6";
+              diskId = "c9c52c";
+            };
             environment.etc = {
               "syncthing.pam".source = ./introducer/introducer_test_cert;
               "syncthing.key".source = ./introducer/introducer_test_key;
@@ -55,6 +59,10 @@
           {
             clan.core.machineName = "peer1";
             clan.core.clanDir = ./.;
+            clan.core.machine = {
+              id = "645a43ad1d6f456aa2d623464efed096";
+              diskId = "9404bf2fb28343cba82e64d1a9131ea4";
+            };
             clan.syncthing.introducer = lib.strings.removeSuffix "\n" (
               builtins.readFile ./introducer/introducer_device_id
             );
@@ -77,6 +85,10 @@
           {
             clan.core.machineName = "peer2";
             clan.core.clanDir = ./.;
+            clan.core.machine = {
+              id = "dd0927b2113b4fa58a94a4be15b0408e";
+              diskId = "05d6d08214d14261b001782b417ca2a3";
+            };
             clan.syncthing.introducer = lib.strings.removeSuffix "\n" (
               builtins.readFile ./introducer/introducer_device_id
             );

@@ -1,4 +1,8 @@
 { lib, ... }:
+
+let
+  suffix = config.clan.core.machine.diskId;
+in
 {
   boot.loader.grub.efiSupport = lib.mkDefault true;
   boot.loader.grub.efiInstallAsRemovable = lib.mkDefault true;
@@ -11,12 +15,12 @@
         content = {
           type = "gpt";
           partitions = {
-            "boot" = {
+            "boot-${suffix}" = {
               size = "1M";
               type = "EF02"; # for grub MBR
               priority = 1;
             };
-            "ESP" = {
+            "ESP-${suffix}" = {
               size = "512M";
               type = "EF00";
               content = {
@@ -25,7 +29,7 @@
                 mountpoint = "/boot";
               };
             };
-            "root" = {
+            "root-${suffix}" = {
               size = "100%";
               content = {
                 type = "filesystem";

@@ -73,16 +73,17 @@ def test_vm_qmp(
                 "services": {"getty": {"autologinUser": "root"}},
             }
         },
+        monkeypatch=monkeypatch,
     )
 
     # 'clan vms run' must be executed from within the flake
     monkeypatch.chdir(flake.path)
 
     # start the VM
-    run_vm_in_thread("my_machine")
+    vm = run_vm_in_thread("my_machine")
 
     # connect with qmp
-    qmp = qmp_connect("my_machine")
+    qmp = qmp_connect("my_machine", vm)
 
     # verify that issuing a command works
     # result = qmp.cmd_obj({"execute": "query-status"})
@@ -121,14 +122,15 @@ def test_vm_persistence(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs=config,
+        monkeypatch=monkeypatch,
     )
 
     monkeypatch.chdir(flake.path)
 
-    run_vm_in_thread("my_machine")
+    vm = run_vm_in_thread("my_machine")
 
     # wait for the VM to start and connect qga
-    qga = qga_connect("my_machine")
+    qga = qga_connect("my_machine", vm)
 
     # create state via qmp command instead of systemd service
     qga.run("echo 'dream2nix' > /var/my-state/root", check=True)
@@ -139,13 +141,13 @@ def test_vm_persistence(
     qga.exec_cmd("poweroff")
 
     # wait for socket to be down (systemd service 'poweroff' rebooting machine)
-    wait_vm_down("my_machine")
+    wait_vm_down("my_machine", vm)
 
     # start vm again
-    run_vm_in_thread("my_machine")
+    vm = run_vm_in_thread("my_machine")
 
     # connect second time
-    qga = qga_connect("my_machine")
+    qga = qga_connect("my_machine", vm)
     # check state exists
     qga.run("cat /var/my-state/test", check=True)
     # ensure root file is owned by root
@@ -171,5 +173,5 @@ def test_vm_persistence(
     assert exitcode == 0, out
 
     # use qmp to shutdown the machine (prevent zombie qemu processes)
-    qmp = qmp_connect("my_machine")
+    qmp = qmp_connect("my_machine", vm)
     qmp.command("system_powerdown")

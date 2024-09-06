@@ -11,6 +11,7 @@ from typing import NamedTuple
 import pytest
 from clan_cli.dirs import nixpkgs_source
 from fixture_error import FixtureError
+from helpers import cli
 from root import CLAN_CORE
 
 log = logging.getLogger(__name__)
@@ -50,9 +51,14 @@ class FlakeForTest(NamedTuple):
     path: Path
 
 
+from age_keys import KEYS, KeyPair
+
+
 def generate_flake(
     temporary_home: Path,
     flake_template: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    sops_key: KeyPair = KEYS[0],
     substitutions: dict[str, str] | None = None,
     # define the machines directly including their config
     machine_configs: dict[str, dict] | None = None,
@@ -75,7 +81,6 @@ def generate_flake(
             )
         )
     """
-
     # copy the template to a new temporary location
     if inventory is None:
         inventory = {}
@@ -133,6 +138,19 @@ def generate_flake(
     sp.run(["git", "config", "user.name", "clan-tool"], cwd=flake, check=True)
     sp.run(["git", "config", "user.email", "clan@example.com"], cwd=flake, check=True)
     sp.run(["git", "commit", "-a", "-m", "Initial commit"], cwd=flake, check=True)
+    monkeypatch.setenv("SOPS_AGE_KEY", sops_key.privkey)
+    cli.run(
+        [
+            "secrets",
+            "users",
+            "add",
+            "user1",
+            sops_key.pubkey,
+            "--flake",
+            str(flake),
+            "--debug",
+        ]
+    )
 
     return FlakeForTest(flake)
 

@@ -32,6 +32,10 @@
           common
           {
             clan.core.machineName = "peer1";
+            clan.core.machine = {
+              id = "df97124f09da48e3a22d77ce30ee8da6";
+              diskId = "c9c52c";
+            };
             environment.etc = {
               "mumble-key".source = ./peer_1/peer_1_test_key;
               "mumble-cert".source = ./peer_1/peer_1_test_cert;
@@ -65,6 +69,10 @@
         imports = [
           common
           {
+            clan.core.machine = {
+              id = "a73f5245cdba4576ab6cfef3145ac9ec";
+              diskId = "c4c47b";
+            };
             clan.core.machineName = "peer2";
             environment.etc = {
               "mumble-key".source = ./peer_2/peer_2_test_key;

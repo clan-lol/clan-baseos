@@ -17,18 +17,19 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
     ```nix hl_lines="14 40"
     { lib, ... }:
     let
+    suffix = config.clan.core.machine.diskId;
     mirrorBoot = idx: {
         type = "disk";
         device = "/dev/disk/by-id/${idx}";
         content = {
             type = "gpt";
             partitions = {
-                "${config.networking.hostName}-boot" = {
+                "boot-${suffix}" = {
                     size = "1M";
                     type = "EF02"; # for grub MBR
                     priority = 1;
                 };
-                "${config.networking.hostName}-ESP" = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
+                "ESP-${suffix}" = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
                     size = "1G";
                     type = "EF00";
                     content = {
@@ -38,7 +39,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
                         mountOptions = [ "nofail" ];
                     };
                 };
-                "${config.networking.hostName}-root" = {
+                "root-${suffix}" = {
                     size = "100%";
                     content = {
                         type = "zfs";
@@ -108,18 +109,19 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
     ```nix hl_lines="14 40 41"
     { lib, ... }:
     let
+    suffix = config.clan.core.machine.diskId;
     mirrorBoot = idx: {
         type = "disk";
         device = "/dev/disk/by-id/${idx}";
         content = {
             type = "gpt";
             partitions = {
-                boot = {
+                "boot-${suffix}" = {
                     size = "1M";
                     type = "EF02"; # for grub MBR
                     priority = 1;
                 };
-                ESP = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
+                "ESP-${suffix}" = lib.mkIf (idx == "nvme-eui.002538b931b59865") {
                     size = "1G";
                     type = "EF00";
                     content = {
@@ -129,7 +131,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
                         mountOptions = [ "nofail" ];
                     };
                 };
-                zfs = {
+                "root-${suffix}" = {
                     size = "100%";
                     content = {
                         type = "zfs";
