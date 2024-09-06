@@ -134,10 +134,6 @@
             ];
             virtualisation.emptyDiskImages = [ 256 ];
             clan.core.clanDir = ./.;
-            clan.core.machine = {
-              id = "a73f5245cdba4576ab6cfef3145ac9ec";
-              diskId = "c4c47b";
-            };
           };
 
           testScript = ''

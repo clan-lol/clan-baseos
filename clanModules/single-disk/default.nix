@@ -1,7 +1,4 @@
 { lib, config, ... }:
-let
-  cfg = config.clan.single-disk;
-in
 {
   options.clan.single-disk = {
     device = lib.mkOption {
@@ -11,38 +8,26 @@ in
       # Question: should we set a default here?
       # default = "/dev/null";
     };
-    suffix = lib.mkOption {
-      default = config.clan.core.machine.diskId;
-      defaultText = "abcdef";
-      type = lib.types.nullOr lib.types.str;
-      description = "The suffix to use for the disk";
-    };
   };
   config = {
-    assertions = [
-      {
-        assertion = cfg.suffix != null;
-        message = "clan.core.machine.diskId must be set, please run `clan facts generate`";
-      }
-    ];
     boot.loader.grub.efiSupport = lib.mkDefault true;
     boot.loader.grub.efiInstallAsRemovable = lib.mkDefault true;
-    disko.devices = lib.mkIf (cfg.suffix != null) {
+    disko.devices = {
       disk = {
         main = {
           type = "disk";
           # This is set through the UI
-          device = cfg.device;
+          device = config.clan.single-disk.device;
 
           content = {
             type = "gpt";
             partitions = {
-              "boot-${cfg.suffix}" = {
+              "${config.networking.hostName}-boot" = {
                 size = "1M";
                 type = "EF02"; # for grub MBR
                 priority = 1;
               };
-              "ESP-${cfg.suffix}" = {
+              "${config.networking.hostName}-ESP" = {
                 size = "512M";
                 type = "EF00";
                 content = {
@@ -51,7 +36,7 @@ in
                   mountpoint = "/boot";
                 };
               };
-              "root-${cfg.suffix}" = {
+              "${config.networking.hostName}-root" = {
                 size = "100%";
                 content = {
                   type = "filesystem";
