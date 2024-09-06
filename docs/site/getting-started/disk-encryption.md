@@ -17,7 +17,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
     ```nix hl_lines="14 40"
     { lib, ... }:
     let
-    suffix = config.clan.core.machine.diskIdShort;
+    suffix = config.clan.core.machine.diskId;
     mirrorBoot = idx: {
         type = "disk";
         device = "/dev/disk/by-id/${idx}";
@@ -109,7 +109,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
     ```nix hl_lines="14 40 41"
     { lib, ... }:
     let
-    suffix = config.clan.core.machine.diskIdShort;
+    suffix = config.clan.core.machine.diskId;
     mirrorBoot = idx: {
         type = "disk";
         device = "/dev/disk/by-id/${idx}";

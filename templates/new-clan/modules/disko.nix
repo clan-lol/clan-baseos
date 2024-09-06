@@ -1,7 +1,7 @@
 { lib, ... }:
 
 let
-  suffix = config.clan.core.machine.diskIdShort;
+  suffix = config.clan.core.machine.diskId;
 in
 {
   # TO NOT EDIT THIS FILE AFTER INSTALLATION of a machine
