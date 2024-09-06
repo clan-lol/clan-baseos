@@ -88,7 +88,8 @@
         "machines": {
           "test-inventory-machine": {
             "config": {
-              "device": "/dev/null"
+              "device": "/dev/null",
+              "suffix": "foobar"
             },
             "imports": []
           }

@@ -1,4 +1,8 @@
 { lib, ... }:
+
+let
+  suffix = config.clan.core.machine.diskIdShort;
+in
 {
   # TO NOT EDIT THIS FILE AFTER INSTALLATION of a machine
   # Otherwise your system might not boot because of missing partitions / filesystems
@@ -13,12 +17,12 @@
         content = {
           type = "gpt";
           partitions = {
-            "boot" = {
+            "boot-${suffix}" = {
               size = "1M";
               type = "EF02"; # for grub MBR
               priority = 1;
             };
-            "ESP" = {
+            "ESP-${suffix}" = {
               size = "512M";
               type = "EF00";
               content = {
@@ -28,7 +32,7 @@
                 mountOptions = [ "nofail" ];
               };
             };
-            "root" = {
+            "root-${suffix}" = {
               size = "100%";
               content = {
                 type = "filesystem";

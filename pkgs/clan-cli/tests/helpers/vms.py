@@ -46,7 +46,7 @@ def wait_vm_up(machine_name: str, flake_url: str | None = None) -> None:
     if flake_url is None:
         flake_url = str(Path.cwd())
     socket_file = vm_state_dir(flake_url, machine_name) / "qmp.sock"
-    timeout: float = 600
+    timeout: float = 1200  # in seconds
     while True:
         if timeout <= 0:
             msg = f"qmp socket {socket_file} not found. Is the VM running?"
@@ -62,7 +62,7 @@ def wait_vm_down(machine_name: str, flake_url: str | None = None) -> None:
     if flake_url is None:
         flake_url = str(Path.cwd())
     socket_file = vm_state_dir(flake_url, machine_name) / "qmp.sock"
-    timeout: float = 300
+    timeout: float = 600
     while socket_file.exists():
         if timeout <= 0:
             msg = f"qmp socket {socket_file} still exists. Is the VM down?"

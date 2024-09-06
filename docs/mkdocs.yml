@@ -108,6 +108,7 @@ nav:
           - reference/clan-core/sops.md
           - reference/clan-core/state.md
           - reference/clan-core/deployment.md
+          - reference/clan-core/machine.md
           - reference/clan-core/networking.md
       - Nix API:
           - reference/nix-api/index.md

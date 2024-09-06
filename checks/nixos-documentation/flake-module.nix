@@ -8,7 +8,13 @@ let
       self.nixosModules.clanCore
       # This is the only option that is not part of the
       # module because it is usually set by flake-parts
-      { clan.core.clanDir = ./.; }
+      {
+        clan.core.clanDir = ./.;
+        clan.core.machine = {
+          id = "df97124f09da48e3a22d77ce30ee8da6";
+          diskId = "c9c52c";
+        };
+      }
     ];
   };
 in

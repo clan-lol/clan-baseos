@@ -23,27 +23,27 @@ let
     description = ''
       List of imported '.nix' files.
 
-          Each filename must be a string and is interpreted relative to the 'directory' passed to buildClan.
-          The import only happens if the machine is part of the service or role.
+      Each filename must be a string and is interpreted relative to the 'directory' passed to buildClan.
+      The import only happens if the machine is part of the service or role.
 
-          ## Example
+      ## Example
 
-          To import the `special.nix` file
+      To import the `special.nix` file
 
-          ```
-          . Clan Directory
-          ├── flake.nix
-          ...
-          └── modules
-              ├── special.nix
-              └── ...
-          ```
+      ```
+      . Clan Directory
+      ├── flake.nix
+      ...
+      └── modules
+          ├── special.nix
+          └── ...
+      ```
 
-          ```nix
-          {
-            imports = [ "modules/special.nix" ];
-          }
-          ```
+      ```nix
+      {
+        imports = [ "modules/special.nix" ];
+      }
+      ```
 
     '';
     default = [ ];
