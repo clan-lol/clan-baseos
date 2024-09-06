@@ -18,10 +18,6 @@
           {
             clan.core.machineName = "machine";
             clan.core.clanDir = ./.;
-            clan.core.machine = {
-              id = "a73f5245cdba4576ab6cfef3145ac9ec";
-              diskId = "c4c47b";
-            };
             clan.core.state.testState.folders = [ "/etc/state" ];
             environment.etc.state.text = "hello world";
             systemd.tmpfiles.settings."vmsecrets" = {

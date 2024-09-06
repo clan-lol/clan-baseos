@@ -17,10 +17,7 @@
           {
             clan.core.machineName = "machine";
             clan.core.clanDir = ./.;
-            clan.core.machine = {
-              id = "a73f5245cdba4576ab6cfef3145ac9ec";
-              diskId = "c4c47b";
-            };
+
             services.nginx.virtualHosts."matrix.clan.test" = {
               enableACME = lib.mkForce false;
               forceSSL = lib.mkForce false;
