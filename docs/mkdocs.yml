@@ -63,6 +63,7 @@ nav:
           - reference/clanModules/nginx.md
           - reference/clanModules/vaultwarden.md
           - reference/clanModules/ergochat.md
+          - reference/clanModules/factless.md
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
           - reference/clanModules/index.md
@@ -108,6 +109,7 @@ nav:
           - reference/clan-core/sops.md
           - reference/clan-core/state.md
           - reference/clan-core/deployment.md
+          - reference/clan-core/machine.md
           - reference/clan-core/networking.md
       - Nix API:
           - reference/nix-api/index.md

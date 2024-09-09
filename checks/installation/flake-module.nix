@@ -13,10 +13,14 @@
       {
         imports = [
           self.clanModules.single-disk
+          self.clanModules.factless
           (modulesPath + "/testing/test-instrumentation.nix") # we need these 2 modules always to be able to run the tests
           (modulesPath + "/profiles/qemu-guest.nix")
         ];
         clan.single-disk.device = "/dev/vdb";
+        clan.factless = {
+          diskId = "ac51e4623c804dcbbce0144ed8e16e55";
+        };
 
         environment.etc."install-successful".text = "ok";
 
