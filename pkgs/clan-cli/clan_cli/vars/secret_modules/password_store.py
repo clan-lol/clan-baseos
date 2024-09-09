@@ -1,5 +1,6 @@
 import os
 import subprocess
+from itertools import chain
 from pathlib import Path
 from typing import override
 
@@ -12,6 +13,7 @@ from . import SecretStoreBase
 class SecretStore(SecretStoreBase):
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
+        self.entry_prefix = "clan-vars"
 
     @property
     def store_name(self) -> str:
@@ -22,6 +24,9 @@ class SecretStore(SecretStoreBase):
         return os.environ.get(
             "PASSWORD_STORE_DIR", f"{os.environ['HOME']}/.password-store"
         )
+
+    def entry_dir(self, generator_name: str, name: str, shared: bool) -> Path:
+        return Path(self.entry_prefix) / self.rel_dir(generator_name, name, shared)
 
     def _set(
         self,
@@ -38,7 +43,7 @@ class SecretStore(SecretStoreBase):
                     "pass",
                     "insert",
                     "-m",
-                    str(self.rel_dir(generator_name, name, shared)),
+                    str(self.entry_dir(generator_name, name, shared)),
                 ],
             ),
             input=value,
@@ -53,7 +58,7 @@ class SecretStore(SecretStoreBase):
                 [
                     "pass",
                     "show",
-                    str(self.rel_dir(generator_name, name, shared)),
+                    str(self.entry_dir(generator_name, name, shared)),
                 ],
             ),
             check=True,
@@ -65,11 +70,10 @@ class SecretStore(SecretStoreBase):
             return False
         return (
             Path(self._password_store_dir)
-            / f"{self.rel_dir(generator_name, name, shared)}.gpg"
+            / f"{self.entry_dir(generator_name, name, shared)}.gpg"
         ).exists()
 
     def generate_hash(self) -> bytes:
-        password_store = self._password_store_dir
         hashes = []
         hashes.append(
             subprocess.run(
@@ -78,17 +82,24 @@ class SecretStore(SecretStoreBase):
                     [
                         "git",
                         "-C",
-                        password_store,
+                        self._password_store_dir,
                         "log",
                         "-1",
                         "--format=%H",
-                        f"machines/{self.machine.name}",
+                        self.entry_prefix,
                     ],
                 ),
                 stdout=subprocess.PIPE,
             ).stdout.strip()
         )
-        for symlink in Path(password_store).glob(f"machines/{self.machine.name}/**/*"):
+        shared_dir = Path(self._password_store_dir) / self.entry_prefix / "shared"
+        machine_dir = (
+            Path(self._password_store_dir)
+            / self.entry_prefix
+            / "per-machine"
+            / self.machine.name
+        )
+        for symlink in chain(shared_dir.glob("**/*"), machine_dir.glob("**/*")):
             if symlink.is_symlink():
                 hashes.append(
                     subprocess.run(
@@ -97,7 +108,7 @@ class SecretStore(SecretStoreBase):
                             [
                                 "git",
                                 "-C",
-                                password_store,
+                                self._password_store_dir,
                                 "log",
                                 "-1",
                                 "--format=%H",
@@ -128,17 +139,15 @@ class SecretStore(SecretStoreBase):
 
         return local_hash.decode() == remote_hash
 
-    # TODO: fixme
     def upload(self, output_dir: Path) -> None:
-        pass
-        # for service in self.machine.facts_data:
-        #     for secret in self.machine.facts_data[service]["secret"]:
-        #         if isinstance(secret, dict):
-        #             secret_name = secret["name"]
-        #         else:
-        #             # TODO: drop old format soon
-        #             secret_name = secret
-        #         with (output_dir / secret_name).open("wb") as f:
-        #            f.chmod(0o600)
-        #            f.write(self.get(service, secret_name))
-        # (output_dir / ".pass_info").write_bytes(self.generate_hash())
+        for secret_var in self.get_all():
+            if not secret_var.deployed:
+                continue
+            rel_dir = self.rel_dir(
+                secret_var.generator, secret_var.name, secret_var.shared
+            )
+            with (output_dir / rel_dir).open("wb") as f:
+                f.write(
+                    self.get(secret_var.generator, secret_var.name, secret_var.shared)
+                )
+        (output_dir / ".pass_info").write_bytes(self.generate_hash())
