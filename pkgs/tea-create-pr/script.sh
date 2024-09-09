@@ -29,7 +29,15 @@ if ! check_remote "$remoteUpstream"; then
   exit 1
 fi
 
-treefmt --fail-on-change --no-cache
+
+# run formatting on a clean working tree
+echo "stashing uncommitted changes to run treefmt"
+git stash push
+if ! treefmt --fail-on-change --no-cache; then
+  git stash pop
+  exit 1
+fi
+git stash pop
 
 upstream_url=$(git remote get-url "$remoteUpstream")
 set -x
