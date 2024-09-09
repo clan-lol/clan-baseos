@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set -x
 
 remoteFork="${1:-origin}"
 remoteUpstream="${2:-upstream}"
@@ -32,12 +33,21 @@ fi
 
 # run formatting on a clean working tree
 echo "stashing uncommitted changes to run treefmt"
-git stash push
+if ! git diff --quiet --cached --exit-code || ! git diff --quiet --exit-code; then
+  git stash push
+  pop() {
+    git stash pop
+  }
+else
+  pop() {
+    :
+  }
+fi
 if ! treefmt --fail-on-change --no-cache; then
-  git stash pop
+  pop
   exit 1
 fi
-git stash pop
+pop
 
 upstream_url=$(git remote get-url "$remoteUpstream")
 set -x
