@@ -25,6 +25,9 @@ let
       evaled = lib.evalModules {
         modules = [
           baseModule
+          ({
+            clan.core.clanDir = ./.;
+          })
           clan-core.nixosModules.clanCore
         ] ++ (map (name: clanModules.${name}) modulenames);
       };

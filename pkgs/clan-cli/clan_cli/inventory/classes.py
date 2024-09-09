@@ -118,6 +118,39 @@ class ServiceBorgbackup:
 
 
 @dataclass
+class FactlessConfig:
+    diskId: None | str = field(default = None)
+    machineId: None | str = field(default = None)
+
+
+@dataclass
+class ServiceFactlesMachine:
+    config: FactlessConfig = field(default_factory = FactlessConfig)
+    imports: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceFactlesRoleDefault:
+    config: FactlessConfig = field(default_factory = FactlessConfig)
+    imports: list[str] = field(default_factory = list)
+    machines: list[str] = field(default_factory = list)
+    tags: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceFactlesRole:
+    default: ServiceFactlesRoleDefault
+
+
+@dataclass
+class ServiceFactles:
+    meta: ServiceMeta
+    roles: ServiceFactlesRole
+    config: FactlessConfig = field(default_factory = FactlessConfig)
+    machines: dict[str, ServiceFactlesMachine] = field(default_factory = dict)
+
+
+@dataclass
 class IwdConfigNetwork:
     ssid: str
 
@@ -222,6 +255,7 @@ class ServiceSingleDisk:
 class Service:
     admin: dict[str, ServiceAdmin] = field(default_factory = dict)
     borgbackup: dict[str, ServiceBorgbackup] = field(default_factory = dict)
+    factless: dict[str, ServiceFactles] = field(default_factory = dict)
     iwd: dict[str, ServiceIwd] = field(default_factory = dict)
     packages: dict[str, ServicePackage] = field(default_factory = dict)
     single_disk: dict[str, ServiceSingleDisk] = field(default_factory = dict, metadata = {"alias": "single-disk"})

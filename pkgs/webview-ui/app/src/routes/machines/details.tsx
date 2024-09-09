@@ -112,15 +112,15 @@ const InstallMachine = (props: InstallMachineProps) => {
     e.preventDefault();
     const curr_uri = activeURI();
     const disk = getValue(formStore, "disk");
-    const disk_id = props.disks.find((d) => d.name === disk)?.id_link;
-    if (!curr_uri || !disk_id || !props.name) {
+    const diskId = props.disks.find((d) => d.name === disk)?.id_link;
+    if (!curr_uri || !diskId || !props.name) {
       return;
     }
 
     const r = await callApi("set_single_disk_uuid", {
       base_path: curr_uri,
       machine_name: props.name,
-      disk_uuid: disk_id,
+      disk_uuid: diskId,
     });
     if (r.status === "error") {
       toast.error("Failed to set disk");

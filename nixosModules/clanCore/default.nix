@@ -18,5 +18,7 @@
     ./vm.nix
     ./wayland-proxy-virtwl.nix
     ./zerotier
+    ./machine_id.nix
+    ./disk_id.nix
   ];
 }

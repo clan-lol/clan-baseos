@@ -1,4 +1,8 @@
 { lib, ... }:
+
+let
+  suffix = config.clan.core.machine.diskId;
+in
 {
   # TO NOT EDIT THIS FILE AFTER INSTALLATION of a machine
   # Otherwise your system might not boot because of missing partitions / filesystems
@@ -6,7 +10,8 @@
   boot.loader.grub.efiInstallAsRemovable = lib.mkDefault true;
   disko.devices = {
     disk = {
-      main = {
+      "main" = {
+        name = suffix;
         type = "disk";
         # Set the following in flake.nix for each maschine:
         # device = <uuid>;

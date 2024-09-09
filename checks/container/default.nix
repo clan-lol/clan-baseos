@@ -9,6 +9,7 @@
         networking.hostName = "machine";
         services.openssh.enable = true;
         services.openssh.startWhenNeeded = false;
+
       };
     testScript = ''
       start_all()
