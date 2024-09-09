@@ -23,11 +23,6 @@ class SecretStore(SecretStoreBase):
             "PASSWORD_STORE_DIR", f"{os.environ['HOME']}/.password-store"
         )
 
-    def _var_path(self, generator_name: str, name: str, shared: bool) -> Path:
-        if shared:
-            return Path(f"shared/{generator_name}/{name}")
-        return Path(f"machines/{self.machine.name}/{generator_name}/{name}")
-
     def _set(
         self,
         generator_name: str,
@@ -43,7 +38,7 @@ class SecretStore(SecretStoreBase):
                     "pass",
                     "insert",
                     "-m",
-                    str(self._var_path(generator_name, name, shared)),
+                    str(self.rel_dir(generator_name, name, shared)),
                 ],
             ),
             input=value,
@@ -58,7 +53,7 @@ class SecretStore(SecretStoreBase):
                 [
                     "pass",
                     "show",
-                    str(self._var_path(generator_name, name, shared)),
+                    str(self.rel_dir(generator_name, name, shared)),
                 ],
             ),
             check=True,
@@ -70,7 +65,7 @@ class SecretStore(SecretStoreBase):
             return False
         return (
             Path(self._password_store_dir)
-            / f"{self._var_path(generator_name, name, shared)}.gpg"
+            / f"{self.rel_dir(generator_name, name, shared)}.gpg"
         ).exists()
 
     def generate_hash(self) -> bytes:
