@@ -181,6 +181,12 @@ def test_generate_secret_var_password_store(
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
     my_generator["script"] = "echo hello > $out/my_secret"
+    my_shared_generator = config["clan"]["core"]["vars"]["generators"][
+        "my_shared_generator"
+    ]
+    my_shared_generator["share"] = True
+    my_shared_generator["files"]["my_shared_secret"]["secret"] = True
+    my_shared_generator["script"] = "echo hello > $out/my_shared_secret"
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
@@ -219,8 +225,11 @@ def test_generate_secret_var_password_store(
     store = password_store.SecretStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
-    assert store.exists("my_generator", "my_secret")
-    assert store.get("my_generator", "my_secret").decode() == "hello\n"
+    assert store.exists("my_generator", "my_secret", shared=False)
+    assert not store.exists("my_generator", "my_secret", shared=True)
+    assert store.exists("my_shared_generator", "my_shared_secret", shared=True)
+    assert not store.exists("my_shared_generator", "my_shared_secret", shared=False)
+    assert store.get("my_generator", "my_secret", shared=False).decode() == "hello\n"
     vars_text = stringify_all_vars(machine)
     assert "my_generator/my_secret" in vars_text
 
@@ -382,7 +391,10 @@ def test_share_flag(
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    assert not check_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    assert check_vars(machine)
     sops_store = sops.SecretStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )

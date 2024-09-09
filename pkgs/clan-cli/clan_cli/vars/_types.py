@@ -103,16 +103,19 @@ class StoreBase(ABC):
     def is_secret_store(self) -> bool:
         pass
 
+    def rel_dir(self, generator_name: str, var_name: str, shared: bool = False) -> Path:
+        if shared:
+            return Path(f"shared/{generator_name}/{var_name}")
+        return Path(f"per-machine/{self.machine.name}/{generator_name}/{var_name}")
+
     def directory(
         self, generator_name: str, var_name: str, shared: bool = False
     ) -> Path:
-        if shared:
-            base_path = self.machine.flake_dir / "vars" / "shared"
-        else:
-            base_path = (
-                self.machine.flake_dir / "vars" / "per-machine" / self.machine.name
-            )
-        return base_path / generator_name / var_name
+        return (
+            Path(self.machine.flake_dir)
+            / "vars"
+            / self.rel_dir(generator_name, var_name, shared)
+        )
 
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
         directory = self.directory(generator_name, name, shared)

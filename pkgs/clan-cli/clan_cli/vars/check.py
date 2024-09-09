@@ -21,14 +21,17 @@ def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
     else:
         generators = list(machine.vars_generators.keys())
     for generator_name in generators:
+        shared = machine.vars_generators[generator_name]["share"]
         for name, file in machine.vars_generators[generator_name]["files"].items():
-            if file["secret"] and not secret_vars_store.exists(generator_name, name):
+            if file["secret"] and not secret_vars_store.exists(
+                generator_name, name, shared=shared
+            ):
                 log.info(
                     f"Secret fact '{name}' for service '{generator_name}' in machine {machine.name} is missing."
                 )
                 missing_secret_vars.append((generator_name, name))
             if not file["secret"] and not public_vars_store.exists(
-                generator_name, name
+                generator_name, name, shared=shared
             ):
                 log.info(
                     f"Public fact '{name}' for service '{generator_name}' in machine {machine.name} is missing."
