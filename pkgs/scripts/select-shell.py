@@ -32,7 +32,7 @@ def print_current_shell() -> None:
         print("No devshell selected")
 
 
-def print_devshells() -> None:
+def list_devshells() -> list[str]:
     project_root = os.environ.get("PRJ_ROOT")
     flake_show = subprocess.run(
         [
@@ -47,7 +47,12 @@ def print_devshells() -> None:
         stdout=subprocess.PIPE,
     )
     names = json.loads(flake_show.stdout.decode())
-    print("Available devshells:\n")
+    return names
+
+
+def print_devshells() -> None:
+    names = list_devshells()
+    print("Available devshells:")
     print("\n".join(names))
 
 
@@ -55,6 +60,9 @@ def select_shell(shell: str) -> None:
     if shell == get_current_shell():
         print(f"{shell} devshell already selected. No changes made.")
         sys.exit(0)
+    elif shell not in (names := list_devshells()):
+        print(f"devshell '{shell}' not found. Available devshells:")
+        print("\n".join(names))
     else:
         with selected_shell_file.open("w") as f:
             f.write(shell)
