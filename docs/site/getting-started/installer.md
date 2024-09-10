@@ -72,13 +72,13 @@ sudo umount /dev/sdb1
         ```
         clan flash asd --list-keymaps
         ```
-
+    
     !!! Note
         You can get a list of all languages with the following command:
         ```
         clan flash asd --list-languages
         ```
-
+    
 
 
 

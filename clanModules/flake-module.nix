@@ -7,7 +7,6 @@
     deltachat = ./deltachat;
     dyndns = ./dyndns;
     ergochat = ./ergochat;
-    factless = ./factless;
     garage = ./garage;
     golem-provider = ./golem-provider;
     heisenbridge = ./heisenbridge;

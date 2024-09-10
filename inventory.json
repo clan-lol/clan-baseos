@@ -68,34 +68,6 @@
         }
       }
     },
-    "factless": {
-      "default": {
-        "meta": {
-          "name": "factless",
-          "description": null,
-          "icon": null
-        },
-        "roles": {
-          "default": {
-            "config": {},
-            "imports": [],
-            "machines": ["test-inventory-machine"],
-            "tags": []
-          }
-        },
-        "config": {},
-        "imports": [],
-        "machines": {
-          "test-inventory-machine": {
-            "config": {
-              "diskId": "910662",
-              "machineId": "fe7f3ff75c844d36ac4e5383b55b5a76"
-            },
-            "imports": []
-          }
-        }
-      }
-    },
     "single-disk": {
       "default": {
         "meta": {

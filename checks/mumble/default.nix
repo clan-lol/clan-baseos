@@ -32,7 +32,6 @@
           common
           {
             clan.core.machineName = "peer1";
-
             environment.etc = {
               "mumble-key".source = ./peer_1/peer_1_test_key;
               "mumble-cert".source = ./peer_1/peer_1_test_cert;

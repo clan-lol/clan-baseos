@@ -1,15 +1,10 @@
 { lib, ... }:
-
-let
-  suffix = config.clan.core.machine.diskId;
-in
 {
   boot.loader.grub.efiSupport = lib.mkDefault true;
   boot.loader.grub.efiInstallAsRemovable = lib.mkDefault true;
   disko.devices = {
     disk = {
-      "main" = {
-        name = suffix;
+      main = {
         type = "disk";
         # Set the following in flake.nix for each maschine:
         # device = <uuid>;
