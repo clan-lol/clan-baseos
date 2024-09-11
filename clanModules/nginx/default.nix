@@ -10,20 +10,19 @@
     ] "Importing the module will already enable the service.")
 
   ];
-  config = {
-
-    clan.core.facts.services."nginx-acme-email" = {
-      public."nginx-acme-email" = { };
-      generator.prompt = "Please enter your email address for Let's Encrypt certificate generation";
-
-      generator.script = ''
-        echo -n "$prompt_value" | tr -d "\n" > "$facts"/nginx-acme-email
+  options = {
+    clan.nginx.acme.email = lib.mkOption {
+      type = lib.types.str;
+      description = ''
+        Email address for account creation and correspondence from the CA.
+        It is recommended to use the same email for all certs to avoid account
+        creation limits.
       '';
     };
+  };
+  config = {
     security.acme.acceptTerms = true;
-    security.acme.defaults.email =
-      lib.mkDefault
-        config.clan.core.facts.services."nginx-acme-email".public."nginx-acme-email".value;
+    security.acme.defaults.email = config.clan.nginx.acme.email;
 
     networking.firewall.allowedTCPPorts = [
       443
