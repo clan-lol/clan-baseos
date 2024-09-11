@@ -14,10 +14,10 @@ This blogpost discusses one method for creating type-safe interfaces in a softwa
 
 ---
 
-With the [clan](https://clan.lol) project, we explored one possible solution to this challenge. Our tech stack is composed of three main components:
+Within the [clan](https://clan.lol) project, we explored one possible solution to this challenge. Our tech stack is composed of three main components:
 
 - Nix: Handles the core business logic.
-- Python: Acts as a thin wrapper, exposing the business logic through a convenient CLI and API.
+- Python: Acts as a thin wrapper, exposing the business logic through a convenient to use CLI and API.
 - TypeScript: Manages the presentation and GUI layer, communicating with Python via an API.
 
 This architecture is a product of our guiding principles: We aim to encapsulate as much business logic as possible in pure Nix, ensuring that anyone familiar with Nix can utilize it.
@@ -30,7 +30,7 @@ By this, I refer to constructs such as classes, structs, or enums.
 These elements are often required across multiple layers of the application
 and must remain consistent to avoid discrepancies.
 Logically, maintaining these models in a single location is crucial to prevent discrepancies and
-eliminate a common source of errors—interface inconsistencies between software components.
+eliminate a common source of errors — interface inconsistencies between software components.
 
 This approach can save significant time during development cycles,
 particularly in dynamically typed environments like Nix and Python,
@@ -44,12 +44,11 @@ Well-defined, statically typed models would provide build-time checks for correc
 
 Building on the earlier blog post about the [NixOS modules to JSON-schema converter](https://docs.clan.lol/blog/2024/05/25/jsonschema-converter/), a further exploration could involve using JSON-schema as an intermediate format. While not explicitly mentioned in the blog post, the JSON-schema converter operates solely on the interface declaration. It can also populate example values and other metadata that may become important later.
 
-In our case, we decided to use NixOS module interface declarations as the source of truth, as all our models are Nix-first citizens. We will use JSON-schema as an interoperable format that can be further utilized to generate Python classes and TypeScript types.
+In our case, we decided to use NixOS module interface declarations as the source of truth, as all our models are Nix-first citizens. We will use JSON-schema as an interoperable format that can further be utilized to generate Python classes and TypeScript types.
 
 For example, the desired Python code output could be a `TypedDict` or a `dataclass`. Since our input data might contain Nix attribute names that are invalid identifiers in Python, and vice versa, it is preferable to choose dataclasses. This allows us to store more metadata about the mapping relationships within the field properties.
 
-```nix
-# in.nix
+```nix title="in.nix"
 {lib, ...}:
 let
   types = lib.types;
@@ -72,8 +71,7 @@ in
 
 With the following nix code this can be converted into python
 
-```nix
-# convert.nix
+```nix title="convert.nix"
 let
   # Import clan-core flake
   clan-core = builtins.getFlake "git+https://git.clan.lol/clan/clan-core";
@@ -89,8 +87,6 @@ in
 {
   inherit schema;
 
-  # Step 2: Generate Python classes from JSON schema
-  # build with 'nix build -f convert.nix python-classes'
   python-classes = pkgs.runCommand "py-cls" {}
   ''
     ${classgen}/bin/classgen ${schema} $out
@@ -98,10 +94,14 @@ in
 }
 ```
 
+Now execute the following:
+```shellSession
+nix build -f convert.nix python-classes
+```
+
 The final Python code ensures that the Python component is always in sync with the Nix code.
 
-```python
-# out.py
+```python title="out.py"
 @dataclass
 class Submodule:
     string: str
@@ -128,7 +128,7 @@ The Python generator adds default constructors for dictionary and list types bec
 
 It is also important to note that we control both the JSON schema converter and the class generator, which is crucial. This control allows us to limit their scope to a subset of JSON schema features and ensure interoperability between the two generators.
 
-Another consideration is serialization and deserialization. In Python, Pydantic is typically a great choice, as it also offers [custom serializers](https://docs.pydantic.dev/latest/concepts/serialization/#custom-serializers). However, when working with NixOS modules, we chose not to emit unset or null values because they create merge conflicts in the underlying NixOS modules. We also wanted to use field-aliases for names that are invalid identifiers in Python or TypeScript and wanted validation to catch errors early (in the deserializer) between our frontend and Nix, allowing us to present well-formatted errors instead of Nix evaluation error stack traces. Nevertheless, we ultimately did not use Pydantic because we aim to follow a zero-dependency paradigm.
+Another consideration is serialization and deserialization. In Python, Pydantic is typically a great choice, as it also offers [custom serializers](https://docs.pydantic.dev/latest/concepts/serialization/#custom-serializers). However, when working with NixOS modules, we chose not to emit unset or null values because they create merge conflicts in the underlying NixOS modules. We also wanted to use field-aliases for names that are invalid identifiers in Python or TypeScript and wanted validation to catch errors early (in the deserializer) between our frontend and Nix, allowing us to present well-formatted errors instead of Nix evaluation error stack traces. Nevertheless, we ultimately did not use Pydantic because it did not meet our needs.
 
 ---
 
@@ -163,7 +163,7 @@ checked(Model, data)
 By adopting this approach, we aim to provide a stable and secure interface for polyglot software stacks built on top of Nixpkgs,
 ultimately enhancing the reliability and maintainability of complex applications.
 
-Additionally, we will improve the overall tools and develop a library, making this methodology applicable to other projects as well.
+Additionally, we will improve the tooling and develop a library, making this methodology applicable to other projects as well.
 
 ### Links
 
