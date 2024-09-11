@@ -6,8 +6,15 @@
         publicModule = "clan_cli.vars.public_modules.in_repo";
         fileModule = file: {
           path = lib.mkIf (file.config.secret == false) (
-            config.clan.core.clanDir + "/machines/${config.clan.core.machineName}/vars/${file.config.name}"
+            if file.config.share then
+              (config.clan.core.clanDir + "/vars/shared/${file.config.generatorName}/${file.config.name}/value")
+            else
+              (
+                config.clan.core.clanDir
+                + "/vars/per-machine/${config.clan.core.machineName}/${file.config.generatorName}/${file.config.name}/value"
+              )
           );
+          value = lib.mkIf (file.config.secret == false) (lib.readFile file.config.path);
         };
       };
 }

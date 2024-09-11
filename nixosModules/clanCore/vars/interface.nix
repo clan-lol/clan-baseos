@@ -74,6 +74,17 @@ in
                       readOnly = true;
                       default = generator.config._module.args.name;
                     };
+                    share = {
+                      type = lib.types.bool;
+                      description = ''
+                        Whether the generated vars should be shared between machines.
+                        Shared vars are only generated once, when the first machine using it is deployed.
+                        Subsequent machines will re-use the already generated values.
+                      '';
+                      readOnly = true;
+                      internal = true;
+                      default = generator.config.share;
+                    };
                     deploy = {
                       description = ''
                         Whether the file should be deployed to the target machine.
@@ -97,15 +108,18 @@ in
                       '';
                       type = str;
                     };
-                    value = {
-                      description = ''
-                        The content of the generated value.
-                        Only available if the file is not secret.
-                      '';
-                      type = str;
-                      default = throw "Cannot access value of secret file";
-                      defaultText = "Throws error because the value of a secret file is not accessible";
-                    };
+                    value =
+                      {
+                        description = ''
+                          The content of the generated value.
+                          Only available if the file is not secret.
+                        '';
+                        type = str;
+                        defaultText = "Throws error because the value of a secret file is not accessible";
+                      }
+                      // lib.optionalAttrs file.config.secret {
+                        default = throw "Cannot access value of secret file";
+                      };
                   };
                 })
               );

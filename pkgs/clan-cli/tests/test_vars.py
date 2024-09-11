@@ -1,3 +1,4 @@
+import json
 import subprocess
 from dataclasses import dataclass
 from io import StringIO
@@ -8,7 +9,7 @@ import pytest
 from age_keys import SopsSetup
 from clan_cli.clan_uri import FlakeId
 from clan_cli.machines.machines import Machine
-from clan_cli.nix import nix_shell
+from clan_cli.nix import nix_eval, nix_shell, run
 from clan_cli.vars.check import check_vars
 from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
@@ -102,6 +103,14 @@ def test_generate_public_var(
     assert store.get("my_generator", "my_value").decode() == "hello\n"
     vars_text = stringify_all_vars(machine)
     assert "my_generator/my_value: hello" in vars_text
+    vars_eval = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_value.value",
+            ]
+        )
+    ).stdout.strip()
+    assert json.loads(vars_eval) == "hello\n"
 
 
 @pytest.mark.impure
@@ -411,6 +420,14 @@ def test_share_flag(
     assert not in_repo_store.exists("shared_generator", "my_value", shared=False)
     assert in_repo_store.exists("unshared_generator", "my_value", shared=False)
     assert not in_repo_store.exists("unshared_generator", "my_value", shared=True)
+    vars_eval = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.shared_generator.files.my_value.value",
+            ]
+        )
+    ).stdout.strip()
+    assert json.loads(vars_eval) == "hello\n"
 
 
 @pytest.mark.impure
