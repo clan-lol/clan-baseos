@@ -21,6 +21,7 @@
     postgresql = ./postgresql;
     root-password = ./root-password;
     single-disk = ./single-disk;
+    state-version = ./state-version;
     sshd = ./sshd;
     static-hosts = ./static-hosts;
     sunshine = ./sunshine;
