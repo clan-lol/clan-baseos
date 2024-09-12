@@ -7,18 +7,6 @@ import pytest
 # Functions to test
 from clan_cli.api import dataclass_to_dict, from_dict
 from clan_cli.errors import ClanError
-from clan_cli.inventory import (
-    Inventory,
-    Machine,
-    MachineDeploy,
-    Meta,
-    Service,
-    ServiceBorgbackup,
-    ServiceBorgbackupRole,
-    ServiceBorgbackupRoleClient,
-    ServiceBorgbackupRoleServer,
-    ServiceMeta,
-)
 from clan_cli.machines import machines
 
 
@@ -170,43 +158,6 @@ def test_list() -> None:
     result = from_dict(list[Name], data)
 
     assert result == [Name("John"), Name("Sarah")]
-
-
-def test_deserialize_extensive_inventory() -> None:
-    # TODO: Make this an abstract test, so it doesn't break the test if the inventory changes
-    data = {
-        "meta": {"name": "superclan", "description": "nice clan"},
-        "services": {
-            "borgbackup": {
-                "instance1": {
-                    "meta": {
-                        "name": "borg1",
-                    },
-                    "roles": {
-                        "client": {},
-                        "server": {},
-                    },
-                }
-            },
-        },
-        "machines": {"foo": {"name": "foo", "deploy": {}}},
-    }
-    expected = Inventory(
-        meta=Meta(name="superclan", description="nice clan"),
-        services=Service(
-            borgbackup={
-                "instance1": ServiceBorgbackup(
-                    meta=ServiceMeta(name="borg1"),
-                    roles=ServiceBorgbackupRole(
-                        client=ServiceBorgbackupRoleClient(),
-                        server=ServiceBorgbackupRoleServer(),
-                    ),
-                )
-            }
-        ),
-        machines={"foo": Machine(deploy=MachineDeploy(), name="foo")},
-    )
-    assert from_dict(Inventory, data) == expected
 
 
 def test_alias_field() -> None:

@@ -1,4 +1,12 @@
-import { callApi, SuccessData, SuccessQuery } from "@/src/api";
+import {
+  callApi,
+  ClanService,
+  Services,
+  SuccessData,
+  SuccessQuery,
+} from "@/src/api";
+import { set_single_disk_id } from "@/src/api/disk";
+import { get_iwd_service } from "@/src/api/wifi";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { FileInput } from "@/src/components/FileInput";
@@ -117,17 +125,12 @@ const InstallMachine = (props: InstallMachineProps) => {
       return;
     }
 
-    const r = await callApi("set_single_disk_uuid", {
-      base_path: curr_uri,
-      machine_name: props.name,
-      disk_uuid: disk_id,
-    });
-    if (r.status === "error") {
-      toast.error("Failed to set disk");
-    }
-    if (r.status === "success") {
+    const r = await set_single_disk_id(curr_uri, props.name, disk_id);
+    if (!r) {
       toast.success("Disk set successfully");
       setConfirmDisk(true);
+    } else {
+      toast.error("Failed to set disk");
     }
   };
 
@@ -600,7 +603,7 @@ const MachineForm = (props: MachineDetailsProps) => {
   );
 };
 
-type WifiData = SuccessData<"get_iwd_service">;
+type WifiData = ClanService<"iwd">;
 
 export const MachineDetails = () => {
   const params = useParams();
@@ -629,12 +632,9 @@ export const MachineDetails = () => {
     queryFn: async () => {
       const curr = activeURI();
       if (curr) {
-        const result = await callApi("get_iwd_service", {
-          base_url: curr,
-          machine_name: params.id,
-        });
-        if (result.status === "error") throw new Error("Failed to fetch data");
-        return Object.entries(result.data?.config?.networks || {}).map(
+        const result = await get_iwd_service(curr, params.id);
+        if (!result) throw new Error("Failed to fetch data");
+        return Object.entries(result?.config?.networks || {}).map(
           ([name, value]) => ({ name, ssid: value.ssid }),
         );
       }
@@ -728,17 +728,17 @@ function WifiModule(props: MachineWifiProps) {
       );
 
     console.log("submitting", values, networks);
-    const r = await callApi("set_iwd_service_for_machine", {
-      base_url: props.base_url,
-      machine_name: props.machine_name,
-      networks: networks,
-    });
-    if (r.status === "error") {
-      toast.error("Failed to set wifi");
-    }
-    if (r.status === "success") {
-      toast.success("Wifi set successfully");
-    }
+    // const r = await callApi("set_iwd_service_for_machine", {
+    //   base_url: props.base_url,
+    //   machine_name: props.machine_name,
+    //   networks: networks,
+    // });
+    // if (r.status === "error") {
+    toast.error("Failed to set wifi. Feature disabled temporarily");
+    // }
+    // if (r.status === "success") {
+    //   toast.success("Wifi set successfully");
+    // }
   };
 
   return (

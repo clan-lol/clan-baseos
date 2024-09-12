@@ -23,35 +23,13 @@ from clan_cli.git import commit_file
 from clan_cli.nix import nix_eval
 
 from .classes import (
-    AdminConfig,
     Inventory,
-    IwdConfig,
-    IwdConfigNetwork,
     # Machine classes
     Machine,
     MachineDeploy,
     # General classes
     Meta,
     Service,
-    # Admin service
-    ServiceAdmin,
-    ServiceAdminRole,
-    ServiceAdminRoleDefault,
-    # Borgbackup service
-    ServiceBorgbackup,
-    ServiceBorgbackupRole,
-    ServiceBorgbackupRoleClient,
-    ServiceBorgbackupRoleServer,
-    # IWD
-    ServiceIwd,
-    ServiceIwdRole,
-    ServiceIwdRoleDefault,
-    ServiceMeta,
-    # Single Disk service
-    ServiceSingleDisk,
-    ServiceSingleDiskRole,
-    ServiceSingleDiskRoleDefault,
-    SingleDiskConfig,
 )
 
 # Re export classes here
@@ -64,27 +42,6 @@ __all__ = [
     "Meta",
     "Inventory",
     "MachineDeploy",
-    "ServiceBorgbackup",
-    "ServiceMeta",
-    "ServiceBorgbackupRole",
-    "ServiceBorgbackupRoleClient",
-    "ServiceBorgbackupRoleServer",
-    # Single Disk service
-    "ServiceSingleDisk",
-    "ServiceSingleDiskRole",
-    "ServiceSingleDiskRoleDefault",
-    "SingleDiskConfig",
-    # Admin service
-    "ServiceAdmin",
-    "ServiceAdminRole",
-    "ServiceAdminRoleDefault",
-    "AdminConfig",
-    # IWD service,
-    "ServiceIwd",
-    "ServiceIwdRole",
-    "ServiceIwdRoleDefault",
-    "IwdConfig",
-    "IwdConfigNetwork",
 ]
 
 
