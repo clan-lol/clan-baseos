@@ -66,8 +66,6 @@ class SecretStore(SecretStoreBase):
         ).stdout
 
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
-        if not super().exists(generator_name, name, shared):
-            return False
         return (
             Path(self._password_store_dir)
             / f"{self.entry_dir(generator_name, name, shared)}.gpg"

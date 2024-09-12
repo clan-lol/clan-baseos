@@ -35,3 +35,6 @@ class FactStore(FactStoreBase):
     # get a single fact
     def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
         return (self.directory(generator_name, name, shared) / "value").read_bytes()
+
+    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
+        return (self.directory(generator_name, name, shared) / "value").exists()
