@@ -1,4 +1,9 @@
-import { callApi, SuccessQuery } from "@/src/api";
+import {
+  callApi,
+  ClanService,
+  ClanServiceInstance,
+  SuccessQuery,
+} from "@/src/api";
 import { BackButton } from "@/src/components/BackButton";
 import { useParams } from "@solidjs/router";
 import {
@@ -19,6 +24,7 @@ import {
 } from "@modular-forms/solid";
 import { TextInput } from "@/src/components/TextInput";
 import toast from "solid-toast";
+import { get_single_service } from "@/src/api/inventory";
 
 interface AdminModuleFormProps {
   admin: AdminData;
@@ -184,19 +190,20 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
   const handleSubmit = async (values: AdminSettings) => {
     console.log("submitting", values, getValues(formStore));
 
-    const r = await callApi("set_admin_service", {
-      base_url: props.base_url,
-      allowed_keys: values.allowedKeys.reduce(
-        (acc, curr) => ({ ...acc, [curr.name]: curr.value }),
-        {},
-      ),
-    });
-    if (r.status === "success") {
-      toast.success("Successfully updated admin settings");
-    }
-    if (r.status === "error") {
-      toast.error(`Failed to update admin settings: ${r.errors[0].message}`);
-    }
+    // const r = await callApi("set_admin_service", {
+    //   base_url: props.base_url,
+    //   allowed_keys: values.allowedKeys.reduce(
+    //     (acc, curr) => ({ ...acc, [curr.name]: curr.value }),
+    //     {}
+    //   ),
+    // });
+    // if (r.status === "success") {
+    //   toast.success("Successfully updated admin settings");
+    // }
+    // if (r.status === "error") {
+    // toast.error(`Failed to update admin settings: ${r.errors[0].message}`);
+    toast.error(`Failed to update admin settings: feature disabled`);
+    // }
     queryClient.invalidateQueries({
       queryKey: [props.base_url, "get_admin_service"],
     });
@@ -329,7 +336,7 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
 };
 
 type GeneralData = SuccessQuery<"show_clan_meta">["data"];
-type AdminData = SuccessQuery<"get_admin_service">["data"];
+type AdminData = ClanServiceInstance<"admin">;
 
 export const ClanDetails = () => {
   const params = useParams();
@@ -347,11 +354,9 @@ export const ClanDetails = () => {
   const adminQuery = createQuery(() => ({
     queryKey: [clan_dir, "get_admin_service"],
     queryFn: async () => {
-      const result = await callApi("get_admin_service", {
-        base_url: clan_dir,
-      });
-      if (result.status === "error") throw new Error("Failed to fetch data");
-      return result.data || null;
+      const result = await get_single_service(clan_dir, "", "admin");
+      if (!result) throw new Error("Failed to fetch data");
+      return result || null;
     },
   }));
 

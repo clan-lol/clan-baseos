@@ -97,6 +97,8 @@
             mkdir -p $out
             python api.py > $out/API.json
             ${self'.packages.json2ts}/bin/json2ts --input $out/API.json > $out/API.ts
+            ${self'.packages.json2ts}/bin/json2ts --input ${self'.packages.inventory-schema}/schema.json > $out/Inventory.ts
+            cp ${self'.packages.inventory-schema}/schema.json $out/inventory-schema.json
           '';
         };
         json2ts = pkgs.buildNpmPackage {
