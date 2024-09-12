@@ -60,24 +60,24 @@ nav:
           - reference/clanModules/borgbackup.md
           - reference/clanModules/deltachat.md
           - reference/clanModules/dyndns.md
-          - reference/clanModules/nginx.md
-          - reference/clanModules/vaultwarden.md
           - reference/clanModules/ergochat.md
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
+          - reference/clanModules/heisenbridge.md
           - reference/clanModules/index.md
           - reference/clanModules/iwd.md
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
           - reference/clanModules/matrix-synapse.md
-          - reference/clanModules/heisenbridge.md
           - reference/clanModules/moonlight.md
           - reference/clanModules/mumble.md
+          - reference/clanModules/nginx.md
           - reference/clanModules/packages.md
           - reference/clanModules/postgresql.md
           - reference/clanModules/root-password.md
           - reference/clanModules/single-disk.md
           - reference/clanModules/sshd.md
+          - reference/clanModules/state-version.md
           - reference/clanModules/static-hosts.md
           - reference/clanModules/sunshine.md
           - reference/clanModules/syncthing-static-peers.md
@@ -85,6 +85,7 @@ nav:
           - reference/clanModules/thelounge.md
           - reference/clanModules/trusted-nix-caches.md
           - reference/clanModules/user-password.md
+          - reference/clanModules/vaultwarden.md
           - reference/clanModules/xfce.md
           - reference/clanModules/zerotier-static-peers.md
           - reference/clanModules/zt-tcp-relay.md

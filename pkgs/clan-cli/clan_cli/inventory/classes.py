@@ -219,12 +219,44 @@ class ServiceSingleDisk:
 
 
 @dataclass
+class StateVersionConfig:
+    pass
+
+@dataclass
+class ServiceStateVersionMachine:
+    config: StateVersionConfig = field(default_factory = StateVersionConfig)
+    imports: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceStateVersionRoleDefault:
+    config: StateVersionConfig = field(default_factory = StateVersionConfig)
+    imports: list[str] = field(default_factory = list)
+    machines: list[str] = field(default_factory = list)
+    tags: list[str] = field(default_factory = list)
+
+
+@dataclass
+class ServiceStateVersionRole:
+    default: ServiceStateVersionRoleDefault
+
+
+@dataclass
+class ServiceStateVersion:
+    meta: ServiceMeta
+    roles: ServiceStateVersionRole
+    config: StateVersionConfig = field(default_factory = StateVersionConfig)
+    machines: dict[str, ServiceStateVersionMachine] = field(default_factory = dict)
+
+
+@dataclass
 class Service:
     admin: dict[str, ServiceAdmin] = field(default_factory = dict)
     borgbackup: dict[str, ServiceBorgbackup] = field(default_factory = dict)
     iwd: dict[str, ServiceIwd] = field(default_factory = dict)
     packages: dict[str, ServicePackage] = field(default_factory = dict)
     single_disk: dict[str, ServiceSingleDisk] = field(default_factory = dict, metadata = {"alias": "single-disk"})
+    state_version: dict[str, ServiceStateVersion] = field(default_factory = dict, metadata = {"alias": "state-version"})
 
 
 @dataclass
