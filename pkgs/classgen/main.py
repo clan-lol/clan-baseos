@@ -45,6 +45,7 @@ def map_json_type(
 
 known_classes = set()
 root_class = "Inventory"
+stop_at = None
 
 
 def field_def_from_default_type(
@@ -198,6 +199,9 @@ def generate_dataclass(schema: dict[str, Any], class_name: str = root_class) -> 
     required_fields = []
     fields_with_default = []
     nested_classes: list[str] = []
+    if stop_at and class_name == stop_at:
+        # Skip generating classes below the stop_at property
+        return f"@dataclass\nclass {class_name}:\n    pass\n"
 
     for prop, prop_info in properties.items():
         field_name = prop.replace("-", "_")
@@ -272,9 +276,6 @@ def generate_dataclass(schema: dict[str, Any], class_name: str = root_class) -> 
             field_meta = f"""{{"alias": "{prop}"}}"""
 
         finalize_field = partial(get_field_def, field_name, field_meta)
-        # if class_name == "DyndnsConfig":
-        # if class_name == "ServiceDyndnMachine":
-        #     breakpoint()
 
         if "default" in prop_info or field_name not in prop_info.get("required", []):
             if "default" in prop_info:
@@ -334,6 +335,10 @@ def generate_dataclass(schema: dict[str, Any], class_name: str = root_class) -> 
 
 def run_gen(args: argparse.Namespace) -> None:
     print(f"Converting {args.input} to {args.output}")
+    if args.stop_at:
+        global stop_at
+        stop_at = args.stop_at
+
     dataclass_code = ""
     with args.input.open() as f:
         schema = json.load(f)
@@ -358,6 +363,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("input", help="Input JSON schema file", type=Path)
     parser.add_argument("output", help="Output Python file", type=Path)
+    parser.add_argument(
+        "--stop-at",
+        type=str,
+        help="Property name to stop generating classes for. Other classes below that property will be generated",
+        default=None,
+    )
     parser.set_defaults(func=run_gen)
 
     args = parser.parse_args()

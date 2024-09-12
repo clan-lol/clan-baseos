@@ -73,7 +73,7 @@
           ];
 
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json ./clan_cli/inventory/classes.py
+            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
 
             python docs.py reference
             mkdir -p $out
@@ -93,7 +93,7 @@
           ];
 
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json ./clan_cli/inventory/classes.py
+            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
             mkdir -p $out
             python api.py > $out/API.json
             ${self'.packages.json2ts}/bin/json2ts --input $out/API.json > $out/API.ts
@@ -122,7 +122,7 @@
             classFile = "classes.py";
           };
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json b_classes.py
+            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json b_classes.py --stop-at "Service"
             file1=$classFile
             file2=b_classes.py
 
