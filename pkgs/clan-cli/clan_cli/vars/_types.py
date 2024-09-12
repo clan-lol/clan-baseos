@@ -63,9 +63,9 @@ class Var:
         return self._store.exists(self.generator, self.name, self.shared)
 
     def __str__(self) -> str:
-        if self.secret:
-            return f"{self.id}: ********"
         if self._store.exists(self.generator, self.name, self.shared):
+            if self.secret:
+                return f"{self.id}: ********"
             return f"{self.id}: {self.printable_value}"
         return f"{self.id}: <not set>"
 
