@@ -132,7 +132,7 @@
                 echo "Classes file is up to date"
             else
                 echo "Classes file is out of date or has been modified"
-                echo "run ./update.sh in the inventory directory to update the classes file"
+                echo "run 'direnv reload' in the pkgs/clan-cli directory to refresh the classes file"
                 echo "--------------------------------\n"
                 diff "$file1" "$file2"
                 echo "--------------------------------\n\n"
