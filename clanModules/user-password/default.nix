@@ -4,6 +4,9 @@
   lib,
   ...
 }:
+let
+  cfg = config.clan.user-password;
+in
 {
   options.clan.user-password = {
     user = lib.mkOption {
@@ -21,8 +24,10 @@
 
   config = {
     users.mutableUsers = false;
-    users.users.${config.clan.user-password.user}.hashedPasswordFile =
-      config.clan.core.facts.services.user-password.secret.user-password-hash.path;
+    users.users.${cfg.user} = {
+      hashedPasswordFile = config.clan.core.facts.services.user-password.secret.user-password-hash.path;
+      isNormalUser = lib.mkDefault true;
+    };
 
     sops.secrets = lib.mkIf (config.clan.core.facts.secretStore == "sops") {
       "${config.clan.core.machineName}-user-password-hash".neededForUsers = true;
