@@ -22,19 +22,19 @@ from .sops import read_key, write_key
 from .types import public_or_private_age_key_type, secret_name_type
 
 
-def add_machine(flake_dir: Path, name: str, key: str, force: bool) -> None:
-    path = sops_machines_folder(flake_dir) / name
+def add_machine(flake_dir: Path, machine: str, key: str, force: bool) -> None:
+    path = sops_machines_folder(flake_dir) / machine
     write_key(path, key, force)
     paths = [path]
 
     def filter_machine_secrets(secret: Path) -> bool:
-        return secret.joinpath("machines", name).exists()
+        return secret.joinpath("machines", machine).exists()
 
     paths.extend(update_secrets(flake_dir, filter_secrets=filter_machine_secrets))
     commit_files(
         paths,
         flake_dir,
-        f"Add machine {name} to secrets",
+        f"Add machine {machine} to secrets",
     )
 
 
@@ -70,9 +70,9 @@ def list_sops_machines(flake_dir: Path) -> list[str]:
     return list_objects(path, validate)
 
 
-def add_secret(flake_dir: Path, machine: str, secret: str) -> None:
+def add_secret(flake_dir: Path, machine: str, secret_path: Path) -> None:
     paths = secrets.allow_member(
-        secrets.machines_folder(sops_secrets_folder(flake_dir) / secret),
+        secrets.machines_folder(secret_path),
         sops_machines_folder(flake_dir),
         machine,
     )
@@ -128,7 +128,11 @@ def add_secret_command(args: argparse.Namespace) -> None:
     if args.flake is None:
         msg = "Could not find clan flake toplevel directory"
         raise ClanError(msg)
-    add_secret(args.flake.path, args.machine, args.secret)
+    add_secret(
+        args.flake.path,
+        args.machine,
+        sops_secrets_folder(args.flake.path) / args.secret,
+    )
 
 
 def remove_secret_command(args: argparse.Namespace) -> None:
