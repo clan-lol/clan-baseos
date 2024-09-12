@@ -210,15 +210,18 @@ def allow_member(
         msg += list_directory(source_folder)
         raise ClanError(msg)
     group_folder.mkdir(parents=True, exist_ok=True)
-    user_target = group_folder / name
-    if user_target.exists():
-        if not user_target.is_symlink():
-            msg = f"Cannot add user '{name}' to {group_folder.parent.name} secret. {user_target} exists but is not a symlink"
+    member = group_folder / name
+    if member.exists():
+        if not member.is_symlink():
+            msg = f"Cannot add user '{name}' to {group_folder.parent.name} secret. {member} exists but is not a symlink"
             raise ClanError(msg)
-        user_target.unlink()
+        # return early if the symlink already points to the correct target
+        if member.resolve() == source:
+            return []
+        member.unlink()
 
-    user_target.symlink_to(os.path.relpath(source, user_target.parent))
-    changed = [user_target]
+    member.symlink_to(os.path.relpath(source, member.parent))
+    changed = [member]
     if do_update_keys:
         changed.extend(
             update_keys(

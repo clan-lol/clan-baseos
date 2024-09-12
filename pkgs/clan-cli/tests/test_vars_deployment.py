@@ -17,69 +17,102 @@ def test_vm_deployment(
     temporary_home: Path,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
-    config["clan"]["virtualisation"]["graphics"] = False
-    config["services"]["getty"]["autologinUser"] = "root"
-    config["services"]["openssh"]["enable"] = True
-    config["networking"]["firewall"]["enable"] = False
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["files"]["my_secret"]["secret"] = True
-    my_generator["script"] = """
+    # machine 1
+    machine1_config = nested_dict()
+    machine1_config["clan"]["virtualisation"]["graphics"] = False
+    machine1_config["services"]["getty"]["autologinUser"] = "root"
+    machine1_config["services"]["openssh"]["enable"] = True
+    machine1_config["networking"]["firewall"]["enable"] = False
+    m1_generator = machine1_config["clan"]["core"]["vars"]["generators"]["m1_generator"]
+    m1_generator["files"]["my_secret"]["secret"] = True
+    m1_generator["script"] = """
         echo hello > $out/my_secret
     """
-    my_shared_generator = config["clan"]["core"]["vars"]["generators"][
+    m1_shared_generator = machine1_config["clan"]["core"]["vars"]["generators"][
         "my_shared_generator"
     ]
-    my_shared_generator["share"] = True
-    my_shared_generator["files"]["shared_secret"]["secret"] = True
-    my_shared_generator["files"]["no_deploy_secret"]["secret"] = True
-    my_shared_generator["files"]["no_deploy_secret"]["deploy"] = False
-    my_shared_generator["script"] = """
+    m1_shared_generator["share"] = True
+    m1_shared_generator["files"]["shared_secret"]["secret"] = True
+    m1_shared_generator["files"]["no_deploy_secret"]["secret"] = True
+    m1_shared_generator["files"]["no_deploy_secret"]["deploy"] = False
+    m1_shared_generator["script"] = """
         echo hello > $out/shared_secret
         echo hello > $out/no_deploy_secret
     """
+    # machine 2
+    machine2_config = nested_dict()
+    machine2_config["clan"]["virtualisation"]["graphics"] = False
+    machine2_config["services"]["getty"]["autologinUser"] = "root"
+    machine2_config["services"]["openssh"]["enable"] = True
+    machine2_config["users"]["users"]["root"]["openssh"]["authorizedKeys"]["keys"] = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDuhpzDHBPvn8nv8RH1MRomDOaXyP4GziQm7r3MZ1Syk grmpf"
+    ]
+    machine2_config["networking"]["firewall"]["enable"] = False
+    machine2_config["clan"]["core"]["vars"]["generators"]["my_shared_generator"] = (
+        m1_shared_generator.copy()
+    )
+
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs={"my_machine": config},
+        machine_configs={"m1_machine": machine1_config, "m2_machine": machine2_config},
         monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
-    cli.run(["vars", "generate", "my_machine"])
+    cli.run(["vars", "generate"])
     # check sops secrets not empty
-    sops_secrets = json.loads(
-        run(
-            nix_eval(
-                [
-                    f"{flake.path}#nixosConfigurations.my_machine.config.sops.secrets",
-                ]
-            )
-        ).stdout.strip()
-    )
-    assert sops_secrets != {}
+    for machine in ["m1_machine", "m2_machine"]:
+        sops_secrets = json.loads(
+            run(
+                nix_eval(
+                    [
+                        f"{flake.path}#nixosConfigurations.{machine}.config.sops.secrets",
+                    ]
+                )
+            ).stdout.strip()
+        )
+        assert sops_secrets != {}
     my_secret_path = run(
         nix_eval(
             [
-                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_secret.path",
+                f"{flake.path}#nixosConfigurations.m1_machine.config.clan.core.vars.generators.m1_generator.files.my_secret.path",
             ]
         )
     ).stdout.strip()
     assert "no-such-path" not in my_secret_path
-    vm = run_vm_in_thread("my_machine")
-    qga = qga_connect("my_machine", vm)
+    for machine in ["m1_machine", "m2_machine"]:
+        shared_secret_path = run(
+            nix_eval(
+                [
+                    f"{flake.path}#nixosConfigurations.{machine}.config.clan.core.vars.generators.my_shared_generator.files.shared_secret.path",
+                ]
+            )
+        ).stdout.strip()
+        assert "no-such-path" not in shared_secret_path
+    vm_m1 = run_vm_in_thread("m1_machine")
+    vm_m2 = run_vm_in_thread("m2_machine", ssh_port=2222)
+    qga_m1 = qga_connect("m1_machine", vm_m1)
+    qga_m2 = qga_connect("m2_machine", vm_m2)
     # check my_secret is deployed
-    _, out, _ = qga.run("cat /run/secrets/vars/my_generator/my_secret", check=True)
+    _, out, _ = qga_m1.run("cat /run/secrets/vars/m1_generator/my_secret", check=True)
     assert out == "hello\n"
-    # check shared_secret is deployed
-    _, out, _ = qga.run(
+    # check shared_secret is deployed on m1
+    _, out, _ = qga_m1.run(
+        "cat /run/secrets/vars/my_shared_generator/shared_secret", check=True
+    )
+    assert out == "hello\n"
+    # check shared_secret is deployed on m2
+    _, out, _ = qga_m2.run(
         "cat /run/secrets/vars/my_shared_generator/shared_secret", check=True
     )
     assert out == "hello\n"
     # check no_deploy_secret is not deployed
-    returncode, out, _ = qga.run(
+    returncode, out, _ = qga_m1.run(
         "test -e /run/secrets/vars/my_shared_generator/no_deploy_secret", check=False
     )
     assert returncode != 0
-    qga.exec_cmd("poweroff")
-    wait_vm_down("my_machine", vm)
+    qga_m1.exec_cmd("poweroff")
+    qga_m2.exec_cmd("poweroff")
+    wait_vm_down("m1_machine", vm_m1)
+    wait_vm_down("m2_machine", vm_m2)

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from clan_cli.machines.machines import Machine
 from clan_cli.secrets.folders import sops_secrets_folder
-from clan_cli.secrets.machines import add_machine, has_machine
+from clan_cli.secrets.machines import add_machine, add_secret, has_machine
 from clan_cli.secrets.secrets import decrypt_secret, encrypt_secret, has_secret
 from clan_cli.secrets.sops import generate_private_key
 
@@ -80,4 +80,9 @@ class SecretStore(SecretStoreBase):
         (output_dir / "key.txt").write_text(key)
 
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
-        return (self.directory(generator_name, name, shared) / "secret").exists()
+        secret_folder = self.secret_path(generator_name, name, shared)
+        if not (secret_folder / "secret").exists():
+            return False
+        # add_secret will be a no-op if the machine is already added
+        add_secret(self.machine.flake_dir, self.machine.name, secret_folder)
+        return True
