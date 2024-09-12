@@ -94,6 +94,8 @@ def test_generate_public_var(
     monkeypatch.chdir(flake.path)
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     assert not check_vars(machine)
+    vars_text = stringify_all_vars(machine)
+    assert "my_generator/my_value: <not set>" in vars_text
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     assert check_vars(machine)
     store = in_repo.FactStore(
@@ -133,8 +135,10 @@ def test_generate_secret_var_sops(
     sops_setup.init()
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     assert not check_vars(machine)
+    vars_text = stringify_all_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     assert check_vars(machine)
+    assert "my_generator/my_secret: <not set>" in vars_text
     in_repo_store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
