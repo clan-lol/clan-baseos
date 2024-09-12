@@ -3,23 +3,33 @@
   ...
 }:
 let
-  inherit (builtins) readDir;
 
-  inherit (lib) concatMap flip;
+  inherit (lib)
+    filterAttrs
+    flatten
+    flip
+    mapAttrsToList
+    ;
 in
-rec {
-  readDirNames =
-    dir:
-    if !(builtins.pathExists dir) then [ ] else lib.mapAttrsToList (name: _type: name) (readDir dir);
+{
 
-  listVars =
-    varsDir:
-    flip concatMap (readDirNames (varsDir)) (
-      generator_name:
-      flip map (readDirNames (varsDir + "/${generator_name}")) (secret_name: {
-        generator = generator_name;
-        name = secret_name;
-        sopsFile = "${varsDir}/${generator_name}/${secret_name}/secret";
-      })
-    );
+  collectFiles =
+    vars:
+    let
+      relevantFiles = generator: flip filterAttrs generator.files (_name: f: f.secret && f.deploy);
+      allFiles = flatten (
+        flip mapAttrsToList vars.generators (
+          gen_name: generator:
+          flip mapAttrsToList (relevantFiles generator) (
+            fname: file:
+            lib.trace file {
+              name = fname;
+              generator = gen_name;
+              inherit (generator) share;
+            }
+          )
+        )
+      );
+    in
+    allFiles;
 }

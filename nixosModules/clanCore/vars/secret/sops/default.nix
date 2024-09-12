@@ -6,31 +6,21 @@
 }:
 let
 
-  inherit (lib) importJSON flip;
+  inherit (lib) flip;
 
-  inherit (builtins) dirOf pathExists;
-
-  inherit (import ./funcs.nix { inherit lib; }) listVars;
+  inherit (import ./funcs.nix { inherit lib; }) collectFiles;
 
   inherit (config.clan.core) machineName;
 
-  metaFile = sopsFile: dirOf sopsFile + "/meta.json";
-
-  metaData = sopsFile: if pathExists (metaFile sopsFile) then importJSON (metaFile sopsFile) else { };
-
-  isSopsSecret =
+  secretPath =
     secret:
-    let
-      meta = metaData secret.sopsFile;
-    in
-    meta.store or null == "sops" && meta.deployed or true && meta.secret or true;
+    if secret.share then
+      config.clan.core.clanDir + "/vars/shared/${secret.generator}/${secret.name}/secret"
+    else
+      config.clan.core.clanDir
+      + "/vars/per-machine/${machineName}/${secret.generator}/${secret.name}/secret";
 
-  varsDirMachines = config.clan.core.clanDir + "/vars/per-machine/${machineName}";
-  varsDirShared = config.clan.core.clanDir + "/vars/shared";
-
-  vars' = (listVars varsDirMachines) ++ (listVars varsDirShared);
-
-  vars = lib.filter isSopsSecret vars';
+  vars = collectFiles config.clan.core.vars;
 in
 {
   config.clan.core.vars.settings = lib.mkIf (config.clan.core.vars.settings.secretStore == "sops") {
@@ -50,7 +40,7 @@ in
       flip map vars (secret: {
         name = "vars/${secret.generator}/${secret.name}";
         value = {
-          sopsFile = secret.sopsFile;
+          sopsFile = secretPath secret;
           format = "binary";
         };
       })

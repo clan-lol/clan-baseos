@@ -144,7 +144,6 @@ class StoreBase(ABC):
         directory.mkdir(parents=True, exist_ok=True)
         new_file = self._set(generator_name, var_name, value, shared, deployed)
         meta = {
-            "deployed": deployed,
             "secret": self.is_secret_store,
             "store": self.store_name,
         }
