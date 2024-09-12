@@ -1,4 +1,3 @@
-import json
 import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -98,6 +97,10 @@ class StoreBase(ABC):
         override this method to implement the actual creation of the file
         """
 
+    @abstractmethod
+    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
+        pass
+
     @property
     @abstractmethod
     def is_secret_store(self) -> bool:
@@ -117,17 +120,6 @@ class StoreBase(ABC):
             / self.rel_dir(generator_name, var_name, shared)
         )
 
-    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
-        directory = self.directory(generator_name, name, shared)
-        if not (directory / "meta.json").exists():
-            return False
-        with (directory / "meta.json").open() as f:
-            meta = json.load(f)
-        # check if is secret, as secret and public store names could collide (eg. 'vm')
-        if meta.get("secret") != self.is_secret_store:
-            return False
-        return meta.get("store") == self.store_name
-
     def set(
         self,
         generator_name: str,
@@ -143,12 +135,6 @@ class StoreBase(ABC):
         # re-create directory
         directory.mkdir(parents=True, exist_ok=True)
         new_file = self._set(generator_name, var_name, value, shared, deployed)
-        meta = {
-            "secret": self.is_secret_store,
-            "store": self.store_name,
-        }
-        with (directory / "meta.json").open("w") as file:
-            json.dump(meta, file, indent=2)
         return new_file
 
     def get_all(self) -> list[Var]:

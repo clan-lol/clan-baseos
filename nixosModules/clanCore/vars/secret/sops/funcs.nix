@@ -21,8 +21,7 @@ in
         flip mapAttrsToList vars.generators (
           gen_name: generator:
           flip mapAttrsToList (relevantFiles generator) (
-            fname: file:
-            lib.trace file {
+            fname: _file: {
               name = fname;
               generator = gen_name;
               inherit (generator) share;

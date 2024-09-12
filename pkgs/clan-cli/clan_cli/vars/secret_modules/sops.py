@@ -78,3 +78,6 @@ class SecretStore(SecretStoreBase):
             sops_secrets_folder(self.machine.flake_dir) / key_name,
         )
         (output_dir / "key.txt").write_text(key)
+
+    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
+        return (self.directory(generator_name, name, shared) / "secret").exists()
