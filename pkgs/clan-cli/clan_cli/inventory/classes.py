@@ -30,10 +30,7 @@ class Meta:
     icon: None | str = field(default = None)
 
 
-@dataclass
-class Service:
-    pass
-
+Service = dict[str, Any]
 
 @dataclass
 class Inventory:

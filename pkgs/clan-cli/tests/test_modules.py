@@ -7,11 +7,6 @@ from clan_cli.clan_uri import FlakeId
 from clan_cli.inventory import (
     Machine,
     MachineDeploy,
-    ServiceBorgbackup,
-    ServiceBorgbackupRole,
-    ServiceBorgbackupRoleClient,
-    ServiceBorgbackupRoleServer,
-    ServiceMeta,
     load_inventory_json,
     save_inventory,
 )
@@ -67,18 +62,16 @@ def test_add_module_to_inventory(
 
     inventory = load_inventory_json(base_path)
 
-    inventory.services.borgbackup = {
-        "borg1": ServiceBorgbackup(
-            meta=ServiceMeta(name="borg1"),
-            roles=ServiceBorgbackupRole(
-                client=ServiceBorgbackupRoleClient(
-                    machines=["machine1"],
-                ),
-                server=ServiceBorgbackupRoleServer(
-                    machines=["machine1"],
-                ),
-            ),
-        )
+    inventory.services = {
+        "borgbackup": {
+            "borg1": {
+                "meta": {"name": "borg1"},
+                "roles": {
+                    "client": {"machines": ["machine1"]},
+                    "server": {"machines": ["machine1"]},
+                },
+            }
+        }
     }
 
     save_inventory(inventory, base_path, "Add borgbackup service")

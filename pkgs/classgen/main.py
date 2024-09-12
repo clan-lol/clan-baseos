@@ -201,7 +201,7 @@ def generate_dataclass(schema: dict[str, Any], class_name: str = root_class) -> 
     nested_classes: list[str] = []
     if stop_at and class_name == stop_at:
         # Skip generating classes below the stop_at property
-        return f"@dataclass\nclass {class_name}:\n    pass\n"
+        return f"{class_name} = dict[str, Any]"
 
     for prop, prop_info in properties.items():
         field_name = prop.replace("-", "_")
