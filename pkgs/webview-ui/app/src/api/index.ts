@@ -1,11 +1,19 @@
 import schema from "@/api/API.json" assert { type: "json" };
-import { API } from "@/api/API";
+import { API, Error } from "@/api/API";
 import { nanoid } from "nanoid";
 import { Schema as Inventory } from "@/api/Inventory";
 
 export type OperationNames = keyof API;
 export type OperationArgs<T extends OperationNames> = API[T]["arguments"];
 export type OperationResponse<T extends OperationNames> = API[T]["return"];
+
+export type ApiEnvelope<T> =
+  | {
+      status: "success";
+      data: T;
+      op_key: string;
+    }
+  | Error;
 
 export type Services = NonNullable<Inventory["services"]>;
 export type ServiceNames = keyof Services;

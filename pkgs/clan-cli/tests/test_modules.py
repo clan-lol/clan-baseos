@@ -8,7 +8,7 @@ from clan_cli.inventory import (
     Machine,
     MachineDeploy,
     load_inventory_json,
-    save_inventory,
+    set_inventory,
 )
 from clan_cli.machines.create import create_machine
 from clan_cli.nix import nix_eval, run_no_stdout
@@ -74,7 +74,7 @@ def test_add_module_to_inventory(
         }
     }
 
-    save_inventory(inventory, base_path, "Add borgbackup service")
+    set_inventory(inventory, base_path, "Add borgbackup service")
 
     cmd = ["facts", "generate", "--flake", str(test_flake_with_core.path), "machine1"]
     cli.run(cmd)

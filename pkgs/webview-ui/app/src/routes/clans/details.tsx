@@ -24,7 +24,7 @@ import {
 } from "@modular-forms/solid";
 import { TextInput } from "@/src/components/TextInput";
 import toast from "solid-toast";
-import { get_single_service } from "@/src/api/inventory";
+import { get_single_service, set_single_service } from "@/src/api/inventory";
 
 interface AdminModuleFormProps {
   admin: AdminData;
@@ -190,20 +190,34 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
   const handleSubmit = async (values: AdminSettings) => {
     console.log("submitting", values, getValues(formStore));
 
-    // const r = await callApi("set_admin_service", {
-    //   base_url: props.base_url,
-    //   allowed_keys: values.allowedKeys.reduce(
-    //     (acc, curr) => ({ ...acc, [curr.name]: curr.value }),
-    //     {}
-    //   ),
-    // });
-    // if (r.status === "success") {
-    //   toast.success("Successfully updated admin settings");
-    // }
-    // if (r.status === "error") {
-    // toast.error(`Failed to update admin settings: ${r.errors[0].message}`);
-    toast.error(`Failed to update admin settings: feature disabled`);
-    // }
+    const r = await set_single_service(
+      queryClient,
+      props.base_url,
+      "",
+      "admin",
+      {
+        meta: {
+          name: "admin",
+        },
+        roles: {
+          default: {
+            tags: ["all"],
+          },
+        },
+        config: {
+          allowedKeys: values.allowedKeys.reduce(
+            (acc, curr) => ({ ...acc, [curr.name]: curr.value }),
+            {},
+          ),
+        },
+      },
+    );
+    if (r.status === "success") {
+      toast.success("Successfully updated admin settings");
+    }
+    if (r.status === "error") {
+      toast.error(`Failed to update admin settings: ${r.errors[0].message}`);
+    }
     queryClient.invalidateQueries({
       queryKey: [props.base_url, "get_admin_service"],
     });
@@ -340,10 +354,11 @@ type AdminData = ClanServiceInstance<"admin">;
 
 export const ClanDetails = () => {
   const params = useParams();
+  const queryClient = useQueryClient();
   const clan_dir = window.atob(params.id);
   // Fetch general meta data
   const clanQuery = createQuery(() => ({
-    queryKey: [clan_dir, "meta"],
+    queryKey: [clan_dir, "inventory", "meta"],
     queryFn: async () => {
       const result = await callApi("show_clan_meta", { uri: clan_dir });
       if (result.status === "error") throw new Error("Failed to fetch data");
@@ -352,11 +367,11 @@ export const ClanDetails = () => {
   }));
   // Fetch admin settings
   const adminQuery = createQuery(() => ({
-    queryKey: [clan_dir, "get_admin_service"],
+    queryKey: [clan_dir, "inventory", "services", "admin"],
     queryFn: async () => {
-      const result = await get_single_service(clan_dir, "", "admin");
+      const result = await get_single_service(queryClient, clan_dir, "admin");
       if (!result) throw new Error("Failed to fetch data");
-      return result || null;
+      return result;
     },
   }));
 
@@ -371,7 +386,7 @@ export const ClanDetails = () => {
           </div>
         }
       >
-        <Switch>
+        <Switch fallback={<>General data not available</>}>
           <Match when={clanQuery.data}>
             {(d) => <EditClanForm initial={d()} directory={clan_dir} />}
           </Match>
@@ -386,7 +401,7 @@ export const ClanDetails = () => {
           </div>
         }
       >
-        <Switch>
+        <Switch fallback={<>Admin data not available</>}>
           <Match when={adminQuery.data}>
             {(d) => <AdminModuleForm admin={d()} base_url={clan_dir} />}
           </Match>

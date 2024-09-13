@@ -8,7 +8,7 @@ from typing import Literal
 from clan_cli.api import API
 from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanCmdError, ClanError
-from clan_cli.inventory import Machine, load_inventory_eval, save_inventory
+from clan_cli.inventory import Machine, load_inventory_eval, set_inventory
 from clan_cli.nix import nix_eval, nix_shell
 
 log = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ def set_machine(flake_url: str | Path, machine_name: str, machine: Machine) -> N
 
     inventory.machines[machine_name] = machine
 
-    save_inventory(inventory, flake_url, "machines: edit '{machine_name}'")
+    set_inventory(inventory, flake_url, "machines: edit '{machine_name}'")
 
 
 @API.register
