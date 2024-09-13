@@ -10,7 +10,7 @@ from clan_cli.inventory import (
     MachineDeploy,
     load_inventory_eval,
     load_inventory_json,
-    save_inventory,
+    set_inventory,
 )
 
 log = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def create_machine(flake: FlakeId, machine: Machine) -> None:
     print(f"Define machine {machine.name}", machine)
 
     inventory.machines.update({machine.name: machine})
-    save_inventory(inventory, flake.path, f"Create machine {machine.name}")
+    set_inventory(inventory, flake.path, f"Create machine {machine.name}")
 
 
 def create_command(args: argparse.Namespace) -> None:

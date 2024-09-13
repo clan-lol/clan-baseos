@@ -7,7 +7,7 @@ from typing import Any, get_args, get_type_hints
 
 from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanCmdError, ClanError
-from clan_cli.inventory import Inventory, load_inventory_json, save_inventory
+from clan_cli.inventory import Inventory, load_inventory_json, set_inventory
 from clan_cli.inventory.classes import Service
 from clan_cli.nix import nix_eval
 
@@ -187,7 +187,7 @@ def set_service_instance(
 
     setattr(inventory.services, module_name, module_instance_map)
 
-    save_inventory(
+    set_inventory(
         inventory, base_path, f"Update {module_name} instance {instance_name}"
     )
 

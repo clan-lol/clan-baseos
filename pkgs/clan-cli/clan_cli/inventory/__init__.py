@@ -58,6 +58,7 @@ default_inventory = Inventory(
 )
 
 
+@API.register
 def load_inventory_eval(flake_dir: str | Path) -> Inventory:
     """
     Loads the actual inventory.
@@ -89,6 +90,7 @@ def load_inventory_eval(flake_dir: str | Path) -> Inventory:
         return inventory
 
 
+@API.register
 def load_inventory_json(
     flake_dir: str | Path, default: Inventory = default_inventory
 ) -> Inventory:
@@ -116,7 +118,8 @@ def load_inventory_json(
     return inventory
 
 
-def save_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> None:
+@API.register
+def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> None:
     """ "
     Write the inventory to the flake directory
     and commit it to git with the given message
@@ -143,4 +146,4 @@ def init_inventory(directory: str, init: Inventory | None = None) -> None:
     # Write inventory.json file
     if inventory is not None:
         # Persist creates a commit message for each change
-        save_inventory(inventory, directory, "Init inventory")
+        set_inventory(inventory, directory, "Init inventory")

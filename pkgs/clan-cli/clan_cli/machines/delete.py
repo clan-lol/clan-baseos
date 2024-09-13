@@ -6,7 +6,7 @@ from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanError
-from clan_cli.inventory import load_inventory_json, save_inventory
+from clan_cli.inventory import load_inventory_json, set_inventory
 
 
 @API.register
@@ -18,7 +18,7 @@ def delete_machine(flake: FlakeId, name: str) -> None:
         msg = f"Machine {name} does not exist"
         raise ClanError(msg)
 
-    save_inventory(inventory, flake.path, f"Delete machine {name}")
+    set_inventory(inventory, flake.path, f"Delete machine {name}")
 
     folder = specific_machine_dir(flake.path, name)
     if folder.exists():
