@@ -42,11 +42,12 @@ let
                     mountpoint = "/boot";
                   };
                 };
-                "root" = {
-                  size = "100%";
+                root = {
+                  name = "root";
+                  end = "-0";
                   content = {
                     type = "filesystem";
-                    format = "ext4";
+                    format = "f2fs";
                     mountpoint = "/";
                   };
                 };
