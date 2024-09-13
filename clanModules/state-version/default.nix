@@ -5,7 +5,7 @@ in
 {
   config = lib.mkMerge [
     (lib.mkIf ((var.value or null) != null) {
-      system.stateVersion = lib.mkDefault (lib.removeSuffix "\n" var.value);
+      system.stateVersion = lib.mkDefault var.value;
     })
 
     {
@@ -13,7 +13,7 @@ in
         files.version.secret = false;
         runtimeInputs = [ ];
         script = ''
-          echo ${lib.versions.majorMinor lib.version} > $out/version
+          echo -n ${lib.versions.majorMinor lib.version} > $out/version
         '';
       };
     }
