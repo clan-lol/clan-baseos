@@ -5,6 +5,8 @@
     borgbackup = ./borgbackup;
     borgbackup-static = ./borgbackup-static;
     deltachat = ./deltachat;
+    machine-id = ./machine-id;
+    disk-id = ./disk-id;
     dyndns = ./dyndns;
     ergochat = ./ergochat;
     garage = ./garage;

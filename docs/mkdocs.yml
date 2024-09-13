@@ -60,6 +60,7 @@ nav:
           - reference/clanModules/borgbackup.md
           - reference/clanModules/deltachat.md
           - reference/clanModules/dyndns.md
+          - reference/clanModules/disk-id.md
           - reference/clanModules/ergochat.md
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
@@ -69,6 +70,7 @@ nav:
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
           - reference/clanModules/matrix-synapse.md
+          - reference/clanModules/machine-id.md
           - reference/clanModules/moonlight.md
           - reference/clanModules/mumble.md
           - reference/clanModules/nginx.md
