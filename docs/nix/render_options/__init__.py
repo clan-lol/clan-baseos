@@ -28,7 +28,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from clan_cli.api.modules import Frontmatter, extract_frontmatter, get_roles
+from clan_cli.api.modules import Frontmatter, extract_frontmatter
 from clan_cli.errors import ClanError
 
 # Get environment variables
@@ -277,9 +277,9 @@ def produce_clan_modules_docs() -> None:
             output += f"{readme_content}\n"
 
             # get_roles(str) -> list[str] | None
-            roles = get_roles(CLAN_CORE_PATH / "clanModules" / module_name)
-            if roles:
-                output += render_roles(roles, module_name)
+            # roles = get_roles(CLAN_CORE_PATH / "clanModules" / module_name)
+            # if roles:
+            #     output += render_roles(roles, module_name)
 
             output += module_usage(module_name)
 

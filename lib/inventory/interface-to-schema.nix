@@ -96,7 +96,7 @@ let
         let
           roles = getRoles self.clanModules.${moduleName};
         in
-        if roles == null then [ ] else roles;
+        if roles == null then [ "default" ] else roles;
       moduleServices = lib.mapAttrs moduleToService (
         lib.filterAttrs (n: _v: rolesOf n != [ ]) modulesSchema
       );
