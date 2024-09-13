@@ -1,12 +1,21 @@
 import { QueryClient } from "@tanstack/solid-query";
-import { callApi, ClanServiceInstance, ServiceNames, Services } from ".";
+import {
+  ApiEnvelope,
+  callApi,
+  ClanServiceInstance,
+  ServiceNames,
+  Services,
+} from ".";
+import { Schema as Inventory } from "@/api/Inventory";
 
 export async function get_inventory(client: QueryClient, base_path: string) {
   const data = await client.ensureQueryData({
     queryKey: [base_path, "inventory"],
     queryFn: () => {
       console.log("Refreshing inventory");
-      return callApi("get_inventory", { base_path });
+      return callApi("get_inventory", { base_path }) as Promise<
+        ApiEnvelope<Inventory>
+      >;
     },
     revalidateIfStale: true,
     staleTime: 60 * 1000,
@@ -51,7 +60,7 @@ export async function get_single_service<T extends keyof Services>(
   client: QueryClient,
   base_path: string,
   service_name: T,
-) {
+): Promise<ClanServiceInstance<T>> {
   const instance_key = await get_first_instance_name(
     client,
     base_path,
@@ -59,7 +68,7 @@ export async function get_single_service<T extends keyof Services>(
   );
 
   if (!instance_key) {
-    return {};
+    throw new Error("No instance found");
   }
   const service: Services[T] | null = await get_service(
     client,
@@ -67,10 +76,10 @@ export async function get_single_service<T extends keyof Services>(
     service_name,
   );
   if (service) {
-    const clanServiceInstance = service[instance_key];
-    return clanServiceInstance || {};
+    const clanServiceInstance = service[instance_key] as ClanServiceInstance<T>;
+    return clanServiceInstance;
   }
-  return {};
+  throw new Error("No service found");
 }
 
 export async function set_single_service<T extends keyof Services>(
@@ -88,10 +97,12 @@ export async function set_single_service<T extends keyof Services>(
     const inventory = r.data;
     inventory.services = inventory.services || {};
     inventory.services[service_name] = inventory.services[service_name] || {};
-    // @ts-expect-error: This doesn't check
+
+    // @ts-expect-error: This cannot be undefined, because of the line above
     inventory.services[service_name][instance_key] = service_config;
     console.log("saving inventory", inventory);
     return callApi("set_inventory", {
+      // @ts-expect-error: This doesn't check
       inventory,
       message: `update_single_service ${service_name}`,
       flake_dir: base_path,

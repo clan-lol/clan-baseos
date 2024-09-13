@@ -21,7 +21,11 @@ import {
   setValue,
 } from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
-import { createQuery, QueryObserver } from "@tanstack/solid-query";
+import {
+  createQuery,
+  QueryObserver,
+  useQueryClient,
+} from "@tanstack/solid-query";
 import {
   createSignal,
   For,
@@ -115,6 +119,7 @@ const InstallMachine = (props: InstallMachineProps) => {
       toast.success("Machine installed successfully");
     }
   };
+  const queryClient = useQueryClient();
 
   const handleDiskConfirm = async (e: Event) => {
     e.preventDefault();
@@ -125,7 +130,12 @@ const InstallMachine = (props: InstallMachineProps) => {
       return;
     }
 
-    const r = await set_single_disk_id(curr_uri, props.name, disk_id);
+    const r = await set_single_disk_id(
+      queryClient,
+      curr_uri,
+      props.name,
+      disk_id,
+    );
     if (!r) {
       toast.success("Disk set successfully");
       setConfirmDisk(true);
