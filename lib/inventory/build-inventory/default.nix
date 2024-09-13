@@ -135,6 +135,8 @@ let
               in
               if builtins.pathExists path then
                 path
+              else if role == "default" then
+                { }
               else
                 throw "Module doesn't have role: '${role}'. Path: ${path} not found."
             ) inverseRoles.${machineName} or [ ];
