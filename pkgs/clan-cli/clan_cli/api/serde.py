@@ -202,6 +202,8 @@ def construct_value(
         return construct_value(base_type, field_value)
 
     # elif get_origin(t) is Union:
+    if t is Any:
+        return field_value
 
     # Unhandled
     msg = f"Unhandled field type {t} with value {field_value}"
