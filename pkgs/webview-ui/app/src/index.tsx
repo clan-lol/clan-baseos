@@ -16,7 +16,7 @@ import { HostList } from "./routes/hosts/view";
 import { Welcome } from "./routes/welcome";
 import { Toaster } from "solid-toast";
 
-const client = new QueryClient();
+export const client = new QueryClient();
 
 const root = document.getElementById("app");
 
