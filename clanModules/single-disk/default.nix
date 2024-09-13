@@ -5,11 +5,13 @@
       default = null;
       type = lib.types.nullOr lib.types.str;
       description = "The primary disk device to install the system on";
-      # Question: should we set a default here?
-      # default = "/dev/null";
     };
   };
   config = {
+    warnings = [
+      "clanModules.single-disk is deprecated. Please copy the disko config from the module into your machine config."
+    ];
+
     boot.loader.grub.efiSupport = lib.mkDefault true;
     boot.loader.grub.efiInstallAsRemovable = lib.mkDefault true;
     disko.devices = {

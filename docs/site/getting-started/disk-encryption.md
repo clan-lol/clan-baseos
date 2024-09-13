@@ -14,7 +14,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
 
 === "**Single Disk**"
     Below is the configuration for `disko.nix`
-    ```nix hl_lines="16 47"
+    ```nix hl_lines="17 48"
       { lib, clan-core, ... }:
       let
         suffix = config.clan.core.vars.generators.disk-id.files.diskId.value;
@@ -115,7 +115,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
 
 === "**Raid 1**"
     Below is the configuration for `disko.nix`
-    ```nix hl_lines="16 47 48"
+    ```nix hl_lines="17 48 49"
       { lib, clan-core, ... }:
       let
         suffix = config.clan.core.vars.generators.disk-id.files.diskId.value;
