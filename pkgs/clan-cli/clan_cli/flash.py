@@ -140,12 +140,18 @@ def list_possible_languages() -> list[str]:
     return languages
 
 
+@dataclass
+class Disk:
+    name: str
+    device: str
+
+
 @API.register
 def flash_machine(
     machine: Machine,
     *,
     mode: str,
-    disks: dict[str, str],
+    disks: list[Disk],
     system_config: SystemConfig,
     dry_run: bool,
     write_efi_boot_entries: bool,
@@ -153,7 +159,7 @@ def flash_machine(
     no_udev: bool = False,
     extra_args: list[str] | None = None,
 ) -> None:
-    devices = [Path(device) for device in disks.values()]
+    devices = [Path(disk.device) for disk in disks]
     with pause_automounting(devices, no_udev):
         if extra_args is None:
             extra_args = []
@@ -226,8 +232,8 @@ def flash_machine(
                 disko_install.append("--dry-run")
             if debug:
                 disko_install.append("--debug")
-            for name, device in disks.items():
-                disko_install.extend(["--disk", name, device])
+            for disk in disks:
+                disko_install.extend(["--disk", disk.name, disk.device])
 
             disko_install.extend(["--extra-files", str(local_dir), upload_dir])
             disko_install.extend(["--flake", str(machine.flake) + "#" + machine.name])
@@ -252,7 +258,7 @@ def flash_machine(
 class FlashOptions:
     flake: FlakeId
     machine: str
-    disks: dict[str, str]
+    disks: list[Disk]
     dry_run: bool
     confirm: bool
     debug: bool
@@ -271,12 +277,23 @@ class AppendDiskAction(argparse.Action):
         self,
         parser: argparse.ArgumentParser,
         namespace: argparse.Namespace,
-        values: str | Sequence[str] | None,
+        values: str | Sequence[str] | None,  # Updated type hint
         option_string: str | None = None,
     ) -> None:
-        disks = getattr(namespace, self.dest)
-        assert isinstance(values, list), "values must be a list"
-        disks[values[0]] = values[1]
+        # Ensure 'values' is a sequence of two elements
+        if not (
+            isinstance(values, Sequence)
+            and not isinstance(values, str)
+            and len(values) == 2
+        ):
+            msg = "Two values must be provided for a 'disk'"
+            raise ValueError(msg)
+
+        # Use the same logic as before, ensuring 'values' is a sequence
+        current_disks: list[Disk] = getattr(namespace, self.dest, [])
+        disk_name, disk_device = values
+        current_disks.append(Disk(name=disk_name, device=disk_device))
+        setattr(namespace, self.dest, current_disks)
 
 
 def flash_command(args: argparse.Namespace) -> None:
@@ -317,7 +334,7 @@ def flash_command(args: argparse.Namespace) -> None:
 
     machine = Machine(opts.machine, flake=opts.flake)
     if opts.confirm and not opts.dry_run:
-        disk_str = ", ".join(f"{name}={device}" for name, device in opts.disks.items())
+        disk_str = ", ".join(f"{disk.name}={disk.device}" for disk in opts.disks)
         msg = f"Install {machine.name}"
         if disk_str != "":
             msg += f" to {disk_str}"
@@ -351,10 +368,10 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
         "--disk",
         type=str,
         nargs=2,
-        metavar=("name", "value"),
+        metavar=("name", "device"),
         action=AppendDiskAction,
         help="device to flash to",
-        default={},
+        default=[],
     )
     mode_help = textwrap.dedent(
         """\
