@@ -5,7 +5,8 @@ import logging
 import os
 import shutil
 import textwrap
-from collections.abc import Sequence
+from collections.abc import Generator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -35,6 +36,60 @@ class SystemConfig:
     keymap: str | None = field(default=None)
     ssh_keys_path: list[str] | None = field(default=None)
     wifi_settings: list[WifiConfig] | None = field(default=None)
+
+
+@contextmanager
+def pause_automounting(
+    devices: list[Path], no_udev: bool
+) -> Generator[None, None, None]:
+    """
+    Pause automounting on the device for the duration of this context
+    manager
+    """
+    if no_udev:
+        yield None
+        return
+
+    if shutil.which("udevadm") is None:
+        msg = "udev is required to disable automounting"
+        log.warning(msg)
+        yield None
+        return
+
+    if os.geteuid() != 0:
+        msg = "root privileges are required to disable automounting"
+        raise ClanError(msg)
+    try:
+        # See /usr/lib/udisks2/udisks2-inhibit
+        rules_dir = Path("/run/udev/rules.d")
+        rules_dir.mkdir(exist_ok=True)
+        rule_files: list[Path] = []
+        for device in devices:
+            devpath: str = str(device)
+            rule_file: Path = (
+                rules_dir / f"90-udisks-inhibit-{devpath.replace('/', '_')}.rules"
+            )
+            with rule_file.open("w") as fd:
+                print(
+                    'SUBSYSTEM=="block", ENV{DEVNAME}=="'
+                    + devpath
+                    + '*", ENV{UDISKS_IGNORE}="1"',
+                    file=fd,
+                )
+                fd.flush()
+                os.fsync(fd.fileno())
+            rule_files.append(rule_file)
+        run(["udevadm", "control", "--reload"])
+        run(["udevadm", "trigger", "--settle", "--subsystem-match=block"])
+
+        yield None
+    except Exception as ex:
+        log.fatal(ex)
+    finally:
+        for rule_file in rule_files:
+            rule_file.unlink(missing_ok=True)
+        run(["udevadm", "control", "--reload"], check=False)
+        run(["udevadm", "trigger", "--settle", "--subsystem-match=block"], check=False)
 
 
 @API.register
@@ -95,99 +150,102 @@ def flash_machine(
     dry_run: bool,
     write_efi_boot_entries: bool,
     debug: bool,
+    no_udev: bool = False,
     extra_args: list[str] | None = None,
 ) -> None:
-    if extra_args is None:
-        extra_args = []
-    system_config_nix: dict[str, Any] = {}
+    devices = [Path(device) for device in disks.values()]
+    with pause_automounting(devices, no_udev):
+        if extra_args is None:
+            extra_args = []
+        system_config_nix: dict[str, Any] = {}
 
-    if system_config.wifi_settings:
-        wifi_settings = {}
-        for wifi in system_config.wifi_settings:
-            wifi_settings[wifi.ssid] = {"password": wifi.password}
-        system_config_nix["clan"] = {"iwd": {"networks": wifi_settings}}
+        if system_config.wifi_settings:
+            wifi_settings = {}
+            for wifi in system_config.wifi_settings:
+                wifi_settings[wifi.ssid] = {"password": wifi.password}
+            system_config_nix["clan"] = {"iwd": {"networks": wifi_settings}}
 
-    if system_config.language:
-        if system_config.language not in list_possible_languages():
-            msg = (
-                f"Language '{system_config.language}' is not a valid language. "
-                f"Run 'clan flash --list-languages' to see a list of possible languages."
-            )
-            raise ClanError(msg)
-        system_config_nix["i18n"] = {"defaultLocale": system_config.language}
-
-    if system_config.keymap:
-        if system_config.keymap not in list_possible_keymaps():
-            msg = (
-                f"Keymap '{system_config.keymap}' is not a valid keymap. "
-                f"Run 'clan flash --list-keymaps' to see a list of possible keymaps."
-            )
-            raise ClanError(msg)
-        system_config_nix["console"] = {"keyMap": system_config.keymap}
-
-    if system_config.ssh_keys_path:
-        root_keys = []
-        for key_path in (Path(x) for x in system_config.ssh_keys_path):
-            try:
-                root_keys.append(key_path.read_text())
-            except OSError as e:
-                msg = f"Cannot read SSH public key file: {key_path}: {e}"
-                raise ClanError(msg) from e
-        system_config_nix["users"] = {
-            "users": {"root": {"openssh": {"authorizedKeys": {"keys": root_keys}}}}
-        }
-
-    secret_facts_module = importlib.import_module(machine.secret_facts_module)
-    secret_facts_store: SecretStoreBase = secret_facts_module.SecretStore(
-        machine=machine
-    )
-    with TemporaryDirectory() as tmpdir_:
-        tmpdir = Path(tmpdir_)
-        upload_dir = machine.secrets_upload_directory
-
-        if upload_dir.startswith("/"):
-            local_dir = tmpdir / upload_dir[1:]
-        else:
-            local_dir = tmpdir / upload_dir
-
-        local_dir.mkdir(parents=True)
-        secret_facts_store.upload(local_dir)
-        disko_install = []
-
-        if os.geteuid() != 0:
-            if shutil.which("sudo") is None:
-                msg = "sudo is required to run disko-install as a non-root user"
+        if system_config.language:
+            if system_config.language not in list_possible_languages():
+                msg = (
+                    f"Language '{system_config.language}' is not a valid language. "
+                    f"Run 'clan flash --list-languages' to see a list of possible languages."
+                )
                 raise ClanError(msg)
-            wrapper = 'set -x; disko_install=$(command -v disko-install); exec sudo "$disko_install" "$@"'
-            disko_install.extend(["bash", "-c", wrapper])
+            system_config_nix["i18n"] = {"defaultLocale": system_config.language}
 
-        disko_install.append("disko-install")
-        if write_efi_boot_entries:
-            disko_install.append("--write-efi-boot-entries")
-        if dry_run:
-            disko_install.append("--dry-run")
-        if debug:
-            disko_install.append("--debug")
-        for name, device in disks.items():
-            disko_install.extend(["--disk", name, device])
+        if system_config.keymap:
+            if system_config.keymap not in list_possible_keymaps():
+                msg = (
+                    f"Keymap '{system_config.keymap}' is not a valid keymap. "
+                    f"Run 'clan flash --list-keymaps' to see a list of possible keymaps."
+                )
+                raise ClanError(msg)
+            system_config_nix["console"] = {"keyMap": system_config.keymap}
 
-        disko_install.extend(["--extra-files", str(local_dir), upload_dir])
-        disko_install.extend(["--flake", str(machine.flake) + "#" + machine.name])
-        disko_install.extend(["--mode", str(mode)])
-        disko_install.extend(
-            [
-                "--system-config",
-                json.dumps(system_config_nix),
-            ]
+        if system_config.ssh_keys_path:
+            root_keys = []
+            for key_path in (Path(x) for x in system_config.ssh_keys_path):
+                try:
+                    root_keys.append(key_path.read_text())
+                except OSError as e:
+                    msg = f"Cannot read SSH public key file: {key_path}: {e}"
+                    raise ClanError(msg) from e
+            system_config_nix["users"] = {
+                "users": {"root": {"openssh": {"authorizedKeys": {"keys": root_keys}}}}
+            }
+
+        secret_facts_module = importlib.import_module(machine.secret_facts_module)
+        secret_facts_store: SecretStoreBase = secret_facts_module.SecretStore(
+            machine=machine
         )
-        disko_install.extend(["--option", "dry-run", "true"])
-        disko_install.extend(extra_args)
+        with TemporaryDirectory() as tmpdir_:
+            tmpdir = Path(tmpdir_)
+            upload_dir = machine.secrets_upload_directory
 
-        cmd = nix_shell(
-            ["nixpkgs#disko"],
-            disko_install,
-        )
-        run(cmd, log=Log.BOTH, error_msg=f"Failed to flash {machine}")
+            if upload_dir.startswith("/"):
+                local_dir = tmpdir / upload_dir[1:]
+            else:
+                local_dir = tmpdir / upload_dir
+
+            local_dir.mkdir(parents=True)
+            secret_facts_store.upload(local_dir)
+            disko_install = []
+
+            if os.geteuid() != 0:
+                if shutil.which("sudo") is None:
+                    msg = "sudo is required to run disko-install as a non-root user"
+                    raise ClanError(msg)
+                wrapper = 'set -x; disko_install=$(command -v disko-install); exec sudo "$disko_install" "$@"'
+                disko_install.extend(["bash", "-c", wrapper])
+
+            disko_install.append("disko-install")
+            if write_efi_boot_entries:
+                disko_install.append("--write-efi-boot-entries")
+            if dry_run:
+                disko_install.append("--dry-run")
+            if debug:
+                disko_install.append("--debug")
+            for name, device in disks.items():
+                disko_install.extend(["--disk", name, device])
+
+            disko_install.extend(["--extra-files", str(local_dir), upload_dir])
+            disko_install.extend(["--flake", str(machine.flake) + "#" + machine.name])
+            disko_install.extend(["--mode", str(mode)])
+            disko_install.extend(
+                [
+                    "--system-config",
+                    json.dumps(system_config_nix),
+                ]
+            )
+            disko_install.extend(["--option", "dry-run", "true"])
+            disko_install.extend(extra_args)
+
+            cmd = nix_shell(
+                ["nixpkgs#disko"],
+                disko_install,
+            )
+            run(cmd, log=Log.BOTH, error_msg=f"Failed to flash {machine}")
 
 
 @dataclass
@@ -201,6 +259,7 @@ class FlashOptions:
     mode: str
     write_efi_boot_entries: bool
     nix_options: list[str]
+    no_udev: bool
     system_config: SystemConfig
 
 
@@ -236,6 +295,7 @@ def flash_command(args: argparse.Namespace) -> None:
             wifi_settings=None,
         ),
         write_efi_boot_entries=args.write_efi_boot_entries,
+        no_udev=args.no_udev,
         nix_options=args.option,
     )
 
@@ -274,6 +334,7 @@ def flash_command(args: argparse.Namespace) -> None:
         dry_run=opts.dry_run,
         debug=opts.debug,
         write_efi_boot_entries=opts.write_efi_boot_entries,
+        no_udev=opts.no_udev,
         extra_args=opts.nix_options,
     )
 
@@ -340,6 +401,12 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--list-keymaps",
         help="List possible keymaps",
+        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--no-udev",
+        help="Disable udev rules to block automounting",
         default=False,
         action="store_true",
     )
