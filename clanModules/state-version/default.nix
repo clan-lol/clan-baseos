@@ -13,7 +13,7 @@ in
         files.version.secret = false;
         runtimeInputs = [ ];
         script = ''
-          echo -n ${lib.versions.majorMinor lib.version} > $out/version
+          echo -n ${lib.versions.majorMinor config.system.stateVersion} > $out/version
         '';
       };
     }
