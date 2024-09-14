@@ -13,3 +13,5 @@ To manually generate the version for a specified machine run:
 ```
 clan vars generate [MACHINE]
 ```
+
+If the setting was already set you can then remove `system.stateVersion` from your machine configuration. For new machines, just import the module.
