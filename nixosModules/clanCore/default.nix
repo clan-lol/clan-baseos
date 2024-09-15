@@ -18,5 +18,6 @@
     ./vm.nix
     ./wayland-proxy-virtwl.nix
     ./zerotier
+    ./zfs.nix
   ];
 }
