@@ -19,9 +19,6 @@
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
 
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
-    # TODO: remove this once the upstream doesnt have dependencies
-    nixos-facter-modules.flake = false;
-    # nixos-facter-modules.inputs.nixpkgs.follows = "nixpkgs";
 
   };
 
