@@ -61,7 +61,12 @@ let
 
     '';
     default = [ ];
-    type = types.listOf types.str;
+    type = types.listOf (
+      types.oneOf [
+        types.str
+        types.anything
+      ]
+    );
   };
 in
 {
