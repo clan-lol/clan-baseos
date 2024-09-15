@@ -46,7 +46,7 @@ sudo umount /dev/sdb1
     It also allows to set language and keymap in the installer image.
 
     ```bash
-    clan flash --flake git+https://git.clan.lol/clan/clan-core \
+    clan flash apply --flake git+https://git.clan.lol/clan/clan-core \
       --ssh-pubkey $HOME/.ssh/id_ed25519.pub \
       --keymap us \
       --language en_US.UTF-8 \
@@ -70,13 +70,13 @@ sudo umount /dev/sdb1
     !!! Note
         You can get a list of all keymaps with the following command:
         ```
-        clan flash asd --list-keymaps
+        clan flash list keymaps
         ```
     
     !!! Note
         You can get a list of all languages with the following command:
         ```
-        clan flash asd --list-languages
+        clan flash list languages
         ```
     
 
