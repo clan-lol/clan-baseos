@@ -160,10 +160,10 @@ let
                 {
                   config.clan.${serviceName} = lib.mkMerge (
                     [
-                      (globalConfig)
-                      (lib.traceValSeq machineServiceConfig)
+                      globalConfig
+                      machineServiceConfig
                     ]
-                    ++ (roleServiceConfigs)
+                    ++ roleServiceConfigs
                   );
                 }
               )
