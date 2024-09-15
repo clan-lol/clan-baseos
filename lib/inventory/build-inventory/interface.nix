@@ -13,6 +13,20 @@ let
       type = types.nullOr types.str;
     };
   };
+  metaOptionsWith = name: {
+    name = lib.mkOption {
+      type = types.str;
+      default = name;
+    };
+    description = lib.mkOption {
+      default = null;
+      type = types.nullOr types.str;
+    };
+    icon = lib.mkOption {
+      default = null;
+      type = types.nullOr types.str;
+    };
+  };
 
   moduleConfig = lib.mkOption {
     default = { };
@@ -64,26 +78,30 @@ in
     machines = lib.mkOption {
       default = { };
       type = types.attrsOf (
-        types.submodule {
-          options = {
-            inherit (metaOptions) name description icon;
-            tags = lib.mkOption {
+        types.submodule (
+          { name, ... }:
+          {
+            options = {
+              inherit (metaOptionsWith name) name description icon;
 
-              default = [ ];
-              apply = lib.unique;
-              type = types.listOf types.str;
+              tags = lib.mkOption {
+
+                default = [ ];
+                apply = lib.unique;
+                type = types.listOf types.str;
+              };
+              system = lib.mkOption {
+                default = null;
+                type = types.nullOr types.str;
+              };
+              deploy.targetHost = lib.mkOption {
+                description = "Configuration for the deployment of the machine";
+                default = null;
+                type = types.nullOr types.str;
+              };
             };
-            system = lib.mkOption {
-              default = null;
-              type = types.nullOr types.str;
-            };
-            deploy.targetHost = lib.mkOption {
-              description = "Configuration for the deployment of the machine";
-              default = null;
-              type = types.nullOr types.str;
-            };
-          };
-        }
+          }
+        )
       );
     };
 
@@ -91,38 +109,41 @@ in
       default = { };
       type = types.attrsOf (
         types.attrsOf (
-          types.submodule {
-            options.meta = metaOptions;
-            options.imports = importsOption;
-            options.config = moduleConfig;
-            options.machines = lib.mkOption {
-              default = { };
-              type = types.attrsOf (
-                types.submodule {
-                  options.imports = importsOption;
-                  options.config = moduleConfig;
-                }
-              );
-            };
-            options.roles = lib.mkOption {
-              default = { };
-              type = types.attrsOf (
-                types.submodule {
-                  options.machines = lib.mkOption {
-                    default = [ ];
-                    type = types.listOf types.str;
-                  };
-                  options.tags = lib.mkOption {
-                    default = [ ];
-                    apply = lib.unique;
-                    type = types.listOf types.str;
-                  };
-                  options.config = moduleConfig;
-                  options.imports = importsOption;
-                }
-              );
-            };
-          }
+          types.submodule (
+            { name, ... }:
+            {
+              options.meta = metaOptionsWith name;
+              options.imports = importsOption;
+              options.config = moduleConfig;
+              options.machines = lib.mkOption {
+                default = { };
+                type = types.attrsOf (
+                  types.submodule {
+                    options.imports = importsOption;
+                    options.config = moduleConfig;
+                  }
+                );
+              };
+              options.roles = lib.mkOption {
+                default = { };
+                type = types.attrsOf (
+                  types.submodule {
+                    options.machines = lib.mkOption {
+                      default = [ ];
+                      type = types.listOf types.str;
+                    };
+                    options.tags = lib.mkOption {
+                      default = [ ];
+                      apply = lib.unique;
+                      type = types.listOf types.str;
+                    };
+                    options.config = moduleConfig;
+                    options.imports = importsOption;
+                  }
+                );
+              };
+            }
+          )
         )
       );
     };
