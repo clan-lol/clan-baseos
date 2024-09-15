@@ -150,7 +150,7 @@ export const Flash = () => {
           },
         },
         mode: "format",
-        disks: { main: values.disk },
+        disks: [{ name: "main", device: values.disk }],
         system_config: {
           language: values.language,
           keymap: values.keymap,
