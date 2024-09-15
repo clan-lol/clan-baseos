@@ -33,12 +33,14 @@ let
     type = types.attrsOf types.anything;
   };
 
-  importsOption = lib.mkOption {
+  extraModulesOption = lib.mkOption {
     description = ''
-      List of imported '.nix' files.
+      List of imported '.nix' expressions.
 
-      Each filename must be a string and is interpreted relative to the 'directory' passed to buildClan.
+      Strings are interpreted relative to the 'directory' passed to buildClan.
       The import only happens if the machine is part of the service or role.
+
+      Other types are passed through to the nixos configuration.
 
       ## Example
 
@@ -55,7 +57,7 @@ let
 
       ```nix
       {
-        imports = [ "modules/special.nix" ];
+        extraModules = [ "modules/special.nix" ];
       }
       ```
 
@@ -118,13 +120,13 @@ in
             { name, ... }:
             {
               options.meta = metaOptionsWith name;
-              options.imports = importsOption;
+              options.extraModules = extraModulesOption;
               options.config = moduleConfig;
               options.machines = lib.mkOption {
                 default = { };
                 type = types.attrsOf (
                   types.submodule {
-                    options.imports = importsOption;
+                    options.extraModules = extraModulesOption;
                     options.config = moduleConfig;
                   }
                 );
@@ -143,7 +145,7 @@ in
                       type = types.listOf types.str;
                     };
                     options.config = moduleConfig;
-                    options.imports = importsOption;
+                    options.extraModules = extraModulesOption;
                   }
                 );
               };
