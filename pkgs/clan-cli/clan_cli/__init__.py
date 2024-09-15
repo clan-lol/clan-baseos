@@ -16,7 +16,6 @@ __all__ = ["directory", "mdns_discovery", "modules", "update", "disk", "admin", 
 from . import (
     backups,
     clan,
-    flash,
     history,
     secrets,
     state,
@@ -27,6 +26,7 @@ from .custom_logger import setup_logging
 from .dirs import get_clan_flake_toplevel_or_env
 from .errors import ClanCmdError, ClanError
 from .facts import cli as facts
+from .flash import cli as flash_cli
 from .hyperlink import help_hyperlink
 from .machines import cli as machines
 from .profiler import profile
@@ -174,6 +174,24 @@ For more detailed information, visit: {help_hyperlink("getting-started", "https:
     )
 
     clan.register_parser(parser_flake)
+
+    parser_flash = subparsers.add_parser(
+        "flash",
+        help="flashes your machine to an USB drive",
+        description="flashes your machine to an USB drive",
+        epilog=(
+            f"""
+Examples:
+  $ clan flash import installer
+  $ clan flash apply installer --disk main /dev/sd<X> --ssh-pubkey ~/.ssh/id_rsa.pub
+  Will create and flash a custom installer nixos image onto a drive
+
+For more detailed information, visit: {help_hyperlink("getting-started", "https://docs.clan.lol/getting-started/installer")}
+            """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    flash_cli.register_parser(parser_flash)
 
     parser_ssh = subparsers.add_parser(
         "ssh",
@@ -333,13 +351,6 @@ For more detailed information, visit: {help_hyperlink("deploy", "https://docs.cl
         description="manage history",
     )
     history.register_parser(parser_history)
-
-    parser_flash = subparsers.add_parser(
-        "flash",
-        help="flash machines to usb sticks or into isos",
-        description="flash machines to usb sticks or into isos",
-    )
-    flash.register_parser(parser_flash)
 
     parser_state = subparsers.add_parser(
         "state",
