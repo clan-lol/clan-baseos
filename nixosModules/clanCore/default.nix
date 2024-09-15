@@ -20,4 +20,6 @@
     ./zerotier
     ./zfs.nix
   ];
+  # Work around for https://github.com/NixOS/nixpkgs/issues/124215
+  documentation.info.enable = lib.mkDefault false;
 }
