@@ -141,9 +141,9 @@ let
                 throw "Module doesn't have role: '${role}'. Path: ${path} not found."
             ) inverseRoles.${machineName} or [ ];
 
-            roleServiceConfigs = builtins.map (
-              role: serviceConfig.roles.${role}.config or { }
-            ) inverseRoles.${machineName} or [ ];
+            roleServiceConfigs = builtins.filter (m: m != { }) (
+              builtins.map (role: serviceConfig.roles.${role}.config or { }) inverseRoles.${machineName} or [ ]
+            );
 
             customImports = map (s: "${directory}/${s}") (
               globalImports ++ machineImports ++ roleServiceImports
@@ -155,14 +155,19 @@ let
             ++ [
               {
                 imports = [ clan-core.clanModules.${serviceName} ] ++ roleModules ++ customImports;
-                config.clan.${serviceName} = lib.mkMerge (
-                  [
-                    globalConfig
-                    machineServiceConfig
-                  ]
-                  ++ roleServiceConfigs
-                );
               }
+              (lib.optionalAttrs (globalConfig != { } || machineServiceConfig != { } || roleServiceConfigs != [ ])
+                {
+                  config.clan.${serviceName} = lib.mkMerge (
+                    [
+                      (globalConfig)
+                      (lib.traceValSeq machineServiceConfig)
+                    ]
+                    ++ (roleServiceConfigs)
+                  );
+                }
+              )
+
               {
                 config.clan.inventory.services.${serviceName}.${instanceName} = {
                   roles = resolvedRoles;
