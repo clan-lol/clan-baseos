@@ -145,7 +145,7 @@ let
               builtins.map (role: serviceConfig.roles.${role}.config or { }) inverseRoles.${machineName} or [ ]
             );
 
-            customImports = map (s: "${directory}/${s}") (
+            customImports = map (s: if builtins.typeOf s == "string" then "${directory}/${s}" else s) (
               globalImports ++ machineImports ++ roleServiceImports
             );
           in

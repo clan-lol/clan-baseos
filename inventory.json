@@ -26,19 +26,19 @@
         },
         "roles": {
           "default": {
-            "imports": [],
+            "extraModules": [],
             "machines": ["test-inventory-machine"],
             "tags": []
           }
         },
         "config": {},
-        "imports": [],
+        "extraModules": [],
         "machines": {
           "test-inventory-machine": {
             "config": {
               "packages": ["zed-editor"]
             },
-            "imports": []
+            "extraModules": []
           }
         }
       },
@@ -51,19 +51,19 @@
         "roles": {
           "default": {
             "config": {},
-            "imports": [],
+            "extraModules": [],
             "machines": ["test-inventory-machine"],
             "tags": []
           }
         },
         "config": {},
-        "imports": [],
+        "extraModules": [],
         "machines": {
           "test-inventory-machine": {
             "config": {
               "packages": ["chromium"]
             },
-            "imports": []
+            "extraModules": []
           }
         }
       }
@@ -78,19 +78,19 @@
         "roles": {
           "default": {
             "config": {},
-            "imports": [],
+            "extraModules": [],
             "machines": ["test-inventory-machine"],
             "tags": []
           }
         },
         "config": {},
-        "imports": [],
+        "extraModules": [],
         "machines": {
           "test-inventory-machine": {
             "config": {
               "device": "/dev/null"
             },
-            "imports": []
+            "extraModules": []
           }
         }
       }
