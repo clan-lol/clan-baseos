@@ -111,7 +111,10 @@ in
     in
     {
       expr = builtins.attrNames result.nixosConfigurations;
-      expected = [ "test-inventory-machine" ];
+      expected = [
+        "test-backup"
+        "test-inventory-machine"
+      ];
     };
 
   test_buildClan_all_machines =
