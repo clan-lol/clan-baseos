@@ -49,7 +49,7 @@
       packages = {
         clan-cli = pkgs.python3.pkgs.callPackage ./default.nix {
           inherit (inputs) nixpkgs;
-          inherit (self'.packages) inventory-schema classgen;
+          inherit (self'.packages) inventory-schema-abstract classgen;
           clan-core-path = clanCoreWithVendoredDeps;
           includedRuntimeDeps = [
             "age"
@@ -58,7 +58,7 @@
         };
         clan-cli-full = pkgs.python3.pkgs.callPackage ./default.nix {
           inherit (inputs) nixpkgs;
-          inherit (self'.packages) inventory-schema classgen;
+          inherit (self'.packages) inventory-schema-abstract classgen;
           clan-core-path = clanCoreWithVendoredDeps;
           includedRuntimeDeps = lib.importJSON ./clan_cli/nix/allowed-programs.json;
         };

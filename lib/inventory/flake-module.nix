@@ -84,6 +84,19 @@ in
           cp schema.json $out
         '';
       };
+      packages.inventory-schema-abstract = pkgs.stdenv.mkDerivation {
+        name = "inventory-schema";
+        buildInputs = [ pkgs.cue ];
+        src = ./.;
+        buildPhase = ''
+          export SCHEMA=${builtins.toFile "inventory-schema.json" (builtins.toJSON bareSchema.abstractSchema)}
+          cp $SCHEMA schema.json
+          cue import -f -p compose -l '#Root:' schema.json
+          mkdir $out
+          cp schema.cue $out
+          cp schema.json $out
+        '';
+      };
       packages.inventory-schema-pretty = pkgs.stdenv.mkDerivation {
         name = "inventory-schema-pretty";
         buildInputs = [ pkgs.cue ];
