@@ -12,27 +12,22 @@
         # Ensure this is unique among all clans you want to use.
         meta.name = "__CHANGE_ME__";
 
-        # Prerequisite: boot into the installer
+        # Prerequisite: boot into the installer.
         # See: https://docs.clan.lol/getting-started/installer
         # local> mkdir -p ./machines/machine1
-        # local> Edit ./machines/<machine>/configuration.nix to your liking
+        # local> Edit ./machines/<machine>/configuration.nix to your liking.
         machines = {
-          # "jon" will be the hostname of the machine
-          jon = {
-            imports = [ ./machines/jon/configuration.nix ];
-          };
-          # "sara" will be the hostname of the machine
-          sara = {
-            imports = [ ./machines/sara/configuration.nix ];
-          };
+          # The name will be used as hostname by default.
+          jon = { };
+          sara = { };
         };
       };
     in
     {
-      # all machines managed by Clan
+      # All machines managed by Clan.
       inherit (clan) nixosConfigurations clanInternals;
-      # add the Clan cli tool to the dev shell
-      # use the "nix develop" command to enter the dev shell
+      # Add the Clan cli tool to the dev shell.
+      # Use "nix develop" to enter the dev shell.
       devShells =
         clan-core.inputs.nixpkgs.lib.genAttrs
           [
