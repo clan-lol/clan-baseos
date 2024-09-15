@@ -29,4 +29,7 @@
 
   # Work around for https://github.com/NixOS/nixpkgs/issues/124215
   documentation.info.enable = lib.mkDefault false;
+
+  # Don't install the /lib/ld-linux.so.2 stub. This saves one instance of nixpkgs.
+  environment.ldso32 = null;
 }
