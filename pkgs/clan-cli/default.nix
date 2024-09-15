@@ -22,7 +22,7 @@
   nixpkgs,
   includedRuntimeDeps,
 
-  inventory-schema,
+  inventory-schema-abstract,
   classgen,
 }:
 let
@@ -63,7 +63,7 @@ let
     ln -sf ${nixpkgs'} $out/clan_cli/nixpkgs
     cp -r ${../../templates} $out/clan_cli/templates
 
-    ${classgen}/bin/classgen ${inventory-schema}/schema.json $out/clan_cli/inventory/classes.py --stop-at "Service"
+    ${classgen}/bin/classgen ${inventory-schema-abstract}/schema.json $out/clan_cli/inventory/classes.py --stop-at "Service"
   '';
 
   # Create a custom nixpkgs for use within the project
