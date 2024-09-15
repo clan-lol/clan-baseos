@@ -223,6 +223,14 @@ in
   imports = [
     # Merge the inventory file
     { inventory = inventoryLoaded; }
+    # TODO: Figure out why this causes infinite recursion
+    {
+      inventory.machines = lib.optionalAttrs (builtins.pathExists "${directory}/machines") (
+        builtins.mapAttrs (_n: _v: { }) (
+          (lib.filterAttrs (_: t: t == "directory") (builtins.readDir "${directory}/machines"))
+        )
+      );
+    }
     # Merge the meta attributes from the buildClan function
     { inventory.meta = if config.meta != null then config.meta else { }; }
   ];
