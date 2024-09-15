@@ -62,6 +62,7 @@ let
       ```
 
     '';
+    apply = value: if lib.isString value then value else builtins.seq (builtins.toJSON value) value;
     default = [ ];
     type = types.listOf (
       types.oneOf [
