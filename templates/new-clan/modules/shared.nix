@@ -6,7 +6,7 @@
     # Set a root password
     clan-core.clanModules.root-password
     clan-core.clanModules.user-password
-    clan-core.clanModules.stateVersion
+    clan-core.clanModules.state-version
   ];
 
   # Locale service discovery and mDNS
