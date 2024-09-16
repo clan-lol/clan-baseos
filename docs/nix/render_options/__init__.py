@@ -205,7 +205,7 @@ Predefined roles
 
 {roles_list}
 
-For more information, see the [inventory guide](../../../guides/inventory/).
+For more information, see the [inventory guide](../../guides/inventory.md).
 """
     return ""
 
