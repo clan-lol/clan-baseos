@@ -65,7 +65,7 @@ class ClanStore:
         self._emitter.connect(signal, cb)
 
     def set_logging_vm(self, ident: str) -> VMObject | None:
-        vm = self.get_vm(ClanURI(f"clan://{ident}"))
+        vm = self.get_vm(ClanURI.from_str(f"clan://{ident}"))
 
         if vm is not None:
             self._logging_vm = vm

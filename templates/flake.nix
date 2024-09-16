@@ -15,6 +15,10 @@
           description = "Flake-parts";
           path = ./flake-parts;
         };
+        flash-installer = {
+          description = "Flash installer";
+          path = ./flash-installer;
+        };
       };
     };
 }

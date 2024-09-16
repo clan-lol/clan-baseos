@@ -4,8 +4,6 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-from .errors import ClanError
-
 
 @dataclass
 class FlakeId:
@@ -54,46 +52,20 @@ class FlakeId:
         return not self.is_local()
 
 
+def _parse_url(comps: urllib.parse.ParseResult) -> FlakeId:
+    if comps.scheme == "" or "file" in comps.scheme:
+        res_p = Path(comps.path).expanduser().resolve()
+        flake_id = FlakeId(str(res_p))
+    else:
+        flake_id = FlakeId(comps.geturl())
+    return flake_id
+
+
 # Define the ClanURI class
 @dataclass
 class ClanURI:
     flake: FlakeId
     machine_name: str
-
-    # Initialize the class with a clan:// URI
-    def __init__(self, uri: str) -> None:
-        # users might copy whitespace along with the uri
-        uri = uri.strip()
-        self._orig_uri = uri
-
-        # Check if the URI starts with clan://
-        # If it does, remove the clan:// prefix
-        if uri.startswith("clan://"):
-            nested_uri = uri[7:]
-        else:
-            msg = f"Invalid uri: expected clan://, got {uri}"
-            raise ClanError(msg)
-
-        # Parse the URI into components
-        # url://netloc/path;parameters?query#fragment
-        components: urllib.parse.ParseResult = urllib.parse.urlparse(nested_uri)
-
-        # Replace the query string in the components with the new query string
-        clean_comps = components._replace(query=components.query, fragment="")
-
-        # Parse the URL into a ClanUrl object
-        self.flake = self._parse_url(clean_comps)
-        self.machine_name = "defaultVM"
-        if components.fragment:
-            self.machine_name = components.fragment
-
-    def _parse_url(self, comps: urllib.parse.ParseResult) -> FlakeId:
-        if comps.scheme == "" or "file" in comps.scheme:
-            res_p = Path(comps.path).expanduser().resolve()
-            flake_id = FlakeId(str(res_p))
-        else:
-            flake_id = FlakeId(comps.geturl())
-        return flake_id
 
     def get_url(self) -> str:
         return str(self.flake)
@@ -104,13 +76,31 @@ class ClanURI:
         url: str,
         machine_name: str | None = None,
     ) -> "ClanURI":
-        clan_uri = ""
-        if not url.startswith("clan://"):
-            clan_uri += "clan://"
-
-        clan_uri += url
+        uri = url
 
         if machine_name:
-            clan_uri += f"#{machine_name}"
+            uri += f"#{machine_name}"
 
-        return cls(clan_uri)
+        # users might copy whitespace along with the uri
+        uri = uri.strip()
+
+        # Check if the URI starts with clan://
+        # If it does, remove the clan:// prefix
+        prefix = "clan://"
+        if uri.startswith(prefix):
+            uri = uri[len(prefix) :]
+
+        # Parse the URI into components
+        # url://netloc/path;parameters?query#fragment
+        components: urllib.parse.ParseResult = urllib.parse.urlparse(uri)
+
+        # Replace the query string in the components with the new query string
+        clean_comps = components._replace(query=components.query, fragment="")
+
+        # Parse the URL into a ClanUrl object
+        flake = _parse_url(clean_comps)
+        machine_name = "defaultVM"
+        if components.fragment:
+            machine_name = components.fragment
+
+        return cls(flake, machine_name)

@@ -335,7 +335,7 @@ class ClanList(Gtk.Box):
 
     def on_join_request(self, source: Any, url: str) -> None:
         log.debug("Join request: %s", url)
-        clan_uri = ClanURI(url)
+        clan_uri = ClanURI.from_str(url)
         JoinList.use().push(clan_uri, self.on_after_join)
 
     def on_after_join(self, source: JoinValue) -> None:
