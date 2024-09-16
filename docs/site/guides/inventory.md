@@ -12,19 +12,6 @@ This guide will walk you through setting up a backup service, where the inventor
 
     Stabilizing the API is a priority.
 
-## Categories
-
- <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-    <!-- Chip 1 -->
-    <div style="background-color: #F5B7B1; color: white; padding: 10px; border-radius: 20px; text-align: center;">
-        Light Coral
-    </div>
-    <!-- Chip 2 -->
-    <div style="background-color: #85C1E9; color: white; padding: 10px; border-radius: 20px; text-align: center;">
-        Baby Blue
-    </div>
-</div>
-
 ## Prerequisites
 
 - [x] [Add machines](./add-machines.md) to your clan.

@@ -212,6 +212,9 @@ For more information, see the [inventory guide](../../guides/inventory.md).
 
 clan_modules_descr = """Clan modules are [NixOS modules](https://wiki.nixos.org/wiki/NixOS_modules) which have been enhanced with additional features provided by Clan, with certain option types restricted to enable configuration through a graphical interface.
 
+!!! note "🔹 = [inventory](../../guides/inventory.md) supported
+    Modules with this indicator support the [inventory](../../guides/inventory.md) feature.
+
 """
 
 
@@ -245,15 +248,6 @@ def produce_clan_modules_docs() -> None:
 
     with Path(CLAN_MODULES).open() as f:
         links: dict[str, str] = json.load(f)
-
-    # with open(CLAN_MODULES_READMES) as readme:
-    #     readme_map: dict[str, str] = json.load(readme)
-
-    # with open(CLAN_MODULES_META) as f:
-    #     meta_map: dict[str, Any] = json.load(f)
-    #     print(meta_map)
-
-    # {'borgbackup': '/nix/store/hi17dwgy7963ddd4ijh81fv0c9sbh8sw-options.json', ... }
 
     modules_index = "# Modules Overview\n\n"
     modules_index += clan_modules_descr
