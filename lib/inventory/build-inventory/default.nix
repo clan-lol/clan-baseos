@@ -37,44 +37,18 @@ let
         ) [ ] members.tags or [ ]);
     };
 
+  checkService =
+    serviceName:
+    let
+      frontmatter = clan-core.lib.modules.getFrontmatter serviceName;
+    in
+    if builtins.elem "inventory" frontmatter.features or [ ] then true else false;
+
   /*
     Returns a NixOS configuration for every machine in the inventory.
 
     machinesFromInventory :: Inventory -> { ${machine_name} :: NixOSConfiguration }
   */
-
-  # { client_1_machine = { tags = [ "backup" ]; }; client_2_machine = { tags = [ "backup" ]; }; not_used_machine = { }; }
-  getAllMachines =
-    inventory:
-    lib.foldlAttrs (
-      res: serviceName: serviceConfigs:
-      (lib.foldlAttrs (
-        res: instanceName: serviceConfig:
-        lib.foldlAttrs (
-          res: roleName: members:
-          let
-            resolved = resolveTags {
-              inherit
-                serviceName
-                instanceName
-                roleName
-                inventory
-                members
-                ;
-            };
-          in
-          res
-          // builtins.listToAttrs (
-            builtins.map (m: {
-              name = m;
-              value = { };
-            }) resolved.machines
-          )
-        ) res serviceConfig.roles
-      ) res serviceConfigs)
-    ) { } (inventory.services or { })
-    // inventory.machines or { };
-
   buildInventory =
     { inventory, directory }:
     # For every machine in the inventory, build a NixOS configuration
@@ -178,7 +152,7 @@ let
             ]
           else
             acc2
-        ) [ ] serviceConfigs)
+        ) [ ] (serviceConfigs))
       ) [ ] inventory.services
       # Append each machine config
       ++ [
@@ -188,9 +162,35 @@ let
         (lib.optionalAttrs (machineConfig.deploy.targetHost or null != null) {
           config.clan.core.networking.targetHost = machineConfig.deploy.targetHost;
         })
+        {
+          assertions = lib.foldlAttrs (
+            acc: serviceName: _:
+            acc
+            ++ [
+              {
+                assertion = checkService serviceName;
+                message = ''
+                  Service ${serviceName} cannot be used in inventory. It does not declare the 'inventory' feature.
+
+
+                          To allow it add the following to the beginning of the README.md of the module:
+
+                            ---
+                            ...
+
+                            features = [ "inventory" ]
+                            ---
+
+                          Also make sure to test the module with the 'inventory' feature enabled.
+
+                '';
+              }
+            ]
+          ) [ ] inventory.services;
+        }
       ]
-    ) (getAllMachines inventory);
+    ) inventory.machines;
 in
 {
-  inherit buildInventory getAllMachines;
+  inherit buildInventory;
 }

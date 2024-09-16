@@ -1,37 +1,8 @@
 { inventory, clan-core, ... }:
 let
-  inherit (inventory) buildInventory getAllMachines;
+  inherit (inventory) buildInventory;
 in
 {
-  test_get_all_used_machines = {
-    # Test that all machines are returned
-    expr = getAllMachines {
-      machines = {
-        machine_3 = {
-          tags = [ "tag_3" ];
-        };
-      };
-      services = {
-        borgbackup.instance_1 = {
-          roles.server.machines = [ "backup_server" ];
-          roles.client.machines = [
-            "client_1_machine"
-            "client_2_machine"
-          ];
-          roles.client.tags = [ "tag_3" ];
-        };
-      };
-    };
-    expected = {
-      backup_server = { };
-      client_1_machine = { };
-      client_2_machine = { };
-      machine_3 = {
-        tags = [ "tag_3" ];
-      };
-    };
-  };
-
   test_inventory_empty = {
     # Empty inventory should return an empty module
     expr = buildInventory {

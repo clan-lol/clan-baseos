@@ -1,6 +1,7 @@
 ---
 description = "Efficient, deduplicating backup program with optional compression and secure encryption."
-categories = ["backup"]
+categories = ["System"]
+features = [ "inventory" ]
 ---
 BorgBackup (short: Borg) gives you:
 

@@ -12,7 +12,7 @@ rec {
     in
     readmeContents;
 
-  getShortDescription =
+  getFrontmatter =
     modulename:
     let
       content = getReadme modulename;
@@ -21,14 +21,21 @@ rec {
       parsed = builtins.partition ({ index, ... }: if index >= 2 then false else true) (
         lib.filter ({ index, ... }: index != 0) (lib.imap0 (index: part: { inherit index part; }) parts)
       );
-
-      # Use this if the content is needed
-      # readmeContent = lib.concatMapStrings (v: "---" + v.part) parsed.wrong;
-
       meta = builtins.fromTOML (builtins.head parsed.right).part;
     in
     if (builtins.length parts >= 3) then
-      meta.description
+      meta
     else
-      throw "Short description delimiter `---` not found in README.md for module ${modulename}";
+      throw ''
+        TOML Frontmatter not found in README.md for module ${modulename}
+
+        Please add the following to the top of your README.md:
+
+        ---
+        description = "Your description here"
+        categories = [ "Your categories here" ]
+        features = [ "inventory" ]
+        ---
+        ...rest of your README.md...
+      '';
 }

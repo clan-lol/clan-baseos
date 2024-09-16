@@ -1,6 +1,7 @@
 ---
 description = "Configures partitioning of the main disk"
-categories = ["disk-layout"]
+categories = ["System"]
+features = [ "inventory" ]
 ---
 # Primary Disk Layout
 
