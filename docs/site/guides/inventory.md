@@ -25,7 +25,9 @@ buildClan {
 
 ## How to add machines
 
-Machines can be added via `inventory.machines` OR via `buildClan` directly.
+Every machine of the form `machines/{machineName}/configuration.nix` will be registered automatically.
+
+Machines can also be manually added under `inventory.machines` OR via `buildClan` directly.
 
 !!! Note
     It doesn't matter where the machine gets introduced to buildClan - All delarations are valid, duplications are merged.
@@ -47,13 +49,8 @@ buildClan {
     inventory = {
         machines = {
             "backup_server" = {
-                # Don't include any nixos config here
-                # The following fields are avilable
-                # description: null | string
-                # icon:        null | string
-                # name:        string
-                # system:      null | string
-                # tags:        [...string]
+                # Don't include any nixos config here.
+                # See the Inventory API Docs for the available attributes.
             };
             "jon" = {
                 # Same as above
@@ -74,6 +71,10 @@ Currently the inventory interface is implemented by the following clanModules
 - [single-disk](../reference/clanModules/single-disk.md)
 
 See the respective module documentation for available roles.
+
+!!! Note
+    It is possible to use any [clanModule](../reference/clanModules/index.md) in the inventory and add machines via
+    `roles.default.*`
 
 ### Adding services to machines
 
@@ -117,9 +118,7 @@ Each service can still be customized and configured according to the modules opt
     }
     ```
 
-### Scalabling the Backup
-
-The inventory allows machines to set **Tags**
+### Scaling the Backup
 
 It is possible to add services to multiple machines via tags. The service instance gets added in the specified role. In this case `role = "client"`
 
