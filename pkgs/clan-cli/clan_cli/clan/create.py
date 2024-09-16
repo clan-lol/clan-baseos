@@ -68,7 +68,7 @@ def create_clan(options: CreateOptions) -> CreateClanResponse:
     )
 
     if options.initial:
-        init_inventory(options.directory, init=options.initial)
+        init_inventory(str(options.directory), init=options.initial)
 
     response = CreateClanResponse(
         flake_init=flake_init,

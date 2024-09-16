@@ -107,7 +107,9 @@ API.register(open_file)
         self.register(wrapper)
         return fn
 
-    def register(self, fn: Callable[..., T]) -> Callable[..., T]:
+    F = TypeVar("F", bound=Callable[..., Any])
+
+    def register(self, fn: F) -> F:
         if fn.__name__ in self._registry:
             msg = f"Function {fn.__name__} already registered"
             raise ClanError(msg)

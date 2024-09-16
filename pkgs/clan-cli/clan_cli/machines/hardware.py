@@ -198,7 +198,7 @@ def generate_machine_hardware_info(
         f"HW/report: Hardware configuration for {machine_name}",
     )
     try:
-        show_machine_hardware_platform(clan_dir, machine_name)
+        show_machine_hardware_platform(clan_dir.path, machine_name)
     except ClanCmdError as e:
         log.exception("Failed to evaluate hardware-configuration.nix")
         # Restore the backup file
@@ -235,7 +235,7 @@ def hw_generate_command(args: argparse.Namespace) -> None:
         force=args.force,
     )
     hw_info = generate_machine_hardware_info(
-        opts.flake, opts.machine, opts.target_host, opts.password, opts.force
+        opts.flake, opts.machine, opts.target_host, opts.password
     )
     print("Successfully generated hardware information.")
     print(f"Target: {opts.machine} ({opts.target_host})")
