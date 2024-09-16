@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 import argparse
 
-from .flash_command import register_flash_apply_parser
+from .flash_cmd import register_flash_apply_parser
 from .list import register_flash_list_parser
 
 
@@ -17,13 +17,8 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
     apply_parser = subparser.add_parser(
         "apply",
         help="Flash a machine",
-        formatter_class=argparse.RawTextHelpFormatter,
     )
     register_flash_apply_parser(apply_parser)
 
-    list_parser = subparser.add_parser(
-        "list",
-        help="List options",
-        formatter_class=argparse.RawTextHelpFormatter,
-    )
+    list_parser = subparser.add_parser("list", help="List options")
     register_flash_list_parser(list_parser)

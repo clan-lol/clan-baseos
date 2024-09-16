@@ -4,6 +4,7 @@ import argparse
 from .create import register_create_parser
 from .delete import register_delete_parser
 from .hardware import register_hw_generate
+from .import_cmd import register_import_parser
 from .install import register_install_parser
 from .list import register_list_parser
 from .update import register_update_parser
@@ -113,3 +114,22 @@ For more detailed information, visit: https://docs.clan.lol/getting-started/depl
         formatter_class=argparse.RawTextHelpFormatter,
     )
     register_install_parser(install_parser)
+
+    import_parser = subparser.add_parser(
+        "import",
+        help="Import a machine",
+        description="Import a template machine from a local or remote source.",
+        epilog=(
+            """
+
+Examples:
+    $ clan machines import flash-installer
+    Will import a machine from the flash-installer template from clan-core.
+
+    $ clan machines import flash-installer --src https://git.clan.lol/clan/clan-core
+    Will import a machine from the flash-installer template from clan-core but with the source set to the provided URL.
+    """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    register_import_parser(import_parser)

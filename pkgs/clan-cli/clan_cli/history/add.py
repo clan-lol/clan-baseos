@@ -111,7 +111,9 @@ def add_history_command(args: argparse.Namespace) -> None:
 
 # takes a (sub)parser and configures it
 def register_add_parser(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("uri", type=ClanURI, help="Path to the flake", default=".")
+    parser.add_argument(
+        "uri", type=ClanURI.from_str, help="Path to the flake", default="."
+    )
     parser.add_argument(
         "--all", help="Add all machines", default=False, action="store_true"
     )
