@@ -124,7 +124,7 @@
             classFile = "classes.py";
           };
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json b_classes.py --stop-at "Service"
+            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema-abstract}/schema.json b_classes.py --stop-at "Service"
             file1=$classFile
             file2=b_classes.py
 
