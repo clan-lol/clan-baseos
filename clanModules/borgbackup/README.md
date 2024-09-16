@@ -8,6 +8,6 @@ BorgBackup (short: Borg) gives you:
 - Secure, authenticated encryption.
 - Compression: lz4, zstd, zlib, lzma or none.
 - Mountable backups with FUSE.
-- Easy installation on multiple platforms: Linux, macOS, BSD, ...
+- Easy installation on multiple platforms: Linux, macOS, BSD, …
 - Free software (BSD license).
-- Backed by a large and active open source community.
+- Backed by a large and active open-source community.
