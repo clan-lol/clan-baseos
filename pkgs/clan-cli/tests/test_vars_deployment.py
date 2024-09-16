@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from age_keys import SopsSetup
+from clan_cli import cmd
 from clan_cli.nix import nix_eval, run
 from fixtures_flakes import generate_flake
 from helpers import cli
@@ -90,6 +91,8 @@ def test_vm_deployment(
             )
         ).stdout.strip()
         assert "no-such-path" not in shared_secret_path
+    # run nix flake lock
+    cmd.run(["nix", "flake", "lock"])
     vm_m1 = run_vm_in_thread("m1_machine")
     vm_m2 = run_vm_in_thread("m2_machine", ssh_port=2222)
     qga_m1 = qga_connect("m1_machine", vm_m1)
