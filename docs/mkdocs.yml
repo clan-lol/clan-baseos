@@ -51,10 +51,12 @@ nav:
       - Flake-parts: getting-started/flake-parts.md
   - Guides:
       - guides/index.md
+      - Adding Machines: guides/add-machines.md
       - Inventory: guides/inventory.md
   - Reference:
       - reference/index.md
       - Clan Modules:
+          - reference/clanModules/index.md
           - reference/clanModules/admin.md
           - reference/clanModules/borgbackup-static.md
           - reference/clanModules/borgbackup.md
@@ -65,7 +67,6 @@ nav:
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
           - reference/clanModules/heisenbridge.md
-          - reference/clanModules/index.md
           - reference/clanModules/iwd.md
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md

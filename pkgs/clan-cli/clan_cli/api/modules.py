@@ -1,9 +1,9 @@
 import json
 import re
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, get_args, get_type_hints
+from typing import Any, TypedDict, get_args, get_type_hints
 
 from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanCmdError, ClanError
@@ -15,10 +15,47 @@ from . import API
 from .serde import from_dict
 
 
+class CategoryInfo(TypedDict):
+    color: str
+    description: str
+
+
 @dataclass
 class Frontmatter:
     description: str
-    categories: list[str] | None = None
+    categories: list[str] = field(default_factory=lambda: ["Uncategorized"])
+    features: list[str] = field(default_factory=list)
+
+    @property
+    def categories_info(self) -> dict[str, CategoryInfo]:
+        category_map: dict[str, CategoryInfo] = {
+            "AudioVideo": {
+                "color": "#AEC6CF",
+                "description": "Applications for presenting, creating, or processing multimedia (audio/video)",
+            },
+            "Audio": {"color": "#CFCFC4", "description": "Audio"},
+            "Video": {"color": "#FFD1DC", "description": "Video"},
+            "Development": {"color": "#F49AC2", "description": "Development"},
+            "Education": {"color": "#B39EB5", "description": "Education"},
+            "Game": {"color": "#FFB347", "description": "Game"},
+            "Graphics": {"color": "#FF6961", "description": "Graphics"},
+            "Social": {"color": "#76D7C4", "description": "Social"},
+            "Network": {"color": "#77DD77", "description": "Network"},
+            "Office": {"color": "#85C1E9", "description": "Office"},
+            "Science": {"color": "#779ECB", "description": "Science"},
+            "System": {"color": "#F5C3C0", "description": "System"},
+            "Settings": {"color": "#03C03C", "description": "Settings"},
+            "Utility": {"color": "#B19CD9", "description": "Utility"},
+            "Uncategorized": {"color": "#C23B22", "description": "Uncategorized"},
+        }
+
+        return category_map
+
+    def __post_init__(self) -> None:
+        for category in self.categories:
+            if category not in self.categories_info:
+                msg = f"Invalid category: {category}"
+                raise ValueError(msg)
 
 
 def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatter, str]:

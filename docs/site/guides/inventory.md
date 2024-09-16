@@ -4,73 +4,36 @@
 
 See [Inventory API Documentation](../reference/nix-api/inventory.md)
 
-This guide will walk you through setting up a backup-service, where the inventory becomes useful.
+This guide will walk you through setting up a backup service, where the inventory becomes useful.
 
-## Prerequisites Meta (optional)
+!!! example "Experimental status"
+    The inventory implementation is not considered stable yet.
+    We are actively soliciting feedback from users.
 
-Metadata about the clan, will be displayed upfront in the upcomming clan-app, make sure to choose a unique name.
+    Stabilizing the API is a priority.
 
-Make sure to set `name` either via `inventory.meta` OR via `clan.meta`.
+## Categories
 
-```{.nix hl_lines="3-8"}
-buildClan {
-    inventory = {
-        meta = {
-            name = "Superclan"
-            description = "Awesome backups and family stuff"
-        };
-    };
-}
-```
+ <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+    <!-- Chip 1 -->
+    <div style="background-color: #F5B7B1; color: white; padding: 10px; border-radius: 20px; text-align: center;">
+        Light Coral
+    </div>
+    <!-- Chip 2 -->
+    <div style="background-color: #85C1E9; color: white; padding: 10px; border-radius: 20px; text-align: center;">
+        Baby Blue
+    </div>
+</div>
 
-## How to add machines
+## Prerequisites
 
-Every machine of the form `machines/{machineName}/configuration.nix` will be registered automatically.
-
-Machines can also be manually added under `inventory.machines` OR via `buildClan` directly.
-
-!!! Note
-    It doesn't matter where the machine gets introduced to buildClan - All delarations are valid, duplications are merged.
-
-    However the clan-app (UI) will create machines in the inventory, because it cannot create arbitrary nix code or nixos configs.
-
-In the following example `backup_server` is one machine - it may specify parts of its configuration in different places.
-
-```{.nix hl_lines="3-5 12-20"}
-buildClan {
-    machines = {
-        "backup_server" = {
-            # Any valid nixos config
-        };
-        "jon" = {
-            # Any valid nixos config
-        };
-    };
-    inventory = {
-        machines = {
-            "backup_server" = {
-                # Don't include any nixos config here.
-                # See the Inventory API Docs for the available attributes.
-            };
-            "jon" = {
-                # Same as above
-            };
-        };
-    };
-}
-```
+- [x] [Add machines](./add-machines.md) to your clan.
 
 ## Services
 
-### Available clanModules
+The inventory defines `services`. Membership of `machines` is defined via roles exclusively.
 
-Currently the inventory interface is implemented by the following clanModules
-
-- [borgbackup](../reference/clanModules/borgbackup.md)
-- [packages](../reference/clanModules/packages.md)
-- [single-disk](../reference/clanModules/single-disk.md)
-
-See the respective module documentation for available roles.
+See the each [module documentation](../reference/clanModules/index.md) for available roles.
 
 !!! Note
     It is possible to use any [clanModule](../reference/clanModules/index.md) in the inventory and add machines via
@@ -95,21 +58,12 @@ Each service can still be customized and configured according to the modules opt
 
     See also: [Multiple Service Instances](#multiple-service-instances)
 
-    ```{.nix hl_lines="14-17"}
+    ```{.nix hl_lines="6-7"}
     buildClan {
         inventory = {
-            machines = {
-                "backup_server" = {
-                    # Don't include any nixos config here
-                    # See inventory.Machines for available options
-                };
-                "jon" = {
-                    # Don't include any nixos config here
-                    # See inventory.Machines for available options
-                };
-            };
             services = {
                 borgbackup.instance_1 = {
+                    # Machines can be added here.
                     roles.client.machines = [ "jon" ];
                     roles.server.machines = [ "backup_server" ];
                 };
@@ -120,24 +74,23 @@ Each service can still be customized and configured according to the modules opt
 
 ### Scaling the Backup
 
-It is possible to add services to multiple machines via tags. The service instance gets added in the specified role. In this case `role = "client"`
+The inventory allows machines to set Tags
+
+It is possible to add services to multiple machines via tags as shown
 
 !!! Example "Tags Example"
 
-    ```{.nix hl_lines="9 12 17"}
+    ```{.nix hl_lines="5 8 14"}
     buildClan {
         inventory = {
             machines = {
-                "backup_server" = {
-                    # Don't include any nixos config here
-                    # See inventory.Machines for available options
-                };
                 "jon" = {
                     tags = [ "backup" ];
                 };
                 "sara" = {
                     tags = [ "backup" ];
                 };
+                # ...
             };
             services = {
                 borgbackup.instance_1 = {
@@ -172,7 +125,7 @@ It is possible to add services to multiple machines via tags. The service instan
                     roles.client.machines = [ "jon" ];
                     roles.server.machines = [ "backup_server" ];
                 };
-                borgbackup.instance_1 = {
+                borgbackup.instance_2 = {
                     roles.client.machines = [ "backup_server" ];
                     roles.server.machines = [ "backup_backup_server" ];
                 };

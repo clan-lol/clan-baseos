@@ -23,11 +23,14 @@
         modulename: _: jsonLib.parseOptions (optionsFromModule modulename) { }
       ) clanModules;
 
-      clanModuleFunctionSchemas = lib.mapAttrsFlatten (modulename: _: {
-        name = modulename;
-        description = self.lib.modules.getShortDescription modulename;
-        parameters = jsonLib.parseOptions (optionsFromModule modulename) { };
-      }) clanModules;
+      clanModuleFunctionSchemas = lib.mapAttrsFlatten (
+        modulename: _:
+        (self.lib.modules.getFrontmatter modulename)
+        // {
+          name = modulename;
+          parameters = jsonLib.parseOptions (optionsFromModule modulename) { };
+        }
+      ) clanModules;
     in
     rec {
       checks = {

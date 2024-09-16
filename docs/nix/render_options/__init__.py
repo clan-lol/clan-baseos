@@ -28,7 +28,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from clan_cli.api.modules import Frontmatter, extract_frontmatter
+from clan_cli.api.modules import Frontmatter, extract_frontmatter, get_roles
 from clan_cli.errors import ClanError
 
 # Get environment variables
@@ -125,14 +125,15 @@ def render_option(name: str, option: dict[str, Any], level: int = 3) -> str:
     return res
 
 
-def module_header(module_name: str) -> str:
-    return f"# {module_name}\n\n"
+def module_header(module_name: str, has_inventory_feature: bool = False) -> str:
+    indicator = " 🔹" if has_inventory_feature else ""
+    return f"# {module_name}{indicator}\n\n"
 
 
 def module_usage(module_name: str) -> str:
     return f"""## Usage
 
-To use this module, import it like this:
+To use this module, import it like th:
 
 ```nix
 {{config, lib, inputs, ...}}: {{
@@ -198,25 +199,13 @@ def render_roles(roles: list[str] | None, module_name: str) -> str:
     if roles:
         roles_list = "\n".join([f"    - `{r}`" for r in roles])
         return f"""
-???+ tip "Inventory usage"
+## Inventory Roles
 
-    Predefined roles:
+Predefined roles
 
 {roles_list}
 
-    Usage:
-
-    ```{{.nix hl_lines="4"}}
-    buildClan {{
-      inventory.services = {{
-        {module_name}.instance_1 = {{
-            roles.{roles[0]}.machines = [ "sara_machine" ];
-            # ...
-        }};
-      }};
-    }}
-    ```
-
+For more information, see the [inventory guide](../../guides/inventory.md).
 """
     return ""
 
@@ -224,6 +213,21 @@ def render_roles(roles: list[str] | None, module_name: str) -> str:
 clan_modules_descr = """Clan modules are [NixOS modules](https://wiki.nixos.org/wiki/NixOS_modules) which have been enhanced with additional features provided by Clan, with certain option types restricted to enable configuration through a graphical interface.
 
 """
+
+
+def render_categories(categories: list[str], frontmatter: Frontmatter) -> str:
+    cat_info = frontmatter.categories_info
+    res = """<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">"""
+    for cat in categories:
+        color = cat_info[cat]["color"]
+        # description = cat_info[cat]["description"]
+        res += f"""
+    <div style="background-color: {color}; color: white; padding: 10px; border-radius: 20px; text-align: center;">
+        {cat}
+    </div>
+"""
+    res += "</div>"
+    return res
 
 
 def produce_clan_modules_docs() -> None:
@@ -270,16 +274,21 @@ def produce_clan_modules_docs() -> None:
         with (Path(options_file) / "share/doc/nixos/options.json").open() as f:
             options: dict[str, dict[str, Any]] = json.load(f)
             print(f"Rendering options for {module_name}...")
-            output = module_header(module_name)
+            output = module_header(module_name, "inventory" in frontmatter.features)
 
             if frontmatter.description:
                 output += f"**{frontmatter.description}**\n\n"
+
+            output += "## Categories\n\n"
+            output += render_categories(frontmatter.categories, frontmatter)
+            output += "\n---\n\n"
+
             output += f"{readme_content}\n"
 
             # get_roles(str) -> list[str] | None
-            # roles = get_roles(CLAN_CORE_PATH / "clanModules" / module_name)
-            # if roles:
-            #     output += render_roles(roles, module_name)
+            roles = get_roles(CLAN_CORE_PATH / "clanModules" / module_name)
+            if roles:
+                output += render_roles(roles, module_name)
 
             output += module_usage(module_name)
 

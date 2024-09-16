@@ -68,7 +68,7 @@ let
           hwConfig = "${directory}/machines/${name}/hardware-configuration.nix";
 
           facterModules = lib.optionals (builtins.pathExists facterJson) [
-            "${clan-core.inputs.nixos-facter-modules}/modules/nixos/facter.nix"
+            clan-core.inputs.nixos-facter-modules.nixosModules.facter
             { config.facter.reportPath = facterJson; }
           ];
         in
@@ -230,6 +230,9 @@ in
           (lib.filterAttrs (_: t: t == "directory") (builtins.readDir "${directory}/machines"))
         )
       );
+    }
+    {
+      inventory.machines = lib.mapAttrs (_n: _: { }) config.machines;
     }
     # Merge the meta attributes from the buildClan function
     { inventory.meta = if config.meta != null then config.meta else { }; }
