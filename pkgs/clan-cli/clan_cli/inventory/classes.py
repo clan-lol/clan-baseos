@@ -35,5 +35,5 @@ Service = dict[str, Any]
 @dataclass
 class Inventory:
     meta: Meta
-    services: Service
     machines: dict[str, Machine] = field(default_factory = dict)
+    services: dict[str, Service] = field(default_factory = dict)
