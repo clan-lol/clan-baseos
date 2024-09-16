@@ -1,6 +1,5 @@
 {
   imports = [
-    ./hardware-configuration.nix
     ../../modules/disko.nix
     ../../modules/shared.nix
     # enables GNOME desktop (optional)
