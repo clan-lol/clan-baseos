@@ -2,8 +2,6 @@
 description = "Email-based instant messaging for Desktop."
 ---
 
-!!! warning "Under construction"
-
 !!! info
     This module will automatically configure an email server on the machine for handling the e-mail messaging seamlessly.
 
