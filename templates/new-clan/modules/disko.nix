@@ -1,4 +1,9 @@
-{ lib, clan-core, ... }:
+{
+  lib,
+  clan-core,
+  config,
+  ...
+}:
 
 let
   suffix = config.clan.core.vars.generators.disk-id.files.diskId.value;
