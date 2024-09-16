@@ -1,6 +1,5 @@
 {
   imports = [
-    ./hardware-configuration.nix
     # contains your disk format and partitioning configuration.
     ../../modules/disko.nix
     # this file is shared among all machines
