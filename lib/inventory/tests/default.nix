@@ -88,9 +88,9 @@ in
         not_used_machine = builtins.length configs.not_used_machine;
       };
       expected = {
-        client_1_machine = 5;
-        client_2_machine = 5;
-        not_used_machine = 2;
+        client_1_machine = 6;
+        client_2_machine = 6;
+        not_used_machine = 3;
       };
     };
 

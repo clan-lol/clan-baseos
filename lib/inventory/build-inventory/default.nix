@@ -189,7 +189,7 @@ let
           ) [ ] inventory.services;
         }
       ]
-    ) inventory.machines;
+    ) (inventory.machines or { });
 in
 {
   inherit buildInventory;
