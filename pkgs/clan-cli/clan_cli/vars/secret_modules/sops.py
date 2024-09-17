@@ -60,6 +60,7 @@ class SecretStore(SecretStoreBase):
             value,
             add_machines=[self.machine.name],
             add_groups=self.machine.deployment["sops"]["defaultGroups"],
+            git_commit=False,
         )
         return path
 

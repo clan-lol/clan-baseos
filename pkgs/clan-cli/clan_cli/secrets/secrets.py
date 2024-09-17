@@ -88,6 +88,7 @@ def encrypt_secret(
     add_users: list[str] | None = None,
     add_machines: list[str] | None = None,
     add_groups: list[str] | None = None,
+    git_commit: bool = True,
 ) -> None:
     if add_groups is None:
         add_groups = []
@@ -145,11 +146,12 @@ def encrypt_secret(
     secret_path = secret_path / "secret"
     encrypt_file(secret_path, value, sorted(recipient_keys))
     files_to_commit.append(secret_path)
-    commit_files(
-        files_to_commit,
-        flake_dir,
-        f"Update secret {secret_path.name}",
-    )
+    if git_commit:
+        commit_files(
+            files_to_commit,
+            flake_dir,
+            f"Update secret {secret_path.parent.name}",
+        )
 
 
 def remove_secret(flake_dir: Path, secret: str) -> None:

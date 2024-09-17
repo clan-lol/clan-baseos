@@ -181,7 +181,7 @@ def execute_generator(
     commit_files(
         files_to_commit,
         machine.flake_dir,
-        f"Update facts/secrets for service {generator_name} in machine {machine.name}",
+        f"Update vars via generator {generator_name} for machine {machine.name}",
     )
 
 

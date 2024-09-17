@@ -535,3 +535,63 @@ def test_api_set_prompts(
         ],
     )
     assert store.get("my_generator", "prompt1").decode() == "input2"
+
+
+@pytest.mark.impure
+def test_commit_message(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    config = nested_dict()
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["script"] = "echo hello > $out/my_value"
+    my_secret_generator = config["clan"]["core"]["vars"]["generators"][
+        "my_secret_generator"
+    ]
+    my_secret_generator["files"]["my_secret"]["secret"] = True
+    my_secret_generator["script"] = "echo hello > $out/my_secret"
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+        monkeypatch=monkeypatch,
+    )
+    monkeypatch.chdir(flake.path)
+    cli.run(
+        [
+            "vars",
+            "generate",
+            "--flake",
+            str(flake.path),
+            "my_machine",
+            "--service",
+            "my_generator",
+        ]
+    )
+    # get last commit message
+    commit_message = run(
+        ["git", "log", "-1", "--pretty=%B"],
+    ).stdout.strip()
+    assert (
+        commit_message
+        == "Update vars via generator my_generator for machine my_machine"
+    )
+    cli.run(
+        [
+            "vars",
+            "generate",
+            "--flake",
+            str(flake.path),
+            "my_machine",
+            "--service",
+            "my_secret_generator",
+        ]
+    )
+    commit_message = run(
+        ["git", "log", "-1", "--pretty=%B"],
+    ).stdout.strip()
+    assert (
+        commit_message
+        == "Update vars via generator my_secret_generator for machine my_machine"
+    )
