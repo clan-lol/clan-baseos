@@ -595,3 +595,44 @@ def test_commit_message(
         commit_message
         == "Update vars via generator my_secret_generator for machine my_machine"
     )
+
+
+@pytest.mark.impure
+def test_default_value(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    config = nested_dict()
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["files"]["my_value"]["value"]["_type"] = "override"
+    my_generator["files"]["my_value"]["value"]["priority"] = 1000  # mkDefault
+    my_generator["files"]["my_value"]["value"]["content"] = "foo"
+    my_generator["script"] = "echo -n hello > $out/my_value"
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+        monkeypatch=monkeypatch,
+    )
+    monkeypatch.chdir(flake.path)
+    # ensure evaluating the default value works without generating the value
+    value_eval = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_value.value",
+            ]
+        )
+    ).stdout.strip()
+    assert json.loads(value_eval) == "foo"
+    # generate
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    # ensure the value is set correctly
+    value_eval = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_value.value",
+            ]
+        )
+    ).stdout.strip()
+    assert json.loads(value_eval) == "hello"
