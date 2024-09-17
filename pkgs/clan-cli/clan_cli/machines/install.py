@@ -15,6 +15,7 @@ from clan_cli.facts.generate import generate_facts
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh.cli import is_ipv6, is_reachable, qrcode_scan
+from clan_cli.vars.generate import generate_vars
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ def install_nixos(
     log.info(f"target host: {target_host}")
 
     generate_facts([machine], None, False)
+    generate_vars([machine], None, False)
 
     with TemporaryDirectory() as tmpdir_:
         tmpdir = Path(tmpdir_)
