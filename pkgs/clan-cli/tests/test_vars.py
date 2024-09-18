@@ -14,10 +14,12 @@ from clan_cli.vars.check import check_vars
 from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
 from clan_cli.vars.secret_modules import password_store, sops
+from clan_cli.vars.set import set_var
 from fixtures_flakes import generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
 from root import CLAN_CORE
+from stdout import CaptureOutput
 
 
 def test_dependencies_as_files() -> None:
@@ -636,3 +638,81 @@ def test_default_value(
         )
     ).stdout.strip()
     assert json.loads(value_eval) == "hello"
+
+
+@pytest.mark.impure
+def test_stdout_of_generate(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+    capture_output: CaptureOutput,
+) -> None:
+    config = nested_dict()
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["script"] = "echo -n hello > $out/my_value"
+    my_secret_generator = config["clan"]["core"]["vars"]["generators"][
+        "my_secret_generator"
+    ]
+    my_secret_generator["files"]["my_secret"]["secret"] = True
+    my_secret_generator["script"] = "echo -n hello > $out/my_secret"
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+        monkeypatch=monkeypatch,
+    )
+    monkeypatch.chdir(flake.path)
+    from clan_cli.vars.generate import generate_vars_for_machine
+
+    with capture_output as output:
+        generate_vars_for_machine(
+            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            "my_generator",
+            regenerate=False,
+        )
+
+    assert "Updated var my_generator/my_value" in output.out
+    assert "old: <not set>" in output.out
+    assert "new: hello" in output.out
+    set_var("my_machine", "my_generator/my_value", b"world", FlakeId(str(flake.path)))
+    with capture_output as output:
+        generate_vars_for_machine(
+            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            "my_generator",
+            regenerate=True,
+        )
+    assert "Updated var my_generator/my_value" in output.out
+    assert "old: world" in output.out
+    assert "new: hello" in output.out
+    # check the output when nothing gets regenerated
+    with capture_output as output:
+        generate_vars_for_machine(
+            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            "my_generator",
+            regenerate=True,
+        )
+    assert "Updated" not in output.out
+    assert "hello" in output.out
+    with capture_output as output:
+        generate_vars_for_machine(
+            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            "my_secret_generator",
+            regenerate=False,
+        )
+    assert "Updated secret var my_secret_generator/my_secret" in output.out
+    assert "hello" not in output.out
+    set_var(
+        "my_machine",
+        "my_secret_generator/my_secret",
+        b"world",
+        FlakeId(str(flake.path)),
+    )
+    with capture_output as output:
+        generate_vars_for_machine(
+            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            "my_secret_generator",
+            regenerate=True,
+        )
+    assert "Updated secret var my_secret_generator/my_secret" in output.out
+    assert "world" not in output.out
+    assert "hello" not in output.out
