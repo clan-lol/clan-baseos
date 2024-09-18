@@ -223,7 +223,7 @@ def get_closure(
     return minimal_closure([generator_name], generators)
 
 
-def _generate_vars_for_machine(
+def generate_vars_for_machine(
     machine: Machine,
     generator_name: str | None,
     regenerate: bool,
@@ -254,7 +254,7 @@ def generate_vars(
     for machine in machines:
         errors = []
         try:
-            was_regenerated |= _generate_vars_for_machine(
+            was_regenerated |= generate_vars_for_machine(
                 machine, generator_name, regenerate
             )
             machine.flush_caches()

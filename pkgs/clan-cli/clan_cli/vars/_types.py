@@ -1,9 +1,19 @@
+import logging
 import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
 from clan_cli.machines import machines
+
+log = logging.getLogger(__name__)
+
+
+def string_repr(value: bytes) -> str:
+    try:
+        return value.decode()
+    except UnicodeDecodeError:
+        return "<binary blob>"
 
 
 @dataclass
@@ -50,10 +60,7 @@ class Var:
 
     @property
     def printable_value(self) -> str:
-        try:
-            return self.value.decode()
-        except UnicodeDecodeError:
-            return "<binary blob>"
+        return string_repr(self.value)
 
     def set(self, value: bytes) -> None:
         self._store.set(self.generator, self.name, value, self.shared, self.deployed)
@@ -128,6 +135,16 @@ class StoreBase(ABC):
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
+        if self.exists(generator_name, var_name, shared):
+            if self.is_secret_store:
+                old_val = None
+                old_val_str = "********"
+            else:
+                old_val = self.get(generator_name, var_name, shared)
+                old_val_str = string_repr(old_val)
+        else:
+            old_val = None
+            old_val_str = "<not set>"
         directory = self.directory(generator_name, var_name, shared)
         # delete directory
         if directory.exists():
@@ -135,6 +152,19 @@ class StoreBase(ABC):
         # re-create directory
         directory.mkdir(parents=True, exist_ok=True)
         new_file = self._set(generator_name, var_name, value, shared, deployed)
+        if self.is_secret_store:
+            print(f"Updated secret var {generator_name}/{var_name}\n")
+        else:
+            if value != old_val:
+                print(
+                    f"Updated var {generator_name}/{var_name}\n"
+                    f"  old: {old_val_str}\n"
+                    f"  new: {string_repr(value)}"
+                )
+            else:
+                print(
+                    f"Var {generator_name}/{var_name} remains unchanged: {old_val_str}"
+                )
         return new_file
 
     def get_all(self) -> list[Var]:
