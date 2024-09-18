@@ -95,10 +95,10 @@ let
             machineServiceConfig = (serviceConfig.machines.${machineName} or { }).config or { };
             globalConfig = serviceConfig.config or { };
 
-            globalImports = serviceConfig.imports or [ ];
-            machineImports = serviceConfig.machines.${machineName}.imports or [ ];
-            roleServiceImports = builtins.foldl' (
-              acc: role: acc ++ serviceConfig.roles.${role}.imports or [ ]
+            globalExtraModules = serviceConfig.extraModules or [ ];
+            machineExtraModules = serviceConfig.machines.${machineName}.extraModules or [ ];
+            roleServiceExtraModules = builtins.foldl' (
+              acc: role: acc ++ serviceConfig.roles.${role}.extraModules or [ ]
             ) [ ] inverseRoles.${machineName} or [ ];
 
             # TODO: maybe optimize this dont lookup the role in inverse roles. Imports are not lazy
@@ -119,8 +119,8 @@ let
               builtins.map (role: serviceConfig.roles.${role}.config or { }) inverseRoles.${machineName} or [ ]
             );
 
-            customImports = map (s: if builtins.typeOf s == "string" then "${directory}/${s}" else s) (
-              globalImports ++ machineImports ++ roleServiceImports
+            extraModules = map (s: if builtins.typeOf s == "string" then "${directory}/${s}" else s) (
+              globalExtraModules ++ machineExtraModules ++ roleServiceExtraModules
             );
           in
 
@@ -128,7 +128,7 @@ let
             acc2
             ++ [
               {
-                imports = [ clan-core.clanModules.${serviceName} ] ++ roleModules ++ customImports;
+                imports = [ clan-core.clanModules.${serviceName} ] ++ roleModules ++ extraModules;
               }
               (lib.optionalAttrs (globalConfig != { } || machineServiceConfig != { } || roleServiceConfigs != [ ])
                 {
