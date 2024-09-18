@@ -106,10 +106,23 @@ def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatte
     )
 
 
+def has_inventory_feature(module_path: Path) -> bool:
+    readme_file = module_path / "README.md"
+    if not readme_file.exists():
+        return False
+    with readme_file.open() as f:
+        readme = f.read()
+        frontmatter, _ = extract_frontmatter(readme, f"{module_path}")
+        return "inventory" in frontmatter.features
+
+
 def get_roles(module_path: Path) -> None | list[str]:
+    if not has_inventory_feature(module_path):
+        return None
+
     roles_dir = module_path / "roles"
     if not roles_dir.exists() or not roles_dir.is_dir():
-        return None
+        return ["default"]
 
     return [
         role.stem  # filename without .nix extension
