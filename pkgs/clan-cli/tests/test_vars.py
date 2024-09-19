@@ -716,3 +716,62 @@ def test_stdout_of_generate(
     assert "Updated secret var my_secret_generator/my_secret" in output.out
     assert "world" not in output.out
     assert "hello" not in output.out
+
+
+@pytest.mark.impure
+def test_migration_skip(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    config = nested_dict()
+    my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
+    my_service["secret"]["my_value"] = {}
+    my_service["generator"]["script"] = "echo -n hello > $secrets/my_value"
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    # the var to migrate to is mistakenly marked as not secret (migration should fail)
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["migrateFact"] = "my_service"
+    my_generator["script"] = "echo -n world > $out/my_value"
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+        monkeypatch=monkeypatch,
+    )
+    monkeypatch.chdir(flake.path)
+    cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    in_repo_store = in_repo.FactStore(
+        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    )
+    assert in_repo_store.exists("my_generator", "my_value")
+    assert in_repo_store.get("my_generator", "my_value").decode() == "world"
+
+
+@pytest.mark.impure
+def test_migration(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    config = nested_dict()
+    my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
+    my_service["public"]["my_value"] = {}
+    my_service["generator"]["script"] = "echo -n hello > $facts/my_value"
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["migrateFact"] = "my_service"
+    my_generator["script"] = "echo -n world > $out/my_value"
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+        monkeypatch=monkeypatch,
+    )
+    monkeypatch.chdir(flake.path)
+    cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    in_repo_store = in_repo.FactStore(
+        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    )
+    assert in_repo_store.exists("my_generator", "my_value")
+    assert in_repo_store.get("my_generator", "my_value").decode() == "hello"

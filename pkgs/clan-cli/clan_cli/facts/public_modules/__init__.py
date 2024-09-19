@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from clan_cli.machines.machines import Machine
+import clan_cli.machines.machines as machines
 
 
 class FactStoreBase(ABC):
     @abstractmethod
-    def __init__(self, machine: Machine) -> None:
+    def __init__(self, machine: machines.Machine) -> None:
         pass
 
     @abstractmethod

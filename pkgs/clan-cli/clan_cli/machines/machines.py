@@ -10,6 +10,8 @@ from typing import Any, Literal
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanError
+from clan_cli.facts import public_modules as facts_public_modules
+from clan_cli.facts import secret_modules as facts_secret_modules
 from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata
 from clan_cli.ssh import Host, parse_deployment_address
 from clan_cli.vars.public_modules import FactStoreBase
@@ -84,6 +86,16 @@ class Machine:
         "clan_cli.facts.public_modules.in_repo", "clan_cli.facts.public_modules.vm"
     ]:
         return self.deployment["facts"]["publicModule"]
+
+    @cached_property
+    def secret_facts_store(self) -> facts_secret_modules.SecretStoreBase:
+        module = importlib.import_module(self.secret_facts_module)
+        return module.SecretStore(machine=self)
+
+    @cached_property
+    def public_facts_store(self) -> facts_public_modules.FactStoreBase:
+        module = importlib.import_module(self.public_facts_module)
+        return module.FactStore(machine=self)
 
     # WIP: Vars module is not ready yet.
     @property

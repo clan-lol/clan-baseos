@@ -42,6 +42,7 @@ in
           inherit (generator)
             dependencies
             finalScript
+            migrateFact
             prompts
             share
             ;
