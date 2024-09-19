@@ -223,6 +223,99 @@ def get_closure(
     return minimal_closure([generator_name], generators)
 
 
+def _migration_file_exists(
+    machine: Machine,
+    service_name: str,
+    fact_name: str,
+) -> bool:
+    is_secret = machine.vars_generators[service_name]["files"][fact_name]["secret"]
+    if is_secret:
+        if machine.secret_facts_store.exists(service_name, fact_name):
+            return True
+        log.debug(
+            f"Cannot migrate fact {fact_name} for service {service_name}, as it does not exist in the secret fact store"
+        )
+    if not is_secret:
+        if machine.public_facts_store.exists(service_name, fact_name):
+            return True
+        log.debug(
+            f"Cannot migrate fact {fact_name} for service {service_name}, as it does not exist in the public fact store"
+        )
+    return False
+
+
+def _migrate_file(
+    machine: Machine,
+    generator_name: str,
+    var_name: str,
+    service_name: str,
+    fact_name: str,
+) -> None:
+    is_secret = machine.vars_generators[generator_name]["files"][var_name]["secret"]
+    if is_secret:
+        old_value = machine.secret_facts_store.get(service_name, fact_name)
+    else:
+        old_value = machine.public_facts_store.get(service_name, fact_name)
+    is_shared = machine.vars_generators[generator_name]["share"]
+    is_deployed = machine.vars_generators[generator_name]["files"][var_name]["deploy"]
+    machine.public_vars_store.set(
+        generator_name, var_name, old_value, shared=is_shared, deployed=is_deployed
+    )
+
+
+def _migrate_files(
+    machine: Machine,
+    generator_name: str,
+) -> None:
+    service_name = machine.vars_generators[generator_name]["migrateFact"]
+    not_found = []
+    for var_name, _file in machine.vars_generators[generator_name]["files"].items():
+        if _migration_file_exists(machine, generator_name, var_name):
+            _migrate_file(machine, generator_name, var_name, service_name, var_name)
+        else:
+            not_found.append(var_name)
+    if len(not_found) > 0:
+        msg = f"Could not migrate the following files for generator {generator_name}, as no fact or secret exists with the same name: {not_found}"
+        raise ClanError(msg)
+
+
+def _check_can_migrate(
+    machine: Machine,
+    generator_name: str,
+) -> bool:
+    vars_generator = machine.vars_generators[generator_name]
+    if "migrateFact" not in vars_generator:
+        return False
+    service_name = vars_generator["migrateFact"]
+    if not service_name:
+        return False
+    # ensure that none of the generated vars already exist in the store
+    for fname, file in vars_generator["files"].items():
+        if file["secret"]:
+            if machine.secret_vars_store.exists(
+                generator_name, fname, vars_generator["share"]
+            ):
+                return False
+        else:
+            if machine.public_vars_store.exists(
+                generator_name, fname, vars_generator["share"]
+            ):
+                return False
+    # ensure that the service to migrate from actually exists
+    if service_name not in machine.facts_data:
+        log.debug(
+            f"Could not migrate facts for generator {generator_name}, as the service {service_name} does not exist"
+        )
+        return False
+    # ensure that all files can be migrated (exists in the corresponding fact store)
+    return bool(
+        all(
+            _migration_file_exists(machine, generator_name, fname)
+            for fname in vars_generator["files"]
+        )
+    )
+
+
 def generate_vars_for_machine(
     machine: Machine,
     generator_name: str | None,
@@ -233,13 +326,16 @@ def generate_vars_for_machine(
         return False
     prompt_values = _ask_prompts(machine, closure)
     for gen_name in closure:
-        execute_generator(
-            machine,
-            gen_name,
-            machine.secret_vars_store,
-            machine.public_vars_store,
-            prompt_values.get(gen_name, {}),
-        )
+        if _check_can_migrate(machine, gen_name):
+            _migrate_files(machine, gen_name)
+        else:
+            execute_generator(
+                machine,
+                gen_name,
+                machine.secret_vars_store,
+                machine.public_vars_store,
+                prompt_values.get(gen_name, {}),
+            )
     # flush caches to make sure the new secrets are available in evaluation
     machine.flush_caches()
     return True

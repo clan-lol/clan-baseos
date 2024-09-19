@@ -12,6 +12,7 @@ let
     either
     enum
     listOf
+    nullOr
     package
     path
     str
@@ -48,6 +49,16 @@ in
               '';
               type = listOf str;
               default = [ ];
+            };
+            migrateFact = {
+              description = ''
+                The fact service name to import the files from.
+
+                Use this to migrate legacy facts to the new vars system.
+              '';
+              type = nullOr str;
+              example = "my_service";
+              default = null;
             };
             files = {
               description = ''
