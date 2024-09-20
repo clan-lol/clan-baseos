@@ -226,7 +226,7 @@ class HardwareGenerateOptions:
     force: bool | None
 
 
-def hw_generate_command(args: argparse.Namespace) -> None:
+def update_hardware_config_command(args: argparse.Namespace) -> None:
     opts = HardwareGenerateOptions(
         flake=args.flake,
         machine=args.machine,
@@ -242,8 +242,8 @@ def hw_generate_command(args: argparse.Namespace) -> None:
     print(f"Type: {hw_info.file}")
 
 
-def register_hw_generate(parser: argparse.ArgumentParser) -> None:
-    parser.set_defaults(func=hw_generate_command)
+def register_update_hardware_config(parser: argparse.ArgumentParser) -> None:
+    parser.set_defaults(func=update_hardware_config_command)
     machine_parser = parser.add_argument(
         "machine",
         help="the name of the machine",

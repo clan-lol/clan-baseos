@@ -3,7 +3,7 @@ import argparse
 
 from .create import register_create_parser
 from .delete import register_delete_parser
-from .hardware import register_hw_generate
+from .hardware import register_update_hardware_config
 from .import_cmd import register_import_parser
 from .install import register_install_parser
 from .list import register_list_parser
@@ -64,8 +64,8 @@ Examples:
     )
     register_list_parser(list_parser)
 
-    generate_hw_parser = subparser.add_parser(
-        "hw-generate",
+    update_hardware_config_parser = subparser.add_parser(
+        "update-hardware-config",
         help="Generate hardware specifics for a machine",
         description="""
 Generates hardware specifics for a machine. Such as the host platform, available kernel modules, etc.
@@ -84,7 +84,7 @@ For more detailed information, visit: https://docs.clan.lol/getting-started/conf
 """
         ),
     )
-    register_hw_generate(generate_hw_parser)
+    register_update_hardware_config(update_hardware_config_parser)
 
     install_parser = subparser.add_parser(
         "install",
