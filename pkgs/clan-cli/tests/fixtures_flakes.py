@@ -54,6 +54,16 @@ class FlakeForTest(NamedTuple):
 from age_keys import KEYS, KeyPair
 
 
+def set_machine_settings(
+    flake: Path,
+    machine_name: str,
+    machine_settings: dict,
+) -> None:
+    settings_path = flake / "machines" / machine_name / "settings.json"
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(json.dumps(machine_settings, indent=2))
+
+
 def generate_flake(
     temporary_home: Path,
     flake_template: Path,
@@ -117,9 +127,7 @@ def generate_flake(
 
     # generate machines from machineConfigs
     for machine_name, machine_config in machine_configs.items():
-        settings_path = flake / "machines" / machine_name / "settings.json"
-        settings_path.parent.mkdir(parents=True, exist_ok=True)
-        settings_path.write_text(json.dumps(machine_config, indent=2))
+        set_machine_settings(flake, machine_name, machine_config)
 
     if "/tmp" not in str(os.environ.get("HOME")):
         log.warning(

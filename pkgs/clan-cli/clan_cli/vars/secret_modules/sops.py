@@ -1,7 +1,8 @@
+import json
 from pathlib import Path
 
 from clan_cli.machines.machines import Machine
-from clan_cli.secrets.folders import sops_secrets_folder
+from clan_cli.secrets.folders import sops_machines_folder, sops_secrets_folder
 from clan_cli.secrets.machines import add_machine, add_secret, has_machine
 from clan_cli.secrets.secrets import decrypt_secret, encrypt_secret, has_secret
 from clan_cli.secrets.sops import generate_private_key
@@ -40,6 +41,18 @@ class SecretStore(SecretStoreBase):
     def store_name(self) -> str:
         return "sops"
 
+    def machine_has_access(
+        self, generator_name: str, secret_name: str, shared: bool
+    ) -> bool:
+        secret_path = self.secret_path(generator_name, secret_name, shared)
+        secret = json.loads((secret_path / "secret").read_text())
+        recipients = [r["recipient"] for r in secret["sops"]["age"]]
+        machines_folder_path = sops_machines_folder(self.machine.flake_dir)
+        machine_pubkey = json.loads(
+            (machines_folder_path / self.machine.name / "key.json").read_text()
+        )["publickey"]
+        return machine_pubkey in recipients
+
     def secret_path(
         self, generator_name: str, secret_name: str, shared: bool = False
     ) -> Path:
@@ -53,16 +66,28 @@ class SecretStore(SecretStoreBase):
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
-        path = self.secret_path(generator_name, name, shared)
-        encrypt_secret(
-            self.machine.flake_dir,
-            path,
-            value,
-            add_machines=[self.machine.name],
-            add_groups=self.machine.deployment["sops"]["defaultGroups"],
-            git_commit=False,
-        )
-        return path
+        secret_folder = self.secret_path(generator_name, name, shared)
+        # delete directory
+        if secret_folder.exists() and not (secret_folder / "secret").exists():
+            # another backend has used that folder before -> error out
+            self.backend_collision_error(secret_folder)
+        # create directory if it doesn't exist
+        secret_folder.mkdir(parents=True, exist_ok=True)
+        if shared and self.exists_shared(generator_name, name):
+            # secret exists, but this machine doesn't have access -> add machine
+            # add_secret will be a no-op if the machine is already added
+            add_secret(self.machine.flake_dir, self.machine.name, secret_folder)
+        else:
+            # initialize the secret
+            encrypt_secret(
+                self.machine.flake_dir,
+                secret_folder,
+                value,
+                add_machines=[self.machine.name] if deployed else [],
+                add_groups=self.machine.deployment["sops"]["defaultGroups"],
+                git_commit=False,
+            )
+        return secret_folder
 
     def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
         return decrypt_secret(
@@ -80,10 +105,14 @@ class SecretStore(SecretStoreBase):
         )
         (output_dir / "key.txt").write_text(key)
 
+    def exists_shared(self, generator_name: str, name: str) -> bool:
+        secret_folder = self.secret_path(generator_name, name, shared=True)
+        return (secret_folder / "secret").exists()
+
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
         secret_folder = self.secret_path(generator_name, name, shared)
         if not (secret_folder / "secret").exists():
             return False
-        # add_secret will be a no-op if the machine is already added
-        add_secret(self.machine.flake_dir, self.machine.name, secret_folder)
-        return True
+        if not shared:
+            return True
+        return self.machine_has_access(generator_name, name, shared)
