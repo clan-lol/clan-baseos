@@ -78,7 +78,10 @@ class Machine:
         assert self.process.stdout is not None, "Machine has no stdout"
         for line in self.process.stdout:
             print(line, end="")
-            if line.startswith("systemd[1]: Startup finished in"):
+            if (
+                line.startswith("systemd[1]: Startup finished in")
+                or "Welcome to NixOS" in line
+            ):
                 break
         else:
             msg = f"Failed to start container {self.name}"
