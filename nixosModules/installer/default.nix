@@ -49,6 +49,8 @@ in
     (modulesPath + "/profiles/base.nix")
   ];
 
+  environment.systemPackages = [ pkgs.nixos-facter ];
+
   ########################################################################################################
   #                                                                                                      #
   # Copied from:                                                                                         #
