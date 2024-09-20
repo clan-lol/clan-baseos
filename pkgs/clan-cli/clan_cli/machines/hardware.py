@@ -117,13 +117,16 @@ def generate_machine_hardware_info(
     if hostname is not None:
         machine.target_host_address = hostname
 
-    nixos_generate_cmd = [
-        "nixos-generate-config",  # Filesystems are managed by disko
-        "--no-filesystems",
-        "--show-hardware-config",
-    ]
-
-    nixos_facter_cmd = ["nix", "run", "--refresh", "github:numtide/nixos-facter"]
+    config_command = (
+        ["nixos-facter"]
+        if report_type == "nixos-facter"
+        else [
+            "nixos-generate-config",
+            # Filesystems are managed by disko
+            "--no-filesystems",
+            "--show-hardware-config",
+        ]
+    )
 
     host = machine.target_host
     target_host = f"{host.user or 'root'}@{host.host}"
@@ -148,11 +151,7 @@ def generate_machine_hardware_info(
                 else []
             ),
             target_host,
-            *(
-                nixos_generate_cmd
-                if report_type == "nixos-generate-config"
-                else nixos_facter_cmd
-            ),
+            *config_command,
         ],
     )
     out = run(cmd)
