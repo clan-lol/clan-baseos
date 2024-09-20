@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 
 from clan_cli.errors import ClanError
@@ -23,14 +24,22 @@ class FactStore(FactStoreBase):
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
-        if self.machine.flake.is_local():
-            file_path = self.directory(generator_name, name, shared) / "value"
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            file_path.touch()
-            file_path.write_bytes(value)
-            return file_path
-        msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
-        raise ClanError(msg)
+        if not self.machine.flake.is_local():
+            msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
+            raise ClanError(msg)
+        folder = self.directory(generator_name, name, shared)
+        if folder.exists():
+            if not (folder / "value").exists():
+                # another backend has used that folder before -> error out
+                self.backend_collision_error(folder)
+            shutil.rmtree(folder)
+        # re-create directory
+        file_path = folder / "value"
+        folder.mkdir(parents=True, exist_ok=True)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.touch()
+        file_path.write_bytes(value)
+        return file_path
 
     # get a single fact
     def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:

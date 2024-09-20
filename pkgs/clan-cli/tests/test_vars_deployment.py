@@ -24,6 +24,9 @@ def test_vm_deployment(
     machine1_config["services"]["getty"]["autologinUser"] = "root"
     machine1_config["services"]["openssh"]["enable"] = True
     machine1_config["networking"]["firewall"]["enable"] = False
+    machine1_config["users"]["users"]["root"]["openssh"]["authorizedKeys"]["keys"] = [
+        # put your key here when debugging and pass ssh_port in run_vm_in_thread call below
+    ]
     m1_generator = machine1_config["clan"]["core"]["vars"]["generators"]["m1_generator"]
     m1_generator["files"]["my_secret"]["secret"] = True
     m1_generator["script"] = """
@@ -46,7 +49,7 @@ def test_vm_deployment(
     machine2_config["services"]["getty"]["autologinUser"] = "root"
     machine2_config["services"]["openssh"]["enable"] = True
     machine2_config["users"]["users"]["root"]["openssh"]["authorizedKeys"]["keys"] = [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDuhpzDHBPvn8nv8RH1MRomDOaXyP4GziQm7r3MZ1Syk grmpf"
+        # put your key here when debugging and pass ssh_port in run_vm_in_thread call below
     ]
     machine2_config["networking"]["firewall"]["enable"] = False
     machine2_config["clan"]["core"]["vars"]["generators"]["my_shared_generator"] = (
@@ -94,7 +97,7 @@ def test_vm_deployment(
     # run nix flake lock
     cmd.run(["nix", "flake", "lock"])
     vm_m1 = run_vm_in_thread("m1_machine")
-    vm_m2 = run_vm_in_thread("m2_machine", ssh_port=2222)
+    vm_m2 = run_vm_in_thread("m2_machine")
     qga_m1 = qga_connect("m1_machine", vm_m1)
     qga_m2 = qga_connect("m2_machine", vm_m2)
     # check my_secret is deployed

@@ -1,9 +1,9 @@
 import logging
-import shutil
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
+from clan_cli.errors import ClanError
 from clan_cli.machines import machines
 
 log = logging.getLogger(__name__)
@@ -113,6 +113,13 @@ class StoreBase(ABC):
     def is_secret_store(self) -> bool:
         pass
 
+    def backend_collision_error(self, folder: Path) -> None:
+        msg = (
+            f"Var folder {folder} exists but doesn't look like a {self.store_name} secret."
+            "Potentially a leftover from another backend. Please delete it manually."
+        )
+        raise ClanError(msg)
+
     def rel_dir(self, generator_name: str, var_name: str, shared: bool = False) -> Path:
         if shared:
             return Path(f"shared/{generator_name}/{var_name}")
@@ -145,12 +152,6 @@ class StoreBase(ABC):
         else:
             old_val = None
             old_val_str = "<not set>"
-        directory = self.directory(generator_name, var_name, shared)
-        # delete directory
-        if directory.exists():
-            shutil.rmtree(directory)
-        # re-create directory
-        directory.mkdir(parents=True, exist_ok=True)
         new_file = self._set(generator_name, var_name, value, shared, deployed)
         if self.is_secret_store:
             print(f"Updated secret var {generator_name}/{var_name}\n")

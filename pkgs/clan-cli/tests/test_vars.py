@@ -8,14 +8,16 @@ from tempfile import TemporaryDirectory
 import pytest
 from age_keys import SopsSetup
 from clan_cli.clan_uri import FlakeId
+from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_eval, nix_shell, run
 from clan_cli.vars.check import check_vars
+from clan_cli.vars.generate import generate_vars_for_machine
 from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
 from clan_cli.vars.secret_modules import password_store, sops
 from clan_cli.vars.set import set_var
-from fixtures_flakes import generate_flake
+from fixtures_flakes import generate_flake, set_machine_settings
 from helpers import cli
 from helpers.nixos_config import nested_dict
 from root import CLAN_CORE
@@ -152,6 +154,10 @@ def test_generate_secret_var_sops(
     assert sops_store.get("my_generator", "my_secret").decode() == "hello\n"
     vars_text = stringify_all_vars(machine)
     assert "my_generator/my_secret" in vars_text
+    # test regeneration works
+    cli.run(
+        ["vars", "generate", "--flake", str(flake.path), "my_machine", "--regenerate"]
+    )
 
 
 @pytest.mark.impure
@@ -184,6 +190,50 @@ def test_generate_secret_var_sops_with_default_group(
     )
     assert sops_store.exists("my_generator", "my_secret")
     assert sops_store.get("my_generator", "my_secret").decode() == "hello\n"
+
+
+@pytest.mark.impure
+def test_generated_shared_secret_sops(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+    sops_setup: SopsSetup,
+) -> None:
+    m1_config = nested_dict()
+    shared_generator = m1_config["clan"]["core"]["vars"]["generators"][
+        "my_shared_generator"
+    ]
+    shared_generator["share"] = True
+    shared_generator["files"]["my_shared_secret"]["secret"] = True
+    shared_generator["script"] = "echo hello > $out/my_shared_secret"
+    m2_config = nested_dict()
+    m2_config["clan"]["core"]["vars"]["generators"]["my_shared_generator"] = (
+        shared_generator.copy()
+    )
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"machine1": m1_config, "machine2": m2_config},
+        monkeypatch=monkeypatch,
+    )
+    monkeypatch.chdir(flake.path)
+    sops_setup.init()
+    machine1 = Machine(name="machine1", flake=FlakeId(str(flake.path)))
+    machine2 = Machine(name="machine2", flake=FlakeId(str(flake.path)))
+    cli.run(["vars", "generate", "--flake", str(flake.path), "machine1"])
+    assert check_vars(machine1)
+    cli.run(["vars", "generate", "--flake", str(flake.path), "machine2"])
+    assert check_vars(machine2)
+    assert check_vars(machine2)
+    m1_sops_store = sops.SecretStore(machine1)
+    m2_sops_store = sops.SecretStore(machine2)
+    assert m1_sops_store.exists("my_shared_generator", "my_shared_secret", shared=True)
+    assert m2_sops_store.exists("my_shared_generator", "my_shared_secret", shared=True)
+    assert m1_sops_store.machine_has_access(
+        "my_shared_generator", "my_shared_secret", shared=True
+    )
+    assert m2_sops_store.machine_has_access(
+        "my_shared_generator", "my_shared_secret", shared=True
+    )
 
 
 @pytest.mark.impure
@@ -383,21 +433,21 @@ def test_share_flag(
 ) -> None:
     config = nested_dict()
     shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
+    shared_generator["share"] = True
     shared_generator["files"]["my_secret"]["secret"] = True
     shared_generator["files"]["my_value"]["secret"] = False
     shared_generator["script"] = (
         "echo hello > $out/my_secret && echo hello > $out/my_value"
     )
-    shared_generator["share"] = True
     unshared_generator = config["clan"]["core"]["vars"]["generators"][
         "unshared_generator"
     ]
+    unshared_generator["share"] = False
     unshared_generator["files"]["my_secret"]["secret"] = True
     unshared_generator["files"]["my_value"]["secret"] = False
     unshared_generator["script"] = (
         "echo hello > $out/my_secret && echo hello > $out/my_value"
     )
-    unshared_generator["share"] = False
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
@@ -775,3 +825,47 @@ def test_migration(
     )
     assert in_repo_store.exists("my_generator", "my_value")
     assert in_repo_store.get("my_generator", "my_value").decode() == "hello"
+
+
+@pytest.mark.impure
+def test_fails_when_files_are_left_from_other_backend(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+    sops_setup: SopsSetup,
+) -> None:
+    config = nested_dict()
+    my_secret_generator = config["clan"]["core"]["vars"]["generators"][
+        "my_secret_generator"
+    ]
+    my_secret_generator["files"]["my_secret"]["secret"] = True
+    my_secret_generator["script"] = "echo hello > $out/my_secret"
+    my_value_generator = config["clan"]["core"]["vars"]["generators"][
+        "my_value_generator"
+    ]
+    my_value_generator["files"]["my_value"]["secret"] = False
+    my_value_generator["script"] = "echo hello > $out/my_value"
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        machine_configs={"my_machine": config},
+        monkeypatch=monkeypatch,
+    )
+    sops_setup.init()
+    monkeypatch.chdir(flake.path)
+    for generator in ["my_secret_generator", "my_value_generator"]:
+        generate_vars_for_machine(
+            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            generator,
+            regenerate=False,
+        )
+    my_secret_generator["files"]["my_secret"]["secret"] = False
+    my_value_generator["files"]["my_value"]["secret"] = True
+    set_machine_settings(flake.path, "my_machine", config)
+    monkeypatch.chdir(flake.path)
+    for generator in ["my_secret_generator", "my_value_generator"]:
+        with pytest.raises(ClanError):
+            generate_vars_for_machine(
+                Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+                generator,
+                regenerate=False,
+            )
