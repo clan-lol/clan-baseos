@@ -1,4 +1,4 @@
-# Include Machines
+# Adding Machines
 
 Clan has two general methods of adding machines
 

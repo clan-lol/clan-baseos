@@ -23,7 +23,7 @@ Instructions and explanations for practical Implementations ordered by Topics.
 
 **How-to Guides for achieving a certain goal or solving a specific issue.**
 
-- [Include Machines](./include-machines.md): Learn how Clan automatically includes machines and Nix files.
+- [Adding Machines](./adding-machines.md): Learn how Clan automatically includes machines and Nix files.
 
 - [Secrets](./secrets.md): Learn how to manage secrets.
 
