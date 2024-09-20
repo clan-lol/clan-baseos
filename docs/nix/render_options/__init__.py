@@ -205,15 +205,15 @@ Predefined roles
 
 {roles_list}
 
-For more information, see the [inventory guide](../../guides/inventory.md).
+For more information, see the [inventory guide](../../manual/inventory.md).
 """
     return ""
 
 
 clan_modules_descr = """Clan modules are [NixOS modules](https://wiki.nixos.org/wiki/NixOS_modules) which have been enhanced with additional features provided by Clan, with certain option types restricted to enable configuration through a graphical interface.
 
-!!! note "🔹 = [inventory](../../guides/inventory.md) supported
-    Modules with this indicator support the [inventory](../../guides/inventory.md) feature.
+!!! note "🔹 = [inventory](../../manual/inventory.md) supported
+    Modules with this indicator support the [inventory](../../manual/inventory.md) feature.
 
 """
 

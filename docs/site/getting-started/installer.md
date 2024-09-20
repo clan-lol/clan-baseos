@@ -53,27 +53,34 @@ sudo umount /dev/sdb1
       --disk main /dev/sd<X> \
       flash-installer
     ```
-
-    Replace `$HOME/.ssh/id_ed25519.pub` with a path to your SSH public key.
-    If you do not have an ssh key yet, you can generate one with `ssh-keygen -t ed25519` command.
+    !!! Note
+        Replace `$HOME/.ssh/id_ed25519.pub` with a path to your SSH public key.  
+        Replace `/dev/sd<X>` with the drive path you want to flash
 
     !!! Danger "Specifying the wrong device can lead to unrecoverable data loss."
 
         The `clan flash` utility will erase the disk. Make sure to specify the correct device
 
-    !!! Note
+    - **SSH-Pubkey Option**:
+        To add an ssh public key into the installer image append the option:
+        ```
+        --ssh-pubkey <pubkey_path>
+        ```
+        If you do not have an ssh key yet, you can generate one with `ssh-keygen -t ed25519` command.
+
+    - **Wifi Option**:
         To add wifi credentials into the installer image append the option:
         ```
-          --wifi <ssid> <password>  
+        --wifi <ssid> <password>  
         ```
 
-    !!! Note
+    - **List Keymaps**:
         You can get a list of all keymaps with the following command:
         ```
         clan flash list keymaps
         ```
     
-    !!! Note
+    - **List Languages**:
         You can get a list of all languages with the following command:
         ```
         clan flash list languages
@@ -89,7 +96,7 @@ sudo umount /dev/sdb1
     wget https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-installer-x86_64-linux.iso
     ```
 
-    ### Step 3. Flash the Installer to the USB Drive
+    ### Step 2.5 Flash the Installer to the USB Drive
 
     !!! Danger "Specifying the wrong device can lead to unrecoverable data loss."
 
@@ -105,28 +112,9 @@ sudo umount /dev/sdb1
     sudo dd bs=4M conv=fsync oflag=direct status=progress if=./nixos-installer-x86_64-linux.iso of=/dev/sd<X>
     ```
 
-### Step 4. Boot and Connect to your network
 
-After writing the installer to the USB drive, use it to boot the target machine.
-To do this plug the USB drive into the target machine and select the USB drive as a temporary boot device.
-
-??? tip "Here you can find the key combinations for selection used by most vendors."
-    - **Dell**: F12 (Boot Menu), F2/Del (BIOS Setup)
-    - **HP**: F9 (Boot Menu), Esc (Startup Menu)
-    - **Lenovo**: F12 (ThinkPad Boot Menu), F2/Fn+F2/Novo Button (IdeaPad Boot Menu/BIOS Setup)
-    - **Acer**: F12 (Boot Menu), F2/Del (BIOS Setup)
-    - **Asus**: F8/Esc (Boot Menu), F2/Del (BIOS Setup)
-    - **Toshiba**: F12/F2 (Boot Menu), Esc then F12 (Alternate Method)
-    - **Sony**: F11/Assist Button (Boot Menu/Recovery Options)
-    - **Samsung**: F2/F12/Esc (Boot Menu), F2 (BIOS Setup)
-    - **MSI**: F11 (Boot Menu), Del (BIOS Setup)
-    - **Apple**: Option (Alt) Key (Boot Menu for Mac)
-    - If your hardware was not listed read the manufacturers instructions how to enter the boot Menu/BIOS Setup.
-
-
-**After Booting**
-
-Now you can deploy your clan configuration onto the machine
+###  Step 3: Boot From USB Stick
+- To use, boot from the Clan USB drive with **secure boot turned off**. For step by step instructions go to [Disabling Secure Boot](../manual/secure-boot.md)
 
 
 ## (Optional) Connect to Wifi Manually

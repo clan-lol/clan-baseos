@@ -1,4 +1,4 @@
-# How to add machines
+# Include Machines
 
 Clan has two general methods of adding machines
 
@@ -17,7 +17,7 @@ Automatically imported:
 
 ## Manual declaration
 
-Machines can also be added manually under `buildClan`, `clan.*` in flake-parts or via [`inventory`](../guides/inventory.md).
+Machines can also be added manually under `buildClan`, `clan.*` in flake-parts or via [`inventory`](../manual/inventory.md).
 
 !!! Note
     It is possible to use `inventory` and `buildClan` together at the same time.

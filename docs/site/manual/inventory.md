@@ -14,7 +14,7 @@ This guide will walk you through setting up a backup service, where the inventor
 
 ## Prerequisites
 
-- [x] [Add machines](./add-machines.md) to your clan.
+- [x] [Add machines](./include-machines.md) to your clan.
 
 ## Services
 

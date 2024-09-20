@@ -4,7 +4,7 @@ description = "Statically configure borgbackup with sane defaults."
 !!! Danger "Deprecated"
     Use [borgbackup](borgbackup.md) instead.
 
-    Don't use borgbackup-static through [inventory](../../guides/inventory.md).
+    Don't use borgbackup-static through [inventory](../../manual/inventory.md).
 
 This module implements the `borgbackup` backend and implements sane defaults
 for backup management through `borgbackup` for members of the clan.

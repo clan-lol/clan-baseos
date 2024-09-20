@@ -39,7 +39,7 @@ exclude_docs: |
   /drafts/
 
 nav:
-  - Getting started:
+  - Get Started:
       - index.md
       - Installer: getting-started/installer.md
       - Configure: getting-started/configure.md
@@ -49,12 +49,15 @@ nav:
       - Mesh VPN: getting-started/mesh-vpn.md
       - Backup & Restore: getting-started/backups.md
       - Flake-parts: getting-started/flake-parts.md
-  - Guides:
-      - guides/index.md
-      - Adding Machines: guides/add-machines.md
-      - Inventory: guides/inventory.md
-  - Reference:
-      - reference/index.md
+  - Manual:
+      - Overview: manual/index.md
+      - Include Machines: manual/include-machines.md
+      - Inventory: manual/inventory.md
+      - Secrets: manual/secrets.md
+      - Secure Boot: manual/secure-boot.md
+      - Contribute: manual/contribute.md
+  - Options:
+      - Overview: reference/index.md
       - Clan Modules:
           - reference/clanModules/index.md
           - reference/clanModules/admin.md
@@ -117,7 +120,6 @@ nav:
           - reference/nix-api/index.md
           - buildClan: reference/nix-api/buildclan.md
           - Inventory: reference/nix-api/inventory.md
-  - Contributing: contributing/contributing.md
   - Blog:
       - blog/index.md
 
