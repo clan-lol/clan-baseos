@@ -49,6 +49,14 @@ let
                     type = "filesystem";
                     format = "f2fs";
                     mountpoint = "/";
+                    extraArgs = [
+                      "-O"
+                      "extra_attr,inode_checksum,sb_checksum,compression"
+                    ];
+                    # Recommendations for flash: https://wiki.archlinux.org/title/F2FS#Recommended_mount_options
+                    mountOptions = [
+                      "compress_algorithm=zstd:6,compress_chksum,atgc,gc_merge,lazytime,nodiscard"
+                    ];
                   };
                 };
               };
@@ -69,4 +77,7 @@ in
       boot.loader.grub.enable = lib.mkDefault true;
     };
   };
+
+  flake.checks.x86_64-linux.flash-installer-disk-test =
+    self.nixosConfigurations.flash-installer.config.system.build.installTest;
 }
