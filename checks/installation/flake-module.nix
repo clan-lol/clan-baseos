@@ -99,7 +99,7 @@
             client.wait_until_succeeds("timeout 2 ssh -o StrictHostKeyChecking=accept-new -v root@target hostname")
             client.succeed("cp -r ${../..} test-flake && chmod -R +w test-flake")
             client.fail("test -f test-flake/machines/test-install-machine/hardware-configuration.nix")
-            client.succeed("clan machines hw-generate --flake test-flake test-install-machine root@target>&2")
+            client.succeed("clan machines update-hardware-config --flake test-flake test-install-machine root@target>&2")
             client.succeed("test -f test-flake/machines/test-install-machine/hardware-configuration.nix")
             client.succeed("clan machines install --debug --flake ${../..} --yes test-install-machine root@target >&2")
             try:
