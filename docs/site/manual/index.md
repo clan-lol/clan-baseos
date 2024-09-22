@@ -27,7 +27,7 @@ Instructions and explanations for practical Implementations ordered by Topics.
 
 - [Secrets](./secrets.md): Learn how to manage secrets.
 
-- [Inventory](./inventory.md): Distributed and editable version of the NixOS module system.
+- [Inventory](./inventory.md): Clan's declaration format for running **services** on one or multiple **machines**.
 
 - [Flake-parts guide](./flake-parts.md): Use clan with [flake-parts](https://flake.parts/).
 
