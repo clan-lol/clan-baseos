@@ -39,24 +39,26 @@ exclude_docs: |
   /drafts/
 
 nav:
-  - Get Started:
-      - index.md
-      - Installer: getting-started/installer.md
-      - Configure: getting-started/configure.md
-      - Secrets & Facts: getting-started/secrets.md
-      - Deploy Machine: getting-started/deploy.md
-      - Disk Encryption: getting-started/disk-encryption.md
-      - Mesh VPN: getting-started/mesh-vpn.md
-      - Backup & Restore: getting-started/backups.md
-      - Flake-parts: getting-started/flake-parts.md
+  - index.md
   - Manual:
       - Overview: manual/index.md
+      - Tutorials:
+          - Getting Started:
+              - getting-started/index.md
+              - Installer: getting-started/installer.md
+              - Configure: getting-started/configure.md
+              - Secrets & Facts: getting-started/secrets.md
+              - Deploy Machine: getting-started/deploy.md
+              - Disk Encryption: getting-started/disk-encryption.md
+              - Mesh VPN: getting-started/mesh-vpn.md
+              - Backup & Restore: getting-started/backups.md
+              - Flake-parts: getting-started/flake-parts.md
       - Include Machines: manual/include-machines.md
       - Inventory: manual/inventory.md
       - Secrets: manual/secrets.md
       - Secure Boot: manual/secure-boot.md
       - Contribute: manual/contribute.md
-  - Options:
+  - Reference:
       - Overview: reference/index.md
       - Clan Modules:
           - reference/clanModules/index.md

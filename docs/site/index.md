@@ -1,109 +1,38 @@
-# Setup
+# Home
 
-Create your own clan with these initial steps and manage a fleet of machines with one single testable git repository!
+## Welcome to **Clan**'s documentation
 
-### Prerequisites
+[Quickstart Guide](./getting-started/index.md){ .md-button }
 
-=== "**Linux**"
+## What's inside
 
-    Clan depends on nix installed on your system. Run the following command to install nix.
+This documentation is structured into the following sections
 
-    ```bash
-    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-    ```
+<div class="grid cards" markdown>
 
-    If you already have installed Nix, make sure you have the `nix-command` and `flakes` configuration enabled in your ~/.config/nix/nix.conf.
-    The determinate installer already comes with this configuration by default.
+-   :material-clock-fast:{ .lg .middle } __Set up in 15 minutes__
 
-    ```bash
-    # /etc/nix/nix.conf or ~/.config/nix/nix.conf
-    experimental-features = nix-command flakes
-    ```
+    ---
 
-=== "**NixOS**"
+    Create your own clan and get everything
+    running in a couple of minutes.
 
-    If you run NixOS the `nix` binary is already installed.
+    [:octicons-arrow-right-24: Getting started](./getting-started/index.md)
 
-    You will also need to enable the `flakes` and `nix-commands` experimental features in your configuration.nix:
+-   :material-sign-direction:{ .lg .middle } __Manual__
 
-    ```nix
-    { nix.settings.experimental-features = [ "nix-command" "flakes" ]; }
-    ```
+    ---
 
-=== "**Other**"
+    Instructions and explanations for practical Implementations ordered by Topic.
 
-    Clan doesn't offer dedicated support for other operating systems yet.
+    [:octicons-arrow-right-24: Manual](./manual/index.md)
 
-### Step 1: Add Clan CLI to Your Shell
+-   :material-api:{ .lg .middle } __Reference__
 
-Add the Clan CLI into your development workflow:
+    ---
 
-```bash
-nix shell git+https://git.clan.lol/clan/clan-core#clan-cli
-```
+    Detailed Specification of Functions and APIs.
 
-You can find reference documentation for the `clan` cli program [here](./reference/cli/index.md).
+    [:octicons-arrow-right-24: Reference](./reference/index.md)
 
-Alternatively you can check out the help pages directly:
-```terminalSession
-clan --help
-```
-
-### Step 2: Initialize Your Project
-
-Set the foundation of your Clan project by initializing it as follows:
-
-```bash
-clan flakes create my-clan
-```
-
-This command creates the `flake.nix` and `.clan-flake` files for your project.
-It will also generate files from a default template, to help show general clan usage patterns.
-
-### Step 3: Verify the Project Structure
-
-Ensure that all project files exist by running:
-
-```bash
-cd my-clan
-tree
-```
-
-This should yield the following:
-
-``` { .console .no-copy }
-.
-├── flake.nix
-├── machines
-│   ├── jon
-│   │   ├── configuration.nix
-│   │   └── hardware-configuration.nix
-│   └── sara
-│       ├── configuration.nix
-│       └── hardware-configuration.nix
-└── modules
-    └── shared.nix
-
-5 directories, 9 files
-```
-
-```bash
-clan machines list
-```
-
-``` { .console .no-copy }
-jon
-sara
-```
-
-!!! success
-
-    You just successfully bootstrapped your first clan directory.
-
----
-
-### What's Next?
-
-- [**Installer**](getting-started/installer.md): Setting up new computers remotely is easy with an USB stick.
-
----
+</div>

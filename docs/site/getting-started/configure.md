@@ -52,7 +52,7 @@ In the `flake.nix` file:
 
 === "**template using flake-parts**"
 
-    !!! info "See [Clan with flake-parts](./flake-parts.md) for help migrating to flake-parts."
+    !!! info "See [Clan with flake-parts](../manual/flake-parts.md) for help migrating to flake-parts."
 
     ```nix title="flake.nix" hl_lines="3"
     clan = {

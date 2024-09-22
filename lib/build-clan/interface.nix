@@ -8,7 +8,21 @@ in
     directory = lib.mkOption {
       type = types.path;
       default = self;
-      description = "The directory containing the clan subdirectory";
+      defaultText = "Root directory of the flake";
+      description = ''
+        The directory containing the clan.
+
+        A typical directory structure could look like this:
+
+        ```
+        .
+        ├── flake.nix
+        ├── assets
+        ├── machines
+        ├── modules
+        └── sops
+        ```
+      '';
     };
 
     specialArgs = lib.mkOption {
