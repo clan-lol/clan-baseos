@@ -52,11 +52,11 @@ nav:
               - Disk Encryption: getting-started/disk-encryption.md
               - Mesh VPN: getting-started/mesh-vpn.md
               - Backup & Restore: getting-started/backups.md
-              - Flake-parts: getting-started/flake-parts.md
       - Include Machines: manual/include-machines.md
       - Inventory: manual/inventory.md
       - Secrets: manual/secrets.md
       - Secure Boot: manual/secure-boot.md
+      - Flake-parts: manual/flake-parts.md
       - Contribute: manual/contribute.md
   - Reference:
       - Overview: reference/index.md
