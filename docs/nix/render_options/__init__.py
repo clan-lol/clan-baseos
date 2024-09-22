@@ -144,9 +144,8 @@ To use this module, import it like th:
 """
 
 
-clan_core_descr = """ClanCore delivers all the essential features for every clan.
-It's always included in your setup, and you can customize your clan's behavior with the configuration [options](#module-options) provided below.
-
+clan_core_descr = """`clan.core` is always included in each machine `config`.
+Your can customize your machines behavior with the configuration [options](#module-options) provided below.
 """
 
 options_head = "\n## Module Options\n"
