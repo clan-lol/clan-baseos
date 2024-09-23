@@ -44,6 +44,7 @@ def map_type(nix_type: str) -> Any:
 
 # merge two dicts recursively
 def merge(a: dict, b: dict, path: list[str] | None = None) -> dict:
+    a = a.copy()
     if path is None:
         path = []
     for key in b:

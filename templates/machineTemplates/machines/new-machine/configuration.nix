@@ -3,5 +3,5 @@
 
   ];
 
-  # Hello World
+  # New machine!
 }

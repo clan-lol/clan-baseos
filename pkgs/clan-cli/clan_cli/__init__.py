@@ -415,10 +415,12 @@ def main() -> None:
     except ClanError as e:
         if isinstance(e, ClanCmdError):
             if e.cmd.msg:
-                log.exception(e.cmd.msg)
+                log.fatal(e.cmd.msg)
                 sys.exit(1)
 
-        log.exception("An error occurred")
+        log.fatal(e.msg)
+        if e.description:
+            print(f"========> {e.description}", file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         log.warning("Interrupted by user")
