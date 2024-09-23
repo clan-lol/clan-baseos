@@ -10,7 +10,7 @@ from clan_cli.inventory import (
     load_inventory_json,
     set_inventory,
 )
-from clan_cli.machines.create import create_machine
+from clan_cli.machines.create import CreateOptions, create_machine
 from clan_cli.nix import nix_eval, run_no_stdout
 from fixtures_flakes import FlakeForTest
 
@@ -53,12 +53,14 @@ def test_add_module_to_inventory(
             age_keys[0].pubkey,
         ]
     )
-    create_machine(
-        FlakeId(str(base_path)),
-        Machine(
+    opts = CreateOptions(
+        clan_dir=FlakeId(str(base_path)),
+        machine=Machine(
             name="machine1", tags=[], system="x86_64-linux", deploy=MachineDeploy()
         ),
     )
+
+    create_machine(opts)
 
     inventory = load_inventory_json(base_path)
 

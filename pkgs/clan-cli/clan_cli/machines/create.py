@@ -1,83 +1,186 @@
 import argparse
 import logging
 import re
+import shutil
+from dataclasses import dataclass
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from clan_cli.api import API
+from clan_cli.clan.create import git_command
 from clan_cli.clan_uri import FlakeId
+from clan_cli.cmd import Log, run
+from clan_cli.dirs import clan_templates, get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
+from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
-    Machine,
     MachineDeploy,
-    load_inventory_eval,
+    dataclass_to_dict,
     load_inventory_json,
+    merge_template_inventory,
     set_inventory,
 )
+from clan_cli.machines.list import list_nixos_machines
+from clan_cli.nix import nix_command
 
 log = logging.getLogger(__name__)
 
 
+def validate_directory(root_dir: Path) -> None:
+    machines_dir = root_dir / "machines"
+    for root, _, files in root_dir.walk():
+        for file in files:
+            file_path = Path(root) / file
+            if not file_path.is_relative_to(machines_dir):
+                msg = f"File {file_path} is not in the 'machines' directory."
+                log.error(msg)
+                description = "Template machines are only allowed to contain files in the 'machines' directory."
+                raise ClanError(msg, description=description)
+
+
+@dataclass
+class CreateOptions:
+    clan_dir: FlakeId
+    machine: InventoryMachine
+    template_src: FlakeId | None = None
+    template_name: str | None = None
+
+
 @API.register
-def create_machine(flake: FlakeId, machine: Machine) -> None:
+def create_machine(opts: CreateOptions) -> None:
+    if not opts.clan_dir.is_local():
+        msg = f"Clan {opts.clan_dir} is not a local clan."
+        description = "Import machine only works on local clans"
+        raise ClanError(msg, description=description)
+
+    if not opts.template_src:
+        opts.template_src = FlakeId(str(clan_templates()))
+
+    if not opts.template_name:
+        opts.template_name = "new-machine"
+
+    clan_dir = opts.clan_dir.path
+
+    log.debug(f"Importing machine '{opts.template_name}' from {opts.template_src}")
+
+    if opts.template_name in list_nixos_machines(clan_dir) and not opts.machine.name:
+        msg = f"{opts.template_name} is already defined in {clan_dir}"
+        description = (
+            "Please add the --rename option to import the machine with a different name"
+        )
+        raise ClanError(msg, description=description)
+
+    machine_name = opts.template_name if not opts.machine.name else opts.machine.name
+    dst = clan_dir / "machines" / machine_name
+
+    # TODO: Move this into nix code
     hostname_regex = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)$"
-    if not re.match(hostname_regex, machine.name):
+    if not re.match(hostname_regex, machine_name):
         msg = "Machine name must be a valid hostname"
         raise ClanError(msg, location="Create Machine")
 
-    inventory = load_inventory_json(flake.path)
+    if dst.exists():
+        msg = f"Machine {machine_name} already exists in {clan_dir}"
+        description = (
+            "Please delete the existing machine or import with a different name"
+        )
+        raise ClanError(msg, description=description)
 
-    full_inventory = load_inventory_eval(flake.path)
+    with TemporaryDirectory() as tmpdir:
+        tmpdirp = Path(tmpdir)
+        command = nix_command(
+            [
+                "flake",
+                "init",
+                "-t",
+                f"{opts.template_src}#machineTemplates",
+            ]
+        )
 
-    if machine.name in full_inventory.machines:
-        msg = f"Machine with the name {machine.name} already exists"
-        raise ClanError(msg)
+        # Check if debug logging is enabled
+        is_debug_enabled = log.isEnabledFor(logging.DEBUG)
+        log_flag = Log.BOTH if is_debug_enabled else Log.NONE
+        run(command, log=log_flag, cwd=tmpdirp)
 
-    print(f"Define machine {machine.name}", machine)
+        validate_directory(tmpdirp)
 
-    inventory.machines.update({machine.name: machine})
-    set_inventory(inventory, flake.path, f"Create machine {machine.name}")
+        src = tmpdirp / "machines" / opts.template_name
+
+        if (
+            not (src / "configuration.nix").exists()
+            and not (src / "inventory.json").exists()
+        ):
+            msg = f"Template machine '{opts.template_name}' does not contain a configuration.nix or inventory.json"
+            description = (
+                "Template machine must contain a configuration.nix or inventory.json"
+            )
+            raise ClanError(msg, description=description)
+
+        def log_copy(src: str, dst: str) -> None:
+            relative_dst = dst.replace(f"{clan_dir}/", "")
+            log.info(f"Add file: {relative_dst}")
+            shutil.copy2(src, dst)
+
+        shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
+
+    run(git_command(clan_dir, "add", f"machines/{machine_name}"), cwd=clan_dir)
+
+    inventory = load_inventory_json(clan_dir)
+
+    # Merge the inventory from the template
+    if (dst / "inventory.json").exists():
+        template_inventory = load_inventory_json(dst)
+        merge_template_inventory(inventory, template_inventory, machine_name)
+
+    # TODO: We should allow the template to specify machine metadata if not defined by user
+    #
+    new_machine = InventoryMachine(name=machine_name, deploy=MachineDeploy())
+    inventory.machines.update({new_machine.name: dataclass_to_dict(new_machine)})
+    set_inventory(inventory, clan_dir, "Imported machine from template")
 
 
 def create_command(args: argparse.Namespace) -> None:
-    create_machine(
-        args.flake,
-        Machine(
-            name=args.machine,
-            system=args.system,
-            description=args.description,
-            tags=args.tags,
-            icon=args.icon,
-            deploy=MachineDeploy(),
-        ),
+    if args.flake:
+        clan_dir = args.flake
+    else:
+        tmp = get_clan_flake_toplevel_or_env()
+        clan_dir = FlakeId(str(tmp)) if tmp else None
+
+    if not clan_dir:
+        msg = "No clan found."
+        description = (
+            "Run this command in a clan directory or specify the --flake option"
+        )
+        raise ClanError(msg, description=description)
+
+    machine = InventoryMachine(
+        name=args.machine_name,
+        tags=args.tags,
+        deploy=MachineDeploy(),
     )
+    opts = CreateOptions(
+        clan_dir=clan_dir,
+        machine=machine,
+        template_name=args.template_name,
+    )
+    create_machine(opts)
 
 
 def register_create_parser(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("machine", type=str)
     parser.set_defaults(func=create_command)
-
     parser.add_argument(
-        "--system",
+        "machine_name",
         type=str,
-        default=None,
-        help="Host platform to use. i.e. 'x86_64-linux' or 'aarch64-darwin' etc.",
-        metavar="PLATFORM",
-    )
-    parser.add_argument(
-        "--description",
-        type=str,
-        default=None,
-        help="A description of the machine.",
-    )
-    parser.add_argument(
-        "--icon",
-        type=str,
-        default=None,
-        help="Path to an icon to use for the machine. - Must be a path to icon file relative to the flake directory, or a public url.",
-        metavar="PATH",
+        help="The name of the machine to import",
     )
     parser.add_argument(
         "--tags",
         nargs="+",
         default=[],
         help="Tags to associate with the machine. Can be used to assign multiple machines to services.",
+    )
+    parser.add_argument(
+        "--template-name",
+        type=str,
+        help="The name of the template machine to import",
     )

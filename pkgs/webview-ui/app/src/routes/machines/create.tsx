@@ -13,16 +13,18 @@ export function CreateMachine() {
   const navigate = useNavigate();
   const [formStore, { Form, Field }] = createForm<CreateMachineForm>({
     initialValues: {
-      flake: {
-        loc: activeURI() || "",
-      },
-      machine: {
-        tags: ["all"],
-        deploy: {
-          targetHost: "",
+      opts: {
+        clan_dir: {
+          loc: activeURI() || "",
         },
-        name: "",
-        description: "",
+        machine: {
+          tags: ["all"],
+          deploy: {
+            targetHost: "",
+          },
+          name: "",
+          description: "",
+        },
       },
     },
   });
@@ -39,14 +41,16 @@ export function CreateMachine() {
     console.log("submitting", values);
 
     const response = await callApi("create_machine", {
-      ...values,
-      flake: {
-        loc: active_dir,
+      opts: {
+        ...values.opts,
+        clan_dir: {
+          loc: active_dir,
+        },
       },
     });
 
     if (response.status === "success") {
-      toast.success(`Successfully created ${values.machine.name}`);
+      toast.success(`Successfully created ${values.opts.machine.name}`);
       reset(formStore);
 
       queryClient.invalidateQueries({
@@ -55,7 +59,7 @@ export function CreateMachine() {
       navigate("/machines");
     } else {
       toast.error(
-        `Error: ${response.errors[0].message}. Machine ${values.machine.name} could not be created`,
+        `Error: ${response.errors[0].message}. Machine ${values.opts.machine.name} could not be created`,
       );
     }
   };
@@ -65,7 +69,7 @@ export function CreateMachine() {
         <span class="px-2">Create new Machine</span>
         <Form onSubmit={handleSubmit}>
           <Field
-            name="machine.name"
+            name="opts.machine.name"
             validate={[required("This field is required")]}
           >
             {(field, props) => (
@@ -79,7 +83,7 @@ export function CreateMachine() {
               />
             )}
           </Field>
-          <Field name="machine.description">
+          <Field name="opts.machine.description">
             {(field, props) => (
               <TextInput
                 inputProps={props}
@@ -90,7 +94,7 @@ export function CreateMachine() {
               />
             )}
           </Field>
-          <Field name="machine.deploy.targetHost">
+          <Field name="opts.machine.deploy.targetHost">
             {(field, props) => (
               <>
                 <TextInput

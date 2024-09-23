@@ -15,6 +15,7 @@ Operate on the returned inventory to make changes
 import contextlib
 import json
 from pathlib import Path
+from typing import Any
 
 from clan_cli.api import API, dataclass_to_dict, from_dict
 from clan_cli.cmd import run_no_stdout
@@ -119,7 +120,9 @@ def load_inventory_json(
 
 
 @API.register
-def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> None:
+def set_inventory(
+    inventory: Inventory | dict[str, Any], flake_dir: str | Path, message: str
+) -> None:
     """ "
     Write the inventory to the flake directory
     and commit it to git with the given message
@@ -127,7 +130,10 @@ def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> 
     inventory_file = get_path(flake_dir)
 
     with inventory_file.open("w") as f:
-        json.dump(dataclass_to_dict(inventory), f, indent=2)
+        if isinstance(inventory, Inventory):
+            json.dump(dataclass_to_dict(inventory), f, indent=2)
+        else:
+            json.dump(inventory, f, indent=2)
 
     commit_file(inventory_file, Path(flake_dir), commit_message=message)
 
@@ -147,3 +153,42 @@ def init_inventory(directory: str, init: Inventory | None = None) -> None:
     if inventory is not None:
         # Persist creates a commit message for each change
         set_inventory(inventory, directory, "Init inventory")
+
+
+@API.register
+def merge_template_inventory(
+    inventory: Inventory, template_inventory: Inventory, machine_name: str
+) -> None:
+    """
+    Merge the template inventory into the current inventory
+    The template inventory is expected to be a subset of the current inventory
+    """
+    for service_name, instance in template_inventory.services.items():
+        if len(instance.keys()) > 0:
+            msg = f"Service {service_name} in template inventory has multiple instances"
+            description = (
+                "Only one instance per service is allowed in a template inventory"
+            )
+            raise ClanError(msg, description=description)
+
+        # Get the service config without knowing instance name
+        service_conf = next((v for v in instance.values() if "config" in v), None)
+
+        if not service_conf:
+            msg = f"Service {service_name} in template inventory has no config"
+            description = "Invalid inventory configuration"
+            raise ClanError(msg, description=description)
+
+        if "machines" in service_conf:
+            msg = f"Service {service_name} in template inventory has machines"
+            description = "The 'machines' key is not allowed in template inventory"
+            raise ClanError(msg, description=description)
+
+        if "roles" not in service_conf:
+            msg = f"Service {service_name} in template inventory has no roles"
+            description = "roles key is required in template inventory"
+            raise ClanError(msg, description=description)
+
+        # TODO: We need a MachineReference type in nix before we can implement this properly
+        msg = "Merge template inventory is not implemented yet"
+        raise NotImplementedError(msg)
