@@ -5,6 +5,8 @@
   setuptools,
   util-linux,
   systemd,
+  colorama,
+  junit-xml,
 }:
 buildPythonApplication {
   pname = "test-driver";
@@ -12,6 +14,8 @@ buildPythonApplication {
   propagatedBuildInputs = [
     util-linux
     systemd
+    colorama
+    junit-xml
   ] ++ extraPythonPackages python3Packages;
   nativeBuildInputs = [ setuptools ];
   format = "pyproject";
