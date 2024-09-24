@@ -47,6 +47,7 @@ in
     (modulesPath + "/profiles/installation-device.nix")
     (modulesPath + "/profiles/all-hardware.nix")
     (modulesPath + "/profiles/base.nix")
+    ./zfs-latest.nix
   ];
 
   environment.systemPackages = [ pkgs.nixos-facter ];
