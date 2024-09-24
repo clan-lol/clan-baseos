@@ -160,7 +160,6 @@ export const Flash = () => {
         dry_run: false,
         write_efi_boot_entries: false,
         debug: false,
-        no_udev: true,
       });
     } catch (error) {
       toast.error(`Error could not flash disk: ${error}`);
