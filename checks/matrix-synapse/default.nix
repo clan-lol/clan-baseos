@@ -70,7 +70,7 @@
       start_all()
       machine.wait_for_unit("matrix-synapse")
       machine.succeed("${pkgs.netcat}/bin/nc -z -v ::1 8008")
-      machine.succeed("${pkgs.curl}/bin/curl -Ssf -L http://localhost/_matrix/static/ -H 'Host: matrix.clan.test'")
+      machine.wait_until_succeeds("${pkgs.curl}/bin/curl -Ssf -L http://localhost/_matrix/static/ -H 'Host: matrix.clan.test'")
 
       machine.systemctl("restart matrix-synapse >&2") # check if user creation is idempotent
       machine.execute("journalctl -u matrix-synapse --no-pager >&2")
