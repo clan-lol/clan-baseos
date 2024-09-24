@@ -5,9 +5,12 @@ import subprocess
 import time
 import types
 from collections.abc import Callable
+from contextlib import _GeneratorContextManager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
+
+from .logger import AbstractLogger, CompositeLogger, TerminalLogger
 
 
 class Error(Exception):
@@ -42,12 +45,20 @@ def retry(fn: Callable, timeout: int = 900) -> None:
 
 
 class Machine:
-    def __init__(self, name: str, toplevel: Path, rootdir: Path, out_dir: str) -> None:
+    def __init__(
+        self,
+        name: str,
+        toplevel: Path,
+        logger: AbstractLogger,
+        rootdir: Path,
+        out_dir: str,
+    ) -> None:
         self.name = name
         self.toplevel = toplevel
         self.out_dir = out_dir
         self.process: subprocess.Popen | None = None
         self.rootdir: Path = rootdir
+        self.logger = logger
 
     def start(self) -> None:
         prepare_machine_root(self.name, self.rootdir)
@@ -78,7 +89,10 @@ class Machine:
         assert self.process.stdout is not None, "Machine has no stdout"
         for line in self.process.stdout:
             print(line, end="")
-            if line.startswith("systemd[1]: Startup finished in"):
+            if (
+                line.startswith("systemd[1]: Startup finished in")
+                or "Welcome to NixOS" in line
+            ):
                 break
         else:
             msg = f"Failed to start container {self.name}"
@@ -184,6 +198,15 @@ class Machine:
         )
         return proc
 
+    def nested(
+        self, msg: str, attrs: dict[str, str] | None = None
+    ) -> _GeneratorContextManager:
+        if attrs is None:
+            attrs = {}
+        my_attrs = {"machine": self.name}
+        my_attrs.update(attrs)
+        return self.logger.nested(msg, my_attrs)
+
     def systemctl(self, q: str) -> subprocess.CompletedProcess:
         """
         Runs `systemctl` commands with optional support for
@@ -199,6 +222,25 @@ class Machine:
         ```
         """
         return self.execute(f"systemctl {q}")
+
+    def wait_until_succeeds(self, command: str, timeout: int = 900) -> str:
+        """
+        Repeat a shell command with 1-second intervals until it succeeds.
+        Has a default timeout of 900 seconds which can be modified, e.g.
+        `wait_until_succeeds(cmd, timeout=10)`. See `execute` for details on
+        command execution.
+        Throws an exception on timeout.
+        """
+        output = ""
+
+        def check_success(_: Any) -> bool:
+            nonlocal output
+            result = self.execute(command, timeout=timeout)
+            return result.returncode == 0
+
+        with self.nested(f"waiting for success: {command}"):
+            retry(check_success, timeout)
+            return output
 
     def wait_for_unit(self, unit: str, timeout: int = 900) -> None:
         """
@@ -257,10 +299,19 @@ def setup_filesystems() -> None:
 
 
 class Driver:
-    def __init__(self, containers: list[Path], testscript: str, out_dir: str) -> None:
+    logger: AbstractLogger
+
+    def __init__(
+        self,
+        containers: list[Path],
+        logger: AbstractLogger,
+        testscript: str,
+        out_dir: str,
+    ) -> None:
         self.containers = containers
         self.testscript = testscript
         self.out_dir = out_dir
+        self.logger = logger
         setup_filesystems()
 
         self.tempdir = TemporaryDirectory()
@@ -279,6 +330,7 @@ class Driver:
                     toplevel=container,
                     rootdir=tempdir_path / name,
                     out_dir=self.out_dir,
+                    logger=self.logger,
                 )
             )
 
@@ -364,9 +416,11 @@ def main() -> None:
         type=writeable_dir,
     )
     args = arg_parser.parse_args()
+    logger = CompositeLogger([TerminalLogger()])
     with Driver(
-        args.containers,
-        args.test_script.read_text(),
-        args.output_directory.resolve(),
+        containers=args.containers,
+        testscript=args.test_script.read_text(),
+        out_dir=args.output_directory.resolve(),
+        logger=logger,
     ) as driver:
         driver.run_tests()
