@@ -3,9 +3,14 @@ from dataclasses import dataclass
 from functools import cached_property
 from graphlib import TopologicalSorter
 
+from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
 
 from .check import check_vars
+
+
+class GeneratorNotFoundError(ClanError):
+    pass
 
 
 @dataclass
@@ -28,6 +33,11 @@ def missing_dependency_closure(
     queue = list(closure)
     while queue:
         gen_name = queue.pop(0)
+
+        if gen_name not in generators:
+            msg = f"Requested generator {gen_name} not found"
+            raise GeneratorNotFoundError(msg)
+
         for dep in generators[gen_name].dependencies:
             if dep not in closure and not generators[dep].exists:
                 dep_closure.add(dep)

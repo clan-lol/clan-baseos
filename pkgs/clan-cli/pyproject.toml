@@ -25,6 +25,7 @@ clan_cli = [
   "templates/**/*",
   "vms/mimetypes/**/*",
   "webui/assets/**/*",
+  "flash/*.sh"
 ]
 
 [tool.pytest.ini_options]

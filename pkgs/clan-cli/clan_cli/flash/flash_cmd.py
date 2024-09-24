@@ -26,7 +26,6 @@ class FlashOptions:
     mode: str
     write_efi_boot_entries: bool
     nix_options: list[str]
-    no_udev: bool
     system_config: SystemConfig
 
 
@@ -73,15 +72,11 @@ def flash_command(args: argparse.Namespace) -> None:
             wifi_settings=None,
         ),
         write_efi_boot_entries=args.write_efi_boot_entries,
-        no_udev=args.no_udev,
         nix_options=args.option,
     )
 
     if args.wifi:
-        opts.system_config.wifi_settings = [
-            WifiConfig(ssid=ssid, password=password)
-            for ssid, password in args.wifi.items()
-        ]
+        opts.system_config.wifi_settings = [WifiConfig(ssid=ssid) for ssid in args.wifi]
 
     machine = Machine(opts.machine, flake=opts.flake)
     if opts.confirm and not opts.dry_run:
@@ -102,7 +97,6 @@ def flash_command(args: argparse.Namespace) -> None:
         dry_run=opts.dry_run,
         debug=opts.debug,
         write_efi_boot_entries=opts.write_efi_boot_entries,
-        no_udev=opts.no_udev,
         extra_args=opts.nix_options,
     )
 
@@ -135,11 +129,9 @@ def register_flash_apply_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--wifi",
         type=str,
-        nargs=2,
-        metavar=("ssid", "password"),
-        action=AppendDiskAction,
-        help="wifi network to connect to",
-        default={},
+        action="append",
+        help="wifi ssid to connect to",
+        default=[],
     )
     parser.add_argument(
         "--mode",
@@ -159,12 +151,6 @@ def register_flash_apply_parser(parser: argparse.ArgumentParser) -> None:
         "--language",
         type=str,
         help="system language",
-    )
-    parser.add_argument(
-        "--no-udev",
-        help="Disable udev rules to block automounting",
-        default=False,
-        action="store_true",
     )
     parser.add_argument(
         "--keymap",

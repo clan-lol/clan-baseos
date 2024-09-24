@@ -11,9 +11,11 @@ from typing import Any
 from clan_cli.api import API
 from clan_cli.cmd import Log, run
 from clan_cli.errors import ClanError
+from clan_cli.facts.generate import generate_facts
 from clan_cli.facts.secret_modules import SecretStoreBase
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
+from clan_cli.vars.generate import generate_vars_for_machine
 
 from .automount import pause_automounting
 from .list import list_possible_keymaps, list_possible_languages
@@ -24,7 +26,6 @@ log = logging.getLogger(__name__)
 @dataclass
 class WifiConfig:
     ssid: str
-    password: str
 
 
 @dataclass
@@ -51,19 +52,21 @@ def flash_machine(
     dry_run: bool,
     write_efi_boot_entries: bool,
     debug: bool,
-    no_udev: bool = False,
     extra_args: list[str] | None = None,
 ) -> None:
     devices = [Path(disk.device) for disk in disks]
-    with pause_automounting(devices, no_udev):
+    with pause_automounting(devices):
         if extra_args is None:
             extra_args = []
         system_config_nix: dict[str, Any] = {}
 
+        generate_vars_for_machine(machine, generator_name=None, regenerate=False)
+        generate_facts([machine], service=None, regenerate=False)
+
         if system_config.wifi_settings:
-            wifi_settings = {}
+            wifi_settings: dict[str, dict[str, str]] = {}
             for wifi in system_config.wifi_settings:
-                wifi_settings[wifi.ssid] = {"password": wifi.password}
+                wifi_settings[wifi.ssid] = {}
             system_config_nix["clan"] = {"iwd": {"networks": wifi_settings}}
 
         if system_config.language:

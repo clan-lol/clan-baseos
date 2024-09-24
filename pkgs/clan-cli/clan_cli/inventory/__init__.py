@@ -171,24 +171,25 @@ def merge_template_inventory(
             )
             raise ClanError(msg, description=description)
 
-        # Get the service config without knowing instance name
-        service_conf = next((v for v in instance.values() if "config" in v), None)
-
-        if not service_conf:
+        # services.<service_name>.<instance_name>.config
+        config = next((v for v in instance.values() if "config" in v), None)
+        if not config:
             msg = f"Service {service_name} in template inventory has no config"
             description = "Invalid inventory configuration"
             raise ClanError(msg, description=description)
 
-        if "machines" in service_conf:
+        # Disallow "config.machines" key
+        if "machines" in config:
             msg = f"Service {service_name} in template inventory has machines"
             description = "The 'machines' key is not allowed in template inventory"
             raise ClanError(msg, description=description)
 
-        if "roles" not in service_conf:
+        # Require "config.roles" key
+        if "roles" not in config:
             msg = f"Service {service_name} in template inventory has no roles"
             description = "roles key is required in template inventory"
             raise ClanError(msg, description=description)
 
-        # TODO: We need a MachineReference type in nix before we can implement this properly
+        # TODO: Implement merging of template inventory
         msg = "Merge template inventory is not implemented yet"
         raise NotImplementedError(msg)
