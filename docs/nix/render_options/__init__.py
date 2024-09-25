@@ -35,6 +35,7 @@ from clan_cli.errors import ClanError
 CLAN_CORE_PATH = Path(os.environ["CLAN_CORE_PATH"])
 CLAN_CORE_DOCS = Path(os.environ["CLAN_CORE_DOCS"])
 CLAN_MODULES = os.environ.get("CLAN_MODULES")
+BUILD_CLAN_PATH = os.environ.get("BUILD_CLAN_PATH")
 
 OUT = os.environ.get("out")
 
@@ -74,11 +75,15 @@ def join_lines_with_indentation(lines: list[str], indent: int = 4) -> str:
     return "\n".join(indent_str + line for line in lines)
 
 
-def render_option(name: str, option: dict[str, Any], level: int = 3) -> str:
+def render_option(
+    name: str, option: dict[str, Any], level: int = 3, short_head: str | None = None
+) -> str:
     read_only = option.get("readOnly")
 
     res = f"""
-{"#" * level} {sanitize(name)}
+{"#" * level} {sanitize(name) if short_head is None else sanitize(short_head)}
+
+{f"**Attribute: `{name}`**" if short_head is not None else ""}
 
 {"**Readonly**" if read_only else ""}
 
@@ -116,7 +121,6 @@ def render_option(name: str, option: dict[str, Any], level: int = 3) -> str:
     decls = option.get("declarations", [])
     if decls:
         source_path, name = replace_store_path(decls[0])
-        print(source_path, name)
         res += f"""
 :simple-git: [{name}]({source_path})
 """
@@ -211,7 +215,7 @@ For more information, see the [inventory guide](../../manual/inventory.md).
 
 clan_modules_descr = """Clan modules are [NixOS modules](https://wiki.nixos.org/wiki/NixOS_modules) which have been enhanced with additional features provided by Clan, with certain option types restricted to enable configuration through a graphical interface.
 
-!!! note "🔹 = [inventory](../../manual/inventory.md) supported
+!!! note "🔹"
     Modules with this indicator support the [inventory](../../manual/inventory.md) feature.
 
 """
@@ -331,6 +335,117 @@ def build_option_card(module_name: str, frontmatter: Frontmatter) -> str:
     return f"{to_md_li(module_name, frontmatter)}\n\n"
 
 
-if __name__ == "__main__":
+def produce_build_clan_docs() -> None:
+    if not BUILD_CLAN_PATH:
+        msg = f"Environment variables are not set correctly: BUILD_CLAN_PATH={BUILD_CLAN_PATH}. Expected a path to the optionsJSON"
+        raise ClanError(msg)
+
+    if not OUT:
+        msg = f"Environment variables are not set correctly: $out={OUT}"
+        raise ClanError(msg)
+
+    output = """# BuildClan
+
+This provides an overview of the available arguments of the `buildClan` function.
+
+!!! Note "Flake-parts"
+    Each attribute is also available via `clan.<option>`
+
+    For example `clan.inventory = ...;` is equivalent to `buildClan { inventory = ...; }`.
+
+"""
+    with Path(BUILD_CLAN_PATH).open() as f:
+        options: dict[str, dict[str, Any]] = json.load(f)
+        # print(options)
+        for option_name, info in options.items():
+            # Skip underscore options
+            if option_name.startswith("_"):
+                continue
+            # Skip inventory sub options
+            # Inventory model has its own chapter
+            if option_name.startswith("inventory."):
+                continue
+
+            print(f"Rendering option of {option_name}...")
+            output += render_option(option_name, info)
+
+    outfile = Path(OUT) / "nix-api/buildclan.md"
+    outfile.parent.mkdir(parents=True, exist_ok=True)
+    with Path.open(outfile, "w") as of:
+        of.write(output)
+
+
+def produce_inventory_docs() -> None:
+    if not BUILD_CLAN_PATH:
+        msg = f"Environment variables are not set correctly: BUILD_CLAN_PATH={BUILD_CLAN_PATH}. Expected a path to the optionsJSON"
+        raise ClanError(msg)
+
+    if not OUT:
+        msg = f"Environment variables are not set correctly: $out={OUT}"
+        raise ClanError(msg)
+
+    output = """# Inventory
+This provides an overview of the available attributes of the `inventory` model.
+
+It can be set via the `inventory` attribute of the [`buildClan`](./buildclan.md#inventory) function, or via the [`clan.inventory`](./buildclan.md#inventory) attribute of flake-parts.
+
+"""
+    # Inventory options are already included under the buildClan attribute
+    # We just omited them in the buildClan docs, because we want a seperate output for the inventory model
+    with Path(BUILD_CLAN_PATH).open() as f:
+        options: dict[str, dict[str, Any]] = json.load(f)
+
+        def by_cat(item: tuple[str, dict[str, Any]]) -> Any:
+            name, _info = item
+            parts = name.split(".") if "." in name else ["root", "sub"]
+
+            # Make everything fixed lenght.
+            remain = 10 - len(parts)
+            parts.extend(["A"] * remain)
+            category = parts[1]
+            # Sort by category,
+            # then by length of the option,
+            # then by the rest of the options
+            comparator = (category, -remain, parts[2:9])
+            return comparator
+
+        seen_categories = set()
+        for option_name, info in sorted(options.items(), key=by_cat):
+            # Skip underscore options
+            if option_name.startswith("_"):
+                continue
+
+            # Skip non inventory sub options
+            if not option_name.startswith("inventory."):
+                continue
+
+            category = option_name.split(".")[1]
+
+            heading_level = 3
+            if category not in seen_categories:
+                heading_level = 2
+                seen_categories.add(category)
+
+            parts = option_name.split(".")
+            short_name = ""
+            for part in parts[1:]:
+                if "<" in part:
+                    continue
+                short_name += ("." + part) if short_name else part
+
+            output += render_option(
+                option_name, info, level=heading_level, short_head=short_name
+            )
+
+    outfile = Path(OUT) / "nix-api/inventory.md"
+    outfile.parent.mkdir(parents=True, exist_ok=True)
+    with Path.open(outfile, "w") as of:
+        of.write(output)
+
+
+if __name__ == "__main__":  #
+    produce_build_clan_docs()
+    produce_inventory_docs()
+
     produce_clan_core_docs()
     produce_clan_modules_docs()

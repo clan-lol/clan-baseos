@@ -3,7 +3,6 @@
   pkgs,
   module-docs,
   clan-cli-docs,
-  inventory-api-docs,
   asciinema-player-js,
   asciinema-player-css,
   roboto,
@@ -20,9 +19,8 @@ pkgs.mkShell {
     mkdir -p ./site/reference/cli
     cp -af ${module-docs}/* ./site/reference/
     cp -af ${clan-cli-docs}/* ./site/reference/cli/
-    cp -af ${inventory-api-docs} ./site/reference/nix-api/inventory.md
 
-    chmod +w ./site/reference/*
+    chmod -R +w ./site/reference/*
 
     echo "Generated API documentation in './site/reference/' "
 
