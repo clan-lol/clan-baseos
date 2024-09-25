@@ -1,4 +1,4 @@
-# Getting Started
+# :material-clock-fast: Getting Started
 
 Create your own clan with these initial steps and manage a fleet of machines with one single testable git repository!
 

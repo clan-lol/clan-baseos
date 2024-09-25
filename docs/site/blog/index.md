@@ -1,2 +1,2 @@
-# Blog
+# :fontawesome-solid-blog: Blog
 

@@ -126,7 +126,7 @@ Adding or configuring a new machine requires two simple steps:
 
       # IMPORTANT! Add your SSH key here
       # e.g. > cat ~/.ssh/id_ed25519.pub
-      users.users.root.openssh.authorizedKeys.keys = "__YOUR_SSH_KEY__";
+      users.users.root.openssh.authorizedKeys.keys = [ "__YOUR_SSH_KEY__" ];
 
       # ...
    }

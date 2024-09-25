@@ -39,7 +39,7 @@ exclude_docs: |
   /drafts/
 
 nav:
-  - index.md
+  - Home: index.md
   - Getting Started:
       - getting-started/index.md
       - Installer: getting-started/installer.md

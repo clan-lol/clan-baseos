@@ -1,3 +1,3 @@
-# Core Concepts
+# :simple-abstract: Concepts
 
 TODO
