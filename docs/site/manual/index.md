@@ -1,4 +1,4 @@
-# :material-book: Manual
+# :material-book: Guides
 
 Instructions and explanations for practical Implementations ordered by Topics.
 

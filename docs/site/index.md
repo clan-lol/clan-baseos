@@ -4,9 +4,7 @@ hide:
   - toc
 ---
 
-# Home
-
-## Welcome to **Clan**'s documentation
+# :material-home: Welcome to **Clan**'s awesome documentation
 
 [Getting Started](./getting-started/index.md){ .md-button }
 
