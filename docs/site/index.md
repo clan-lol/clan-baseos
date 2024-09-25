@@ -1,8 +1,14 @@
+---
+hide:
+  - navigation
+  - toc
+---
+
 # Home
 
 ## Welcome to **Clan**'s documentation
 
-[Quickstart Guide](./getting-started/index.md){ .md-button }
+[Getting Started](./getting-started/index.md){ .md-button }
 
 ## What's inside
 
@@ -19,13 +25,21 @@ This documentation is structured into the following sections
 
     [:octicons-arrow-right-24: Getting started](./getting-started/index.md)
 
--   :material-sign-direction:{ .lg .middle } __Manual__
+-   :simple-abstract:{ .lg .middle } __Concepts__
+
+    ---
+
+    Important Core Concepts that should be inderstood to get the best experience.
+
+    [:octicons-arrow-right-24: Core Concepts](./concepts/index.md)
+
+-   :material-sign-direction:{ .lg .middle } __Guides__
 
     ---
 
     Instructions and explanations for practical Implementations ordered by Topic.
 
-    [:octicons-arrow-right-24: Manual](./manual/index.md)
+    [:octicons-arrow-right-24: Guides](./manual/index.md)
 
 -   :material-api:{ .lg .middle } __Reference__
 

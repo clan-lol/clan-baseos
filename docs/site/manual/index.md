@@ -17,18 +17,50 @@ Instructions and explanations for practical Implementations ordered by Topics.
 
     [:octicons-arrow-right-24: Getting started](../getting-started/index.md)
 
+-   :fontawesome-solid-user-group:{ .lg .middle } __Authoring Modules__
+
+    ---
+
+    Create clanModules that can be reused by the community.
+
+    [:octicons-arrow-right-24: Authoring clanModules](../clanmodules/index.md)
+
 </div>
 
 ## Guides
 
 **How-to Guides for achieving a certain goal or solving a specific issue.**
 
-- [Adding Machines](./adding-machines.md): Learn how Clan automatically includes machines and Nix files.
+<div class="grid cards" markdown>
 
-- [Secrets](./secrets.md): Learn how to manage secrets.
+-   [Machines](./include-machines.md)
 
-- [Inventory](./inventory.md): Clan's declaration format for running **services** on one or multiple **machines**.
+    ---
 
-- [Flake-parts guide](./flake-parts.md): Use clan with [flake-parts](https://flake.parts/).
+    Learn how Clan automatically includes machines and Nix files.
 
-- [Contribute](./contribute.md): Discover how to set up a development environment to contribute to Clan!
+-   [Secrets](./secrets.md)
+
+    ---
+
+    Learn how to manage secrets.
+
+-   [Inventory](./inventory.md)
+
+    ---
+
+    Clan's declaration format for running **services** on one or multiple **machines**.
+
+-   [Flake-parts](./flake-parts.md)
+
+    ---
+
+    Use clan with [https://flake-parts.dev]()
+
+-   [Contribute](./contribute.md)
+
+    ---
+
+    Discover how to set up a development environment to contribute to Clan!
+
+</div>
