@@ -35,13 +35,34 @@ in
     machines = lib.mkOption {
       type = types.attrsOf types.deferredModule;
       default = { };
+      description = ''
+        A mapping of machine names to their nixos configuration.
+
+        ???+ example
+
+            ```nix
+            machines = {
+              my-machine = {
+                # Your nixos configuration
+              };
+            };
+            ```
+      '';
     };
     inventory = lib.mkOption {
       type = types.submodule { imports = [ ../inventory/build-inventory/interface.nix ]; };
+      description = ''
+        The `Inventory` submodule.
+
+        For details see the [Inventory](./inventory.md) documentation.
+      '';
     };
 
     # Meta
     meta = lib.mkOption {
+      description = ''
+        Global information about the clan.
+      '';
       type = types.nullOr (
         types.submodule {
           options = {
@@ -58,15 +79,28 @@ in
     pkgsForSystem = lib.mkOption {
       type = types.functionTo (types.nullOr types.attrs);
       default = _: null;
+      defaultText = "Lambda :: String -> { ... } | null";
+      description = ''
+        A function that maps from architecture to pkg. `( string -> pkgs )`
+
+        If specified this nixpkgs will be only imported once for each system.
+        This improves performance, but all nipxkgs.* options will be ignored.
+      '';
     };
 
     # Outputs
     nixosConfigurations = lib.mkOption {
+      # Hide from documentation.
+      # Exposed at the top-level of the flake, clan.nixosConfigurations should not used by the user.
+      # Instead, the user should use the `.#nixosConfigurations` attribute of the flake output.
+      visible = false;
       type = types.lazyAttrsOf types.raw;
       default = { };
     };
     # flake.clanInternals
     clanInternals = lib.mkOption {
+      # Hide from documentation. Exposes internals to the cli.
+      visible = false;
       # type = types.raw;
       # ClanInternals
       type = types.submodule {

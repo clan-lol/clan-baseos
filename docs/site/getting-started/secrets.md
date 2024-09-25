@@ -60,5 +60,4 @@ If you followed the quickstart tutorial all necessary secrets are initialized at
 ## Whats next?
 
 - [Deployment](deploy.md): How to remotely deploy your machine
-- [Advanced Secrets](../manual/secrets.md) If you want to know more about how to save and share passwords in your clan 
-
+- Full [Secrets](../manual/secrets.md) guide If you want to know more about how to save and share passwords in your clan

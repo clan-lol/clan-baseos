@@ -40,24 +40,27 @@ exclude_docs: |
 
 nav:
   - index.md
-  - Manual:
+  - Getting Started:
+      - getting-started/index.md
+      - Installer: getting-started/installer.md
+      - Configure: getting-started/configure.md
+      - Secrets & Facts: getting-started/secrets.md
+      - Deploy Machine: getting-started/deploy.md
+  - Guides:
       - Overview: manual/index.md
-      - Tutorials:
-          - Getting Started:
-              - getting-started/index.md
-              - Installer: getting-started/installer.md
-              - Configure: getting-started/configure.md
-              - Secrets & Facts: getting-started/secrets.md
-              - Deploy Machine: getting-started/deploy.md
-              - Disk Encryption: getting-started/disk-encryption.md
-              - Mesh VPN: getting-started/mesh-vpn.md
-              - Backup & Restore: getting-started/backups.md
+      - Disk Encryption: getting-started/disk-encryption.md
+      - Mesh VPN: getting-started/mesh-vpn.md
+      - Backup & Restore: getting-started/backups.md
       - Adding Machines: manual/adding-machines.md
       - Inventory: manual/inventory.md
       - Secrets: manual/secrets.md
       - Secure Boot: manual/secure-boot.md
       - Flake-parts: manual/flake-parts.md
+      - Authoring ClanModules:
+          - clanmodules/index.md
       - Contribute: manual/contribute.md
+  - Concepts:
+      - Overview: concepts/index.md
   - Reference:
       - Overview: reference/index.md
       - Clan Modules:
@@ -119,7 +122,6 @@ nav:
           - reference/clan-core/deployment.md
           - reference/clan-core/networking.md
       - Nix API:
-          - reference/nix-api/index.md
           - buildClan: reference/nix-api/buildclan.md
           - Inventory: reference/nix-api/inventory.md
   - Blog:
