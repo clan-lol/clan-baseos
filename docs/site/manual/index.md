@@ -33,7 +33,7 @@ Instructions and explanations for practical Implementations ordered by Topics.
 
 <div class="grid cards" markdown>
 
--   [Machines](./include-machines.md)
+-   [Machines](./adding-machines.md)
 
     ---
 

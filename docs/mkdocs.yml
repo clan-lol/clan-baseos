@@ -51,7 +51,7 @@ nav:
       - Disk Encryption: getting-started/disk-encryption.md
       - Mesh VPN: getting-started/mesh-vpn.md
       - Backup & Restore: getting-started/backups.md
-      - Machines: manual/include-machines.md
+      - Adding Machines: manual/adding-machines.md
       - Inventory: manual/inventory.md
       - Secrets: manual/secrets.md
       - Secure Boot: manual/secure-boot.md

@@ -33,7 +33,7 @@ in
 
     # Optional
     machines = lib.mkOption {
-      type = types.deferredModule;
+      type = types.attrsOf types.deferredModule;
       default = { };
       description = ''
         A mapping of machine names to their nixos configuration.

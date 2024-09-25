@@ -38,7 +38,7 @@ buildClan argument: `directory`
 ```nix
 "Root directory of the flake"
 ```
-        
+
 :simple-git: [interface.nix](https://git.clan.lol/clan/clan-core/src/branch/main/lib/build-clan/interface.nix)
 
 
@@ -86,7 +86,7 @@ A mapping of machine names to their nixos configuration.
 ```nix
 { }
 ```
-        
+
 :simple-git: [interface.nix](https://git.clan.lol/clan/clan-core/src/branch/main/lib/build-clan/interface.nix)
 
 
@@ -107,7 +107,7 @@ Global information about the clan.
 ```nix
 null
 ```
-        
+
 :simple-git: [interface.nix](https://git.clan.lol/clan/clan-core/src/branch/main/lib/build-clan/interface.nix)
 
 
@@ -145,7 +145,7 @@ This improves performance, but all nipxkgs.* options will be ignored.
 ```nix
 "Lambda :: String -> { ... } | null"
 ```
-        
+
 :simple-git: [interface.nix](https://git.clan.lol/clan/clan-core/src/branch/main/lib/build-clan/interface.nix)
 
 
@@ -165,6 +165,6 @@ Extra arguments to pass to nixosSystem i.e. useful to make self available
 ```nix
 { }
 ```
-        
+
 :simple-git: [interface.nix](https://git.clan.lol/clan/clan-core/src/branch/main/lib/build-clan/interface.nix)
 
