@@ -1,11 +1,14 @@
-{ self, inputs, ... }:
+{
+  self,
+  inputs,
+  ...
+}:
 let
   inputOverrides = builtins.concatStringsSep " " (
     builtins.map (input: " --override-input ${input} ${inputs.${input}}") (builtins.attrNames inputs)
   );
 in
 {
-
   perSystem =
     {
       pkgs,
@@ -13,10 +16,14 @@ in
       system,
       ...
     }:
-    # let
+    let
+      jsonDocs = import ./eval-docs.nix {
+        inherit pkgs lib;
+      };
 
-    # in
+    in
     {
+      legacyPackages.clan-internals-docs = jsonDocs.optionsJSON;
 
       # Run: nix-unit --extra-experimental-features flakes --flake .#legacyPackages.x86_64-linux.evalTests
       legacyPackages.evalTests-build-clan = import ./tests.nix {
