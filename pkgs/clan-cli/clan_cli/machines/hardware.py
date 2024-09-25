@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class HardwareReport:
-    file: Literal["nixos-generate-config", "nixos-facter"]
+    backend: Literal["nixos-generate-config", "nixos-facter"]
 
 
 hw_nix_file = "hardware-configuration.nix"
@@ -104,9 +104,7 @@ def generate_machine_hardware_info(
     password: str | None = None,
     keyfile: str | None = None,
     force: bool | None = False,
-    report_type: Literal[
-        "nixos-generate-config", "nixos-facter"
-    ] = "nixos-generate-config",
+    backend: Literal["nixos-generate-config", "nixos-facter"] = "nixos-generate-config",
 ) -> HardwareReport:
     """
     Generate hardware information for a machine
@@ -119,7 +117,7 @@ def generate_machine_hardware_info(
 
     config_command = (
         ["nixos-facter"]
-        if report_type == "nixos-facter"
+        if backend == "nixos-facter"
         else [
             "nixos-generate-config",
             # Filesystems are managed by disko
@@ -162,7 +160,7 @@ def generate_machine_hardware_info(
         raise ClanError(msg)
 
     hw_file = Path(
-        f"{clan_dir}/machines/{machine_name}/{hw_nix_file if report_type == 'nixos-generate-config' else facter_file}"
+        f"{clan_dir}/machines/{machine_name}/{hw_nix_file if backend == 'nixos-generate-config' else facter_file}"
     )
     hw_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -213,7 +211,7 @@ def generate_machine_hardware_info(
             location=f"{__name__} {hw_file}",
         ) from e
 
-    return HardwareReport(report_type)
+    return HardwareReport(backend)
 
 
 @dataclass
@@ -223,6 +221,7 @@ class HardwareGenerateOptions:
     target_host: str | None
     password: str | None
     force: bool | None
+    backend: Literal["nixos-generate-config", "nixos-facter"]
 
 
 def update_hardware_config_command(args: argparse.Namespace) -> None:
@@ -232,13 +231,13 @@ def update_hardware_config_command(args: argparse.Namespace) -> None:
         target_host=args.target_host,
         password=args.password,
         force=args.force,
+        backend=args.backend,
     )
-    hw_info = generate_machine_hardware_info(
-        opts.flake, opts.machine, opts.target_host, opts.password
+    generate_machine_hardware_info(
+        opts.flake, opts.machine, opts.target_host, opts.password, opts.backend
     )
     print("Successfully generated hardware information.")
     print(f"Target: {opts.machine} ({opts.target_host})")
-    print(f"Type: {hw_info.file}")
 
 
 def register_update_hardware_config(parser: argparse.ArgumentParser) -> None:
@@ -259,6 +258,12 @@ def register_update_hardware_config(parser: argparse.ArgumentParser) -> None:
         help="Pre-provided password the cli will prompt otherwise if needed.",
         type=str,
         required=False,
+    )
+    machine_parser = parser.add_argument(
+        "--backend",
+        help="The type of hardware report to generate.",
+        choices=["nixos-generate-config", "nixos-facter"],
+        default="nixos-generate-config",
     )
     machine_parser = parser.add_argument(
         "--force",
