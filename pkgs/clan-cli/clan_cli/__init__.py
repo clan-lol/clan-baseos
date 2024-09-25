@@ -421,7 +421,9 @@ def main() -> None:
             log.error(msg)  # noqa: TRY400
             sys.exit(1)
 
-        log.fatal(e.msg)
+        if not e.msg:  # should not be empty, print stack trace
+            raise
+        msg = e.msg
         if e.description:
             print(f"========> {e.description}", file=sys.stderr)
         sys.exit(1)
