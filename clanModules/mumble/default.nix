@@ -41,8 +41,8 @@ in
       registerName = config.clan.core.machineName;
       openFirewall = true;
       bonjour = true;
-      sslKey = config.clan.core.facts.services.mumble.secret.mumble-key.path;
-      sslCert = config.clan.core.facts.services.mumble.public.mumble-cert.path;
+      sslKey = "/var/lib/murmur/sslKey";
+      sslCert = "/var/lib/murmur/sslCert";
     };
 
     clan.core.state.mumble.folders = [
@@ -53,6 +53,23 @@ in
     systemd.tmpfiles.rules = [
       "d '/var/lib/mumble' 0770 '${config.clan.services.mumble.user}' 'users' - -"
     ];
+
+    systemd.tmpfiles.settings."murmur" = {
+      "/var/lib/murmur/sslKey" = {
+        C.argument = config.clan.core.facts.services.mumble.secret.mumble-key.path;
+        Z = {
+          mode = "0400";
+          user = "murmur";
+        };
+      };
+      "/var/lib/murmur/sslCert" = {
+        C.argument = config.clan.core.facts.services.mumble.public.mumble-cert.path;
+        Z = {
+          mode = "0400";
+          user = "murmur";
+        };
+      };
+    };
 
     environment.systemPackages =
       let

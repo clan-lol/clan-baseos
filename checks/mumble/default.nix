@@ -11,8 +11,6 @@
           {
             clan.core.clanDir = ./.;
             environment.systemPackages = [ pkgs.killall ];
-            services.murmur.sslKey = "/etc/mumble-key";
-            services.murmur.sslCert = "/etc/mumble-cert";
             clan.core.facts.services.mumble.secret."mumble-key".path = "/etc/mumble-key";
             clan.core.facts.services.mumble.public."mumble-cert".path = "/etc/mumble-cert";
           }
@@ -37,14 +35,14 @@
               "mumble-cert".source = ./peer_1/peer_1_test_cert;
             };
             systemd.tmpfiles.settings."vmsecrets" = {
-              "/etc/secrets/mumble-key" = {
+              "/var/lib/murmur/sslKey" = {
                 C.argument = "${./peer_1/peer_1_test_key}";
                 z = {
                   mode = "0400";
                   user = "murmur";
                 };
               };
-              "/etc/secrets/mumble-cert" = {
+              "/var/lib/murmur/sslCert" = {
                 C.argument = "${./peer_1/peer_1_test_cert}";
                 z = {
                   mode = "0400";
@@ -52,8 +50,6 @@
                 };
               };
             };
-            services.murmur.sslKey = "/etc/mumble-key";
-            services.murmur.sslCert = "/etc/mumble-cert";
             clan.core.facts.services.mumble.secret."mumble-key".path = "/etc/mumble-key";
             clan.core.facts.services.mumble.public."mumble-cert".path = "/etc/mumble-cert";
           }
@@ -71,14 +67,14 @@
               "mumble-cert".source = ./peer_2/peer_2_test_cert;
             };
             systemd.tmpfiles.settings."vmsecrets" = {
-              "/etc/secrets/mumble-key" = {
+              "/var/lib/murmur/sslKey" = {
                 C.argument = "${./peer_2/peer_2_test_key}";
                 z = {
                   mode = "0400";
                   user = "murmur";
                 };
               };
-              "/etc/secrets/mumble-cert" = {
+              "/var/lib/murmur/sslCert" = {
                 C.argument = "${./peer_2/peer_2_test_cert}";
                 z = {
                   mode = "0400";
