@@ -4,20 +4,35 @@
   lib,
   ...
 }:
+
+let
+  cfg = config.clan.localsend;
+in
 {
   # Integration can be improved, if the following issues get implemented:
   # - cli frontend: https://github.com/localsend/localsend/issues/11
   # - ipv6 support: https://github.com/localsend/localsend/issues/549
   options.clan.localsend = {
-    enable = lib.mkEnableOption "enable the localsend module";
     defaultLocation = lib.mkOption {
       type = lib.types.str;
       description = "The default download location";
     };
     package = lib.mkPackageOption pkgs "localsend" { };
+    ipv4Addr = lib.mkOption {
+      type = lib.types.str;
+      example = "192.168.56.2/24";
+      description = "Every machine needs a unique ipv4 address";
+    };
   };
 
-  config = lib.mkIf config.clan.localsend.enable {
+  imports = [
+    (lib.mkRemovedOptionModule [
+      "clan"
+      "localsend"
+      "enable"
+    ] "Importing the module will already enable the service.")
+  ];
+  config = {
     clan.core.state.localsend.folders = [
       "/var/localsend"
       config.clan.localsend.defaultLocation
@@ -28,10 +43,9 @@
     networking.firewall.interfaces."zt+".allowedUDPPorts = [ 53317 ];
 
     #TODO: This is currently needed because there is no ipv6 multicasting support yet
-    #
     systemd.network.networks."09-zerotier" = {
       networkConfig = {
-        Address = "192.168.56.2/24";
+        Address = cfg.ipv4Addr;
       };
     };
   };
