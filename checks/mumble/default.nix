@@ -6,6 +6,9 @@
       {
         imports = [
           self.clanModules.mumble
+          {
+            clan.services.mumble.user = "alice";
+          }
           self.nixosModules.clanCore
           (self.inputs.nixpkgs + "/nixos/tests/common/x11.nix")
           {
