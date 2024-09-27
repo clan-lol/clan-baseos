@@ -10,7 +10,7 @@ from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 from clan_cli.machines.types import machine_name_type, validate_hostname
 
-from . import secrets
+from . import secrets, sops
 from .folders import (
     list_objects,
     remove_object,
@@ -24,7 +24,7 @@ from .types import public_or_private_age_key_type, secret_name_type
 
 def add_machine(flake_dir: Path, machine: str, pubkey: str, force: bool) -> None:
     machine_path = sops_machines_folder(flake_dir) / machine
-    write_key(machine_path, pubkey, force)
+    write_key(machine_path, pubkey, sops.KeyType.AGE, overwrite=force)
     paths = [machine_path]
 
     def filter_machine_secrets(secret: Path) -> bool:
@@ -48,7 +48,8 @@ def remove_machine(flake_dir: Path, name: str) -> None:
 
 
 def get_machine(flake_dir: Path, name: str) -> str:
-    return read_key(sops_machines_folder(flake_dir) / name)
+    key, type = read_key(sops_machines_folder(flake_dir) / name)
+    return key
 
 
 def has_machine(flake_dir: Path, name: str) -> bool:
@@ -168,7 +169,7 @@ def register_machines_parser(parser: argparse.ArgumentParser) -> None:
     add_dynamic_completer(add_machine_action, complete_machines)
     add_parser.add_argument(
         "key",
-        help="public key or private key of the user",
+        help="public or private age key of the machine",
         type=public_or_private_age_key_type,
     )
     add_parser.set_defaults(func=add_command)
