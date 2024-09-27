@@ -5,8 +5,9 @@ from pathlib import Path
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
+from . import sops
 from .secrets import update_secrets
-from .sops import default_admin_key_path, generate_private_key, get_public_key
+from .sops import default_admin_key_path, generate_private_key
 
 log = logging.getLogger(__name__)
 
@@ -45,10 +46,6 @@ def generate_key() -> str:
     return pub_key
 
 
-def show_key() -> str:
-    return get_public_key(default_admin_key_path().read_text())
-
-
 def generate_command(args: argparse.Namespace) -> None:
     pub_key = generate_key()
     log.info(
@@ -57,7 +54,9 @@ def generate_command(args: argparse.Namespace) -> None:
 
 
 def show_command(args: argparse.Namespace) -> None:
-    print(show_key())
+    key, type = sops.maybe_get_public_key()
+    type_or_null = f'"{type.name.lower()}"' if type else "null"
+    print(f'{{"key": "{key}", "type": {type_or_null}}}')
 
 
 def update_command(args: argparse.Namespace) -> None:
@@ -76,7 +75,7 @@ def register_key_parser(parser: argparse.ArgumentParser) -> None:
     parser_generate = subparser.add_parser("generate", help="generate age key")
     parser_generate.set_defaults(func=generate_command)
 
-    parser_show = subparser.add_parser("show", help="show age public key")
+    parser_show = subparser.add_parser("show", help="show public key")
     parser_show.set_defaults(func=show_command)
 
     parser_update = subparser.add_parser(
