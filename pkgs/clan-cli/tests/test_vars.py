@@ -1,5 +1,5 @@
 import json
-import subprocess
+import shutil
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
@@ -9,7 +9,7 @@ from age_keys import SopsSetup
 from clan_cli.clan_uri import FlakeId
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
-from clan_cli.nix import nix_eval, nix_shell, run
+from clan_cli.nix import nix_eval, run
 from clan_cli.vars.check import check_vars
 from clan_cli.vars.generate import generate_vars_for_machine
 from clan_cli.vars.list import stringify_all_vars
@@ -238,6 +238,7 @@ def test_generated_shared_secret_sops(
 def test_generate_secret_var_password_store(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
+    test_root: Path,
 ) -> None:
     config = nested_dict()
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
@@ -258,29 +259,13 @@ def test_generate_secret_var_password_store(
     )
     monkeypatch.chdir(flake.path)
     gnupghome = temporary_home / "gpg"
-    gnupghome.mkdir(mode=0o700)
+    shutil.copytree(test_root / "data" / "gnupg-home", gnupghome)
     monkeypatch.setenv("GNUPGHOME", str(gnupghome))
+
+    password_store_dir = temporary_home / "pass"
+    shutil.copytree(test_root / "data" / "password-store", password_store_dir)
     monkeypatch.setenv("PASSWORD_STORE_DIR", str(temporary_home / "pass"))
-    gpg_key_spec = temporary_home / "gpg_key_spec"
-    gpg_key_spec.write_text(
-        """
-        Key-Type: 1
-        Key-Length: 1024
-        Name-Real: Root Superuser
-        Name-Email: test@local
-        Expire-Date: 0
-        %no-protection
-    """
-    )
-    subprocess.run(
-        nix_shell(
-            ["nixpkgs#gnupg"], ["gpg", "--batch", "--gen-key", str(gpg_key_spec)]
-        ),
-        check=True,
-    )
-    subprocess.run(
-        nix_shell(["nixpkgs#pass"], ["pass", "init", "test@local"]), check=True
-    )
+
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     assert not check_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
