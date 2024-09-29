@@ -92,35 +92,54 @@ def show_machine_hardware_platform(clan_dir: Path, machine_name: str) -> str | N
     return host_platform.get("system", None)
 
 
+@dataclass
+class HardwareGenerateOptions:
+    flake: FlakeId
+    machine: str
+    backend: Literal["nixos-generate-config", "nixos-facter"]
+    force: bool = False
+    target_host: str | None = None
+    keyfile: str | None = None
+    password: str | None = None
+
+
 @API.register
-def generate_machine_hardware_info(
-    clan_dir: FlakeId,
-    machine_name: str,
-    hostname: str | None = None,
-    password: str | None = None,
-    keyfile: str | None = None,
-    force: bool | None = False,
-    backend: Literal["nixos-generate-config", "nixos-facter"] = "nixos-generate-config",
-) -> HardwareReport:
+def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareReport:
     """
     Generate hardware information for a machine
     and place the resulting *.nix file in the machine's directory.
     """
 
-    machine = Machine(machine_name, flake=clan_dir)
-    if hostname is not None:
-        machine.target_host_address = hostname
+    machine = Machine(opts.machine, flake=opts.flake)
+    if opts.target_host is not None:
+        machine.target_host_address = opts.target_host
 
-    config_command = (
-        ["nixos-facter"]
-        if backend == "nixos-facter"
-        else [
+    hw_file = opts.flake.path / "machines" / opts.machine
+    if opts.backend == "nixos-generate-config":
+        hw_file /= hw_nix_file
+    else:
+        hw_file /= facter_file
+
+    # Check if the hardware-configuration.nix file is a template
+    is_template = hw_file.exists() and "throw ''" in hw_file.read_text()
+
+    if hw_file.exists() and not opts.force and not is_template:
+        msg = "File exists"
+        raise ClanError(
+            msg,
+            description=f"'{hw_file}' already exists. To force overwrite the existing configuration use '--force'.",
+        )
+    hw_file.parent.mkdir(parents=True, exist_ok=True)
+
+    if opts.backend == "nixos-facter":
+        config_command = ["nixos-facter"]
+    else:
+        config_command = [
             "nixos-generate-config",
             # Filesystems are managed by disko
             "--no-filesystems",
             "--show-hardware-config",
         ]
-    )
 
     host = machine.target_host
     target_host = f"{host.user or 'root'}@{host.host}"
@@ -130,9 +149,9 @@ def generate_machine_hardware_info(
             "nixpkgs#sshpass",
         ],
         [
-            *(["sshpass", "-p", f"{password}"] if password else []),
+            *(["sshpass", "-p", opts.password] if opts.password else []),
             "ssh",
-            *(["-i", f"{keyfile}"] if keyfile else []),
+            *(["-i", f"{opts.keyfile}"] if opts.keyfile else []),
             # Disable known hosts file
             "-o",
             "UserKnownHostsFile=/dev/null",
@@ -150,30 +169,12 @@ def generate_machine_hardware_info(
     )
     out = run(cmd)
     if out.returncode != 0:
-        log.error(f"Failed to inspect {machine_name}. Address: {hostname}")
         log.error(out)
-        msg = f"Failed to inspect {machine_name}. Address: {hostname}"
+        msg = f"Failed to inspect {opts.machine}. Address: {opts.target_host}"
         raise ClanError(msg)
 
-    hw_file = clan_dir.path / "machines" / machine_name
-    if backend == "nixos-generate-config":
-        hw_file /= hw_nix_file
-    else:
-        hw_file /= facter_file
-    hw_file.parent.mkdir(parents=True, exist_ok=True)
-
-    # Check if the hardware-configuration.nix file is a template
-    is_template = hw_file.exists() and "throw ''" in hw_file.read_text()
-
-    if hw_file.exists() and not force and not is_template:
-        msg = "File exists"
-        raise ClanError(
-            msg,
-            description=f"'{hw_file}' already exists. To force overwrite the existing configuration use '--force'.",
-        )
-
     backup_file = None
-    if hw_file.exists() and force:
+    if hw_file.exists() and opts.force:
         # Backup the existing file
         backup_file = hw_file.with_suffix(".bak")
         hw_file.replace(backup_file)
@@ -188,11 +189,11 @@ def generate_machine_hardware_info(
 
     commit_file(
         hw_file,
-        clan_dir.path,
-        f"HW/report: Hardware configuration for {machine_name}",
+        opts.flake.path,
+        f"HW/report: Hardware configuration for {opts.machine}",
     )
     try:
-        show_machine_hardware_platform(clan_dir.path, machine_name)
+        show_machine_hardware_platform(opts.flake.path, opts.machine)
     except ClanCmdError as e:
         log.exception("Failed to evaluate hardware-configuration.nix")
         # Restore the backup file
@@ -207,17 +208,7 @@ def generate_machine_hardware_info(
             description=f"Configuration at '{hw_file}' is invalid. Please check the file and try again.",
         ) from e
 
-    return HardwareReport(backend)
-
-
-@dataclass
-class HardwareGenerateOptions:
-    flake: FlakeId
-    machine: str
-    target_host: str | None
-    password: str | None
-    force: bool | None
-    backend: Literal["nixos-generate-config", "nixos-facter"]
+    return HardwareReport(opts.backend)
 
 
 def update_hardware_config_command(args: argparse.Namespace) -> None:
@@ -229,9 +220,7 @@ def update_hardware_config_command(args: argparse.Namespace) -> None:
         force=args.force,
         backend=args.backend,
     )
-    generate_machine_hardware_info(
-        opts.flake, opts.machine, opts.target_host, opts.password, opts.backend
-    )
+    generate_machine_hardware_info(opts)
     print("Successfully generated hardware information.")
     print(f"Target: {opts.machine} ({opts.target_host})")
 

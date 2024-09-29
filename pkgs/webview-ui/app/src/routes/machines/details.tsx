@@ -153,11 +153,13 @@ const InstallMachine = (props: InstallMachineProps) => {
 
     const loading_toast = toast.loading("Generating hardware report...");
     const r = await callApi("generate_machine_hardware_info", {
-      clan_dir: { loc: curr_uri },
-      machine_name: props.name,
-      keyfile: props.sshKey?.name,
-      hostname: props.targetHost,
-      backend: "nixos-facter",
+      opts: {
+        flake: { loc: curr_uri },
+        machine: props.name,
+        keyfile: props.sshKey?.name,
+        target_host: props.targetHost,
+        backend: "nixos-facter",
+      },
     });
     toast.dismiss(loading_toast);
     hwInfoQuery.refetch();
