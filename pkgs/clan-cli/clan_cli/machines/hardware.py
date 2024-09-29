@@ -97,7 +97,6 @@ class HardwareGenerateOptions:
     flake: FlakeId
     machine: str
     backend: Literal["nixos-generate-config", "nixos-facter"]
-    force: bool = False
     target_host: str | None = None
     keyfile: str | None = None
     password: str | None = None
@@ -120,15 +119,6 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
     else:
         hw_file /= facter_file
 
-    # Check if the hardware-configuration.nix file is a template
-    is_template = hw_file.exists() and "throw ''" in hw_file.read_text()
-
-    if hw_file.exists() and not opts.force and not is_template:
-        msg = "File exists"
-        raise ClanError(
-            msg,
-            description=f"'{hw_file}' already exists. To force overwrite the existing configuration use '--force'.",
-        )
     hw_file.parent.mkdir(parents=True, exist_ok=True)
 
     if opts.backend == "nixos-facter":
@@ -174,12 +164,6 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
         raise ClanError(msg)
 
     backup_file = None
-    if hw_file.exists() and opts.force:
-        # Backup the existing file
-        backup_file = hw_file.with_suffix(".bak")
-        hw_file.replace(backup_file)
-        print(f"Backed up existing {hw_file} to {backup_file}")
-
     with hw_file.open("w") as f:
         f.write(out.stdout)
         print(f"Successfully generated: {hw_file}")
@@ -217,7 +201,6 @@ def update_hardware_config_command(args: argparse.Namespace) -> None:
         machine=args.machine,
         target_host=args.target_host,
         password=args.password,
-        force=args.force,
         backend=args.backend,
     )
     generate_machine_hardware_info(opts)
@@ -249,10 +232,5 @@ def register_update_hardware_config(parser: argparse.ArgumentParser) -> None:
         help="The type of hardware report to generate.",
         choices=["nixos-generate-config", "nixos-facter"],
         default="nixos-generate-config",
-    )
-    machine_parser = parser.add_argument(
-        "--force",
-        help="Will overwrite the hardware-configuration.nix file.",
-        action="store_true",
     )
     add_dynamic_completer(machine_parser, complete_machines)
