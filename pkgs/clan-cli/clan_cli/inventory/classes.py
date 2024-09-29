@@ -19,7 +19,6 @@ class Machine:
     name: str
     description: None | str = field(default = None)
     icon: None | str = field(default = None)
-    system: None | str = field(default = None)
     tags: list[str] = field(default_factory = list)
 
 

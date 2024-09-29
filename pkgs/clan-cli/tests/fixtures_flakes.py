@@ -109,13 +109,12 @@ def generate_flake(
         inventory = {}
     if machine_configs is None:
         machine_configs = {}
-    if substitutions is None:
-        substitutions = {
-            "__CHANGE_ME__": "_test_vm_persistence",
-            "git+https://git.clan.lol/clan/clan-core": "path://" + str(CLAN_CORE),
-            "https://git.clan.lol/clan/clan-core/archive/main.tar.gz": "path://"
-            + str(CLAN_CORE),
-        }
+    substitutions = {
+        "__CHANGE_ME__": "_test_vm_persistence",
+        "git+https://git.clan.lol/clan/clan-core": "path://" + str(CLAN_CORE),
+        "https://git.clan.lol/clan/clan-core/archive/main.tar.gz": "path://"
+        + str(CLAN_CORE),
+    }
     flake = temporary_home / "flake"
     shutil.copytree(flake_template, flake)
     sp.run(["chmod", "+w", "-R", str(flake)], check=True)
