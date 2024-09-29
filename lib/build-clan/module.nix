@@ -68,7 +68,6 @@ let
           hwConfig = "${directory}/machines/${name}/hardware-configuration.nix";
 
           facterModules = lib.optionals (builtins.pathExists facterJson) [
-            clan-core.inputs.nixos-facter-modules.nixosModules.facter
             { config.facter.reportPath = facterJson; }
           ];
         in
