@@ -81,7 +81,7 @@ def show_machine_hardware_platform(clan_dir: Path, machine_name: str) -> str | N
         [
             f"{clan_dir}#clanInternals.machines.{system}.{machine_name}",
             "--apply",
-            "machine: { inherit (machine.config.nixpkgs.hostPlatform) system; }",
+            "machine: { inherit (machine.pkgs) system; }",
             "--json",
         ]
     )
@@ -164,9 +164,11 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
         raise ClanError(msg)
 
     backup_file = None
-    with hw_file.open("w") as f:
-        f.write(out.stdout)
-        print(f"Successfully generated: {hw_file}")
+    if hw_file.exists():
+        backup_file = hw_file.with_suffix(".bak")
+        hw_file.replace(backup_file)
+    hw_file.write_text(out.stdout)
+    print(f"Successfully generated: {hw_file}")
 
     # try to evaluate the machine
     # If it fails, the hardware-configuration.nix file is invalid
@@ -204,8 +206,6 @@ def update_hardware_config_command(args: argparse.Namespace) -> None:
         backend=args.backend,
     )
     generate_machine_hardware_info(opts)
-    print("Successfully generated hardware information.")
-    print(f"Target: {opts.machine} ({opts.target_host})")
 
 
 def register_update_hardware_config(parser: argparse.ArgumentParser) -> None:
