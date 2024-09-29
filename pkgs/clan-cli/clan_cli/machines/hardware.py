@@ -168,11 +168,10 @@ def generate_machine_hardware_info(
     is_template = hw_file.exists() and "throw" in hw_file.read_text()
 
     if hw_file.exists() and not force and not is_template:
-        msg = "File exists."
+        msg = "File exists"
         raise ClanError(
             msg,
-            description="Hardware file already exists. To force overwrite the existing configuration use '--force'.",
-            location=f"{__name__} {hw_file}",
+            description=f"'{hw_file}' already exists. To force overwrite the existing configuration use '--force'.",
         )
 
     backup_file = None
@@ -207,8 +206,7 @@ def generate_machine_hardware_info(
         msg = "Invalid hardware-configuration.nix file"
         raise ClanError(
             msg,
-            description="The hardware-configuration.nix file is invalid. Please check the file and try again.",
-            location=f"{__name__} {hw_file}",
+            description=f"Configuration at '{hw_file}' is invalid. Please check the file and try again.",
         ) from e
 
     return HardwareReport(backend)
