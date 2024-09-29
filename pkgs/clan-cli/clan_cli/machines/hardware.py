@@ -174,7 +174,7 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
     commit_file(
         hw_file,
         opts.flake.path,
-        f"HW/report: Hardware configuration for {opts.machine}",
+        f"machines/{opts.machine}/{hw_file.name}: update hardware configuration",
     )
     try:
         show_machine_hardware_platform(opts.flake.path, opts.machine)
