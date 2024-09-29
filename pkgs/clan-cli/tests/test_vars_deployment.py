@@ -23,6 +23,7 @@ def test_vm_deployment(
 ) -> None:
     # machine 1
     machine1_config = nested_dict()
+    machine1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     machine1_config["clan"]["virtualisation"]["graphics"] = False
     machine1_config["services"]["getty"]["autologinUser"] = "root"
     machine1_config["services"]["openssh"]["enable"] = True

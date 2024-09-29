@@ -83,6 +83,7 @@ def test_generate_public_var(
     temporary_home: Path,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo hello > $out/my_value"
@@ -122,6 +123,7 @@ def test_generate_secret_var_sops(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
     my_generator["script"] = "echo hello > $out/my_secret"
@@ -162,6 +164,7 @@ def test_generate_secret_var_sops_with_default_group(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     config["clan"]["core"]["sops"]["defaultGroups"] = ["my_group"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
@@ -193,6 +196,7 @@ def test_generated_shared_secret_sops(
     sops_setup: SopsSetup,
 ) -> None:
     m1_config = nested_dict()
+    m1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = m1_config["clan"]["core"]["vars"]["generators"][
         "my_shared_generator"
     ]
@@ -200,6 +204,7 @@ def test_generated_shared_secret_sops(
     shared_generator["files"]["my_shared_secret"]["secret"] = True
     shared_generator["script"] = "echo hello > $out/my_shared_secret"
     m2_config = nested_dict()
+    m2_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     m2_config["clan"]["core"]["vars"]["generators"]["my_shared_generator"] = (
         shared_generator.copy()
     )
@@ -235,6 +240,7 @@ def test_generate_secret_var_password_store(
     temporary_home: Path,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     config["clan"]["core"]["vars"]["settings"]["secretStore"] = "password-store"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
@@ -421,6 +427,7 @@ def test_share_flag(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
     shared_generator["share"] = True
     shared_generator["files"]["my_secret"]["secret"] = True
@@ -641,6 +648,7 @@ def test_default_value(
     temporary_home: Path,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["files"]["my_value"]["value"]["_type"] = "override"
@@ -683,6 +691,7 @@ def test_stdout_of_generate(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo -n hello > $out/my_value"
@@ -761,6 +770,7 @@ def test_migration_skip(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
     my_service["secret"]["my_value"] = {}
     my_service["generator"]["script"] = "echo -n hello > $secrets/my_value"
@@ -792,6 +802,7 @@ def test_migration(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
     my_service["public"]["my_value"] = {}
     my_service["generator"]["script"] = "echo -n hello > $facts/my_value"
@@ -822,6 +833,7 @@ def test_fails_when_files_are_left_from_other_backend(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_secret_generator = config["clan"]["core"]["vars"]["generators"][
         "my_secret_generator"
     ]
