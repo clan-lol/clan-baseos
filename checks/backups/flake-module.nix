@@ -10,7 +10,6 @@
       {
         pkgs,
         lib,
-        config,
         ...
       }:
       let
@@ -30,6 +29,7 @@
         clan.core.networking.targetHost = "machine";
         networking.hostName = "machine";
         services.openssh.settings.UseDns = false;
+        nixpkgs.hostPlatform = "x86_64-linux";
 
         programs.ssh.knownHosts = {
           machine.hostNames = [ "machine" ];

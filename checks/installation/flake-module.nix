@@ -20,13 +20,13 @@
 
         environment.etc."install-successful".text = "ok";
 
+        nixpkgs.hostPlatform = "x86_64-linux";
         boot.consoleLogLevel = lib.mkForce 100;
         boot.kernelParams = [ "boot.shell_on_fail" ];
       };
   };
   perSystem =
     {
-      nodes,
       pkgs,
       lib,
       ...

@@ -18,6 +18,7 @@ in
       # Dummy file system
       fileSystems."/".device = "/dev/null";
       boot.loader.grub.device = "/dev/null";
+      nixpkgs.hostPlatform = "x86_64-linux";
       imports = [
         documentationModule
       ];
