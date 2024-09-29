@@ -414,13 +414,19 @@ def main() -> None:
         args.func(args)
     except ClanError as e:
         if isinstance(e, ClanCmdError):
+            msg = ""
             if e.cmd.msg:
-                log.fatal(e.cmd.msg)
-                sys.exit(1)
+                msg += f"{e.cmd.msg}: "
+            msg += f"command exited with code {e.cmd.returncode}: {e.cmd.command}"
+            log.error(msg)  # noqa: TRY400
+            sys.exit(1)
 
-        log.fatal(e.msg)
+        if not e.msg:  # should not be empty, print stack trace
+            raise
+        msg = e.msg
         if e.description:
-            print(f"========> {e.description}", file=sys.stderr)
+            msg += f": {e.description}"
+        log.error(msg)  # noqa: TRY400
         sys.exit(1)
     except KeyboardInterrupt:
         log.warning("Interrupted by user")

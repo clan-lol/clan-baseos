@@ -81,7 +81,7 @@ const InstallMachine = (props: InstallMachineProps) => {
           machine_name: props.name,
         });
         if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data?.file === "nixos-facter" || null;
+        return result.data?.backend === "nixos-facter" || null;
       }
       return null;
     },
@@ -153,11 +153,13 @@ const InstallMachine = (props: InstallMachineProps) => {
 
     const loading_toast = toast.loading("Generating hardware report...");
     const r = await callApi("generate_machine_hardware_info", {
-      clan_dir: { loc: curr_uri },
-      machine_name: props.name,
-      keyfile: props.sshKey?.name,
-      hostname: props.targetHost,
-      report_type: "nixos-facter",
+      opts: {
+        flake: { loc: curr_uri },
+        machine: props.name,
+        keyfile: props.sshKey?.name,
+        target_host: props.targetHost,
+        backend: "nixos-facter",
+      },
     });
     toast.dismiss(loading_toast);
     hwInfoQuery.refetch();

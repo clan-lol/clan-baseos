@@ -50,6 +50,7 @@
             services.openssh.enable = true;
             users.users.root.openssh.authorizedKeys.keyFiles = [ ../lib/ssh/pubkey ];
             system.nixos.variant_id = "installer";
+            environment.systemPackages = [ pkgs.nixos-facter ];
             virtualisation.emptyDiskImages = [ 4096 ];
             nix.settings = {
               substituters = lib.mkForce [ ];
@@ -101,6 +102,8 @@
             client.fail("test -f test-flake/machines/test-install-machine/hardware-configuration.nix")
             client.succeed("clan machines update-hardware-config --flake test-flake test-install-machine root@target>&2")
             client.succeed("test -f test-flake/machines/test-install-machine/hardware-configuration.nix")
+            client.succeed("clan machines update-hardware-config --backend nixos-facter --flake test-flake test-install-machine root@target>&2")
+            client.succeed("test -f test-flake/machines/test-install-machine/facter.json")
             client.succeed("clan machines install --debug --flake ${../..} --yes test-install-machine root@target >&2")
             try:
               target.shutdown()
