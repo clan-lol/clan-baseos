@@ -425,7 +425,8 @@ def main() -> None:
             raise
         msg = e.msg
         if e.description:
-            print(f"========> {e.description}", file=sys.stderr)
+            msg += f": {e.description}"
+        log.error(msg)  # noqa: TRY400
         sys.exit(1)
     except KeyboardInterrupt:
         log.warning("Interrupted by user")
