@@ -63,6 +63,7 @@ def test_vm_deployment(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"m1_machine": machine1_config, "m2_machine": machine2_config},
     )
 

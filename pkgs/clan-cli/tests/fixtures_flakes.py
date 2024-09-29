@@ -59,9 +59,29 @@ def set_machine_settings(
     config_path.write_text(json.dumps(machine_settings, indent=2))
 
 
+def init_git(monkeypatch: pytest.MonkeyPatch, flake: Path) -> None:
+    monkeypatch.setenv("GIT_AUTHOR_NAME", "clan-tool")
+    monkeypatch.setenv("GIT_AUTHOR_EMAIL", "clan@example.com")
+    monkeypatch.setenv("GIT_COMMITTER_NAME", "clan-tool")
+    monkeypatch.setenv("GIT_COMMITTER_EMAIL", "clan@example.com")
+
+    # TODO: Find out why test_vms_api.py fails in nix build
+    # but works in pytest when this bottom line is commented out
+    sp.run(
+        ["git", "config", "--global", "init.defaultBranch", "main"],
+        cwd=flake,
+        check=True,
+    )
+
+    sp.run(["git", "init"], cwd=flake, check=True)
+    sp.run(["git", "add", "."], cwd=flake, check=True)
+    sp.run(["git", "commit", "-a", "-m", "Initial commit"], cwd=flake, check=True)
+
+
 def generate_flake(
     temporary_home: Path,
     flake_template: Path,
+    monkeypatch: pytest.MonkeyPatch,
     substitutions: dict[str, str] | None = None,
     # define the machines directly including their config
     machine_configs: dict[str, dict] | None = None,
@@ -125,7 +145,7 @@ def generate_flake(
         configuration_nix.write_text("""
            { imports = [ (builtins.fromJSON (builtins.readFile ./configuration.json)) ]; }
         """)
-        set_machine_config(flake, machine_name, machine_config)
+        set_machine_settings(flake, machine_name, machine_config)
 
     if "/tmp" not in str(os.environ.get("HOME")):
         log.warning(
@@ -139,17 +159,15 @@ def generate_flake(
         cwd=flake,
         check=True,
     )
-    sp.run(["git", "init"], cwd=flake, check=True)
-    sp.run(["git", "add", "."], cwd=flake, check=True)
-    sp.run(["git", "config", "user.name", "clan-tool"], cwd=flake, check=True)
-    sp.run(["git", "config", "user.email", "clan@example.com"], cwd=flake, check=True)
-    sp.run(["git", "commit", "-a", "-m", "Initial commit"], cwd=flake, check=True)
+    init_git(monkeypatch, flake)
+
     return FlakeForTest(flake)
 
 
 def create_flake(
     temporary_home: Path,
     flake_template: str | Path,
+    monkeypatch: pytest.MonkeyPatch,
     clan_core_flake: Path | None = None,
     # names referring to pre-defined machines from ../machines
     machines: list[str] | None = None,
@@ -202,18 +220,7 @@ def create_flake(
             f"!! $HOME does not point to a temp directory!! HOME={os.environ['HOME']}"
         )
 
-    # TODO: Find out why test_vms_api.py fails in nix build
-    # but works in pytest when this bottom line is commented out
-    sp.run(
-        ["git", "config", "--global", "init.defaultBranch", "main"],
-        cwd=flake,
-        check=True,
-    )
-    sp.run(["git", "init"], cwd=flake, check=True)
-    sp.run(["git", "add", "."], cwd=flake, check=True)
-    sp.run(["git", "config", "user.name", "clan-tool"], cwd=flake, check=True)
-    sp.run(["git", "config", "user.email", "clan@example.com"], cwd=flake, check=True)
-    sp.run(["git", "commit", "-a", "-m", "Initial commit"], cwd=flake, check=True)
+    init_git(monkeypatch, flake)
 
     if remote:
         with tempfile.TemporaryDirectory(prefix="flake-"):
@@ -226,7 +233,11 @@ def create_flake(
 def test_flake(
     monkeypatch: pytest.MonkeyPatch, temporary_home: Path
 ) -> Iterator[FlakeForTest]:
-    yield from create_flake(temporary_home, "test_flake")
+    yield from create_flake(
+        temporary_home=temporary_home,
+        flake_template="test_flake",
+        monkeypatch=monkeypatch,
+    )
     # check that git diff on ./sops is empty
     if (temporary_home / "test_flake" / "sops").exists():
         git_proc = sp.run(
@@ -248,9 +259,10 @@ def test_flake_with_core(
         msg = "clan-core flake not found. This test requires the clan-core flake to be present"
         raise FixtureError(msg)
     yield from create_flake(
-        temporary_home,
-        "test_flake_with_core",
-        CLAN_CORE,
+        temporary_home=temporary_home,
+        flake_template="test_flake_with_core",
+        clan_core_flake=CLAN_CORE,
+        monkeypatch=monkeypatch,
     )
 
 
@@ -280,9 +292,10 @@ def test_flake_with_core_and_pass(
         msg = "clan-core flake not found. This test requires the clan-core flake to be present"
         raise FixtureError(msg)
     yield from create_flake(
-        temporary_home,
-        "test_flake_with_core_and_pass",
-        CLAN_CORE,
+        temporary_home=temporary_home,
+        flake_template="test_flake_with_core_and_pass",
+        clan_core_flake=CLAN_CORE,
+        monkeypatch=monkeypatch,
     )
 
 
@@ -294,7 +307,8 @@ def test_flake_minimal(
         msg = "clan-core flake not found. This test requires the clan-core flake to be present"
         raise FixtureError(msg)
     yield from create_flake(
-        temporary_home,
-        CLAN_CORE / "templates" / "minimal",
-        CLAN_CORE,
+        temporary_home=temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
+        clan_core_flake=CLAN_CORE,
     )

@@ -90,6 +90,7 @@ def test_generate_public_var(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -130,6 +131,7 @@ def test_generate_secret_var_sops(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -172,6 +174,7 @@ def test_generate_secret_var_sops_with_default_group(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -211,6 +214,7 @@ def test_generated_shared_secret_sops(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"machine1": m1_config, "machine2": m2_config},
     )
     monkeypatch.chdir(flake.path)
@@ -255,6 +259,7 @@ def test_generate_secret_var_password_store(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -309,6 +314,7 @@ def test_generate_secret_for_multiple_machines(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"machine1": machine1_config, "machine2": machine2_config},
     )
     monkeypatch.chdir(flake.path)
@@ -354,6 +360,7 @@ def test_dependant_generators(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -393,6 +400,7 @@ def test_prompt(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -432,6 +440,7 @@ def test_share_flag(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -482,6 +491,7 @@ def test_prompt_create_file(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -510,6 +520,7 @@ def test_api_get_prompts(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -538,6 +549,7 @@ def test_api_set_prompts(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -584,6 +596,7 @@ def test_commit_message(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -643,6 +656,7 @@ def test_default_value(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -688,6 +702,7 @@ def test_stdout_of_generate(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -767,6 +782,7 @@ def test_migration_skip(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -798,6 +814,7 @@ def test_migration(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -832,6 +849,7 @@ def test_fails_when_files_are_left_from_other_backend(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
