@@ -4,7 +4,7 @@ throw ''
 
   Run the following command:
 
-  'clan machines hw-generate <maschine_name> <hostname>'
+  'clan machines update-hardware-config <machine_name> <hostname>'
 
   OR:
 

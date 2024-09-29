@@ -75,7 +75,7 @@ The target must be a Linux based system reachable via SSH.
             """
 Examples:
 
-  $ clan machines hw-generate [MACHINE] [TARGET_HOST]
+  $ clan machines update-hardware-config [MACHINE] [TARGET_HOST]
   Will generate hardware specifics for the the specified `[TARGET_HOST]` and place the result in hardware.nix for the given machine `[MACHINE]`.
 
 For more detailed information, visit: https://docs.clan.lol/getting-started/configure/#machine-configuration
