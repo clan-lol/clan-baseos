@@ -1,4 +1,5 @@
 import json
+import subprocess
 from typing import TYPE_CHECKING
 
 import pytest
@@ -59,6 +60,15 @@ def test_add_module_to_inventory(
     )
 
     create_machine(opts)
+    (test_flake_with_core.path / "machines" / "machine1" / "facter.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "system": "x86_64-linux",
+            }
+        )
+    )
+    subprocess.run(["git", "add", "."], cwd=test_flake_with_core.path)
 
     inventory = load_inventory_json(base_path)
 
