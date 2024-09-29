@@ -30,13 +30,13 @@ facter_file = "facter.json"
 
 @API.register
 def show_machine_hardware_info(
-    clan_dir: str | Path, machine_name: str
+    clan_dir: Path, machine_name: str
 ) -> HardwareReport | None:
     """
     Show hardware information for a machine returns None if none exist.
     """
 
-    hw_file = Path(f"{clan_dir}/machines/{machine_name}/{hw_nix_file}")
+    hw_file = Path(clan_dir) / "machines" / machine_name / hw_nix_file
     is_template = hw_file.exists() and "throw" in hw_file.read_text()
 
     if hw_file.exists() and not is_template:
@@ -49,9 +49,7 @@ def show_machine_hardware_info(
 
 
 @API.register
-def show_machine_deployment_target(
-    clan_dir: str | Path, machine_name: str
-) -> str | None:
+def show_machine_deployment_target(clan_dir: Path, machine_name: str) -> str | None:
     """
     Show deployment target for a machine returns None if none exist.
     """
@@ -73,9 +71,7 @@ def show_machine_deployment_target(
 
 
 @API.register
-def show_machine_hardware_platform(
-    clan_dir: str | Path, machine_name: str
-) -> str | None:
+def show_machine_hardware_platform(clan_dir: Path, machine_name: str) -> str | None:
     """
     Show hardware information for a machine returns None if none exist.
     """
@@ -159,13 +155,15 @@ def generate_machine_hardware_info(
         msg = f"Failed to inspect {machine_name}. Address: {hostname}"
         raise ClanError(msg)
 
-    hw_file = Path(
-        f"{clan_dir}/machines/{machine_name}/{hw_nix_file if backend == 'nixos-generate-config' else facter_file}"
-    )
+    hw_file = clan_dir.path / "machines" / machine_name
+    if backend == "nixos-generate-config":
+        hw_file /= hw_nix_file
+    else:
+        hw_file /= facter_file
     hw_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Check if the hardware-configuration.nix file is a template
-    is_template = hw_file.exists() and "throw" in hw_file.read_text()
+    is_template = hw_file.exists() and "throw ''" in hw_file.read_text()
 
     if hw_file.exists() and not force and not is_template:
         msg = "File exists"
