@@ -55,9 +55,8 @@ def set_machine_settings(
     machine_name: str,
     machine_settings: dict,
 ) -> None:
-    settings_path = flake / "machines" / machine_name / "settings.json"
-    settings_path.parent.mkdir(parents=True, exist_ok=True)
-    settings_path.write_text(json.dumps(machine_settings, indent=2))
+    config_path = flake / "machines" / machine_name / "configuration.json"
+    config_path.write_text(json.dumps(machine_settings, indent=2))
 
 
 def generate_flake(
@@ -121,7 +120,12 @@ def generate_flake(
 
     # generate machines from machineConfigs
     for machine_name, machine_config in machine_configs.items():
-        set_machine_settings(flake, machine_name, machine_config)
+        configuration_nix = flake / "machines" / machine_name / "configuration.nix"
+        configuration_nix.parent.mkdir(parents=True, exist_ok=True)
+        configuration_nix.write_text("""
+           { imports = [ (builtins.fromJSON (builtins.readFile ./configuration.json)) ]; }
+        """)
+        set_machine_config(flake, machine_name, machine_config)
 
     if "/tmp" not in str(os.environ.get("HOME")):
         log.warning(
