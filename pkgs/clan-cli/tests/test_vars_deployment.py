@@ -12,6 +12,7 @@ from clan_cli.vms.run import inspect_vm, spawn_vm
 from fixtures_flakes import generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
+from nix_config import ConfigItem
 from root import CLAN_CORE
 
 
@@ -19,11 +20,12 @@ from root import CLAN_CORE
 def test_vm_deployment(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
+    nix_config: dict[str, ConfigItem],
     sops_setup: SopsSetup,
 ) -> None:
     # machine 1
     machine1_config = nested_dict()
-    machine1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
+    machine1_config["nixpkgs"]["hostPlatform"] = nix_config["system"].value
     machine1_config["clan"]["virtualisation"]["graphics"] = False
     machine1_config["services"]["getty"]["autologinUser"] = "root"
     machine1_config["services"]["openssh"]["enable"] = True
@@ -49,6 +51,7 @@ def test_vm_deployment(
     """
     # machine 2
     machine2_config = nested_dict()
+    machine2_config["nixpkgs"]["hostPlatform"] = nix_config["system"].value
     machine2_config["clan"]["virtualisation"]["graphics"] = False
     machine2_config["services"]["getty"]["autologinUser"] = "root"
     machine2_config["services"]["openssh"]["enable"] = True
