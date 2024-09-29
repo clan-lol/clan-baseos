@@ -55,7 +55,7 @@ let
   # TODO: remove default system once we have a hardware-config mechanism
   nixosConfiguration =
     {
-      system ? "x86_64-linux",
+      system ? null,
       name,
       pkgs ? null,
       extraConfig ? { },
@@ -92,7 +92,7 @@ let
               # Machine specific settings
               clan.core.machineName = name;
               networking.hostName = lib.mkDefault name;
-              nixpkgs.hostPlatform = lib.mkDefault system;
+              nixpkgs.hostPlatform = lib.mkIf (system != null) (lib.mkDefault system);
 
               # speeds up nix commands by using the nixpkgs from the host system (especially useful in VMs)
               nix.registry.nixpkgs.to = {
