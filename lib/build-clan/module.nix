@@ -63,37 +63,15 @@ let
     nixpkgs.lib.nixosSystem {
       modules =
         let
-          settings = machineSettings name;
-          facterJson = "${directory}/machines/${name}/facter.json";
           hwConfig = "${directory}/machines/${name}/hardware-configuration.nix";
-
-          facterModules = lib.optionals (builtins.pathExists facterJson) [
-            { config.facter.reportPath = facterJson; }
-          ];
         in
-        (machineImports settings)
-        ++ facterModules
-        ++ [
+        [
           {
             # Autoinclude configuration.nix and hardware-configuration.nix
             imports = builtins.filter builtins.pathExists [
               "${directory}/machines/${name}/configuration.nix"
               hwConfig
             ];
-            config.warnings =
-              lib.optionals
-                (builtins.all builtins.pathExists [
-                  hwConfig
-                  facterJson
-                ])
-                [
-                  ''
-                    Duplicate hardware facts: '${hwConfig}' and '${facterJson}' exist.
-                    Using both is not recommended.
-
-                    It is recommended to use the hardware facts from '${facterJson}', please remove '${hwConfig}'.
-                  ''
-                ];
           }
           settings
           clan-core.nixosModules.clanCore

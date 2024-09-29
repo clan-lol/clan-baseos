@@ -9,6 +9,7 @@
     ./meta/interface.nix
     ./metadata.nix
     ./networking.nix
+    ./nixos-facter.nix
     ./nix-settings.nix
     ./options.nix
     ./outputs.nix
