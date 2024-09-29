@@ -142,10 +142,6 @@ in
                 apply = lib.unique;
                 type = types.listOf types.str;
               };
-              system = lib.mkOption {
-                default = null;
-                type = types.nullOr types.str;
-              };
               deploy.targetHost = lib.mkOption {
                 description = "Configuration for the deployment of the machine";
                 default = null;

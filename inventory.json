@@ -12,8 +12,7 @@
       },
       "description": "A nice thing",
       "icon": "./path/to/icon.png",
-      "tags": ["1", "2", "3"],
-      "system": "x86_64-linux"
+      "tags": ["1", "2", "3"]
     }
   },
   "services": {
