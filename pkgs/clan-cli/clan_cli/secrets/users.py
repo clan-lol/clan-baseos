@@ -1,5 +1,4 @@
 import argparse
-import os
 from pathlib import Path
 
 from clan_cli.completions import add_dynamic_completer, complete_secrets, complete_users
@@ -102,8 +101,15 @@ def add_command(args: argparse.Namespace) -> None:
     if args.flake is None:
         msg = "Could not find clan flake toplevel directory"
         raise ClanError(msg)
-    key_type = sops.KeyType.AGE if args.key_age else sops.KeyType.PGP
-    key = args.key_age or args.key_pgp
+    if args.age_key or args.agekey:
+        key_type = sops.KeyType.AGE
+    elif args.pgp_key:
+        key_type = sops.KeyType.PGP
+    else:
+        msg = "BUG!: key type not set"
+        raise ValueError(msg)
+    key = args.agekey or args.age_key or args.pgp_key
+    assert key is not None, "key is None"
     add_user(args.flake.path, args.user, key, key_type, args.force)
 
 
@@ -154,14 +160,22 @@ def register_users_parser(parser: argparse.ArgumentParser) -> None:
     add_parser.add_argument("user", help="the name of the user", type=user_name_type)
     key_type = add_parser.add_mutually_exclusive_group(required=True)
     key_type.add_argument(
-        "--key-age",
+        "agekey",
+        help="public or private age key of the user. "
+        "Execute 'clan secrets key --help' on how to retrieve a key. "
+        "To fetch an age key from an SSH host key: ssh-keyscan <domain_name> | nix shell nixpkgs#ssh-to-age -c ssh-to-age",
+        type=public_or_private_age_key_type,
+        nargs="?",
+    )
+    key_type.add_argument(
+        "--age-key",
         help="public or private age key of the user. "
         "Execute 'clan secrets key --help' on how to retrieve a key. "
         "To fetch an age key from an SSH host key: ssh-keyscan <domain_name> | nix shell nixpkgs#ssh-to-age -c ssh-to-age",
         type=public_or_private_age_key_type,
     )
     key_type.add_argument(
-        "--key-pgp",
+        "--pgp-key",
         help=(
             "public PGP encryption key of the user. "
             "Execute `gpg -k --fingerprint --fingerprint` and remove spaces to get it."

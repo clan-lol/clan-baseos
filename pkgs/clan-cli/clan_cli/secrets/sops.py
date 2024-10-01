@@ -104,7 +104,8 @@ def maybe_get_user_or_machine(
             for user in folder.iterdir():
                 if not (user / "key.json").exists():
                     continue
-                if read_key(user) == (pub_key, key_type):
+                this_pub_key, this_key_type = read_key(user)
+                if pub_key == this_pub_key and key_type == this_key_type:
                     key.username = user.name
                     return key
 
