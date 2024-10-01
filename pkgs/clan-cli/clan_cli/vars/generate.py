@@ -121,7 +121,7 @@ def execute_generator(
             raise ClanError(msg) from e
 
     env = os.environ.copy()
-    with TemporaryDirectory() as tmp:
+    with TemporaryDirectory(prefix="vars-") as tmp:
         tmpdir = Path(tmp)
         tmpdir_in = tmpdir / "in"
         tmpdir_prompts = tmpdir / "prompts"
@@ -394,7 +394,6 @@ def register_generate_parser(parser: argparse.ArgumentParser) -> None:
 
     parser.add_argument(
         "--regenerate",
-        type=bool,
         action=argparse.BooleanOptionalAction,
         help="whether to regenerate facts for the specified machine",
         default=None,

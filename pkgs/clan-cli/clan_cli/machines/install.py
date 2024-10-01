@@ -45,7 +45,7 @@ def install_nixos(
     generate_facts([machine], None, False)
     generate_vars([machine], None, False)
 
-    with TemporaryDirectory() as tmpdir_:
+    with TemporaryDirectory(prefix="nixos-install-") as tmpdir_:
         tmpdir = Path(tmpdir_)
         upload_dir_ = machine.secrets_upload_directory
 

@@ -129,11 +129,13 @@ def run_vm(
         cache.mkdir(exist_ok=True)
 
         if cachedir is None:
-            cache_tmp = stack.enter_context(TemporaryDirectory(dir=cache))
+            cache_tmp = stack.enter_context(
+                TemporaryDirectory(prefix="vm-cache-", dir=cache)
+            )
             cachedir = Path(cache_tmp)
 
         if socketdir is None:
-            socket_tmp = stack.enter_context(TemporaryDirectory())
+            socket_tmp = stack.enter_context(TemporaryDirectory(prefix="vm-sockets-"))
             socketdir = Path(socket_tmp)
 
         # TODO: We should get this from the vm argument

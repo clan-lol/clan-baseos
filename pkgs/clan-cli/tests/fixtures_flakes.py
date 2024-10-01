@@ -232,7 +232,7 @@ def create_flake(
     sp.run(["git", "commit", "-a", "-m", "Initial commit"], cwd=flake, check=True)
 
     if remote:
-        with tempfile.TemporaryDirectory():
+        with tempfile.TemporaryDirectory(prefix="flake-"):
             yield FlakeForTest(flake)
     else:
         yield FlakeForTest(flake)

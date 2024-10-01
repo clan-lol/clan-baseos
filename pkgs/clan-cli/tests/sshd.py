@@ -38,7 +38,7 @@ class SshdConfig:
 def sshd_config(test_root: Path) -> Iterator[SshdConfig]:
     # FIXME, if any parent of the sshd directory is world-writable than sshd will refuse it.
     # we use .direnv instead since it's already in .gitignore
-    with TemporaryDirectory() as _dir:
+    with TemporaryDirectory(prefix="sshd-") as _dir:
         tmpdir = Path(_dir)
         host_key = test_root / "data" / "ssh_host_ed25519_key"
         host_key.chmod(0o600)

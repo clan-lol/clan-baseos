@@ -80,7 +80,7 @@ def nix_eval(flags: list[str]) -> list[str]:
         ]
     )
     if os.environ.get("IN_NIX_SANDBOX"):
-        with tempfile.TemporaryDirectory() as nix_store:
+        with tempfile.TemporaryDirectory(prefix="nix-store-") as nix_store:
             return [
                 *default_flags,
                 "--override-input",
