@@ -1,5 +1,7 @@
 import argparse
+import json
 import logging
+import sys
 from pathlib import Path
 
 from clan_cli.errors import ClanError
@@ -54,9 +56,13 @@ def generate_command(args: argparse.Namespace) -> None:
 
 
 def show_command(args: argparse.Namespace) -> None:
-    key, key_type = sops.maybe_get_admin_public_key()
-    type_or_null = f'"{key_type.name.lower()}"' if key_type else "null"
-    print(f'{{"key": "{key}", "type": {type_or_null}}}')
+    key = sops.maybe_get_admin_public_key()
+    if not key:
+        msg = "No public key found"
+        raise ClanError(msg)
+    json.dump(
+        {"key": key.pubkey, "type": str(key.key_type)}, sys.stdout, indent=2, sort_keys=True
+    )
 
 
 def update_command(args: argparse.Namespace) -> None:

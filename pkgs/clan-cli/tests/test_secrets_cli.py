@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from collections.abc import Iterator
@@ -253,7 +254,7 @@ def test_secrets(
     cli.run(["secrets", "key", "generate", "--flake", str(test_flake.path)])
     with capture_output as output:
         cli.run(["secrets", "key", "show", "--flake", str(test_flake.path)])
-    key = output.out
+    key = json.loads(output.out)["key"]
     assert key.startswith("age1")
     cli.run(
         ["secrets", "users", "add", "--flake", str(test_flake.path), "testuser", key]
