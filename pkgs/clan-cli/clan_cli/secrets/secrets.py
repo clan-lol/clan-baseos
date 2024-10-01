@@ -135,8 +135,8 @@ def encrypt_secret(
 
     recipient_keys = collect_keys_for_path(secret_path)
 
-    if (key.pubkey, key.type) not in recipient_keys:
-        recipient_keys.add((key.pubkey, key.type))
+    if (key.pubkey, key.key_type) not in recipient_keys:
+        recipient_keys.add((key.pubkey, key.key_type))
         files_to_commit.extend(
             allow_member(
                 users_folder(secret_path),

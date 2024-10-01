@@ -54,8 +54,8 @@ def generate_command(args: argparse.Namespace) -> None:
 
 
 def show_command(args: argparse.Namespace) -> None:
-    key, type = sops.maybe_get_public_key()
-    type_or_null = f'"{type.name.lower()}"' if type else "null"
+    key, key_type = sops.maybe_get_admin_public_key()
+    type_or_null = f'"{key_type.name.lower()}"' if key_type else "null"
     print(f'{{"key": "{key}", "type": {type_or_null}}}')
 
 

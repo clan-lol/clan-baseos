@@ -111,8 +111,8 @@ def get_command(args: argparse.Namespace) -> None:
     if args.flake is None:
         msg = "Could not find clan flake toplevel directory"
         raise ClanError(msg)
-    key, type = get_user(args.flake.path, args.user)
-    type_or_null = f'"{type.name.lower()}"' if type else "null"
+    key, key_type = get_user(args.flake.path, args.user)
+    type_or_null = '"{key_type.name.lower()}"' if key_type else "null"
     print(f'{{"key": "{key}", "type": {type_or_null}}}')
 
 

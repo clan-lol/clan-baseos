@@ -48,7 +48,7 @@ def remove_machine(flake_dir: Path, name: str) -> None:
 
 
 def get_machine(flake_dir: Path, name: str) -> str:
-    key, type = read_key(sops_machines_folder(flake_dir) / name)
+    key, _ = read_key(sops_machines_folder(flake_dir) / name)
     return key
 
 
