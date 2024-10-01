@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import enum
 import io
 import json
@@ -27,7 +25,7 @@ class KeyType(enum.Enum):
     PGP = enum.auto()
 
     @classmethod
-    def validate(cls, value: str | None) -> KeyType | None:  # noqa: ANN102
+    def validate(cls, value: str | None) -> "KeyType | None":  # noqa: ANN102
         if value:
             return cls.__members__.get(value.upper())
         return None
