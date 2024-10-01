@@ -346,12 +346,42 @@ def produce_build_clan_docs() -> None:
 
     output = """# BuildClan
 
-This provides an overview of the available arguments of the `buildClan` function.
+This provides an overview of the available arguments of the `clan` interface.
 
-!!! Note "Flake-parts"
-    Each attribute is also available via `clan.<option>`
+Each attribute is documented below
 
-    For example `clan.inventory = ...;` is equivalent to `buildClan { inventory = ...; }`.
+- **buildClan**: A function that takes an attribute set.`.
+
+    ??? example "buildClan Example"
+
+        ```nix
+        buildClan {
+            directory = self;
+            machines = {
+                jon = { };
+                sara = { };
+            };
+        };
+        ```
+
+- **flake-parts**: Each attribute can be defined via `clan.<attribute name>`. See our [flake-parts](../../manual/flake-parts.md) guide.
+
+    ??? example "flake-parts Example"
+
+        ```nix
+        flake-parts.lib.mkFlake { inherit inputs; } ({
+            systems = [];
+            imports = [
+                clan-core.flakeModules.default
+            ];
+            clan = {
+                machines = {
+                    jon = { };
+                    sara = { };
+                };
+            };
+        });
+        ```
 
 """
     with Path(BUILD_CLAN_PATH).open() as f:
