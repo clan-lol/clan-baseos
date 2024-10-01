@@ -87,7 +87,21 @@ in
     '';
   };
 
-  config = lib.mkIf (cfg.destinations != { }) {
+  config = {
+
+    # Destinations
+    clan.borgbackup.destinations =
+      let
+        destinations = builtins.map (serverName: {
+          name = serverName;
+          value = {
+            repo = "borg@${serverName}:/var/lib/borgbackup/${machineName}";
+          };
+        }) allServers;
+      in
+      (builtins.listToAttrs destinations);
+
+    # Derived from the destinations
     systemd.services = lib.mapAttrs' (
       _: dest:
       lib.nameValuePair "borgbackup-job-${dest.name}" {
@@ -122,22 +136,6 @@ in
       };
     }) cfg.destinations;
 
-    clan.core.facts.services.borgbackup = {
-      public."borgbackup.ssh.pub" = { };
-      secret."borgbackup.ssh" = { };
-      secret."borgbackup.repokey" = { };
-      generator.path = [
-        pkgs.openssh
-        pkgs.coreutils
-        pkgs.xkcdpass
-      ];
-      generator.script = ''
-        ssh-keygen -t ed25519 -N "" -f "$secrets"/borgbackup.ssh
-        mv "$secrets"/borgbackup.ssh.pub "$facts"/borgbackup.ssh.pub
-        xkcdpass -n 4 -d - > "$secrets"/borgbackup.repokey
-      '';
-    };
-
     environment.systemPackages = [
       (pkgs.writeShellScriptBin "borgbackup-create" ''
         set -efu -o pipefail
@@ -169,20 +167,27 @@ in
       '')
     ];
 
+    # Facts generation. So the client can authenticate to the server
+    clan.core.facts.services.borgbackup = {
+      public."borgbackup.ssh.pub" = { };
+      secret."borgbackup.ssh" = { };
+      secret."borgbackup.repokey" = { };
+      generator.path = [
+        pkgs.openssh
+        pkgs.coreutils
+        pkgs.xkcdpass
+      ];
+      generator.script = ''
+        ssh-keygen -t ed25519 -N "" -f "$secrets"/borgbackup.ssh
+        mv "$secrets"/borgbackup.ssh.pub "$facts"/borgbackup.ssh.pub
+        xkcdpass -n 4 -d - > "$secrets"/borgbackup.repokey
+      '';
+    };
+
     clan.core.backups.providers.borgbackup = {
       list = "borgbackup-list";
       create = "borgbackup-create";
       restore = "borgbackup-restore";
     };
-    clan.borgbackup.destinations =
-      let
-        destinations = builtins.map (serverName: {
-          name = serverName;
-          value = {
-            repo = "borg@${serverName}:/var/lib/borgbackup/${machineName}";
-          };
-        }) allServers;
-      in
-      (builtins.listToAttrs destinations);
   };
 }
