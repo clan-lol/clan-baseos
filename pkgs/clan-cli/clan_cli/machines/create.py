@@ -86,7 +86,7 @@ def create_machine(opts: CreateOptions) -> None:
         )
         raise ClanError(msg, description=description)
 
-    with TemporaryDirectory() as tmpdir:
+    with TemporaryDirectory(prefix="machine-template-") as tmpdir:
         tmpdirp = Path(tmpdir)
         command = nix_command(
             [

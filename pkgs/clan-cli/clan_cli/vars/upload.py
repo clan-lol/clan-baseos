@@ -19,7 +19,7 @@ def upload_secrets(machine: Machine) -> None:
     if secret_store.update_check():
         log.info("Secrets already up to date")
         return
-    with TemporaryDirectory() as tempdir:
+    with TemporaryDirectory(prefix="vars-upload-") as tempdir:
         secret_store.upload(Path(tempdir))
         host = machine.target_host
 
