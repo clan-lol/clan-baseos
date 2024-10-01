@@ -81,17 +81,10 @@ let
               builtins.attrValues resolvedRoles
             );
 
-            # Inverse map of roles. Allows for easy lookup of roles for a given machine.
-            # { ${machine_name} :: [roles]
-            inverseRoles = lib.foldlAttrs (
-              acc: roleName:
-              { machines }:
-              acc
-              // builtins.foldl' (
-                acc2: machineName: acc2 // { ${machineName} = (acc.${machineName} or [ ]) ++ [ roleName ]; }
-              ) { } machines
-            ) { } resolvedRoles;
-
+            # all roles where the machine is present
+            machineRoles = builtins.attrNames (
+              lib.filterAttrs (_role: roleConfig: builtins.elem machineName roleConfig.machines) resolvedRoles
+            );
             machineServiceConfig = (serviceConfig.machines.${machineName} or { }).config or { };
             globalConfig = serviceConfig.config or { };
 
@@ -99,7 +92,7 @@ let
             machineExtraModules = serviceConfig.machines.${machineName}.extraModules or [ ];
             roleServiceExtraModules = builtins.foldl' (
               acc: role: acc ++ serviceConfig.roles.${role}.extraModules or [ ]
-            ) [ ] inverseRoles.${machineName} or [ ];
+            ) [ ] machineRoles;
 
             # TODO: maybe optimize this dont lookup the role in inverse roles. Imports are not lazy
             roleModules = builtins.map (
@@ -109,14 +102,12 @@ let
               in
               if builtins.pathExists path then
                 path
-              else if role == "default" then
-                { }
               else
                 throw "Module doesn't have role: '${role}'. Path: ${path} not found."
-            ) inverseRoles.${machineName} or [ ];
+            ) machineRoles;
 
             roleServiceConfigs = builtins.filter (m: m != { }) (
-              builtins.map (role: serviceConfig.roles.${role}.config or { }) inverseRoles.${machineName} or [ ]
+              builtins.map (role: serviceConfig.roles.${role}.config or { }) machineRoles
             );
 
             extraModules = map (s: if builtins.typeOf s == "string" then "${directory}/${s}" else s) (
