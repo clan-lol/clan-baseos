@@ -134,7 +134,7 @@ python3.pkgs.buildPythonApplication {
             chmod +w -R ./src
             cd ./src
 
-            export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1
+            export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1 PYTHONWARNINGS=error
             ${pythonWithTestDeps}/bin/python -m pytest -m "not impure and not with_core" ./tests
             touch $out
           '';
@@ -147,7 +147,7 @@ python3.pkgs.buildPythonApplication {
             cd ./src
 
             export CLAN_CORE=${clan-core-path}
-            export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1
+            export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1 PYTHONWARNINGS=error
             ${pythonWithTestDeps}/bin/python -m pytest -m "not impure and with_core" ./tests
             touch $out
           '';
