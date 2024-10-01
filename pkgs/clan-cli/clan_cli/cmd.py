@@ -71,8 +71,6 @@ class TimeTable:
         weakref.finalize(self, self.table_print)
 
     def table_print(self) -> None:
-        if os.getenv("PERF") != "1":
-            return
         print("======== CMD TIMETABLE ========")
 
         # Sort the table by time in descending order
@@ -96,7 +94,9 @@ class TimeTable:
             self.table[cmd] = time
 
 
-TIME_TABLE = TimeTable()
+TIME_TABLE = None
+if os.environ.get("CLAN_CLI_PERF"):
+    TIME_TABLE = TimeTable()
 
 
 def run(
@@ -135,7 +135,8 @@ def run(
             process.wait()
         tend = datetime.datetime.now(tz=datetime.UTC)
 
-        global TIME_TABLE
+    global TIME_TABLE
+    if TIME_TABLE:
         TIME_TABLE.add(shlex.join(cmd), tend - tstart)
 
     # Wait for the subprocess to finish
