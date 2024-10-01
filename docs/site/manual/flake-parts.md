@@ -28,7 +28,7 @@ inputs = {
 
 ## 2. Import Clan-Core Flake Module
 
-After updating your flake inputs, the next step is to import the `clan-core` flake module. This will make the [clan options](https://git.clan.lol/clan/clan-core/src/branch/main/flakeModules/clan.nix) available within `mkFlake`.
+After updating your flake inputs, the next step is to import the `clan-core` flake module. This will make the [clan options](../reference/nix-api/buildclan.md) available within `mkFlake`.
 
 ```nix
   outputs =
@@ -61,6 +61,7 @@ Below is a guide on how to structure this in your flake.nix:
         clan-core.flakeModules.default
       ];
       # Define your clan
+      # See: https://docs.clan.lol/reference/nix-api/buildclan/
       clan = {
         # Clan wide settings. (Required)
         meta.name = ""; # Ensure to choose a unique name.
