@@ -4,6 +4,7 @@ import socket
 import sys
 import threading
 import traceback
+from collections.abc import Iterator
 from pathlib import Path
 from time import sleep
 
@@ -89,26 +90,43 @@ def wait_vm_down(machine_name: str, vm: VmThread, flake_url: str | None = None) 
 
 
 # wait for vm to be up then connect and return qmp instance
+@contextlib.contextmanager
 def qmp_connect(
     machine_name: str, vm: VmThread, flake_url: str | None = None
-) -> QEMUMonitorProtocol:
+) -> Iterator[QEMUMonitorProtocol]:
     if flake_url is None:
         flake_url = str(Path.cwd())
     state_dir = vm_state_dir(flake_url, machine_name)
     wait_vm_up(machine_name, vm, flake_url)
-    qmp = QEMUMonitorProtocol(
+    with QEMUMonitorProtocol(
         address=str(os.path.realpath(state_dir / "qmp.sock")),
-    )
-    qmp.connect()
-    return qmp
+    ) as qmp:
+        qmp.connect()
+        yield qmp
 
 
 # wait for vm to be up then connect and return qga instance
+@contextlib.contextmanager
 def qga_connect(
     machine_name: str, vm: VmThread, flake_url: str | None = None
-) -> QgaSession:
+) -> Iterator[QgaSession]:
     if flake_url is None:
         flake_url = str(Path.cwd())
     state_dir = vm_state_dir(flake_url, machine_name)
     wait_vm_up(machine_name, vm, flake_url)
-    return QgaSession(os.path.realpath(state_dir / "qga.sock"))
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        # try to reconnect a couple of times if connection refused
+        socket_file = os.path.realpath(state_dir / "qga.sock")
+        for _ in range(100):
+            try:
+                sock.connect(str(socket_file))
+            except ConnectionRefusedError:
+                sleep(0.1)
+            else:
+                break
+            sock.connect(str(socket_file))
+        yield QgaSession(sock)
+    finally:
+        sock.close()
