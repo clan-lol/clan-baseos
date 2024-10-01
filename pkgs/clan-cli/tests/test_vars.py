@@ -3,7 +3,6 @@ import subprocess
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 from age_keys import SopsSetup
@@ -24,7 +23,7 @@ from root import CLAN_CORE
 from stdout import CaptureOutput
 
 
-def test_dependencies_as_files() -> None:
+def test_dependencies_as_files(temp_dir: Path) -> None:
     from clan_cli.vars.generate import dependencies_as_dir
 
     decrypted_dependencies = {
@@ -37,19 +36,17 @@ def test_dependencies_as_files() -> None:
             "var_2b": b"var_2b",
         },
     }
-    with TemporaryDirectory() as tmpdir:
-        dep_tmpdir = Path(tmpdir)
-        dependencies_as_dir(decrypted_dependencies, dep_tmpdir)
-        assert dep_tmpdir.is_dir()
-        assert (dep_tmpdir / "gen_1" / "var_1a").read_bytes() == b"var_1a"
-        assert (dep_tmpdir / "gen_1" / "var_1b").read_bytes() == b"var_1b"
-        assert (dep_tmpdir / "gen_2" / "var_2a").read_bytes() == b"var_2a"
-        assert (dep_tmpdir / "gen_2" / "var_2b").read_bytes() == b"var_2b"
-        # ensure the files are not world readable
-        assert (dep_tmpdir / "gen_1" / "var_1a").stat().st_mode & 0o777 == 0o600
-        assert (dep_tmpdir / "gen_1" / "var_1b").stat().st_mode & 0o777 == 0o600
-        assert (dep_tmpdir / "gen_2" / "var_2a").stat().st_mode & 0o777 == 0o600
-        assert (dep_tmpdir / "gen_2" / "var_2b").stat().st_mode & 0o777 == 0o600
+    dependencies_as_dir(decrypted_dependencies, temp_dir)
+    assert temp_dir.is_dir()
+    assert (temp_dir / "gen_1" / "var_1a").read_bytes() == b"var_1a"
+    assert (temp_dir / "gen_1" / "var_1b").read_bytes() == b"var_1b"
+    assert (temp_dir / "gen_2" / "var_2a").read_bytes() == b"var_2a"
+    assert (temp_dir / "gen_2" / "var_2b").read_bytes() == b"var_2b"
+    # ensure the files are not world readable
+    assert (temp_dir / "gen_1" / "var_1a").stat().st_mode & 0o777 == 0o600
+    assert (temp_dir / "gen_1" / "var_1b").stat().st_mode & 0o777 == 0o600
+    assert (temp_dir / "gen_2" / "var_2a").stat().st_mode & 0o777 == 0o600
+    assert (temp_dir / "gen_2" / "var_2b").stat().st_mode & 0o777 == 0o600
 
 
 def test_required_generators() -> None:
