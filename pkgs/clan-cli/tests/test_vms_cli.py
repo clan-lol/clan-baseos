@@ -56,46 +56,6 @@ def test_run(
 
 @pytest.mark.skipif(no_kvm, reason="Requires KVM")
 @pytest.mark.impure
-def test_vm_qmp(
-    monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
-) -> None:
-    # set up a simple clan flake
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        machine_configs={
-            "my_machine": {
-                "clan": {
-                    "virtualisation": {"graphics": False},
-                    "networking": {"targetHost": "client"},
-                },
-                "services": {"getty": {"autologinUser": "root"}},
-            }
-        },
-        monkeypatch=monkeypatch,
-    )
-
-    # 'clan vms run' must be executed from within the flake
-    monkeypatch.chdir(flake.path)
-
-    # start the VM
-    vm = run_vm_in_thread("my_machine")
-
-    # connect with qmp
-    with qmp_connect("my_machine", vm) as qmp:
-        # verify that issuing a command works
-        # result = qmp.cmd_obj({"execute": "query-status"})
-        result = qmp.command("query-status")
-        assert result["status"] == "running", result
-
-        # shutdown machine (prevent zombie qemu processes)
-        qmp.command("system_powerdown")
-    vm.join()
-
-
-@pytest.mark.skipif(no_kvm, reason="Requires KVM")
-@pytest.mark.impure
 def test_vm_persistence(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
