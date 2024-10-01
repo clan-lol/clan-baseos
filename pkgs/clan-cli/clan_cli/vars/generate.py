@@ -394,7 +394,6 @@ def register_generate_parser(parser: argparse.ArgumentParser) -> None:
 
     parser.add_argument(
         "--regenerate",
-        type=bool,
         action=argparse.BooleanOptionalAction,
         help="whether to regenerate facts for the specified machine",
         default=None,
