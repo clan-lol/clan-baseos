@@ -119,7 +119,7 @@ let
             acc2
             ++ [
               {
-                imports = [ clan-core.clanModules.${serviceName} ] ++ roleModules ++ extraModules;
+                imports = roleModules ++ extraModules;
               }
               (lib.optionalAttrs (globalConfig != { } || machineServiceConfig != { } || roleServiceConfigs != [ ])
                 {
