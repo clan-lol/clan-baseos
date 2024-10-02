@@ -17,15 +17,19 @@ class WaypipeConfig:
 @dataclass
 class VmConfig:
     machine_name: str
-    machine_icon: Path
-    machine_description: str
     flake_url: FlakeId
-    clan_name: str
 
     cores: int
     memory_size: int
     graphics: bool
+
+    # FIXME: I don't think this belongs here.
+    clan_name: str
+    machine_description: str | None
+    machine_icon: Path | None
+
     waypipe: bool = False
+
 
     def __post_init__(self) -> None:
         if isinstance(self.flake_url, str):
