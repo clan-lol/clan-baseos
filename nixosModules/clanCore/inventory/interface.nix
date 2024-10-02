@@ -48,6 +48,7 @@ let
 in
 {
   options.clan.inventory.services = lib.mkOption {
+    default = { };
     description = ''
       Configuration for each inventory service.
 

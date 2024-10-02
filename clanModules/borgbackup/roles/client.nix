@@ -5,7 +5,8 @@
   ...
 }:
 let
-  instances = config.clan.inventory.services.borgbackup;
+  # Instances might be empty, if the module is not used via the inventory
+  instances = config.clan.inventory.services.borgbackup or { };
   # roles = { ${role_name} :: { machines :: [string] } }
   allServers = lib.foldlAttrs (
     acc: _instanceName: instanceConfig:
