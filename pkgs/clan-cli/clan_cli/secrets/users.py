@@ -1,4 +1,6 @@
 import argparse
+import json
+import sys
 from pathlib import Path
 
 from clan_cli.completions import add_dynamic_completer, complete_secrets, complete_users
@@ -48,8 +50,9 @@ def remove_user(flake_dir: Path, name: str) -> None:
     )
 
 
-def get_user(flake_dir: Path, name: str) -> tuple[str, sops.KeyType]:
-    return read_key(sops_users_folder(flake_dir) / name)
+def get_user(flake_dir: Path, name: str) -> sops.SopsKey:
+    key, key_type = read_key(sops_users_folder(flake_dir) / name)
+    return sops.SopsKey(key, name, key_type)
 
 
 def list_users(flake_dir: Path) -> list[str]:
@@ -117,9 +120,8 @@ def get_command(args: argparse.Namespace) -> None:
     if args.flake is None:
         msg = "Could not find clan flake toplevel directory"
         raise ClanError(msg)
-    key, key_type = get_user(args.flake.path, args.user)
-    type_or_null = '"{key_type.name.lower()}"' if key_type else "null"
-    print(f'{{"key": "{key}", "type": {type_or_null}}}')
+    key = get_user(args.flake.path, args.user)
+    json.dump(key.as_dict(), sys.stdout, indent=2, sort_keys=True)
 
 
 def remove_command(args: argparse.Namespace) -> None:
