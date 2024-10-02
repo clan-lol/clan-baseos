@@ -30,7 +30,6 @@ class VmConfig:
 
     waypipe: bool = False
 
-
     def __post_init__(self) -> None:
         if isinstance(self.flake_url, str):
             self.flake_url = FlakeId(self.flake_url)

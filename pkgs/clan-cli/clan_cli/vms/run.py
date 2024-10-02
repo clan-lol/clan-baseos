@@ -3,17 +3,23 @@ import importlib
 import json
 import logging
 import os
-from contextlib import ExitStack
+import socket
+import subprocess
+import time
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import CmdOut, Log, handle_output, run
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import module_root, user_cache_dir, vm_state_dir
-from clan_cli.errors import ClanError
+from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.facts.generate import generate_facts
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
+from clan_cli.qemu.qga import QgaSession
+from clan_cli.qemu.qmp import QEMUMonitorProtocol
 
 from .inspect import VmConfig, inspect_vm
 from .qemu import qemu_command
@@ -107,14 +113,94 @@ def prepare_disk(
     return disk_img
 
 
-def run_vm(
+@contextmanager
+def start_vm(
+    args: list[str],
+    packages: list[str],
+    extra_env: dict[str, str],
+    stdout: int | None = None,
+    stderr: int | None = None,
+) -> Iterator[subprocess.Popen]:
+    env = os.environ.copy()
+    env.update(extra_env)
+    cmd = nix_shell(packages, args)
+    with subprocess.Popen(cmd, env=env, stdout=stdout, stderr=stderr) as process:
+        try:
+            yield process
+        finally:
+            process.terminate()
+            try:
+                # Fix me: This should in future properly shutdown the VM using qmp
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+
+
+class QemuVm:
+    def __init__(
+        self,
+        machine: Machine,
+        process: subprocess.Popen,
+    ) -> None:
+        self.machine = machine
+        self.process = process
+        self.state_dir = vm_state_dir(self.machine.flake, self.machine.name)
+        self.qmp_socket_file = self.state_dir / "qmp.sock"
+        self.qga_socket_file = self.state_dir / "qga.sock"
+
+    # wait for vm to be up then connect and return qmp instance
+    @contextmanager
+    def qmp_connect(self) -> Iterator[QEMUMonitorProtocol]:
+        with QEMUMonitorProtocol(
+            address=str(os.path.realpath(self.qmp_socket_file)),
+        ) as qmp:
+            qmp.connect()
+            yield qmp
+
+    @contextmanager
+    def qga_connect(self, timeout_sec: float = 100) -> Iterator[QgaSession]:
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            # try to reconnect a couple of times if connection refused
+            socket_file = os.path.realpath(self.qga_socket_file)
+            start_time = time.time()
+            while time.time() - start_time < timeout_sec:
+                try:
+                    sock.connect(str(socket_file))
+                except ConnectionRefusedError:
+                    time.sleep(0.1)
+                else:
+                    break
+                sock.connect(str(socket_file))
+            yield QgaSession(sock)
+        finally:
+            sock.close()
+
+    def wait_up(self, timeout_sec: float = 60) -> None:
+        start_time = time.time()
+        while time.time() - start_time < timeout_sec:
+            if self.process.poll() is not None:
+                msg = "VM failed to start. Qemu process exited with code {self.process.returncode}"
+                raise ClanError(msg)
+            if self.qmp_socket_file.exists():
+                break
+            time.sleep(0.1)
+
+    def wait_down(self) -> int:
+        return self.process.wait()
+
+
+@contextmanager
+def spawn_vm(
     vm: VmConfig,
     *,
     cachedir: Path | None = None,
     socketdir: Path | None = None,
     nix_options: list[str] | None = None,
     portmap: list[tuple[int, int]] | None = None,
-) -> None:
+    stdout: int | None = None,
+    stderr: int | None = None,
+) -> Iterator[QemuVm]:
     if portmap is None:
         portmap = []
     if nix_options is None:
@@ -141,7 +227,7 @@ def run_vm(
         # TODO: We should get this from the vm argument
         nixos_config = build_vm(machine, cachedir, nix_options)
 
-        state_dir = vm_state_dir(str(vm.flake_url), machine.name)
+        state_dir = vm_state_dir(vm.flake_url, machine.name)
         state_dir.mkdir(parents=True, exist_ok=True)
 
         # specify socket files for qmp and qga
@@ -185,24 +271,71 @@ def run_vm(
 
         packages = ["nixpkgs#qemu"]
 
-        env = os.environ.copy()
+        extra_env = {}
         if vm.graphics and not vm.waypipe:
             packages.append("nixpkgs#virt-viewer")
             remote_viewer_mimetypes = module_root() / "vms" / "mimetypes"
-            env["XDG_DATA_DIRS"] = (
-                f"{remote_viewer_mimetypes}:{env.get('XDG_DATA_DIRS', '')}"
+            extra_env["XDG_DATA_DIRS"] = (
+                f"{remote_viewer_mimetypes}:{os.environ.get('XDG_DATA_DIRS', '')}"
             )
 
         with (
             start_waypipe(qemu_cmd.vsock_cid, f"[{vm.machine_name}] "),
             start_virtiofsd(virtiofsd_socket),
+            start_vm(
+                qemu_cmd.args, packages, extra_env, stdout=stdout, stderr=stderr
+            ) as process,
         ):
-            run(
-                nix_shell(packages, qemu_cmd.args),
-                env=env,
-                log=Log.BOTH,
-                error_msg=f"Could not start vm {machine}",
-            )
+            qemu_vm = QemuVm(machine, process)
+            qemu_vm.wait_up()
+
+            try:
+                yield qemu_vm
+            finally:
+                try:
+                    with qemu_vm.qmp_connect() as qmp:
+                        qmp.command("system_powerdown")
+                    qemu_vm.wait_down()
+                except OSError:
+                    pass
+                # TODO: add a timeout here instead of waiting indefinitely
+
+
+def run_vm(
+    vm_config: VmConfig,
+    *,
+    cachedir: Path | None = None,
+    socketdir: Path | None = None,
+    nix_options: list[str] | None = None,
+    portmap: list[tuple[int, int]] | None = None,
+) -> None:
+    with spawn_vm(
+        vm_config,
+        cachedir=cachedir,
+        socketdir=socketdir,
+        nix_options=nix_options,
+        portmap=portmap,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as vm:
+        stdout_buf, stderr_buf = handle_output(vm.process, Log.BOTH)
+        args: list[str] = vm.process.args  # type: ignore[assignment]
+        cmd_out = CmdOut(
+            stdout=stdout_buf,
+            stderr=stderr_buf,
+            cwd=Path.cwd(),
+            command_list=args,
+            returncode=vm.process.returncode,
+            msg=f"Could not start vm {vm_config.machine_name}",
+            env={},
+        )
+
+        if vm.process.returncode != 0:
+            raise ClanCmdError(cmd_out)
+        rc = vm.wait_down()
+        if rc != 0:
+            msg = f"VM exited with code {rc}"
+            raise ClanError(msg)
 
 
 def run_command(

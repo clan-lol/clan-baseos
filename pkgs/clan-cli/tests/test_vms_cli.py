@@ -2,10 +2,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from clan_cli.clan_uri import FlakeId
+from clan_cli.machines.machines import Machine
+from clan_cli.vms.run import inspect_vm, spawn_vm
 from fixtures_flakes import FlakeForTest, generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
-from helpers.vms import qga_connect, qmp_connect, run_vm_in_thread, wait_vm_down
 from root import CLAN_CORE
 from stdout import CaptureOutput
 
@@ -84,30 +86,18 @@ def test_vm_persistence(
         machine_configs=config,
     )
 
-    monkeypatch.chdir(flake.path)
+    vm_config = inspect_vm(machine=Machine("my_machine", FlakeId(str(flake.path))))
 
-    vm = run_vm_in_thread("my_machine")
-
-    # wait for the VM to start and connect qga
-    with qga_connect("my_machine", vm) as qga:
+    with spawn_vm(vm_config) as vm, vm.qga_connect() as qga:
         # create state via qmp command instead of systemd service
         qga.run("echo 'dream2nix' > /var/my-state/root", check=True)
         qga.run("echo 'dream2nix' > /var/my-state/test", check=True)
         qga.run("chown test /var/my-state/test", check=True)
         qga.run("chown test /var/user-state", check=True)
         qga.run("touch /var/my-state/rebooting", check=True)
-        qga.exec_cmd("poweroff")
-
-        # wait for socket to be down (systemd service 'poweroff' rebooting machine)
-        wait_vm_down("my_machine", vm)
-
-    vm.join()
 
     ## start vm again
-    vm = run_vm_in_thread("my_machine")
-
-    ## connect second time
-    with qga_connect("my_machine", vm) as qga:
+    with spawn_vm(vm_config) as vm, vm.qga_connect() as qga:
         # check state exists
         qga.run("cat /var/my-state/test", check=True)
         # ensure root file is owned by root
@@ -131,7 +121,3 @@ def test_vm_persistence(
             "systemctl --failed | tee /tmp/yolo | grep -q '0 loaded units listed' || ( cat /tmp/yolo && false )"
         )
         assert exitcode == 0, out
-
-        with qmp_connect("my_machine", vm) as qmp:
-            qmp.command("system_powerdown")
-    vm.join()

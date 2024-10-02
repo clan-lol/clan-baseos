@@ -1,14 +1,17 @@
 import json
+from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
 from age_keys import SopsSetup
 from clan_cli import cmd
+from clan_cli.clan_uri import FlakeId
+from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_eval, run
+from clan_cli.vms.run import inspect_vm, spawn_vm
 from fixtures_flakes import generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
-from helpers.vms import qga_connect, run_vm_in_thread, wait_vm_down
 from root import CLAN_CORE
 
 
@@ -61,9 +64,9 @@ def test_vm_deployment(
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"m1_machine": machine1_config, "m2_machine": machine2_config},
     )
-    monkeypatch.chdir(flake.path)
+
     sops_setup.init()
-    cli.run(["vars", "generate"])
+    cli.run(["vars", "generate", "--flake", str(flake.path)])
     # check sops secrets not empty
     for machine in ["m1_machine", "m2_machine"]:
         sops_secrets = json.loads(
@@ -94,13 +97,15 @@ def test_vm_deployment(
         ).stdout.strip()
         assert "no-such-path" not in shared_secret_path
     # run nix flake lock
-    cmd.run(["nix", "flake", "lock"])
-    vm_m1 = run_vm_in_thread("m1_machine")
-    vm_m2 = run_vm_in_thread("m2_machine")
-    with (
-        qga_connect("m1_machine", vm_m1) as qga_m1,
-        qga_connect("m2_machine", vm_m2) as qga_m2,
-    ):
+    cmd.run(["nix", "flake", "lock"], cwd=flake.path)
+
+    vm1_config = inspect_vm(machine=Machine("m1_machine", FlakeId(str(flake.path))))
+    vm2_config = inspect_vm(machine=Machine("m2_machine", FlakeId(str(flake.path))))
+    with ExitStack() as stack:
+        vm1 = stack.enter_context(spawn_vm(vm1_config))
+        vm2 = stack.enter_context(spawn_vm(vm2_config))
+        qga_m1 = stack.enter_context(vm1.qga_connect())
+        qga_m2 = stack.enter_context(vm2.qga_connect())
         # check my_secret is deployed
         _, out, _ = qga_m1.run(
             "cat /run/secrets/vars/m1_generator/my_secret", check=True
@@ -122,9 +127,3 @@ def test_vm_deployment(
             check=False,
         )
         assert returncode != 0
-        qga_m1.exec_cmd("poweroff")
-        qga_m2.exec_cmd("poweroff")
-        wait_vm_down("m1_machine", vm_m1)
-        wait_vm_down("m2_machine", vm_m2)
-    vm_m1.join()
-    vm_m2.join()
