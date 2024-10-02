@@ -27,7 +27,7 @@ from .folders import (
     sops_secrets_folder,
     sops_users_folder,
 )
-from .sops import decrypt_file, encrypt_file, ensure_sops_key, read_key, update_keys
+from .sops import decrypt_file, encrypt_file, ensure_admin_key, read_key, update_keys
 from .types import VALID_SECRET_NAME, secret_name_type
 
 
@@ -96,7 +96,7 @@ def encrypt_secret(
         add_machines = []
     if add_users is None:
         add_users = []
-    key = ensure_sops_key(flake_dir)
+    key = ensure_admin_key(flake_dir)
     recipient_keys = set()
 
     files_to_commit = []
@@ -293,7 +293,7 @@ def list_command(args: argparse.Namespace) -> None:
 
 
 def decrypt_secret(flake_dir: Path, secret_path: Path) -> str:
-    ensure_sops_key(flake_dir)
+    ensure_admin_key(flake_dir)
     path = secret_path / "secret"
     if not path.exists():
         msg = f"Secret '{secret_path!s}' does not exist"
