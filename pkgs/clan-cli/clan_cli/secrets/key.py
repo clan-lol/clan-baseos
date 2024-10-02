@@ -2,57 +2,40 @@ import argparse
 import json
 import logging
 import sys
-from pathlib import Path
 
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
 from . import sops
 from .secrets import update_secrets
-from .sops import default_admin_key_path, generate_private_key
+from .sops import (
+    default_admin_key_path,
+    generate_private_key,
+    maybe_get_admin_public_key,
+)
 
 log = logging.getLogger(__name__)
 
 
-def extract_public_key(filepath: Path) -> str:
-    """
-    Extracts the public key from a given text file.
-    """
-    try:
-        with filepath.open() as file:
-            for line in file:
-                # Check if the line contains the public key
-                if line.startswith("# public key:"):
-                    # Extract and return the public key part after the prefix
-                    return line.strip().split(": ")[1]
-    except FileNotFoundError as e:
-        msg = f"The file at {filepath} was not found."
-        raise ClanError(msg) from e
-    except OSError as e:
-        msg = f"An error occurred while extracting the public key: {e}"
-        raise ClanError(msg) from e
+def generate_key() -> sops.SopsKey:
+    key = maybe_get_admin_public_key()
+    if key is not None:
+        print(f"{key.key_type.name} key {key.pubkey} is already set")
+        return key
 
-    msg = f"Could not find the public key in the file at {filepath}."
-    raise ClanError(msg)
-
-
-def generate_key() -> str:
     path = default_admin_key_path()
-    if path.exists():
-        log.info(f"Key already exists at {path}")
-        return extract_public_key(path)
-    priv_key, pub_key = generate_private_key(out_file=path)
-    log.info(
-        f"Generated age private key at '{default_admin_key_path()}' for your user. Please back it up on a secure location or you will lose access to your secrets."
+    _, pub_key = generate_private_key(out_file=path)
+    print(
+        f"Generated age private key at '{path}' for your user. Please back it up on a secure location or you will lose access to your secrets."
     )
-    return pub_key
+    return sops.SopsKey(pub_key, username="", key_type=sops.KeyType.AGE)
 
 
 def generate_command(args: argparse.Namespace) -> None:
-    pub_key = generate_key()
-    log.info(
-        f"Also add your age public key to the repository with: \nclan secrets users add <username> {pub_key}"
-    )
+    key = generate_key()
+    print("Also add your age public key to the repository with:")
+    key_type = key.key_type.name.lower()
+    print(f"clan secrets users add --{key_type}-key <username>")
 
 
 def show_command(args: argparse.Namespace) -> None:
@@ -76,7 +59,13 @@ def register_key_parser(parser: argparse.ArgumentParser) -> None:
         required=True,
     )
 
-    parser_generate = subparser.add_parser("generate", help="generate age key")
+    parser_generate = subparser.add_parser(
+        "generate",
+        description=(
+            "Generate an age key for the Clan, "
+            "to use PGP set `SOPS_PGP_FP` in your environment."
+        ),
+    )
     parser_generate.set_defaults(func=generate_command)
 
     parser_show = subparser.add_parser("show", help="show public key")

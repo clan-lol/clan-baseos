@@ -180,6 +180,7 @@ def register_users_parser(parser: argparse.ArgumentParser) -> None:
         "--pgp-key",
         help=(
             "public PGP encryption key of the user. "
+            # Use --fingerprint --fingerprint to get fingerprints for subkeys:
             "Execute `gpg -k --fingerprint --fingerprint` and remove spaces to get it."
         ),
     )
