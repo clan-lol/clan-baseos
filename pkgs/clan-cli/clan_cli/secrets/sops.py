@@ -37,6 +37,13 @@ class SopsKey:
     username: str
     key_type: KeyType
 
+    def as_dict(self) -> dict[str, str]:
+        return {
+            "publickey": self.pubkey,
+            "username": self.username,
+            "type": self.key_type.name.lower(),
+        }
+
 
 def get_public_age_key(privkey: str) -> str:
     cmd = nix_shell(["nixpkgs#age"], ["age-keygen", "-y"])

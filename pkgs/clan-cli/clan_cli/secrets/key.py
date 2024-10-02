@@ -60,9 +60,7 @@ def show_command(args: argparse.Namespace) -> None:
     if not key:
         msg = "No public key found"
         raise ClanError(msg)
-    json.dump(
-        {"key": key.pubkey, "type": str(key.key_type)}, sys.stdout, indent=2, sort_keys=True
-    )
+    json.dump(key.as_dict(), sys.stdout, indent=2, sort_keys=True)
 
 
 def update_command(args: argparse.Namespace) -> None:
