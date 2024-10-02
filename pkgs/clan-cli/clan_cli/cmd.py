@@ -131,8 +131,6 @@ def run(
 
         if input:
             process.communicate(input)
-        else:
-            process.wait()
         tend = datetime.datetime.now(tz=datetime.UTC)
 
     global TIME_TABLE
