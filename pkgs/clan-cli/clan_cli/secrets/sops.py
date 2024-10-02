@@ -31,7 +31,7 @@ class KeyType(enum.Enum):
         return None
 
 
-@dataclass
+@dataclass(frozen=True, eq=False)
 class SopsKey:
     pubkey: str
     username: str
@@ -108,8 +108,7 @@ def maybe_get_user_or_machine(flake_dir: Path, key: SopsKey) -> SopsKey | None:
                     continue
                 this_pub_key, this_key_type = read_key(user)
                 if key.pubkey == this_pub_key and key.key_type == this_key_type:
-                    key.username = user.name
-                    return key
+                    return SopsKey(key.pubkey, user.name, key.key_type)
 
     return None
 
