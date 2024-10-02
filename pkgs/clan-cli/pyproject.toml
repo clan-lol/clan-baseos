@@ -33,7 +33,7 @@ testpaths = "tests"
 faulthandler_timeout = 60
 log_level = "DEBUG"
 log_format = "%(levelname)s: %(message)s\n       %(pathname)s:%(lineno)d::%(funcName)s"
-addopts = "--cov . --cov-report term --cov-report html:.reports/html --no-cov-on-fail --durations 5 --color=yes --new-first -n auto" # Add --pdb for debugging
+addopts = "--cov . --cov-report term --cov-report html:.reports/html --no-cov-on-fail --durations 5 --color=yes --new-first -W error -n auto" # Add --pdb for debugging
 norecursedirs = "tests/helpers"
 markers = ["impure", "with_core"]
 filterwarnings = "default::ResourceWarning"
