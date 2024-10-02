@@ -103,7 +103,7 @@ def ensure_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey:
     return key
 
 
-def default_sops_key_path() -> Path:
+def default_admin_key_path() -> Path:
     raw_path = os.environ.get("SOPS_AGE_KEY_FILE")
     if raw_path:
         return Path(raw_path)
@@ -111,11 +111,11 @@ def default_sops_key_path() -> Path:
 
 
 @API.register
-def maybe_get_public_key() -> str | None:
+def maybe_get_admin_public_key() -> str | None:
     key = os.environ.get("SOPS_AGE_KEY")
     if key:
         return get_public_key(key)
-    path = default_sops_key_path()
+    path = default_admin_key_path()
     if path.exists():
         return get_public_key(path.read_text())
 
@@ -123,14 +123,14 @@ def maybe_get_public_key() -> str | None:
 
 
 def maybe_get_sops_key(flake_dir: Path) -> SopsKey | None:
-    pub_key = maybe_get_public_key()
+    pub_key = maybe_get_admin_public_key()
     if pub_key:
         return maybe_get_user_or_machine(flake_dir, pub_key)
     return None
 
 
-def ensure_sops_key(flake_dir: Path) -> SopsKey:
-    pub_key = maybe_get_public_key()
+def ensure_admin_key(flake_dir: Path) -> SopsKey:
+    pub_key = maybe_get_admin_public_key()
     if not pub_key:
         msg = "No sops key found. Please generate one with 'clan secrets key generate'."
         raise ClanError(msg)

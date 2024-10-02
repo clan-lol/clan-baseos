@@ -6,7 +6,7 @@ from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
 from .secrets import update_secrets
-from .sops import default_sops_key_path, generate_private_key, get_public_key
+from .sops import default_admin_key_path, generate_private_key, get_public_key
 
 log = logging.getLogger(__name__)
 
@@ -34,19 +34,19 @@ def extract_public_key(filepath: Path) -> str:
 
 
 def generate_key() -> str:
-    path = default_sops_key_path()
+    path = default_admin_key_path()
     if path.exists():
         log.info(f"Key already exists at {path}")
         return extract_public_key(path)
     priv_key, pub_key = generate_private_key(out_file=path)
     log.info(
-        f"Generated age private key at '{default_sops_key_path()}' for your user. Please back it up on a secure location or you will lose access to your secrets."
+        f"Generated age private key at '{default_admin_key_path()}' for your user. Please back it up on a secure location or you will lose access to your secrets."
     )
     return pub_key
 
 
 def show_key() -> str:
-    return get_public_key(default_sops_key_path().read_text())
+    return get_public_key(default_admin_key_path().read_text())
 
 
 def generate_command(args: argparse.Namespace) -> None:

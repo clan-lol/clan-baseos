@@ -22,13 +22,13 @@ from .sops import read_key, write_key
 from .types import public_or_private_age_key_type, secret_name_type
 
 
-def add_machine(flake_dir: Path, machine: str, key: str, force: bool) -> None:
-    path = sops_machines_folder(flake_dir) / machine
-    write_key(path, key, force)
-    paths = [path]
+def add_machine(flake_dir: Path, machine: str, pubkey: str, force: bool) -> None:
+    machine_path = sops_machines_folder(flake_dir) / machine
+    write_key(machine_path, pubkey, force)
+    paths = [machine_path]
 
     def filter_machine_secrets(secret: Path) -> bool:
-        return secret.joinpath("machines", machine).exists()
+        return (secret / "machines" / machine).exists()
 
     paths.extend(update_secrets(flake_dir, filter_secrets=filter_machine_secrets))
     commit_files(
