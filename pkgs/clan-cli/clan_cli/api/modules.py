@@ -122,7 +122,7 @@ def get_roles(module_path: Path) -> None | list[str]:
 
     roles_dir = module_path / "roles"
     if not roles_dir.exists() or not roles_dir.is_dir():
-        return ["default"]
+        return []
 
     return [
         role.stem  # filename without .nix extension

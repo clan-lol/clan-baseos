@@ -17,6 +17,28 @@
     }
   },
   "services": {
+    "borgbackup": {
+      "simple": {
+        "roles": {
+          "client": {
+            "machines": ["test-inventory-machine"]
+          },
+          "server": {
+            "tags": ["2"]
+          }
+        }
+      },
+      "double": {
+        "roles": {
+          "server": {
+            "machines": ["test-inventory-machine"]
+          },
+          "client": {
+            "tags": ["1"]
+          }
+        }
+      }
+    },
     "packages": {
       "editors": {
         "meta": {

@@ -1,26 +1,6 @@
+# Dont import this file
+# It is only here for backwards compatibility.
+# Dont author new modules with this file.
 {
-  config,
-  pkgs,
-  ...
-}:
-
-{
-
-  config = {
-    clan.core.vars.generators.disk-id = {
-      files.diskId.secret = false;
-      runtimeInputs = [
-        pkgs.coreutils
-        pkgs.bash
-      ];
-      script = ''
-        uuid=$(bash ${../uuid4.sh})
-
-        # Remove the hyphens from the UUID
-        uuid_no_hyphens=$(echo -n "$uuid" | tr -d '-')
-
-        echo -n "$uuid_no_hyphens" > "$out/diskId"
-      '';
-    };
-  };
+  imports = [ ./roles/default.nix ];
 }

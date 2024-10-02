@@ -4,9 +4,11 @@ let
   machineDir = clanDir + "/machines/";
   inherit (config.clan.core) machineName;
 
-  instances = config.clan.inventory.services.borgbackup;
-
-  # roles = { ${role_name} :: { machines :: [string] } }
+  # Instances might be empty, if the module is not used via the inventory
+  #
+  # Type: { ${instanceName} :: { roles :: Roles } }
+  #   Roles :: { ${role_name} :: { machines :: [string] } }
+  instances = config.clan.inventory.services.borgbackup or { };
 
   allClients = lib.foldlAttrs (
     acc: _instanceName: instanceConfig:

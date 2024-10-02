@@ -1,18 +1,6 @@
-{ config, lib, ... }:
-let
-  var = config.clan.core.vars.generators.state-version.files.version or { };
-in
+# Dont import this file
+# It is only here for backwards compatibility.
+# Dont author new modules with this file.
 {
-  system.stateVersion = lib.mkDefault var.value;
-
-  clan.core.vars.generators.state-version = {
-    files.version = {
-      secret = false;
-      value = lib.mkDefault lib.version;
-    };
-    runtimeInputs = [ ];
-    script = ''
-      echo -n ${lib.versions.majorMinor config.system.stateVersion} > $out/version
-    '';
-  };
+  imports = [ ./roles/default.nix ];
 }
