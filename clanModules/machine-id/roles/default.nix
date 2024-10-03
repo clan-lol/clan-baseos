@@ -32,7 +32,7 @@ in
           pkgs.bash
         ];
         script = ''
-          uuid=$(bash ${../../uuid4.sh})
+          uuid=$(bash ${./uuid4.sh})
 
           # Remove the hyphens from the UUID
           uuid_no_hyphens=$(echo -n "$uuid" | tr -d '-')
