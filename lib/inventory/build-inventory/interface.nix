@@ -1,24 +1,7 @@
-{ config, lib, ... }:
+{ lib, ... }:
 let
   types = lib.types;
 
-  metaOptions = {
-    name = lib.mkOption { type = types.str; };
-    description = lib.mkOption {
-      default = null;
-      type = types.nullOr types.str;
-      description = ''
-        Optional freeform description
-      '';
-    };
-    icon = lib.mkOption {
-      default = null;
-      type = types.nullOr types.str;
-      description = ''
-        Under construction, will be used for the UI
-      '';
-    };
-  };
   metaOptionsWith = name: {
     name = lib.mkOption {
       type = types.str;
@@ -45,6 +28,8 @@ let
 
   moduleConfig = lib.mkOption {
     default = { };
+    # TODO: use types.deferredModule
+    # clan.borgbackup MUST be defined as submodule
     type = types.attrsOf types.anything;
     description = ''
       Configuration of the specific clanModule.
@@ -102,6 +87,7 @@ let
   };
 in
 {
+
   imports = [ ./assertions.nix ];
   options = {
     assertions = lib.mkOption {
@@ -110,7 +96,13 @@ in
       visible = false;
       default = [ ];
     };
-    meta = metaOptions;
+    meta = lib.mkOption {
+      type = lib.types.submoduleWith {
+        modules = [
+          ./meta-interface.nix
+        ];
+      };
+    };
 
     machines = lib.mkOption {
       description = ''
@@ -189,6 +181,7 @@ in
       type = types.attrsOf (
         types.attrsOf (
           types.submodule (
+            # instance name
             { name, ... }:
             {
               options.meta = metaOptionsWith name;

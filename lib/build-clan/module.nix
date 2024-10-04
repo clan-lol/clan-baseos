@@ -222,7 +222,12 @@ in
 {
   imports = [
     # Merge the inventory file
-    { inventory = inventoryLoaded; }
+    {
+      inventory = _: {
+        _file = inventoryFile;
+        config = inventoryLoaded;
+      };
+    }
     # TODO: Figure out why this causes infinite recursion
     {
       inventory.machines = lib.optionalAttrs (builtins.pathExists "${directory}/machines") (
@@ -235,7 +240,9 @@ in
       inventory.machines = lib.mapAttrs (_n: _: { }) config.machines;
     }
     # Merge the meta attributes from the buildClan function
-    { inventory.meta = if config.meta != null then config.meta else { }; }
+    #
+    # config.inventory.meta <- config.meta
+    { inventory.meta = config.meta; }
   ];
 
   inherit nixosConfigurations;
