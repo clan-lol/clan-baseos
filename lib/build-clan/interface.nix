@@ -63,17 +63,10 @@ in
       description = ''
         Global information about the clan.
       '';
-      type = types.nullOr (
-        types.submodule {
-          options = {
-            name = lib.mkOption {
-              type = types.nullOr types.str;
-              description = "Needs to be (globally) unique, as this determines the folder name where the flake gets downloaded to.";
-            };
-          };
-        }
-      );
-      default = null;
+      type = types.deferredModuleWith {
+        staticModules = [ ../inventory/build-inventory/meta-interface.nix ];
+      };
+      default = { };
     };
 
     pkgsForSystem = lib.mkOption {
