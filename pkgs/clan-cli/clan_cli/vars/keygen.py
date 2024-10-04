@@ -5,7 +5,7 @@ import os
 from clan_cli.clan_uri import FlakeId
 from clan_cli.errors import ClanError
 from clan_cli.secrets.key import generate_key
-from clan_cli.secrets.sops import maybe_get_admin_public_key
+from clan_cli.secrets.sops import KeyType, maybe_get_admin_public_key
 from clan_cli.secrets.users import add_user
 
 log = logging.getLogger(__name__)
@@ -24,7 +24,8 @@ def keygen(user: str | None, flake: FlakeId, force: bool) -> None:
     add_user(
         flake_dir=flake.path,
         name=user,
-        key=pub_key,
+        key=pub_key.pubkey,
+        key_type=KeyType.AGE,
         force=force,
     )
 
