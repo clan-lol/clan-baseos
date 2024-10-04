@@ -1,11 +1,13 @@
 import argparse
+import json
+import sys
 from pathlib import Path
 
 from clan_cli.completions import add_dynamic_completer, complete_secrets, complete_users
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
-from . import secrets
+from . import secrets, sops
 from .folders import list_objects, remove_object, sops_secrets_folder, sops_users_folder
 from .secrets import update_secrets
 from .sops import read_key, write_key
@@ -17,13 +19,19 @@ from .types import (
 )
 
 
-def add_user(flake_dir: Path, name: str, key: str, force: bool) -> None:
+def add_user(
+    flake_dir: Path,
+    name: str,
+    key: str,
+    key_type: sops.KeyType,
+    force: bool,
+) -> None:
     path = sops_users_folder(flake_dir) / name
 
     def filter_user_secrets(secret: Path) -> bool:
         return secret.joinpath("users", name).exists()
 
-    write_key(path, key, force)
+    write_key(path, key, key_type, overwrite=force)
     paths = [path]
     paths.extend(update_secrets(flake_dir, filter_secrets=filter_user_secrets))
     commit_files(
@@ -42,8 +50,9 @@ def remove_user(flake_dir: Path, name: str) -> None:
     )
 
 
-def get_user(flake_dir: Path, name: str) -> str:
-    return read_key(sops_users_folder(flake_dir) / name)
+def get_user(flake_dir: Path, name: str) -> sops.SopsKey:
+    key, key_type = read_key(sops_users_folder(flake_dir) / name)
+    return sops.SopsKey(key, name, key_type)
 
 
 def list_users(flake_dir: Path) -> list[str]:
@@ -95,14 +104,24 @@ def add_command(args: argparse.Namespace) -> None:
     if args.flake is None:
         msg = "Could not find clan flake toplevel directory"
         raise ClanError(msg)
-    add_user(args.flake.path, args.user, args.key, args.force)
+    if args.age_key or args.agekey:
+        key_type = sops.KeyType.AGE
+    elif args.pgp_key:
+        key_type = sops.KeyType.PGP
+    else:
+        msg = "BUG!: key type not set"
+        raise ValueError(msg)
+    key = args.agekey or args.age_key or args.pgp_key
+    assert key is not None, "key is None"
+    add_user(args.flake.path, args.user, key, key_type, args.force)
 
 
 def get_command(args: argparse.Namespace) -> None:
     if args.flake is None:
         msg = "Could not find clan flake toplevel directory"
         raise ClanError(msg)
-    print(get_user(args.flake.path, args.user))
+    key = get_user(args.flake.path, args.user)
+    json.dump(key.as_dict(), sys.stdout, indent=2, sort_keys=True)
 
 
 def remove_command(args: argparse.Namespace) -> None:
@@ -141,12 +160,29 @@ def register_users_parser(parser: argparse.ArgumentParser) -> None:
         "-f", "--force", help="overwrite existing user", action="store_true"
     )
     add_parser.add_argument("user", help="the name of the user", type=user_name_type)
-    add_parser.add_argument(
-        "key",
-        help="public key or private key of the user."
-        "Execute 'clan secrets key --help' on how to retrieve a key."
+    key_type = add_parser.add_mutually_exclusive_group(required=True)
+    key_type.add_argument(
+        "agekey",
+        help="public or private age key of the user. "
+        "Execute 'clan secrets key --help' on how to retrieve a key. "
         "To fetch an age key from an SSH host key: ssh-keyscan <domain_name> | nix shell nixpkgs#ssh-to-age -c ssh-to-age",
         type=public_or_private_age_key_type,
+        nargs="?",
+    )
+    key_type.add_argument(
+        "--age-key",
+        help="public or private age key of the user. "
+        "Execute 'clan secrets key --help' on how to retrieve a key. "
+        "To fetch an age key from an SSH host key: ssh-keyscan <domain_name> | nix shell nixpkgs#ssh-to-age -c ssh-to-age",
+        type=public_or_private_age_key_type,
+    )
+    key_type.add_argument(
+        "--pgp-key",
+        help=(
+            "public PGP encryption key of the user. "
+            # Use --fingerprint --fingerprint to get fingerprints for subkeys:
+            "Execute `gpg -k --fingerprint --fingerprint` and remove spaces to get it."
+        ),
     )
     add_parser.set_defaults(func=add_command)
 

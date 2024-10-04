@@ -1,3 +1,4 @@
+import enum
 import io
 import json
 import os
@@ -19,13 +20,32 @@ from clan_cli.nix import nix_shell
 from .folders import sops_machines_folder, sops_users_folder
 
 
-@dataclass
+class KeyType(enum.Enum):
+    AGE = enum.auto()
+    PGP = enum.auto()
+
+    @classmethod
+    def validate(cls, value: str | None) -> "KeyType | None":  # noqa: ANN102
+        if value:
+            return cls.__members__.get(value.upper())
+        return None
+
+
+@dataclass(frozen=True, eq=False)
 class SopsKey:
     pubkey: str
     username: str
+    key_type: KeyType
+
+    def as_dict(self) -> dict[str, str]:
+        return {
+            "publickey": self.pubkey,
+            "username": self.username,
+            "type": self.key_type.name.lower(),
+        }
 
 
-def get_public_key(privkey: str) -> str:
+def get_public_age_key(privkey: str) -> str:
     cmd = nix_shell(["nixpkgs#age"], ["age-keygen", "-y"])
     try:
         res = subprocess.run(
@@ -78,8 +98,7 @@ def get_user_name(flake_dir: Path, user: str) -> str:
         print(f"{flake_dir / user} already exists")
 
 
-def maybe_get_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey | None:
-    key = SopsKey(pub_key, username="")
+def maybe_get_user_or_machine(flake_dir: Path, key: SopsKey) -> SopsKey | None:
     folders = [sops_users_folder(flake_dir), sops_machines_folder(flake_dir)]
 
     for folder in folders:
@@ -87,20 +106,20 @@ def maybe_get_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey | None:
             for user in folder.iterdir():
                 if not (user / "key.json").exists():
                     continue
-                if read_key(user) == pub_key:
-                    key.username = user.name
-                    return key
+                this_pub_key, this_key_type = read_key(user)
+                if key.pubkey == this_pub_key and key.key_type == this_key_type:
+                    return SopsKey(key.pubkey, user.name, key.key_type)
 
     return None
 
 
 @API.register
-def ensure_user_or_machine(flake_dir: Path, pub_key: str) -> SopsKey:
-    key = maybe_get_user_or_machine(flake_dir, pub_key)
-    if not key:
-        msg = f"Your sops key is not yet added to the repository. Please add it with 'clan secrets users add youruser {pub_key}' (replace youruser with your user name)"
-        raise ClanError(msg)
-    return key
+def ensure_user_or_machine(flake_dir: Path, key: SopsKey) -> SopsKey:
+    maybe_key = maybe_get_user_or_machine(flake_dir, key)
+    if maybe_key:
+        return maybe_key
+    msg = f"Your sops key is not yet added to the repository. Please add it with 'clan secrets users add youruser {key.pubkey}' (replace youruser with your user name)"
+    raise ClanError(msg)
 
 
 def default_admin_key_path() -> Path:
@@ -111,43 +130,59 @@ def default_admin_key_path() -> Path:
 
 
 @API.register
-def maybe_get_admin_public_key() -> str | None:
-    key = os.environ.get("SOPS_AGE_KEY")
-    if key:
-        return get_public_key(key)
+def maybe_get_admin_public_key() -> None | SopsKey:
+    age_key = os.environ.get("SOPS_AGE_KEY")
+    pgp_key = os.environ.get("SOPS_PGP_FP")
+    if age_key and pgp_key:
+        msg = "Cannot decide which key to use when both `SOPS_AGE_KEY` and `SOPS_PGP_FP` are set. Please specify one or the other."
+        raise ClanError(msg)
+    if age_key:
+        return SopsKey(
+            pubkey=get_public_age_key(age_key), key_type=KeyType.AGE, username=""
+        )
+    if pgp_key:
+        return SopsKey(pubkey=pgp_key, key_type=KeyType.PGP, username="")
+
     path = default_admin_key_path()
     if path.exists():
-        return get_public_key(path.read_text())
+        return SopsKey(
+            pubkey=get_public_age_key(path.read_text()),
+            key_type=KeyType.AGE,
+            username="",
+        )
 
     return None
 
 
 def maybe_get_sops_key(flake_dir: Path) -> SopsKey | None:
-    pub_key = maybe_get_admin_public_key()
-    if pub_key:
-        return maybe_get_user_or_machine(flake_dir, pub_key)
-    return None
+    key = maybe_get_admin_public_key()
+    if not key:
+        return None
+    return maybe_get_user_or_machine(flake_dir, key)
 
 
 def ensure_admin_key(flake_dir: Path) -> SopsKey:
-    pub_key = maybe_get_admin_public_key()
-    if not pub_key:
-        msg = "No sops key found. Please generate one with 'clan secrets key generate'."
-        raise ClanError(msg)
-    return ensure_user_or_machine(flake_dir, pub_key)
+    key = maybe_get_admin_public_key()
+    if key:
+        return ensure_user_or_machine(flake_dir, key)
+    msg = "No sops key found. Please generate one with 'clan secrets key generate'."
+    raise ClanError(msg)
 
 
 @contextmanager
-def sops_manifest(keys: list[str]) -> Iterator[Path]:
+def sops_manifest(keys: list[tuple[str, KeyType]]) -> Iterator[Path]:
+    all_keys: dict[str, list[str]] = {
+        key_type.lower(): [] for key_type in KeyType.__members__
+    }
+    for key, key_type in keys:
+        all_keys[key_type.name.lower()].append(key)
     with NamedTemporaryFile(delete=False, mode="w") as manifest:
-        json.dump(
-            {"creation_rules": [{"key_groups": [{"age": keys}]}]}, manifest, indent=2
-        )
+        json.dump({"creation_rules": [{"key_groups": [all_keys]}]}, manifest, indent=2)
         manifest.flush()
         yield Path(manifest.name)
 
 
-def update_keys(secret_path: Path, keys: list[str]) -> list[Path]:
+def update_keys(secret_path: Path, keys: list[tuple[str, KeyType]]) -> list[Path]:
     with sops_manifest(keys) as manifest:
         secret_path = secret_path / "secret"
         time_before = secret_path.stat().st_mtime
@@ -171,7 +206,7 @@ def update_keys(secret_path: Path, keys: list[str]) -> list[Path]:
 def encrypt_file(
     secret_path: Path,
     content: IO[str] | str | bytes | None,
-    pubkeys: list[str],
+    pubkeys: list[tuple[str, KeyType]],
 ) -> None:
     folder = secret_path.parent
     folder.mkdir(parents=True, exist_ok=True)
@@ -237,7 +272,7 @@ def get_meta(secret_path: Path) -> dict:
         return json.load(f)
 
 
-def write_key(path: Path, publickey: str, overwrite: bool) -> None:
+def write_key(path: Path, publickey: str, key_type: KeyType, overwrite: bool) -> None:
     path.mkdir(parents=True, exist_ok=True)
     try:
         flags = os.O_CREAT | os.O_WRONLY | os.O_TRUNC
@@ -248,21 +283,23 @@ def write_key(path: Path, publickey: str, overwrite: bool) -> None:
         msg = f"{path.name} already exists in {path}. Use --force to overwrite."
         raise ClanError(msg) from e
     with os.fdopen(fd, "w") as f:
-        json.dump({"publickey": publickey, "type": "age"}, f, indent=2)
+        contents = {"publickey": publickey, "type": key_type.name.lower()}
+        json.dump(contents, f, indent=2)
 
 
-def read_key(path: Path) -> str:
+def read_key(path: Path) -> tuple[str, KeyType]:
     with Path(path / "key.json").open() as f:
         try:
             key = json.load(f)
         except json.JSONDecodeError as e:
             msg = f"Failed to decode {path.name}: {e}"
             raise ClanError(msg) from e
-    if key["type"] != "age":
-        msg = f"{path.name} is not an age key but {key['type']}. This is not supported"
+    key_type = KeyType.validate(key.get("type"))
+    if key_type is None:
+        msg = f"Invalid key type in {path.name}: \"{key_type}\" (expected one of {', '.join(KeyType.__members__.keys())})."
         raise ClanError(msg)
     publickey = key.get("publickey")
     if not publickey:
         msg = f"{path.name} does not contain a public key"
         raise ClanError(msg)
-    return publickey
+    return publickey, key_type

@@ -32,6 +32,7 @@ Note: This module assumes the presence of other modules and classes such as `Cla
 import dataclasses
 import json
 from dataclasses import dataclass, fields, is_dataclass
+from enum import Enum
 from pathlib import Path
 from types import UnionType
 from typing import (
@@ -179,25 +180,31 @@ def construct_value(
     # Nested types
     # list
     # dict
-    if get_origin(t) is list:
+    origin = get_origin(t)
+    if origin is list:
         if not isinstance(field_value, list):
             msg = f"Expected list, got {field_value}"
             raise ClanError(msg, location=f"{loc}")
 
         return [construct_value(get_args(t)[0], item) for item in field_value]
-    if get_origin(t) is dict and isinstance(field_value, dict):
+    if origin is dict and isinstance(field_value, dict):
         return {
             key: construct_value(get_args(t)[1], value)
             for key, value in field_value.items()
         }
-    if get_origin(t) is Literal:
+    if origin is Literal:
         valid_values = get_args(t)
         if field_value not in valid_values:
-            msg = f"Expected one of {valid_values}, got {field_value}"
+            msg = f"Expected one of {', '.join(valid_values)}, got {field_value}"
             raise ClanError(msg, location=f"{loc}")
         return field_value
 
-    if get_origin(t) is Annotated:
+    if origin is Enum:
+        if field_value not in origin.__members__:
+            msg = f"Expected one of {', '.join(origin.__members__)}, got {field_value}"
+            raise ClanError(msg, location=f"{loc}")
+
+    if origin is Annotated:
         (base_type,) = get_args(t)
         return construct_value(base_type, field_value)
 
