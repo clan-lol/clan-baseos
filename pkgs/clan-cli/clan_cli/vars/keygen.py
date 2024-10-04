@@ -6,6 +6,7 @@ from clan_cli.clan_uri import FlakeId
 from clan_cli.errors import ClanError
 from clan_cli.secrets.key import generate_key
 from clan_cli.secrets.users import add_user
+from clan_cli.vars.secret_modules.sops import SecretStore as SopsSecretStore
 
 log = logging.getLogger(__name__)
 
@@ -16,9 +17,12 @@ def keygen(user: str | None, flake: FlakeId, force: bool) -> None:
         if not user:
             msg = "No user provided and $USER is not set. Please provide a user via --user."
             raise ClanError(msg)
-    pub_key = generate_key()
+    pub_key = SopsSecretStore.maybe_get_admin_public_key()
+    if not pub_key:
+        pub_key = generate_key()
+    # TODO set flake_dir=flake.path / "vars"
     add_user(
-        flake_dir=flake.path / "vars",
+        flake_dir=flake.path,
         name=user,
         key=pub_key,
         force=force,

@@ -99,13 +99,15 @@ class SecretStore(SecretStoreBase):
         with os.fdopen(fd, "w") as f:
             json.dump({"publickey": publickey, "type": "age"}, f, indent=2)
 
-    def default_admin_key_path(self) -> Path:
+    @staticmethod
+    def default_admin_key_path() -> Path:
         raw_path = os.environ.get("SOPS_AGE_KEY_FILE")
         if raw_path:
             return Path(raw_path)
         return user_config_dir() / "sops" / "age" / "keys.txt"
 
-    def get_public_key(self, privkey: str) -> str:
+    @staticmethod
+    def get_public_key(privkey: str) -> str:
         cmd = nix_shell(["nixpkgs#age"], ["age-keygen", "-y"])
         try:
             res = subprocess.run(
@@ -116,19 +118,20 @@ class SecretStore(SecretStoreBase):
             raise ClanError(msg) from e
         return res.stdout.strip()
 
-    def maybe_get_admin_public_key(self) -> str | None:
+    @classmethod
+    def maybe_get_admin_public_key(cls: type["SecretStore"]) -> str | None:
         key = os.environ.get("SOPS_AGE_KEY")
         if key:
-            return self.get_public_key(key)
-        path = self.default_admin_key_path()
+            return cls.get_public_key(key)
+        path = cls.default_admin_key_path()
         if path.exists():
-            return self.get_public_key(path.read_text())
+            return cls.get_public_key(path.read_text())
 
         return None
 
     # TODO: get rid of `clan secrets generate` dependency
     def admin_key(self) -> SopsKey:
-        pub_key = self.maybe_get_admin_public_key()
+        pub_key = SecretStore.maybe_get_admin_public_key()
         if not pub_key:
             raise MissingKeyError
         return self.ensure_user_or_machine(pub_key)

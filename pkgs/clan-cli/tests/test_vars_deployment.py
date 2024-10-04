@@ -60,7 +60,6 @@ def test_vm_deployment(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"m1_machine": machine1_config, "m2_machine": machine2_config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
