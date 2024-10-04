@@ -1,7 +1,5 @@
 import argparse
-import functools
 import getpass
-import operator
 import os
 import shutil
 import sys
@@ -22,7 +20,6 @@ from clan_cli.completions import (
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
-from . import sops
 from .folders import (
     list_objects,
     sops_groups_folder,
@@ -45,13 +42,13 @@ def update_secrets(
         changed_files.extend(
             update_keys(
                 secret_path,
-                sorted_keys(collect_keys_for_path(secret_path)),
+                sorted(collect_keys_for_path(secret_path)),
             )
         )
     return changed_files
 
 
-def collect_keys_for_type(folder: Path) -> set[tuple[str, sops.KeyType]]:
+def collect_keys_for_type(folder: Path) -> set[str]:
     if not folder.exists():
         return set()
     keys = set()
@@ -71,7 +68,7 @@ def collect_keys_for_type(folder: Path) -> set[tuple[str, sops.KeyType]]:
     return keys
 
 
-def collect_keys_for_path(path: Path) -> set[tuple[str, sops.KeyType]]:
+def collect_keys_for_path(path: Path) -> set[str]:
     keys = set()
     keys.update(collect_keys_for_type(path / "machines"))
     keys.update(collect_keys_for_type(path / "users"))
@@ -135,8 +132,8 @@ def encrypt_secret(
 
     recipient_keys = collect_keys_for_path(secret_path)
 
-    if (key.pubkey, key.key_type) not in recipient_keys:
-        recipient_keys.add((key.pubkey, key.key_type))
+    if key.pubkey not in recipient_keys:
+        recipient_keys.add(key.pubkey)
         files_to_commit.extend(
             allow_member(
                 users_folder(secret_path),
@@ -147,7 +144,7 @@ def encrypt_secret(
         )
 
     secret_path = secret_path / "secret"
-    encrypt_file(secret_path, value, sorted_keys(recipient_keys))
+    encrypt_file(secret_path, value, sorted(recipient_keys))
     files_to_commit.append(secret_path)
     if git_commit:
         commit_files(
@@ -231,7 +228,7 @@ def allow_member(
         changed.extend(
             update_keys(
                 group_folder.parent,
-                sorted_keys(collect_keys_for_path(group_folder.parent)),
+                sorted(collect_keys_for_path(group_folder.parent)),
             )
         )
     return changed
@@ -258,11 +255,8 @@ def disallow_member(group_folder: Path, name: str) -> list[Path]:
         group_folder.parent.rmdir()
 
     return update_keys(
-        target.parent.parent, sorted_keys(collect_keys_for_path(group_folder.parent))
+        target.parent.parent, sorted(collect_keys_for_path(group_folder.parent))
     )
-
-
-sorted_keys = functools.partial(sorted, key=operator.itemgetter(0))
 
 
 def has_secret(secret_path: Path) -> bool:

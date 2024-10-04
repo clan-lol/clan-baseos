@@ -229,7 +229,7 @@ class SecretStore(SecretStoreBase):
     ) -> bool:
         secret_path = self.secret_path(generator_name, secret_name, shared)
         secret = json.loads((secret_path / "secret").read_text())
-        recipients = [r["recipient"] for r in (secret["sops"].get("age") or [])]
+        recipients = [r["recipient"] for r in secret["sops"]["age"]]
         machines_folder_path = sops_machines_folder(self.machine.flake_dir)
         machine_pubkey = json.loads(
             (machines_folder_path / self.machine.name / "key.json").read_text()

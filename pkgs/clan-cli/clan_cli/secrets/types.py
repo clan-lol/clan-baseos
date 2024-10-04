@@ -5,7 +5,7 @@ from pathlib import Path
 
 from clan_cli.errors import ClanError
 
-from .sops import get_public_age_key
+from .sops import get_public_key
 
 VALID_SECRET_NAME = re.compile(r"^[a-zA-Z0-9._-]+$")
 VALID_USER_NAME = re.compile(r"^[a-z_]([a-z0-9_-]{0,31})?$")
@@ -24,7 +24,7 @@ def public_or_private_age_key_type(arg_value: str) -> str:
     if arg_value.startswith("age1"):
         return arg_value.strip()
     if arg_value.startswith("AGE-SECRET-KEY-"):
-        return get_public_age_key(arg_value)
+        return get_public_key(arg_value)
     if not arg_value.startswith("age1"):
         msg = f"Please provide an age key starting with age1, got: '{arg_value}'"
         raise ClanError(msg)
