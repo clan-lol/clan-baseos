@@ -21,13 +21,12 @@ class SopsSetup:
         self.user = os.environ.get("USER", "user")
         cli.run(
             [
-                "secrets",
-                "users",
-                "add",
+                "vars",
+                "keygen",
                 "--flake",
                 str(flake_path),
+                "--user",
                 self.user,
-                self.keys[0].pubkey,
             ]
         )
 

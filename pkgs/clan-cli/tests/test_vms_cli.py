@@ -82,7 +82,6 @@ def test_vm_persistence(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs=config,
-        monkeypatch=monkeypatch,
     )
 
     monkeypatch.chdir(flake.path)

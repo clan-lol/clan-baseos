@@ -90,7 +90,6 @@ def test_generate_public_var(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
@@ -130,7 +129,6 @@ def test_generate_secret_var_sops(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -172,7 +170,6 @@ def test_generate_secret_var_sops_with_default_group(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -210,7 +207,6 @@ def test_generated_shared_secret_sops(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"machine1": m1_config, "machine2": m2_config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -253,7 +249,6 @@ def test_generate_secret_var_password_store(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     gnupghome = temporary_home / "gpg"
@@ -324,7 +319,6 @@ def test_generate_secret_for_multiple_machines(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"machine1": machine1_config, "machine2": machine2_config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -370,7 +364,6 @@ def test_dependant_generators(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
@@ -410,7 +403,6 @@ def test_prompt(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     monkeypatch.setattr("sys.stdin", StringIO(input_value))
@@ -449,7 +441,6 @@ def test_share_flag(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -500,7 +491,6 @@ def test_prompt_create_file(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -529,7 +519,6 @@ def test_api_get_prompts(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     monkeypatch.setattr("sys.stdin", StringIO("input1"))
@@ -558,7 +547,6 @@ def test_api_set_prompts(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
@@ -590,6 +578,7 @@ def test_api_set_prompts(
 def test_commit_message(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
+    sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
@@ -604,9 +593,9 @@ def test_commit_message(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
+    sops_setup.init()
     cli.run(
         [
             "vars",
@@ -662,7 +651,6 @@ def test_default_value(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
     # ensure evaluating the default value works without generating the value
@@ -692,6 +680,7 @@ def test_stdout_of_generate(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
     capture_output: CaptureOutput,
+    sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
@@ -706,9 +695,9 @@ def test_stdout_of_generate(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
+    sops_setup.init()
     from clan_cli.vars.generate import generate_vars_for_machine
 
     with capture_output as output:
@@ -769,6 +758,7 @@ def test_stdout_of_generate(
 def test_migration_skip(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
+    sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
@@ -783,9 +773,9 @@ def test_migration_skip(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
+    sops_setup.init()
     cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     in_repo_store = in_repo.FactStore(
@@ -799,6 +789,7 @@ def test_migration_skip(
 def test_migration(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
+    sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
@@ -812,9 +803,9 @@ def test_migration(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
     monkeypatch.chdir(flake.path)
+    sops_setup.init()
     cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     in_repo_store = in_repo.FactStore(
@@ -845,10 +836,9 @@ def test_fails_when_files_are_left_from_other_backend(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
         machine_configs={"my_machine": config},
-        monkeypatch=monkeypatch,
     )
-    sops_setup.init()
     monkeypatch.chdir(flake.path)
+    sops_setup.init()
     for generator in ["my_secret_generator", "my_value_generator"]:
         generate_vars_for_machine(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
@@ -876,13 +866,13 @@ def test_keygen(
     monkeypatch.chdir(temporary_home)
     cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
     # check public key exists
-    assert (temporary_home / "vars" / "sops" / "users" / "user").is_dir()
+    assert (temporary_home / "sops" / "users" / "user").is_dir()
     # check private key exists
     assert (temporary_home / ".config" / "sops" / "age" / "keys.txt").is_file()
     # it should still work, even if the keys already exist
     import shutil
 
-    shutil.rmtree(temporary_home / "vars" / "sops" / "users" / "user")
+    shutil.rmtree(temporary_home / "sops" / "users" / "user")
     cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
     # check public key exists
-    assert (temporary_home / "vars" / "sops" / "users" / "user").is_dir()
+    assert (temporary_home / "sops" / "users" / "user").is_dir()
