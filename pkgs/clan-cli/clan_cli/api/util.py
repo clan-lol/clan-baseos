@@ -2,6 +2,7 @@ import copy
 import dataclasses
 import pathlib
 from dataclasses import MISSING
+from enum import EnumType
 from types import NoneType, UnionType
 from typing import (
     Annotated,
@@ -77,13 +78,16 @@ def type_to_dict(
 
     if dataclasses.is_dataclass(t):
         fields = dataclasses.fields(t)
-        properties = {
-            f.metadata.get("alias", f.name): type_to_dict(
+        properties = {}
+        for f in fields:
+            if f.name.startswith("_"):
+                continue
+            assert not isinstance(
+                f.type, str
+            ), f"Expected field type to be a type, got {f.type}, Have you imported `from __future__ import annotations`?"
+            properties[f.metadata.get("alias", f.name)] = type_to_dict(
                 f.type, f"{scope} {t.__name__}.{f.name}", type_map
             )
-            for f in fields
-            if not f.name.startswith("_")
-        }
 
         required = set()
         for pn, pv in properties.items():
@@ -192,6 +196,11 @@ def type_to_dict(
             return {"type": "boolean"}
         if t is object:
             return {"type": "object"}
+        if type(t) is EnumType:
+            return {
+                "type": "string",
+                "enum": list(t.__members__),
+            }
         if t is Any:
             msg = f"{scope} - Usage of the Any type is not supported for API functions. In: {scope}"
             raise JSchemaTypeError(msg)
@@ -208,7 +217,7 @@ def type_to_dict(
         if t is NoneType:
             return {"type": "null"}
 
-        msg = f"{scope} - Error primitive type not supported {t!s}"
+        msg = f"{scope} - Basic type '{t!s}' is not supported"
         raise JSchemaTypeError(msg)
-    msg = f"{scope} - Error type not supported {t!s}"
+    msg = f"{scope} - Type '{t!s}' is not supported"
     raise JSchemaTypeError(msg)
