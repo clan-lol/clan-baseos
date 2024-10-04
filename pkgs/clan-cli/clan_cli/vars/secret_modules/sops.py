@@ -37,6 +37,12 @@ class SopsKey:
     username: str
 
 
+class MissingKeyError(ClanError):
+    def __init__(self) -> None:
+        msg = "Cannot find admin keys for current $USER on this computer. Please initialize admin keys once with 'clan vars keygen'"
+        super().__init__(msg)
+
+
 class SecretStore(SecretStoreBase):
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
@@ -124,22 +130,19 @@ class SecretStore(SecretStoreBase):
     def admin_key(self) -> SopsKey:
         pub_key = self.maybe_get_admin_public_key()
         if not pub_key:
-            msg = "No sops key found. Please generate one with 'clan secrets key generate'."
-            raise ClanError(msg)
-        # return SopsKey(pub_key, username="")
+            raise MissingKeyError
         return self.ensure_user_or_machine(pub_key)
 
     # TODO: find alternative to `clan secrets users add`
     def ensure_user_or_machine(self, pub_key: str) -> SopsKey:
-        key = self.maybe_get_user_or_machine(pub_key)
+        key = self.maybe_get_user(pub_key)
         if not key:
-            msg = f"Your sops key is not yet added to the repository. Please add it with 'clan secrets users add youruser {pub_key}' (replace youruser with your user name)"
-            raise ClanError(msg)
+            raise MissingKeyError
         return key
 
-    def maybe_get_user_or_machine(self, pub_key: str) -> SopsKey | None:
+    def maybe_get_user(self, pub_key: str) -> SopsKey | None:
         key = SopsKey(pub_key, username="")
-        folders = [self.sops_dir / "users", self.sops_dir / "machines"]
+        folders = [self.sops_dir / "users"]
 
         for folder in folders:
             if folder.exists():

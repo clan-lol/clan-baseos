@@ -866,3 +866,23 @@ def test_fails_when_files_are_left_from_other_backend(
                 generator,
                 regenerate=False,
             )
+
+
+@pytest.mark.impure
+def test_keygen(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    monkeypatch.chdir(temporary_home)
+    cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
+    # check public key exists
+    assert (temporary_home / "vars" / "sops" / "users" / "user").is_dir()
+    # check private key exists
+    assert (temporary_home / ".config" / "sops" / "age" / "keys.txt").is_file()
+    # it should still work, even if the keys already exist
+    import shutil
+
+    shutil.rmtree(temporary_home / "vars" / "sops" / "users" / "user")
+    cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
+    # check public key exists
+    assert (temporary_home / "vars" / "sops" / "users" / "user").is_dir()

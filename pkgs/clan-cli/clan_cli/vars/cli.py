@@ -6,6 +6,7 @@ from clan_cli.hyperlink import help_hyperlink
 from .check import register_check_parser
 from .generate import register_generate_parser
 from .get import register_get_parser
+from .keygen import register_keygen_parser
 from .list import register_list_parser
 from .set import register_set_parser
 from .upload import register_upload_parser
@@ -19,6 +20,20 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
         help="the command to run",
         required=True,
     )
+
+    keygen_parser = subparser.add_parser(
+        "keygen",
+        help="initialize sops keys for vars",
+        epilog=(
+            """
+This subcommand allows initializing sops keys for vars.
+This creates the file ~/.config/sops/age/keys.txt
+
+             """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    register_keygen_parser(keygen_parser)
 
     check_parser = subparser.add_parser(
         "check",
