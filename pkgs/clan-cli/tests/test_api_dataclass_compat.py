@@ -129,6 +129,9 @@ def test_all_dataclasses() -> None:
         try:
             API.reset()
             dclass = load_dataclass_from_file(file, dataclass, str(cli_path.parent))
+            if dclass is None:
+                msg = f"Could not load dataclass {dataclass} from {file}"
+                raise ClanError(msg)
             type_to_dict(dclass)
         except JSchemaTypeError as e:
             print(f"Error loading dataclass {dataclass} from {file}: {e}")
