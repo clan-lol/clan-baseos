@@ -14,6 +14,8 @@ let
         generator.prompt = "Wifi password for '${value.ssid}'";
         generator.script = ''
           config="
+          [Settings]
+            AutoConnect=${if value.AutoConnect then "true" else "false"}
           [Security]
             Passphrase=$prompt_value
           "
@@ -34,6 +36,11 @@ in
                 type = lib.types.str;
                 default = name;
                 description = "The name of the wifi network";
+              };
+              AutoConnect = lib.mkOption {
+                type = lib.types.bool;
+                default = true;
+                description = "Automatically try to join this wifi network";
               };
             };
           }
