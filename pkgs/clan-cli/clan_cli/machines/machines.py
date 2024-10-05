@@ -13,7 +13,7 @@ from clan_cli.errors import ClanError
 from clan_cli.facts import public_modules as facts_public_modules
 from clan_cli.facts import secret_modules as facts_secret_modules
 from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata
-from clan_cli.ssh import Host, parse_deployment_address
+from clan_cli.ssh import Host, HostKeyCheck, parse_deployment_address
 from clan_cli.vars.public_modules import FactStoreBase
 from clan_cli.vars.secret_modules import SecretStoreBase
 
@@ -27,6 +27,7 @@ class Machine:
     nix_options: list[str] = field(default_factory=list)
     cached_deployment: None | dict[str, Any] = None
     override_target_host: None | str = None
+    host_key_check: HostKeyCheck = HostKeyCheck.STRICT
 
     _eval_cache: dict[str, str] = field(default_factory=dict)
     _build_cache: dict[str, Path] = field(default_factory=dict)
@@ -143,7 +144,10 @@ class Machine:
     @property
     def target_host(self) -> Host:
         return parse_deployment_address(
-            self.name, self.target_host_address, meta={"machine": self}
+            self.name,
+            self.target_host_address,
+            self.host_key_check,
+            meta={"machine": self},
         )
 
     @property
@@ -159,6 +163,7 @@ class Machine:
         return parse_deployment_address(
             self.name,
             build_host,
+            self.host_key_check,
             forward_agent=True,
             meta={"machine": self, "target_host": self.target_host},
         )
