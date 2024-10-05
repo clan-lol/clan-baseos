@@ -171,6 +171,7 @@ def update(args: argparse.Namespace) -> None:
             name=args.machines[0], flake=args.flake, nix_options=args.option
         )
         machine.override_target_host = args.target_host
+        machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
         machines.append(machine)
 
     elif args.target_host is not None:
@@ -187,7 +188,7 @@ def update(args: argparse.Namespace) -> None:
                 except ClanError:  # check if we have a build host set
                     ignored_machines.append(machine)
                     continue
-
+                machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
                 machines.append(machine)
 
             if not machines and ignored_machines != []:
@@ -201,8 +202,8 @@ def update(args: argparse.Namespace) -> None:
         else:
             machines = get_selected_machines(args.flake, args.option, args.machines)
 
-    group = MachineGroup(machines)
-    deploy_machine(group)
+    host_group = MachineGroup(machines)
+    deploy_machine(host_group)
 
 
 def register_update_parser(parser: argparse.ArgumentParser) -> None:
@@ -216,6 +217,12 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
     )
 
     add_dynamic_completer(machines_parser, complete_machines)
+    parser.add_argument(
+        "--host-key-check",
+        choices=["strict", "tofu", "none"],
+        default="strict",
+        help="Host key (.ssh/known_hosts) check mode",
+    )
 
     parser.add_argument(
         "--target-host",

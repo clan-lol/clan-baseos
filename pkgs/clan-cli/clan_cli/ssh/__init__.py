@@ -133,6 +133,14 @@ class HostKeyCheck(Enum):
     # Do not check ssh host keys
     NONE = 2
 
+    @staticmethod
+    def from_str(label: str) -> "HostKeyCheck":
+        if label.upper() in HostKeyCheck.__members__:
+            return HostKeyCheck[label.upper()]
+        msg = f"Invalid choice: {label}."
+        description = "Choose from: " + ", ".join(HostKeyCheck.__members__)
+        raise ClanError(msg, description=description)
+
 
 class Host:
     def __init__(
@@ -790,6 +798,7 @@ class HostGroup:
 def parse_deployment_address(
     machine_name: str,
     host: str,
+    host_key_check: HostKeyCheck,
     forward_agent: bool = True,
     meta: dict[str, Any] | None = None,
 ) -> Host:
@@ -820,6 +829,7 @@ def parse_deployment_address(
         hostname,
         user=user,
         port=port,
+        host_key_check=host_key_check,
         command_prefix=machine_name,
         forward_agent=forward_agent,
         meta=meta,

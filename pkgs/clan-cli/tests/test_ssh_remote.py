@@ -1,13 +1,13 @@
 import subprocess
 
-from clan_cli.ssh import Host, HostGroup, parse_deployment_address
+from clan_cli.ssh import Host, HostGroup, HostKeyCheck, parse_deployment_address
 
 
 def test_parse_ipv6() -> None:
-    host = parse_deployment_address("foo", "[fe80::1%eth0]:2222")
+    host = parse_deployment_address("foo", "[fe80::1%eth0]:2222", HostKeyCheck.STRICT)
     assert host.host == "fe80::1%eth0"
     assert host.port == 2222
-    host = parse_deployment_address("foo", "[fe80::1%eth0]")
+    host = parse_deployment_address("foo", "[fe80::1%eth0]", HostKeyCheck.STRICT)
     assert host.host == "fe80::1%eth0"
     assert host.port is None
 
