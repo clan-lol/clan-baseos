@@ -26,6 +26,7 @@ class Machine:
     flake: FlakeId
     nix_options: list[str] = field(default_factory=list)
     cached_deployment: None | dict[str, Any] = None
+    override_target_host: None | str = None
 
     _eval_cache: dict[str, str] = field(default_factory=dict)
     _build_cache: dict[str, Path] = field(default_factory=dict)
@@ -57,17 +58,15 @@ class Machine:
     @property
     def target_host_address(self) -> str:
         # deploymentAddress is deprecated.
-        val = self.deployment.get("targetHost") or self.deployment.get(
-            "deploymentAddress"
+        val = (
+            self.override_target_host
+            or self.deployment.get("targetHost")
+            or self.deployment.get("deploymentAddress")
         )
         if val is None:
             msg = f"the 'clan.core.networking.targetHost' nixos option is not set for machine '{self.name}'"
             raise ClanError(msg)
         return val
-
-    @target_host_address.setter
-    def target_host_address(self, value: str) -> None:
-        self.deployment["targetHost"] = value
 
     @property
     def secret_facts_module(

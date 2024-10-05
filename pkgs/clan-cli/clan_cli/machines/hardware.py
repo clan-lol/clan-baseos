@@ -111,7 +111,7 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
 
     machine = Machine(opts.machine, flake=opts.flake)
     if opts.target_host is not None:
-        machine.target_host_address = opts.target_host
+        machine.override_target_host = opts.target_host
 
     hw_file = opts.flake.path / "machines" / opts.machine
     if opts.backend == "nixos-generate-config":

@@ -176,6 +176,12 @@ class Host:
         self.verbose_ssh = verbose_ssh
         self.ssh_options = ssh_options
 
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __str__(self) -> str:
+        return f"{self.user}@{self.host}" + str(self.port if self.port else "")
+
     def _prefix_output(
         self,
         displayed_cmd: str,
@@ -546,6 +552,12 @@ def _worker(
 class HostGroup:
     def __init__(self, hosts: list[Host]) -> None:
         self.hosts = hosts
+
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __str__(self) -> str:
+        return f"HostGroup({self.hosts})"
 
     def _run_local(
         self,

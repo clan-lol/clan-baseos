@@ -98,7 +98,7 @@ def update_machines(base_path: str, machines: list[InventoryMachine]) -> None:
             msg = f"'TargetHost' is not set for machine '{machine.name}'"
             raise ClanError(msg)
         # Copy targetHost to machine
-        m.target_host_address = machine.deploy.targetHost
+        m.override_target_host = machine.deploy.targetHost
         group_machines.append(m)
 
     deploy_machine(MachineGroup(group_machines))
@@ -118,11 +118,13 @@ def deploy_machine(machines: MachineGroup) -> None:
 
         generate_facts([machine], None, False)
         generate_vars([machine], None, False)
-        upload_secrets(machine)
 
+        upload_secrets(machine)
         path = upload_sources(
-            str(machine.flake.path) if machine.flake.is_local() else machine.flake.url,
-            target,
+            flake_url=str(machine.flake.path)
+            if machine.flake.is_local()
+            else machine.flake.url,
+            remote_url=target,
         )
         if host.host_key_check != HostKeyCheck.STRICT:
             ssh_arg += " -o StrictHostKeyChecking=no"
@@ -168,7 +170,7 @@ def update(args: argparse.Namespace) -> None:
         machine = Machine(
             name=args.machines[0], flake=args.flake, nix_options=args.option
         )
-        machine.target_host_address = args.target_host
+        machine.override_target_host = args.target_host
         machines.append(machine)
 
     elif args.target_host is not None:
@@ -199,7 +201,8 @@ def update(args: argparse.Namespace) -> None:
         else:
             machines = get_selected_machines(args.flake, args.option, args.machines)
 
-    deploy_machine(MachineGroup(machines))
+    group = MachineGroup(machines)
+    deploy_machine(group)
 
 
 def register_update_parser(parser: argparse.ArgumentParser) -> None:
