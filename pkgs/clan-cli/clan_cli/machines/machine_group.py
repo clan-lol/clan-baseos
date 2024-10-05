@@ -12,6 +12,12 @@ class MachineGroup:
     def __init__(self, machines: list[Machine]) -> None:
         self.group = HostGroup([m.target_host for m in machines])
 
+    def __repr__(self) -> str:
+        return str(self)
+
+    def __str__(self) -> str:
+        return f"MachineGroup({self.group})"
+
     def run_function(
         self, func: Callable[[Machine], T], check: bool = True
     ) -> list[HostResult[T]]:

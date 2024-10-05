@@ -110,7 +110,7 @@ class InstallOptions:
 @API.register
 def install_machine(opts: InstallOptions, password: str | None) -> None:
     machine = Machine(opts.machine, flake=opts.flake)
-    machine.target_host_address = opts.target_host
+    machine.override_target_host = opts.target_host
 
     install_nixos(
         machine,
