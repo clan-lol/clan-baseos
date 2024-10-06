@@ -63,7 +63,7 @@ def handle_output(process: subprocess.Popen, log: Log) -> tuple[str, str]:
 class TimeTable:
     """
     This class is used to store the time taken by each command
-    and print it at the end of the program if env PERF=1 is set.
+    and print it at the end of the program if env CLAN_CLI_PERF=1 is set.
     """
 
     def __init__(self) -> None:
@@ -144,7 +144,8 @@ def run(
         stdout=stdout_buf,
         stderr=stderr_buf,
         cwd=cwd,
-        command=shlex.join(cmd),
+        env=env,
+        command_list=cmd,
         returncode=process.returncode,
         msg=error_msg,
     )
