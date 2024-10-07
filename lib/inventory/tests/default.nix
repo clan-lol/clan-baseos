@@ -42,13 +42,13 @@ in
 
       expected = {
         server_imports = [
-          "${clan-core.clanModules.borgbackup}/roles/server.nix"
+          (clan-core.clanModules.borgbackup + "/roles/server.nix")
         ];
         client_1_imports = [
-          "${clan-core.clanModules.borgbackup}/roles/client.nix"
+          (clan-core.clanModules.borgbackup + "/roles/client.nix")
         ];
         client_2_imports = [
-          "${clan-core.clanModules.borgbackup}/roles/client.nix"
+          (clan-core.clanModules.borgbackup + "/roles/client.nix")
         ];
       };
     };
@@ -114,8 +114,8 @@ in
       };
       expected = {
         machine_1_imports = [
-          "${clan-core.clanModules.borgbackup}/roles/client.nix"
-          "${clan-core.clanModules.borgbackup}/roles/server.nix"
+          (clan-core.clanModules.borgbackup + "/roles/client.nix")
+          (clan-core.clanModules.borgbackup + "/roles/server.nix")
         ];
       };
     };
