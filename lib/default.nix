@@ -4,8 +4,11 @@
   nixpkgs,
   ...
 }:
+let
+  eval = import ./eval-clan-modules { inherit clan-core nixpkgs lib; };
+in
 {
-  evalClanModules = import ./eval-clan-modules { inherit clan-core nixpkgs lib; };
+  inherit (eval) evalClanModules evalClanModulesWithRoles;
   buildClan = import ./build-clan { inherit lib nixpkgs clan-core; };
   facts = import ./facts.nix { inherit lib; };
   inventory = import ./inventory { inherit lib clan-core; };
