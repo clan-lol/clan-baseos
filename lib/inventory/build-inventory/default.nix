@@ -103,7 +103,7 @@ let
               if builtins.pathExists path then
                 path
               else
-                throw "Module doesn't have role: '${role}'. Path: ${path} not found."
+                throw "Module doesn't have role: '${role}'. Role: ${role}.nix not found."
             ) machineRoles;
 
             roleServiceConfigs = builtins.filter (m: m != { }) (
