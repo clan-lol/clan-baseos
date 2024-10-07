@@ -23,14 +23,13 @@ def upload_secrets(machine: Machine) -> None:
         secret_facts_store.upload(Path(tempdir))
         host = machine.target_host
 
-        ssh_cmd = host.ssh_cmd()
         run(
             nix_shell(
                 ["nixpkgs#rsync"],
                 [
                     "rsync",
                     "-e",
-                    " ".join(["ssh"] + ssh_cmd[2:]),
+                    " ".join(["ssh", *host.ssh_cmd_opts()]),
                     "--recursive",
                     "--links",
                     "--times",
@@ -38,7 +37,7 @@ def upload_secrets(machine: Machine) -> None:
                     "--delete",
                     "--chmod=D700,F600",
                     f"{tempdir!s}/",
-                    f"{host.user}@{host.host}:{machine.secrets_upload_directory}/",
+                    f"{host.target}:{machine.secrets_upload_directory}/",
                 ],
             ),
             log=Log.BOTH,

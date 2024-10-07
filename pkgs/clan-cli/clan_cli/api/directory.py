@@ -135,7 +135,7 @@ def show_block_devices(options: BlockDeviceOptions) -> Blockdevices:
             "ssh",
             *(["-i", f"{keyfile}"] if keyfile else []),
             # Disable strict host key checking
-            "-o StrictHostKeyChecking=no",
+            "-o StrictHostKeyChecking=accept-new",
             # Disable known hosts file
             "-o UserKnownHostsFile=/dev/null",
             f"{options.hostname}",
