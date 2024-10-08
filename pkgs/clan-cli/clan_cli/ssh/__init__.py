@@ -143,6 +143,9 @@ class HostKeyCheck(Enum):
         description = "Choose from: " + ", ".join(HostKeyCheck.__members__)
         raise ClanError(msg, description=description)
 
+    def __str__(self) -> str:
+        return self.name.lower()
+
     def to_ssh_opt(self) -> list[str]:
         match self:
             case HostKeyCheck.STRICT:
@@ -509,6 +512,11 @@ class Host:
             check=check,
             timeout=timeout,
         )
+
+    def nix_ssh_env(self) -> dict[str, str]:
+        env = os.environ.copy()
+        env["NIX_SSHOPTS"] = " ".join(self.ssh_cmd_opts())
+        return env
 
     def ssh_cmd_opts(
         self,
