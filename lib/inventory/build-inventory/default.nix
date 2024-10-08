@@ -120,7 +120,7 @@ let
               globalExtraModules ++ machineExtraModules ++ roleServiceExtraModules
             );
           in
-          if !serviceConfig.enabled then
+          if !(serviceConfig.enabled or true) then
             acc2
           else if isInService then
             acc2

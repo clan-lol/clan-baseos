@@ -200,4 +200,33 @@ in
         msg = "no machine with tag '\\w+' found";
       };
     };
+  test_inventory_disabled_service =
+    let
+      configs = buildInventory {
+        directory = ./.;
+        inventory = {
+          services = {
+            borgbackup.instance_1 = {
+              enabled = false;
+              roles.client.machines = [ "machine_1" ];
+            };
+          };
+          machines = {
+            "machine_1" = {
+
+            };
+          };
+        };
+      };
+    in
+    {
+      expr = {
+        machine_1_config = (builtins.head configs."machine_1");
+      };
+      expected = {
+        # Empty config
+        machine_1_config = { };
+      };
+
+    };
 }
