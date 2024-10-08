@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import os
 import shlex
 import sys
 
@@ -33,8 +32,7 @@ def is_path_input(node: dict[str, dict[str, str]]) -> bool:
 
 def upload_sources(machine: Machine, always_upload_source: bool = False) -> str:
     host = machine.build_host
-    env = os.environ.copy()
-    env["NIX_SSHOPTS"] = " ".join(host.ssh_cmd_opts())
+    env = host.nix_ssh_env()
 
     if not always_upload_source:
         flake_url = (
@@ -121,6 +119,8 @@ def deploy_machine(machines: MachineGroup) -> None:
             machine,
         )
 
+        env = host.nix_ssh_env()
+
         cmd = [
             "nixos-rebuild",
             "switch",
@@ -142,10 +142,10 @@ def deploy_machine(machines: MachineGroup) -> None:
             target_host = f"{target_host.user or 'root'}@{target_host.host}"
             cmd.extend(["--target-host", target_host])
 
-        ret = host.run(cmd, check=False)
+        ret = host.run(cmd, extra_env=env, check=False)
         # re-retry switch if the first time fails
         if ret.returncode != 0:
-            ret = host.run(cmd)
+            ret = host.run(cmd, extra_env=env)
 
     machines.run_function(deploy)
 
