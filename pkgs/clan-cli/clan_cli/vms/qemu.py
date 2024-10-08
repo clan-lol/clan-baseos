@@ -93,6 +93,7 @@ def qemu_command(
     qmp_socket_file: Path,
     qga_socket_file: Path,
     portmap: list[tuple[int, int]] | None = None,
+    interactive: bool = False,
 ) -> QemuCommand:
     if portmap is None:
         portmap = []
@@ -137,12 +138,20 @@ def qemu_command(
         "-chardev", f"socket,path={qga_socket_file},server=on,wait=off,id=qga0",
         "-device", "virtio-serial",
         "-device", "virtserialport,chardev=qga0,name=org.qemu.guest_agent.0",
-
-        "-serial", "null",
-        "-chardev", "stdio,mux=on,id=char0,signal=off",
-        "-mon", "chardev=char0,mode=readline",
-        "-device", "virtconsole,chardev=char0,nr=0",
     ]  # fmt: on
+    if interactive:
+        command.extend([
+          "-serial", "null",
+          "-chardev", "stdio,mux=on,id=char0,signal=off",
+          "-mon", "chardev=char0,mode=readline",
+          "-device", "virtconsole,chardev=char0,nr=0",
+        ])
+    else:
+        command.extend([
+            "-serial", "null",
+            "-chardev", "file,id=char0,path=/dev/stdout",
+            "-device", "virtconsole,chardev=char0,nr=0",
+        ])
 
     vsock_cid = None
     if vm.graphics:
