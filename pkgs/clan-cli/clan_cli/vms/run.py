@@ -31,13 +31,14 @@ log = logging.getLogger(__name__)
 
 def facts_to_nixos_config(facts: dict[str, dict[str, bytes]]) -> dict:
     nixos_config: dict = {}
-    nixos_config["clanCore"] = {}
-    nixos_config["clanCore"]["secrets"] = {}
+    nixos_config["clan"] = {}
+    nixos_config["clan"]["core"] = {}
+    nixos_config["clan"]["core"]["secrets"] = {}
     for service, service_facts in facts.items():
-        nixos_config["clanCore"]["secrets"][service] = {}
-        nixos_config["clanCore"]["secrets"][service]["facts"] = {}
+        nixos_config["clan"]["core"]["secrets"][service] = {}
+        nixos_config["clan"]["core"]["secrets"][service]["facts"] = {}
         for fact, value in service_facts.items():
-            nixos_config["clanCore"]["secrets"][service]["facts"][fact] = {
+            nixos_config["clan"]["core"]["secrets"][service]["facts"][fact] = {
                 "value": value.decode()
             }
     return nixos_config

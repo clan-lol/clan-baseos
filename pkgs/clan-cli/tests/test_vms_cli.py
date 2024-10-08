@@ -68,7 +68,7 @@ def test_vm_persistence(
     config["my_machine"]["systemd"]["services"]["logrotate-checkconf"]["enable"] = False
     config["my_machine"]["services"]["getty"]["autologinUser"] = "root"
     config["my_machine"]["clan"]["virtualisation"] = {"graphics": False}
-    config["my_machine"]["clan"]["networking"] = {"targetHost": "client"}
+    config["my_machine"]["clan"]["core"]["networking"] = {"targetHost": "client"}
     config["my_machine"]["clan"]["core"]["state"]["my_state"]["folders"] = [
         # to be owned by root
         "/var/my-state",
