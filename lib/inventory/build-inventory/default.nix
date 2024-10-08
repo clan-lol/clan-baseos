@@ -63,6 +63,7 @@ let
         ++ (lib.foldlAttrs (
           # [ Modules ], String, ServiceConfig
           acc2: instanceName: serviceConfig:
+
           let
             resolvedRoles = builtins.mapAttrs (
               roleName: members:
@@ -119,8 +120,9 @@ let
               globalExtraModules ++ machineExtraModules ++ roleServiceExtraModules
             );
           in
-
-          if isInService then
+          if !serviceConfig.enabled then
+            acc2
+          else if isInService then
             acc2
             ++ [
               {
