@@ -31,10 +31,15 @@ def is_path_input(node: dict[str, dict[str, str]]) -> bool:
     return locked["type"] == "path" or locked.get("url", "").startswith("file://")
 
 
-def upload_sources(
-    flake_url: str, remote_url: str, always_upload_source: bool = False
-) -> str:
+def upload_sources(machine: Machine, always_upload_source: bool = False) -> str:
+    host = machine.build_host
+    env = os.environ.copy()
+    env["NIX_SSHOPTS"] = " ".join(host.ssh_cmd_opts())
+
     if not always_upload_source:
+        flake_url = (
+            str(machine.flake.path) if machine.flake.is_local() else machine.flake.url
+        )
         flake_data = nix_metadata(flake_url)
         url = flake_data["resolvedUrl"]
         has_path_inputs = any(
@@ -47,14 +52,11 @@ def upload_sources(
         if not has_path_inputs:
             # Just copy the flake to the remote machine, we can substitute other inputs there.
             path = flake_data["path"]
-            env = os.environ.copy()
-            # env["NIX_SSHOPTS"] = " ".join(opts.remote_ssh_options)
-            assert remote_url
             cmd = nix_command(
                 [
                     "copy",
                     "--to",
-                    f"ssh://{remote_url}",
+                    f"ssh://{host.target}",
                     "--no-check-sigs",
                     path,
                 ]
@@ -63,19 +65,18 @@ def upload_sources(
             return path
 
     # Slow path: we need to upload all sources to the remote machine
-    assert remote_url
     cmd = nix_command(
         [
             "flake",
             "archive",
             "--to",
-            f"ssh://{remote_url}",
+            f"ssh://{host.target}",
             "--json",
             flake_url,
         ]
     )
     log.info("run %s", shlex.join(cmd))
-    proc = run(cmd, error_msg="failed to upload sources")
+    proc = run(cmd, env=env, error_msg="failed to upload sources")
 
     try:
         return json.loads(proc.stdout)["path"]
@@ -111,27 +112,14 @@ def deploy_machine(machines: MachineGroup) -> None:
 
     def deploy(machine: Machine) -> None:
         host = machine.build_host
-        target = f"{host.user or 'root'}@{host.host}"
-        ssh_arg = f"-p {host.port}" if host.port else ""
-        env = os.environ.copy()
-        env["NIX_SSHOPTS"] = ssh_arg
 
         generate_facts([machine], None, False)
         generate_vars([machine], None, False)
 
         upload_secrets(machine)
         path = upload_sources(
-            flake_url=str(machine.flake.path)
-            if machine.flake.is_local()
-            else machine.flake.url,
-            remote_url=target,
+            machine,
         )
-        if host.host_key_check != HostKeyCheck.STRICT:
-            ssh_arg += " -o StrictHostKeyChecking=no"
-        if host.host_key_check == HostKeyCheck.NONE:
-            ssh_arg += " -o UserKnownHostsFile=/dev/null"
-
-        ssh_arg += " -i " + host.key if host.key else ""
 
         cmd = [
             "nixos-rebuild",
@@ -153,6 +141,7 @@ def deploy_machine(machines: MachineGroup) -> None:
         if target_host := host.meta.get("target_host"):
             target_host = f"{target_host.user or 'root'}@{target_host.host}"
             cmd.extend(["--target-host", target_host])
+
         ret = host.run(cmd, check=False)
         # re-retry switch if the first time fails
         if ret.returncode != 0:
@@ -201,6 +190,8 @@ def update(args: argparse.Namespace) -> None:
 
         else:
             machines = get_selected_machines(args.flake, args.option, args.machines)
+            for machine in machines:
+                machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
 
     host_group = MachineGroup(machines)
     deploy_machine(host_group)
@@ -219,8 +210,8 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
     add_dynamic_completer(machines_parser, complete_machines)
     parser.add_argument(
         "--host-key-check",
-        choices=["strict", "tofu", "none"],
-        default="strict",
+        choices=["strict", "ask", "tofu", "none"],
+        default="ask",
         help="Host key (.ssh/known_hosts) check mode",
     )
 

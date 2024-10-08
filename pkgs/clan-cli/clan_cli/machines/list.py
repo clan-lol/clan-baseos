@@ -109,7 +109,7 @@ def check_machine_online(
             *(["-i", f"{opts.keyfile}"] if opts and opts.keyfile else []),
             # Disable strict host key checking
             "-o",
-            "StrictHostKeyChecking=no",
+            "StrictHostKeyChecking=accept-new",
             # Disable known hosts file
             "-o",
             "UserKnownHostsFile=/dev/null",

@@ -128,10 +128,12 @@ NO_OUTPUT_TIMEOUT = 20
 class HostKeyCheck(Enum):
     # Strictly check ssh host keys, prompt for unknown ones
     STRICT = 0
+    # Ask for confirmation on first use
+    ASK = 1
     # Trust on ssh keys on first use
-    TOFU = 1
+    TOFU = 2
     # Do not check ssh host keys
-    NONE = 2
+    NONE = 3
 
     @staticmethod
     def from_str(label: str) -> "HostKeyCheck":
@@ -140,6 +142,25 @@ class HostKeyCheck(Enum):
         msg = f"Invalid choice: {label}."
         description = "Choose from: " + ", ".join(HostKeyCheck.__members__)
         raise ClanError(msg, description=description)
+
+    def to_ssh_opt(self) -> list[str]:
+        match self:
+            case HostKeyCheck.STRICT:
+                return ["-o", "StrictHostKeyChecking=yes"]
+            case HostKeyCheck.ASK:
+                return []
+            case HostKeyCheck.TOFU:
+                return ["-o", "StrictHostKeyChecking=accept-new"]
+            case HostKeyCheck.NONE:
+                return [
+                    "-o",
+                    "StrictHostKeyChecking=no",
+                    "-o",
+                    "UserKnownHostsFile=/dev/null",
+                ]
+            case _:
+                msg = "Invalid HostKeyCheck"
+                raise ClanError(msg)
 
 
 class Host:
@@ -151,7 +172,7 @@ class Host:
         key: str | None = None,
         forward_agent: bool = False,
         command_prefix: str | None = None,
-        host_key_check: HostKeyCheck = HostKeyCheck.STRICT,
+        host_key_check: HostKeyCheck = HostKeyCheck.ASK,
         meta: dict[str, Any] | None = None,
         verbose_ssh: bool = False,
         ssh_options: dict[str, str] | None = None,
@@ -189,6 +210,10 @@ class Host:
 
     def __str__(self) -> str:
         return f"{self.user}@{self.host}" + str(self.port if self.port else "")
+
+    @property
+    def target(self) -> str:
+        return f"{self.user or 'root'}@{self.host}"
 
     def _prefix_output(
         self,
@@ -485,13 +510,11 @@ class Host:
             timeout=timeout,
         )
 
-    def ssh_cmd(
+    def ssh_cmd_opts(
         self,
         verbose_ssh: bool = False,
         tty: bool = False,
     ) -> list[str]:
-        ssh_target = f"{self.user}@{self.host}" if self.user is not None else self.host
-
         ssh_opts = ["-A"] if self.forward_agent else []
 
         for k, v in self.ssh_options.items():
@@ -502,16 +525,23 @@ class Host:
         if self.key:
             ssh_opts.extend(["-i", self.key])
 
-        if self.host_key_check != HostKeyCheck.STRICT:
-            ssh_opts.extend(["-o", "StrictHostKeyChecking=no"])
-        if self.host_key_check == HostKeyCheck.NONE:
-            ssh_opts.extend(["-o", "UserKnownHostsFile=/dev/null"])
+        ssh_opts.extend(self.host_key_check.to_ssh_opt())
         if verbose_ssh or self.verbose_ssh:
             ssh_opts.extend(["-v"])
         if tty:
             ssh_opts.extend(["-t"])
+        return ssh_opts
 
-        return ["ssh", ssh_target, *ssh_opts]
+    def ssh_cmd(
+        self,
+        verbose_ssh: bool = False,
+        tty: bool = False,
+    ) -> list[str]:
+        return [
+            "ssh",
+            self.target,
+            *self.ssh_cmd_opts(verbose_ssh=verbose_ssh, tty=tty),
+        ]
 
 
 T = TypeVar("T")

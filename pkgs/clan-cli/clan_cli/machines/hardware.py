@@ -147,7 +147,7 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
             "UserKnownHostsFile=/dev/null",
             # Disable strict host key checking. The GUI user cannot type "yes" into the ssh terminal.
             "-o",
-            "StrictHostKeyChecking=no",
+            "StrictHostKeyChecking=accept-new",
             *(
                 ["-p", str(machine.target_host.port)]
                 if machine.target_host.port
