@@ -65,8 +65,9 @@ def test_vm_deployment(
         machine_configs={"m1_machine": machine1_config, "m2_machine": machine2_config},
     )
 
-    sops_setup.init()
+    sops_setup.init(flake.path)
     cli.run(["vars", "generate", "--flake", str(flake.path)])
+
     # check sops secrets not empty
     for machine in ["m1_machine", "m2_machine"]:
         sops_secrets = json.loads(
