@@ -513,8 +513,9 @@ class Host:
             timeout=timeout,
         )
 
-    def nix_ssh_env(self) -> dict[str, str]:
-        env = os.environ.copy()
+    def nix_ssh_env(self, env: dict[str, str] | None) -> dict[str, str]:
+        if env is None:
+            env = {}
         env["NIX_SSHOPTS"] = " ".join(self.ssh_cmd_opts())
         return env
 
