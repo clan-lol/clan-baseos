@@ -24,16 +24,6 @@
 
               clan.core.networking.zerotier.controller.enable = true;
               networking.useDHCP = false;
-
-              systemd.services.shutdown-after-boot = {
-                enable = true;
-                wantedBy = [ "multi-user.target" ];
-                after = [ "multi-user.target" ];
-                script = ''
-                  #!/usr/bin/env bash
-                  shutdown -h now
-                '';
-              };
             };
           vm2 =
             { lib, ... }:
