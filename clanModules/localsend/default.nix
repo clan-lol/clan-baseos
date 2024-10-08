@@ -13,11 +13,15 @@ in
   # - cli frontend: https://github.com/localsend/localsend/issues/11
   # - ipv6 support: https://github.com/localsend/localsend/issues/549
   options.clan.localsend = {
-    defaultLocation = lib.mkOption {
-      type = lib.types.str;
-      description = "The default download location";
+
+    displayName = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "The name that localsend will use to display your instance.";
     };
+
     package = lib.mkPackageOption pkgs "localsend" { };
+
     ipv4Addr = lib.mkOption {
       type = lib.types.str;
       example = "192.168.56.2/24";
@@ -35,9 +39,13 @@ in
   config = {
     clan.core.state.localsend.folders = [
       "/var/localsend"
-      config.clan.localsend.defaultLocation
     ];
-    environment.systemPackages = [ config.clan.localsend.package ];
+    environment.systemPackages = [
+      (pkgs.callPackage ./localsend-ensure-config {
+        localsend = config.clan.localsend.package;
+        alias = config.clan.localsend.displayName;
+      })
+    ];
 
     networking.firewall.interfaces."zt+".allowedTCPPorts = [ 53317 ];
     networking.firewall.interfaces."zt+".allowedUDPPorts = [ 53317 ];
