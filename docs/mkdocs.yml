@@ -30,6 +30,8 @@ markdown_extensions:
       use_pygments: true
       anchor_linenums: true
   - pymdownx.keys
+  - pymdownx.snippets:
+      base_path: ../.
   - toc:
       title: On this page
 
