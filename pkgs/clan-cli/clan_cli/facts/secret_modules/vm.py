@@ -10,7 +10,7 @@ from . import SecretStoreBase
 class SecretStore(SecretStoreBase):
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
-        self.dir = vm_state_dir(str(machine.flake), machine.name) / "secrets"
+        self.dir = vm_state_dir(machine.flake, machine.name) / "secrets"
         self.dir.mkdir(parents=True, exist_ok=True)
 
     def set(

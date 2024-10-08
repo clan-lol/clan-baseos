@@ -3,17 +3,24 @@ import importlib
 import json
 import logging
 import os
-from contextlib import ExitStack
+import subprocess
+import time
+from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import CmdOut, Log, handle_output, run
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import module_root, user_cache_dir, vm_state_dir
-from clan_cli.errors import ClanError
+from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.facts.generate import generate_facts
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
+from clan_cli.qemu.qga import QgaSession
+from clan_cli.qemu.qmp import QEMUMonitorProtocol
 
 from .inspect import VmConfig, inspect_vm
 from .qemu import qemu_command
@@ -25,13 +32,14 @@ log = logging.getLogger(__name__)
 
 def facts_to_nixos_config(facts: dict[str, dict[str, bytes]]) -> dict:
     nixos_config: dict = {}
-    nixos_config["clanCore"] = {}
-    nixos_config["clanCore"]["secrets"] = {}
+    nixos_config["clan"] = {}
+    nixos_config["clan"]["core"] = {}
+    nixos_config["clan"]["core"]["secrets"] = {}
     for service, service_facts in facts.items():
-        nixos_config["clanCore"]["secrets"][service] = {}
-        nixos_config["clanCore"]["secrets"][service]["facts"] = {}
+        nixos_config["clan"]["core"]["secrets"][service] = {}
+        nixos_config["clan"]["core"]["secrets"][service]["facts"] = {}
         for fact, value in service_facts.items():
-            nixos_config["clanCore"]["secrets"][service]["facts"][fact] = {
+            nixos_config["clan"]["core"]["secrets"][service]["facts"][fact] = {
                 "value": value.decode()
             }
     return nixos_config
@@ -107,16 +115,101 @@ def prepare_disk(
     return disk_img
 
 
-def run_vm(
+@contextmanager
+def start_vm(
+    args: list[str],
+    packages: list[str],
+    extra_env: dict[str, str],
+    stdout: int | None = None,
+    stderr: int | None = None,
+    stdin: int | None = None,
+) -> Iterator[subprocess.Popen]:
+    env = os.environ.copy()
+    env.update(extra_env)
+    cmd = nix_shell(packages, args)
+    with subprocess.Popen(
+        cmd, env=env, stdout=stdout, stderr=stderr, stdin=stdin
+    ) as process:
+        try:
+            yield process
+        finally:
+            process.terminate()
+            try:
+                # Fix me: This should in future properly shutdown the VM using qmp
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+
+
+class QemuVm:
+    def __init__(
+        self,
+        machine: Machine,
+        process: subprocess.Popen,
+        socketdir: Path,
+    ) -> None:
+        self.machine = machine
+        self.process = process
+        self.qmp_socket_file = socketdir / "qmp.sock"
+        self.qga_socket_file = socketdir / "qga.sock"
+
+    # wait for vm to be up then connect and return qmp instance
+    @contextmanager
+    def qmp_connect(self) -> Iterator[QEMUMonitorProtocol]:
+        with QEMUMonitorProtocol(
+            address=str(os.path.realpath(self.qmp_socket_file)),
+        ) as qmp:
+            qmp.connect()
+            yield qmp
+
+    @contextmanager
+    def qga_connect(self, timeout_sec: float = 100) -> Iterator[QgaSession]:
+        start_time = time.time()
+        # try to reconnect a couple of times if connection refused
+        session = None
+        while time.time() - start_time < timeout_sec:
+            try:
+                session = QgaSession(str(self.qga_socket_file))
+                break
+            except ConnectionRefusedError:
+                time.sleep(0.1)
+                continue
+        if session is None:
+            msg = (
+                f"Timeout after {timeout_sec} seconds. Could not connect to QGA socket"
+            )
+            raise ClanError(msg)
+        with session:
+            yield session
+
+    def wait_up(self, timeout_sec: float = 60) -> None:
+        start_time = time.time()
+        while time.time() - start_time < timeout_sec:
+            if self.process.poll() is not None:
+                msg = "VM failed to start. Qemu process exited with code {self.process.returncode}"
+                raise ClanError(msg)
+            if self.qmp_socket_file.exists():
+                break
+            time.sleep(0.1)
+
+    def wait_down(self) -> int:
+        return self.process.wait()
+
+
+@contextmanager
+def spawn_vm(
     vm: VmConfig,
     *,
     cachedir: Path | None = None,
     socketdir: Path | None = None,
     nix_options: list[str] | None = None,
-    portmap: list[tuple[int, int]] | None = None,
-) -> None:
+    portmap: dict[int, int] | None = None,
+    stdout: int | None = None,
+    stderr: int | None = None,
+    stdin: int | None = None,
+) -> Iterator[QemuVm]:
     if portmap is None:
-        portmap = []
+        portmap = {}
     if nix_options is None:
         nix_options = []
     with ExitStack() as stack:
@@ -141,7 +234,7 @@ def run_vm(
         # TODO: We should get this from the vm argument
         nixos_config = build_vm(machine, cachedir, nix_options)
 
-        state_dir = vm_state_dir(str(vm.flake_url), machine.name)
+        state_dir = vm_state_dir(vm.flake_url, machine.name)
         state_dir.mkdir(parents=True, exist_ok=True)
 
         # specify socket files for qmp and qga
@@ -181,28 +274,96 @@ def run_vm(
             qmp_socket_file=qmp_socket_file,
             qga_socket_file=qga_socket_file,
             portmap=portmap,
+            interactive=stdin is None,
         )
 
         packages = ["nixpkgs#qemu"]
 
-        env = os.environ.copy()
+        extra_env = {}
         if vm.graphics and not vm.waypipe:
             packages.append("nixpkgs#virt-viewer")
             remote_viewer_mimetypes = module_root() / "vms" / "mimetypes"
-            env["XDG_DATA_DIRS"] = (
-                f"{remote_viewer_mimetypes}:{env.get('XDG_DATA_DIRS', '')}"
+            extra_env["XDG_DATA_DIRS"] = (
+                f"{remote_viewer_mimetypes}:{os.environ.get('XDG_DATA_DIRS', '')}"
             )
 
         with (
             start_waypipe(qemu_cmd.vsock_cid, f"[{vm.machine_name}] "),
             start_virtiofsd(virtiofsd_socket),
+            start_vm(
+                qemu_cmd.args, packages, extra_env, stdout=stdout, stderr=stderr
+            ) as process,
         ):
-            run(
-                nix_shell(packages, qemu_cmd.args),
-                env=env,
-                log=Log.BOTH,
-                error_msg=f"Could not start vm {machine}",
-            )
+            qemu_vm = QemuVm(machine, process, socketdir)
+            qemu_vm.wait_up()
+
+            try:
+                yield qemu_vm
+            finally:
+                try:
+                    with qemu_vm.qmp_connect() as qmp:
+                        qmp.command("system_powerdown")
+                    qemu_vm.wait_down()
+                except OSError:
+                    pass
+                # TODO: add a timeout here instead of waiting indefinitely
+
+
+@dataclass
+class RuntimeConfig:
+    cachedir: Path | None = None
+    socketdir: Path | None = None
+    nix_options: list[str] | None = None
+    portmap: dict[int, int] | None = None
+    command: list[str] | None = None
+    no_block: bool = False
+
+
+def run_vm(
+    vm_config: VmConfig,
+    runtime_config: RuntimeConfig,
+) -> CmdOut:
+    stdin = None
+    if runtime_config.command is not None:
+        stdin = subprocess.DEVNULL
+    with (
+        spawn_vm(
+            vm_config,
+            cachedir=runtime_config.cachedir,
+            socketdir=runtime_config.socketdir,
+            nix_options=runtime_config.nix_options,
+            portmap=runtime_config.portmap,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=stdin,
+        ) as vm,
+        ThreadPoolExecutor(max_workers=1) as executor,
+    ):
+        future = executor.submit(handle_output, vm.process, Log.BOTH)
+        args: list[str] = vm.process.args  # type: ignore[assignment]
+
+        if runtime_config.command is not None:
+            with vm.qga_connect() as qga:
+                if runtime_config.no_block:
+                    qga.run_nonblocking(runtime_config.command)
+                else:
+                    qga.run(runtime_config.command)
+
+        stdout_buf, stderr_buf = future.result()
+
+        rc = vm.wait_down()
+        cmd_out = CmdOut(
+            stdout=stdout_buf,
+            stderr=stderr_buf,
+            cwd=Path.cwd(),
+            command_list=args,
+            returncode=vm.process.returncode,
+            msg=f"VM {vm_config.machine_name} exited with code {rc}",
+            env={},
+        )
+        if rc != 0:
+            raise ClanCmdError(cmd_out)
+        return cmd_out
 
 
 def run_command(
@@ -212,9 +373,16 @@ def run_command(
 
     vm: VmConfig = inspect_vm(machine=machine_obj)
 
-    portmap = [p.split(":") for p in args.publish]
+    portmap = dict(p.split(":") for p in args.publish)
 
-    run_vm(vm, nix_options=args.option, portmap=portmap)
+    runtime_config = RuntimeConfig(
+        nix_options=args.option,
+        portmap=portmap,
+        command=args.command,
+        no_block=args.no_block,
+    )
+
+    run_vm(vm, runtime_config)
 
 
 def register_run_parser(parser: argparse.ArgumentParser) -> None:
@@ -230,5 +398,16 @@ def register_run_parser(parser: argparse.ArgumentParser) -> None:
         type=str,
         default=[],
         help="Forward ports from host to guest",
+    )
+    parser.add_argument(
+        "--no-block",
+        action="store_true",
+        help="Do no block when running the command",
+        default=False,
+    )
+    parser.add_argument(
+        "command",
+        nargs=argparse.REMAINDER,
+        help="command to run in the vm",
     )
     parser.set_defaults(func=lambda args: run_command(args))

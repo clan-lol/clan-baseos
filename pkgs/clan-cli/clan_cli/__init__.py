@@ -24,7 +24,7 @@ from . import (
 from .clan_uri import FlakeId
 from .custom_logger import setup_logging
 from .dirs import get_clan_flake_toplevel_or_env
-from .errors import ClanCmdError, ClanError
+from .errors import ClanError
 from .facts import cli as facts
 from .flash import cli as flash_cli
 from .hyperlink import help_hyperlink
@@ -401,7 +401,7 @@ def main() -> None:
     if len(sys.argv) == 1:
         parser.print_help()
 
-    if getattr(args, "debug", False):
+    if debug := getattr(args, "debug", False):
         setup_logging(logging.DEBUG, root_log_name=__name__.split(".")[0])
         log.debug("Debug log activated")
     else:
@@ -413,21 +413,11 @@ def main() -> None:
     try:
         args.func(args)
     except ClanError as e:
-        if isinstance(e, ClanCmdError):
-            msg = ""
-            if e.cmd.msg:
-                msg += f"{e.cmd.msg}: "
-            msg += f"command exited with code {e.cmd.returncode}: {e.cmd.command}"
-            log.error(msg)  # noqa: TRY400
+        if debug:
+            log.exception("Exited with error")
+        else:
+            log.error("%s", e)  # noqa: TRY400
             sys.exit(1)
-
-        if not e.msg:  # should not be empty, print stack trace
-            raise
-        msg = e.msg
-        if e.description:
-            msg += f": {e.description}"
-        log.error(msg)  # noqa: TRY400
-        sys.exit(1)
     except KeyboardInterrupt:
         log.warning("Interrupted by user")
         sys.exit(1)

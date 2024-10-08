@@ -2,10 +2,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from clan_cli.clan_uri import FlakeId
+from clan_cli.machines.machines import Machine
+from clan_cli.vms.run import inspect_vm, spawn_vm
 from fixtures_flakes import FlakeForTest, generate_flake
 from helpers import cli
 from helpers.nixos_config import nested_dict
-from helpers.vms import qga_connect, qmp_connect, run_vm_in_thread, wait_vm_down
 from root import CLAN_CORE
 from stdout import CaptureOutput
 
@@ -51,7 +53,7 @@ def test_run(
             "user1",
         ]
     )
-    cli.run(["vms", "run", "vm1"])
+    cli.run(["vms", "run", "--no-block", "vm1", "shutdown", "-h", "now"])
 
 
 @pytest.mark.skipif(no_kvm, reason="Requires KVM")
@@ -66,7 +68,7 @@ def test_vm_persistence(
     config["my_machine"]["systemd"]["services"]["logrotate-checkconf"]["enable"] = False
     config["my_machine"]["services"]["getty"]["autologinUser"] = "root"
     config["my_machine"]["clan"]["virtualisation"] = {"graphics": False}
-    config["my_machine"]["clan"]["networking"] = {"targetHost": "client"}
+    config["my_machine"]["clan"]["core"]["networking"] = {"targetHost": "client"}
     config["my_machine"]["clan"]["core"]["state"]["my_state"]["folders"] = [
         # to be owned by root
         "/var/my-state",
@@ -84,54 +86,40 @@ def test_vm_persistence(
         machine_configs=config,
     )
 
-    monkeypatch.chdir(flake.path)
+    vm_config = inspect_vm(machine=Machine("my_machine", FlakeId(str(flake.path))))
 
-    vm = run_vm_in_thread("my_machine")
-
-    # wait for the VM to start and connect qga
-    with qga_connect("my_machine", vm) as qga:
+    with spawn_vm(vm_config) as vm, vm.qga_connect() as qga:
         # create state via qmp command instead of systemd service
-        qga.run("echo 'dream2nix' > /var/my-state/root", check=True)
-        qga.run("echo 'dream2nix' > /var/my-state/test", check=True)
-        qga.run("chown test /var/my-state/test", check=True)
-        qga.run("chown test /var/user-state", check=True)
-        qga.run("touch /var/my-state/rebooting", check=True)
-        qga.exec_cmd("poweroff")
-
-        # wait for socket to be down (systemd service 'poweroff' rebooting machine)
-        wait_vm_down("my_machine", vm)
-
-    vm.join()
+        qga.run(["/bin/sh", "-c", "echo 'dream2nix' > /var/my-state/root"])
+        qga.run(["/bin/sh", "-c", "echo 'dream2nix' > /var/my-state/test"])
+        qga.run(["/bin/sh", "-c", "chown test /var/my-state/test"])
+        qga.run(["/bin/sh", "-c", "chown test /var/user-state"])
+        qga.run_nonblocking(["shutdown", "-h", "now"])
 
     ## start vm again
-    vm = run_vm_in_thread("my_machine")
-
-    ## connect second time
-    with qga_connect("my_machine", vm) as qga:
+    with spawn_vm(vm_config) as vm, vm.qga_connect() as qga:
         # check state exists
-        qga.run("cat /var/my-state/test", check=True)
+        qga.run(["cat", "/var/my-state/test"])
         # ensure root file is owned by root
-        qga.run("stat -c '%U' /var/my-state/root", check=True)
+        qga.run(["stat", "-c", "%U", "/var/my-state/root"])
         # ensure test file is owned by test
-        qga.run("stat -c '%U' /var/my-state/test", check=True)
+        qga.run(["stat", "-c", "%U", "/var/my-state/test"])
         # ensure /var/user-state is owned by test
-        qga.run("stat -c '%U' /var/user-state", check=True)
+        qga.run(["stat", "-c", "%U", "/var/user-state"])
 
         # ensure that the file created by the service is still there and has the expected content
-        exitcode, out, err = qga.run("cat /var/my-state/test")
-        assert exitcode == 0, err
-        assert out == "dream2nix\n", out
+        result = qga.run(["cat", "/var/my-state/test"])
+        assert result.stdout == "dream2nix\n", result.stdout
 
         # check for errors
-        exitcode, out, err = qga.run("cat /var/my-state/error")
-        assert exitcode == 1, out
+        result = qga.run(["cat", "/var/my-state/error"], check=False)
+        assert result.returncode == 1, result.stdout
 
         # check all systemd services are OK, or print details
-        exitcode, out, err = qga.run(
-            "systemctl --failed | tee /tmp/yolo | grep -q '0 loaded units listed' || ( cat /tmp/yolo && false )"
+        result = qga.run(
+            [
+                "/bin/sh",
+                "-c",
+                "systemctl --failed | tee /tmp/log | grep -q '0 loaded units listed' || ( cat /tmp/log && false )",
+            ],
         )
-        assert exitcode == 0, out
-
-        with qmp_connect("my_machine", vm) as qmp:
-            qmp.command("system_powerdown")
-    vm.join()

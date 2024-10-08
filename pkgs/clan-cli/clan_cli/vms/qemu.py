@@ -92,10 +92,11 @@ def qemu_command(
     virtiofsd_socket: Path,
     qmp_socket_file: Path,
     qga_socket_file: Path,
-    portmap: list[tuple[int, int]] | None = None,
+    portmap: dict[int, int] | None = None,
+    interactive: bool = False,
 ) -> QemuCommand:
     if portmap is None:
-        portmap = []
+        portmap = {}
     kernel_cmdline = [
         (Path(nixos_config["toplevel"]) / "kernel-params").read_text(),
         f'init={nixos_config["toplevel"]}/init',
@@ -104,7 +105,7 @@ def qemu_command(
     ]
     if not vm.waypipe:
         kernel_cmdline.append("console=tty0")
-    hostfwd = ",".join(f"hostfwd=tcp::{h}-:{g}" for h, g in portmap)
+    hostfwd = ",".join(f"hostfwd=tcp::{h}-:{g}" for h, g in portmap.items())
     # fmt: off
     command = [
         "qemu-kvm",
@@ -137,12 +138,20 @@ def qemu_command(
         "-chardev", f"socket,path={qga_socket_file},server=on,wait=off,id=qga0",
         "-device", "virtio-serial",
         "-device", "virtserialport,chardev=qga0,name=org.qemu.guest_agent.0",
-
-        "-serial", "null",
-        "-chardev", "stdio,mux=on,id=char0,signal=off",
-        "-mon", "chardev=char0,mode=readline",
-        "-device", "virtconsole,chardev=char0,nr=0",
     ]  # fmt: on
+    if interactive:
+        command.extend([
+          "-serial", "null",
+          "-chardev", "stdio,mux=on,id=char0,signal=off",
+          "-mon", "chardev=char0,mode=readline",
+          "-device", "virtconsole,chardev=char0,nr=0",
+        ])
+    else:
+        command.extend([
+            "-serial", "null",
+            "-chardev", "file,id=char0,path=/dev/stdout",
+            "-device", "virtconsole,chardev=char0,nr=0",
+        ])
 
     vsock_cid = None
     if vm.graphics:

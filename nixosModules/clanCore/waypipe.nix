@@ -45,9 +45,7 @@
     security.sudo.wheelNeedsPassword = false;
 
     users.users.user = lib.mkIf (config.clan.services.waypipe.user == "user") {
-      # workaround sysusers
-      isSystemUser = true;
-      uid = 998;
+      uid = 1000;
       group = "users";
       initialPassword = "";
       extraGroups = [
