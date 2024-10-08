@@ -32,17 +32,18 @@ let
         ] ++ (map (name: clanModules.${name}) modulenames);
       };
     in
-    lib.warn ''
-      EvalClanModules doesn't respect role specific interfaces.
+    # lib.warn ''
+    #   EvalClanModules doesn't respect role specific interfaces.
 
-      The following {module}/default.nix file trying to be imported.
+    #   The following {module}/default.nix file trying to be imported.
 
-      Modules: ${builtins.toJSON modulenames}
+    #   Modules: ${builtins.toJSON modulenames}
 
-      This might result in incomplete or incorrect interfaces.
+    #   This might result in incomplete or incorrect interfaces.
 
-      FIX: Use evalClanModuleWithRole instead.
-    '' evaled;
+    #   FIX: Use evalClanModuleWithRole instead.
+    # ''
+    evaled;
 
   /*
     This function takes a list of module names and evaluates them
