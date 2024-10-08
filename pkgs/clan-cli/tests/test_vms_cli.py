@@ -53,7 +53,7 @@ def test_run(
             "user1",
         ]
     )
-    cli.run(["vms", "run", "vm1"])
+    cli.run(["vms", "run", "--no-block", "vm1", "shutdown", "-h", "now"])
 
 
 @pytest.mark.skipif(no_kvm, reason="Requires KVM")
@@ -90,34 +90,38 @@ def test_vm_persistence(
 
     with spawn_vm(vm_config) as vm, vm.qga_connect() as qga:
         # create state via qmp command instead of systemd service
-        qga.run("echo 'dream2nix' > /var/my-state/root", check=True)
-        qga.run("echo 'dream2nix' > /var/my-state/test", check=True)
-        qga.run("chown test /var/my-state/test", check=True)
-        qga.run("chown test /var/user-state", check=True)
-        qga.run("touch /var/my-state/rebooting", check=True)
+        qga.run(["sh", "-c", "echo 'dream2nix' > /var/my-state/root"], check=True)
+        qga.run(["sh", "-c", "echo 'dream2nix' > /var/my-state/test"], check=True)
+        qga.run(["sh", "-c", "chown test /var/my-state/test"], check=True)
+        qga.run(["sh", "-c", "chown test /var/user-state"], check=True)
+        qga.run(["sh", "-c", "touch /var/my-state/rebooting"], check=True)
 
     ## start vm again
     with spawn_vm(vm_config) as vm, vm.qga_connect() as qga:
         # check state exists
-        qga.run("cat /var/my-state/test", check=True)
+        qga.run(["cat", "/var/my-state/test"], check=True)
         # ensure root file is owned by root
-        qga.run("stat -c '%U' /var/my-state/root", check=True)
+        qga.run(["stat", "-c", "%U", "/var/my-state/root"], check=True)
         # ensure test file is owned by test
-        qga.run("stat -c '%U' /var/my-state/test", check=True)
+        qga.run(["stat", "-c", "%U", "/var/my-state/test"], check=True)
         # ensure /var/user-state is owned by test
-        qga.run("stat -c '%U' /var/user-state", check=True)
+        qga.run(["stat", "-c", "%U", "/var/user-state"], check=True)
 
         # ensure that the file created by the service is still there and has the expected content
-        exitcode, out, err = qga.run("cat /var/my-state/test")
+        exitcode, out, err = qga.run(["cat", "/var/my-state/test"])
         assert exitcode == 0, err
         assert out == "dream2nix\n", out
 
         # check for errors
-        exitcode, out, err = qga.run("cat /var/my-state/error")
+        exitcode, out, err = qga.run(["cat", "/var/my-state/error"])
         assert exitcode == 1, out
 
         # check all systemd services are OK, or print details
         exitcode, out, err = qga.run(
-            "systemctl --failed | tee /tmp/yolo | grep -q '0 loaded units listed' || ( cat /tmp/yolo && false )"
+            [
+                "sh",
+                "-c",
+                "systemctl --failed | tee /tmp/log | grep -q '0 loaded units listed' || ( cat /tmp/log && false )",
+            ]
         )
         assert exitcode == 0, out
