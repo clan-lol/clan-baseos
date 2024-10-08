@@ -5,10 +5,10 @@ import logging
 import os
 import subprocess
 import time
-from dataclasses import dataclass
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -324,9 +324,8 @@ def run_vm(
     runtime_config: RuntimeConfig,
 ) -> CmdOut:
     stdin = None
-    # if command is not None:
-    #   stdin = subprocess.DEVNULL
-    stdin = subprocess.DEVNULL
+    if runtime_config.command is not None:
+        stdin = subprocess.DEVNULL
     with (
         spawn_vm(
             vm_config,

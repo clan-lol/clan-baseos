@@ -1,9 +1,17 @@
 import base64
 import time
 import types
+from dataclasses import dataclass
 
 from clan_cli.errors import ClanError
 from clan_cli.qemu.qmp import QEMUMonitorProtocol
+
+
+@dataclass
+class VmCommandResult:
+    returncode: int
+    stdout: str | None
+    stderr: str | None
 
 
 # qga is almost like qmp, but not quite, because:
@@ -35,10 +43,17 @@ class QgaSession:
         if result_pid is None:
             msg = "Could not get PID from QGA"
             raise ClanError(msg)
-        return result_pid["return"]["pid"]
+        try:
+            return result_pid["return"]["pid"]
+        except KeyError as e:
+            if "error" in result_pid:
+                msg = f"Could not run command: {result_pid['error']['desc']}"
+                raise ClanError(msg) from e
+            msg = f"PID could not be found: {result_pid}"
+            raise ClanError(msg) from e
 
     # run, wait for result, return exitcode and output
-    def run(self, cmd: list[str], check: bool = False) -> tuple[int, str, str]:
+    def run(self, cmd: list[str], check: bool = True) -> VmCommandResult:
         pid = self.run_nonblocking(cmd)
         # loop until exited=true
         while True:
@@ -54,17 +69,14 @@ class QgaSession:
             time.sleep(0.1)
 
         exitcode = result["return"]["exitcode"]
-        stdout = (
-            ""
-            if "out-data" not in result["return"]
-            else base64.b64decode(result["return"]["out-data"]).decode("utf-8")
-        )
-        stderr = (
-            ""
-            if "err-data" not in result["return"]
-            else base64.b64decode(result["return"]["err-data"]).decode("utf-8")
-        )
+        err_data = result["return"].get("err-data")
+        stdout = None
+        stderr = None
+        if out_data := result["return"].get("out-data"):
+            stdout = base64.b64decode(out_data).decode("utf-8")
+        if err_data is not None:
+            stderr = base64.b64decode(err_data).decode("utf-8")
         if check and exitcode != 0:
             msg = f"Command on guest failed\nCommand: {cmd}\nExitcode {exitcode}\nStdout: {stdout}\nStderr: {stderr}"
             raise ClanError(msg)
-        return exitcode, stdout, stderr
+        return VmCommandResult(exitcode, stdout, stderr)

@@ -107,23 +107,21 @@ def test_vm_deployment(
         qga_m1 = stack.enter_context(vm1.qga_connect())
         qga_m2 = stack.enter_context(vm2.qga_connect())
         # check my_secret is deployed
-        _, out, _ = qga_m1.run(
-            ["cat", "/run/secrets/vars/m1_generator/my_secret"], check=True
-        )
-        assert out == "hello\n"
+        result = qga_m1.run(["cat", "/run/secrets/vars/m1_generator/my_secret"])
+        assert result.stdout == "hello\n"
         # check shared_secret is deployed on m1
-        _, out, _ = qga_m1.run(
-            ["cat", "/run/secrets/vars/my_shared_generator/shared_secret"], check=True
+        result = qga_m1.run(
+            ["cat", "/run/secrets/vars/my_shared_generator/shared_secret"]
         )
-        assert out == "hello\n"
+        assert result.stdout == "hello\n"
         # check shared_secret is deployed on m2
-        _, out, _ = qga_m2.run(
-            ["cat", "/run/secrets/vars/my_shared_generator/shared_secret"], check=True
+        result = qga_m2.run(
+            ["cat", "/run/secrets/vars/my_shared_generator/shared_secret"]
         )
-        assert out == "hello\n"
+        assert result.stdout == "hello\n"
         # check no_deploy_secret is not deployed
-        returncode, out, _ = qga_m1.run(
+        result = qga_m1.run(
             ["test", "-e", "/run/secrets/vars/my_shared_generator/no_deploy_secret"],
             check=False,
         )
-        assert returncode != 0
+        assert result.returncode != 0
