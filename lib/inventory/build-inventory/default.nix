@@ -98,7 +98,12 @@ let
             roleModules = builtins.map (
               role:
               let
-                path = clan-core.clanModules.${serviceName} + "/roles/${role}.nix";
+                # Check the module exists
+                module =
+                  clan-core.clanModules.${serviceName}
+                    or (throw "ClanModule not found: '${serviceName}'. Make sure the module is added in the 'clanModules' attribute of clan-core.");
+
+                path = module + "/roles/${role}.nix";
               in
               if builtins.pathExists path then
                 path

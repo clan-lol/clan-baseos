@@ -1,5 +1,12 @@
-{ inventory, clan-core, ... }:
+{ clan-core, lib, ... }:
 let
+  inventory = (
+    import ../build-inventory {
+
+      inherit lib clan-core;
+    }
+  );
+
   inherit (inventory) buildInventory;
 in
 {
@@ -117,6 +124,30 @@ in
           (clan-core.clanModules.borgbackup + "/roles/client.nix")
           (clan-core.clanModules.borgbackup + "/roles/server.nix")
         ];
+      };
+    };
+
+  test_inventory_module_doesnt_exist =
+    let
+      configs = buildInventory {
+        directory = ./.;
+        inventory = {
+          services = {
+            fanatasy.instance_1 = {
+              roles.default.machines = [ "machine_1" ];
+            };
+          };
+          machines = {
+            "machine_1" = { };
+          };
+        };
+      };
+    in
+    {
+      expr = configs;
+      expectedError = {
+        type = "ThrownError";
+        msg = "ClanModule not found*";
       };
     };
 
