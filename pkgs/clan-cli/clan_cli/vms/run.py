@@ -203,13 +203,13 @@ def spawn_vm(
     cachedir: Path | None = None,
     socketdir: Path | None = None,
     nix_options: list[str] | None = None,
-    portmap: list[tuple[int, int]] | None = None,
+    portmap: dict[int, int] | None = None,
     stdout: int | None = None,
     stderr: int | None = None,
     stdin: int | None = None,
 ) -> Iterator[QemuVm]:
     if portmap is None:
-        portmap = []
+        portmap = {}
     if nix_options is None:
         nix_options = []
     with ExitStack() as stack:
@@ -314,7 +314,7 @@ class RuntimeConfig:
     cachedir: Path | None = None
     socketdir: Path | None = None
     nix_options: list[str] | None = None
-    portmap: list[tuple[int, int]] | None = None
+    portmap: dict[int, int] | None = None
     command: list[str] | None = None
     no_block: bool = False
 
@@ -373,7 +373,7 @@ def run_command(
 
     vm: VmConfig = inspect_vm(machine=machine_obj)
 
-    portmap = [p.split(":") for p in args.publish]
+    portmap = dict(p.split(":") for p in args.publish)
 
     runtime_config = RuntimeConfig(
         nix_options=args.option,
