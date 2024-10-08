@@ -184,6 +184,19 @@ in
             # instance name
             { name, ... }:
             {
+              options.enabled = lib.mkOption {
+                type = lib.types.bool;
+                default = true;
+                description = ''
+                  Enable or disable the complete service.
+
+                  If the service is disabled, it will not be added to any machine.
+
+                  !!! Note
+                      This flag is primarily used to temporarily disable a service.
+                      I.e. A 'backup service' without any 'server' might be incomplete and would cause failure if enabled.
+                '';
+              };
               options.meta = metaOptionsWith name;
               options.extraModules = extraModulesOption;
               options.config = moduleConfig // {
