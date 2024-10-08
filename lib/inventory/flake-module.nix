@@ -17,13 +17,6 @@ in
       ...
     }:
     let
-      inventory = (
-        import ./build-inventory {
-          clan-core = self;
-          inherit lib;
-        }
-      );
-
       getSchema = import ./interface-to-schema.nix { inherit lib self; };
 
       # The schema for the inventory, without default values, from the module system.
@@ -125,7 +118,7 @@ in
 
       # Run: nix-unit --extra-experimental-features flakes --flake .#legacyPackages.x86_64-linux.evalTests
       legacyPackages.evalTests-inventory = import ./tests {
-        inherit inventory;
+        inherit lib;
         clan-core = self;
       };
 
