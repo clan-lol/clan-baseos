@@ -97,6 +97,18 @@ in
           cp schema.json $out
         '';
       };
+
+      legacyPackages.schemas = (
+        import ./schemas {
+          inherit
+            pkgs
+            self
+            lib
+            self'
+            ;
+        }
+      );
+
       packages.inventory-schema-pretty = pkgs.stdenv.mkDerivation {
         name = "inventory-schema-pretty";
         buildInputs = [ pkgs.cue ];
