@@ -23,16 +23,38 @@ let
   };
 
   inventorySchema = jsonLib.parseModule (import ../build-inventory/interface.nix);
+
   renderSchema = pkgs.writers.writePython3Bin "render-schema" {
     flakeIgnore = [
       "F401"
       "E501"
     ];
   } ./render_schema.py;
+
+  inventory-schema-abstract = pkgs.stdenv.mkDerivation {
+    name = "inventory-schema-files";
+    buildInputs = [ pkgs.cue ];
+    src = ./.;
+    buildPhase = ''
+      export SCHEMA=${builtins.toFile "inventory-schema.json" (builtins.toJSON inventorySchema)}
+      cp $SCHEMA schema.json
+      # Also generate a CUE schema version that is derived from the JSON schema
+      cue import -f -p compose -l '#Root:' schema.json
+      mkdir $out
+      cp schema.cue $out
+      cp schema.json $out
+    '';
+  };
 in
 {
-  inherit inventorySchema modulesSchema renderSchema;
+  inherit
+    inventorySchema
+    modulesSchema
+    renderSchema
+    inventory-schema-abstract
+    ;
 
+  # Inventory schema, with the modules schema added per role
   inventory =
     pkgs.runCommand "rendered"
       {
