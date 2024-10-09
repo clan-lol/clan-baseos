@@ -1,7 +1,5 @@
 import json
 
-# some unused imports are needed to trigger registrations of api functions
-import clan_cli.config.schema  # noqa: F401
 from clan_cli.api import API
 
 

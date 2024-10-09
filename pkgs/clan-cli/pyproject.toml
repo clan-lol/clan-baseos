@@ -20,7 +20,6 @@ exclude = ["clan_cli.nixpkgs*", "result"]
 [tool.setuptools.package-data]
 clan_cli = [
   "**/allowed-programs.json",
-  "config/jsonschema/*",
   "py.typed",
   "templates/**/*",
   "vms/mimetypes/**/*",
@@ -48,10 +47,6 @@ exclude = "clan_cli.nixpkgs"
 
 [[tool.mypy.overrides]]
 module = "argcomplete.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "jsonschema.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
