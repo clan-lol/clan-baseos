@@ -1,4 +1,5 @@
 {
+  clan-core,
   pkgs,
   module-docs,
   clan-cli-docs,
@@ -14,7 +15,9 @@ in
 pkgs.stdenv.mkDerivation {
   name = "clan-documentation";
 
-  src = ../.;
+  # Points to repository root.
+  # so that we can access directories outside of docs to include code snippets
+  src = clan-core;
 
   nativeBuildInputs =
     [
@@ -29,6 +32,8 @@ pkgs.stdenv.mkDerivation {
       filelock # FIXME: this should be already provided by mkdocs-rss-plugin
     ]);
   configurePhase = ''
+    pushd docs
+
     mkdir -p ./site/reference/cli
     cp -af ${module-docs}/* ./site/reference/
     cp -af ${clan-cli-docs}/* ./site/reference/cli/

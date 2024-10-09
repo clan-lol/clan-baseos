@@ -89,6 +89,7 @@
       };
       packages = {
         docs = pkgs.python3.pkgs.callPackage ./default.nix {
+          clan-core = self;
           inherit (self'.packages) clan-cli-docs inventory-api-docs;
           inherit (inputs) nixpkgs;
           inherit module-docs;
