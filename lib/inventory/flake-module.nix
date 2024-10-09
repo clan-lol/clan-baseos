@@ -19,7 +19,6 @@ in
     {
       devShells.inventory-schema = pkgs.mkShell {
         inputsFrom = with config.checks; [
-          lib-inventory-examples-cue
           lib-inventory-eval
           self'.devShells.default
         ];
