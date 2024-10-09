@@ -12,23 +12,18 @@
       #   borgbackup = self.clanModules.borgbackup;
       # };
 
-      optionsFromModule =
-        mName:
-        let
-          eval = self.lib.evalClanModules [ mName ];
-        in
-        if (eval.options.clan ? "${mName}") then eval.options.clan.${mName} else { };
+      optionsFromModule = name: module: (self.lib.evalClanModules [ module ]).options.clan.${name} or { };
 
       clanModuleSchemas = lib.mapAttrs (
-        modulename: _: jsonLib.parseOptions (optionsFromModule modulename) { }
+        name: module: jsonLib.parseOptions (optionsFromModule name module) { }
       ) clanModules;
 
       clanModuleFunctionSchemas = lib.attrsets.mapAttrsToList (
-        modulename: _:
+        modulename: module:
         (self.lib.modules.getFrontmatter modulename)
         // {
           name = modulename;
-          parameters = jsonLib.parseOptions (optionsFromModule modulename) { };
+          parameters = jsonLib.parseOptions (optionsFromModule modulename module) { };
         }
       ) clanModules;
     in

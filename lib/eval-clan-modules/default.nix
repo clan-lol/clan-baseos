@@ -1,26 +1,23 @@
 {
-  nixpkgs,
   clan-core,
   lib,
+  pkgs,
 }:
 let
-  inherit (import nixpkgs { system = "x86_64-linux"; }) pkgs;
-
-  inherit (clan-core) clanModules;
-
   baseModule = {
     imports = (import (pkgs.path + "/nixos/modules/module-list.nix")) ++ [
       {
-        nixpkgs.hostPlatform = "x86_64-linux";
+        nixpkgs.pkgs = pkgs;
         clan.core.name = "dummy";
+        system.stateVersion = lib.version;
       }
     ];
   };
 
   # This function takes a list of module names and evaluates them
-  # evalClanModules :: [ String ] -> { config, options, ... }
+  # evalClanModules :: [ module ] -> { config, options, ... }
   evalClanModulesLegacy =
-    modulenames:
+    modules:
     let
       evaled = lib.evalModules {
         modules = [
@@ -29,7 +26,7 @@ let
             clan.core.clanDir = clan-core;
           }
           clan-core.nixosModules.clanCore
-        ] ++ (map (name: clanModules.${name}) modulenames);
+        ] ++ modules;
       };
     in
     # lib.warn ''
