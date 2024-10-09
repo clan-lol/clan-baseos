@@ -46,6 +46,6 @@ mkShell {
 
     # Generate classes.py from inventory schema
     # This file is in .gitignore
-    ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema-abstract}/schema.json $PKG_ROOT/clan_cli/inventory/classes.py --stop-at "Service"
+    ${self'.packages.classgen}/bin/classgen ${self'.legacyPackages.schemas.inventory-schema-abstract}/schema.json $PKG_ROOT/clan_cli/inventory/classes.py --stop-at "Service"
   '';
 }

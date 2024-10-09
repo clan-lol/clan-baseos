@@ -47,7 +47,8 @@
       packages = {
         clan-cli = pkgs.python3.pkgs.callPackage ./default.nix {
           inherit (inputs) nixpkgs;
-          inherit (self'.packages) inventory-schema-abstract classgen;
+          inherit (self'.packages) classgen;
+          inherit (self'.legacyPackages.schemas) inventory-schema-abstract;
           clan-core-path = clanCoreWithVendoredDeps;
           includedRuntimeDeps = [
             "age"
@@ -56,7 +57,8 @@
         };
         clan-cli-full = pkgs.python3.pkgs.callPackage ./default.nix {
           inherit (inputs) nixpkgs;
-          inherit (self'.packages) inventory-schema-abstract classgen;
+          inherit (self'.packages) classgen;
+          inherit (self'.legacyPackages.schemas) inventory-schema-abstract;
           clan-core-path = clanCoreWithVendoredDeps;
           includedRuntimeDeps = lib.importJSON ./clan_cli/nix/allowed-programs.json;
         };
@@ -71,7 +73,7 @@
           ];
 
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema-abstract}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
+            ${self'.packages.classgen}/bin/classgen ${self'.legacyPackages.schemas.inventory-schema-abstract}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
 
             python docs.py reference
             mkdir -p $out
@@ -89,7 +91,7 @@
           ];
 
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema-abstract}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
+            ${self'.packages.classgen}/bin/classgen ${self'.legacyPackages.schemas.inventory-schema-abstract}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
             mkdir -p $out
             # Retrieve python API Typescript types
             python api.py > $out/API.json
@@ -113,7 +115,7 @@
             classFile = "classes.py";
           };
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema-abstract}/schema.json b_classes.py --stop-at "Service"
+            ${self'.packages.classgen}/bin/classgen ${self'.legacyPackages.schemas.inventory-schema-abstract}/schema.json b_classes.py --stop-at "Service"
             file1=$classFile
             file2=b_classes.py
 

@@ -128,7 +128,7 @@ It is possible to add services to multiple machines via tags as shown
 Or it can build anytime via:
 
 ```sh
-nix build git+https://git.clan.lol/clan/clan-core#inventory-schema
+nix build git+https://git.clan.lol/clan/clan-core#schemas.inventory
 > result
 > ├── schema.cue
 > └── schema.json
