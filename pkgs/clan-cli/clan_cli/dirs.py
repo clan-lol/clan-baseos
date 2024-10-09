@@ -115,10 +115,6 @@ def specific_machine_dir(flake_dir: Path, machine: str) -> Path:
     return machines_dir(flake_dir) / machine
 
 
-def machine_settings_file(flake_dir: Path, machine: str) -> Path:
-    return specific_machine_dir(flake_dir, machine) / "settings.json"
-
-
 def module_root() -> Path:
     return Path(__file__).parent
 
