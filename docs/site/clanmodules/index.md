@@ -6,7 +6,7 @@ This site will guide you through authoring your first module. Explaining which c
 Under construction
 :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier:
 
-## Bootstrapping a `clanModule`
+## Bootstrapping the `clanModule`
 
 A ClanModule is a specific subset of a [NixOS Module](https://nix.dev/tutorials/module-system/index.html), but it has some constraints and might be used via the [Inventory](../manual/inventory.md) interface.
 
@@ -40,9 +40,6 @@ clanModules/borgbackup
 
 The next step is to register the module via the `clanModules` attribute.
 
-!!! Note
-    Currently ClanModules should be contributed to the clan-core repository. Ad-hoc loading modules is not recommended / supported yet.
-
 ```nix title="clanModules/flake-module.nix"
 --8<-- "clanModules/flake-module.nix:0:6"
     # Register your new module here
@@ -51,7 +48,7 @@ The next step is to register the module via the `clanModules` attribute.
 
 ## Readme
 
-The `README.md` is a required file. It MUST contain frontmatter in [`toml`]() format.
+The `README.md` is a required file. It MUST contain frontmatter in [`toml`](https://toml.io) format.
 
 ```markdown
 ---
