@@ -11,11 +11,9 @@
       buildClanOptions = self'.legacyPackages.clan-internals-docs;
       # Simply evaluated options (JSON)
       # { clanCore = «derivation JSON»; clanModules = { ${name} = «derivation JSON» }; }
-      jsonDocs = import ./get-module-docs.nix {
-        inherit (inputs) nixpkgs;
-        inherit pkgs;
-        inherit (self.nixosModules) clanCore;
+      jsonDocs = pkgs.callPackage ./get-module-docs.nix {
         inherit (self) clanModules;
+        evalClanModules = self.lib.evalClanModules;
       };
 
       clanModulesFileInfo = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModules);
