@@ -1,18 +1,18 @@
 {
-  nixpkgs,
   clan-core,
   lib,
+  pkgs,
 }:
 let
-  inherit (import nixpkgs { system = "x86_64-linux"; }) pkgs;
 
   inherit (clan-core) clanModules;
 
   baseModule = {
     imports = (import (pkgs.path + "/nixos/modules/module-list.nix")) ++ [
       {
-        nixpkgs.hostPlatform = "x86_64-linux";
+        nixpkgs.pkgs = pkgs;
         clan.core.name = "dummy";
+        system.stateVersion = lib.version;
       }
     ];
   };

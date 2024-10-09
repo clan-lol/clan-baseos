@@ -5,7 +5,10 @@
   ...
 }:
 let
-  eval = import ./eval-clan-modules { inherit clan-core nixpkgs lib; };
+  eval = import ./eval-clan-modules {
+    inherit clan-core lib;
+    pkgs = nixpkgs.legacyPackages.x86_64-linux;
+  };
 in
 {
   inherit (eval) evalClanModules evalClanModulesWithRoles;
