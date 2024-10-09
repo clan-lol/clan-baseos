@@ -20,8 +20,6 @@
           (
             {
               lib,
-              options,
-              pkgs,
               ...
             }:
             {
@@ -30,16 +28,6 @@
                 # speed up by not instantiating nixpkgs twice and disable documentation
                 nixpkgs.pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
                 documentation.enable = false;
-              };
-              options.clan.core.optionsNix = lib.mkOption {
-                type = lib.types.raw;
-                internal = true;
-                readOnly = true;
-                default = (pkgs.nixosOptionsDoc { inherit options; }).optionsNix;
-                defaultText = "optionsNix";
-                description = ''
-                  This is to export nixos options used for `clan config`
-                '';
               };
               options.clanImports = lib.mkOption {
                 type = lib.types.listOf lib.types.str;
