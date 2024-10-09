@@ -4,9 +4,6 @@
   pkgs,
 }:
 let
-
-  inherit (clan-core) clanModules;
-
   baseModule = {
     imports = (import (pkgs.path + "/nixos/modules/module-list.nix")) ++ [
       {
@@ -18,9 +15,9 @@ let
   };
 
   # This function takes a list of module names and evaluates them
-  # evalClanModules :: [ String ] -> { config, options, ... }
+  # evalClanModules :: [ module ] -> { config, options, ... }
   evalClanModulesLegacy =
-    modulenames:
+    modules:
     let
       evaled = lib.evalModules {
         modules = [
@@ -29,7 +26,7 @@ let
             clan.core.clanDir = clan-core;
           }
           clan-core.nixosModules.clanCore
-        ] ++ (map (name: clanModules.${name}) modulenames);
+        ] ++ modules;
       };
     in
     # lib.warn ''
