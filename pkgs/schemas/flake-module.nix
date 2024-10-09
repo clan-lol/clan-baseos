@@ -23,7 +23,7 @@
         modulename: _: jsonLib.parseOptions (optionsFromModule modulename) { }
       ) clanModules;
 
-      clanModuleFunctionSchemas = lib.mapAttrsFlatten (
+      clanModuleFunctionSchemas = lib.attrsets.mapAttrsToList (
         modulename: _:
         (self.lib.modules.getFrontmatter modulename)
         // {

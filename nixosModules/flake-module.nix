@@ -10,6 +10,7 @@
     ];
     clanCore.imports = [
       inputs.sops-nix.nixosModules.sops
+      inputs.nixos-facter-modules.nixosModules.facter
       inputs.disko.nixosModules.default
       ./clanCore
       (

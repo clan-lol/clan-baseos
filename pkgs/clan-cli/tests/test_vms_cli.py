@@ -83,6 +83,7 @@ def test_vm_persistence(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs=config,
     )
 

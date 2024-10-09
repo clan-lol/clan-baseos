@@ -26,36 +26,10 @@ let
     }
   );
 
-  machineSettings =
-    machineName:
-    let
-      warn = lib.warn ''
-        The use of ./machines/<machine>/settings.json is deprecated.
-        If your settings.json is empty, you can safely remove it.
-        !!! Consider using the inventory system. !!!
-
-        File: ${directory + /machines/${machineName}/settings.json}
-
-        If there are still features missing in the inventory system, please open an issue on the clan-core repository.
-      '';
-    in
-    # CLAN_MACHINE_SETTINGS_FILE allows to override the settings file temporarily
-    # This is useful for doing a dry-run before writing changes into the settings.json
-    # Using CLAN_MACHINE_SETTINGS_FILE requires passing --impure to nix eval
-    if builtins.getEnv "CLAN_MACHINE_SETTINGS_FILE" != "" then
-      warn (builtins.fromJSON (builtins.readFile (builtins.getEnv "CLAN_MACHINE_SETTINGS_FILE")))
-    else
-      lib.optionalAttrs (builtins.pathExists "${directory}/machines/${machineName}/settings.json") (
-        warn (builtins.fromJSON (builtins.readFile (directory + /machines/${machineName}/settings.json)))
-      );
-
-  machineImports =
-    machineSettings: map (module: clan-core.clanModules.${module}) (machineSettings.clanImports or [ ]);
-
   # TODO: remove default system once we have a hardware-config mechanism
   nixosConfiguration =
     {
-      system ? "x86_64-linux",
+      system ? null,
       name,
       pkgs ? null,
       extraConfig ? { },
@@ -63,40 +37,16 @@ let
     nixpkgs.lib.nixosSystem {
       modules =
         let
-          settings = machineSettings name;
-          facterJson = "${directory}/machines/${name}/facter.json";
           hwConfig = "${directory}/machines/${name}/hardware-configuration.nix";
-
-          facterModules = lib.optionals (builtins.pathExists facterJson) [
-            clan-core.inputs.nixos-facter-modules.nixosModules.facter
-            { config.facter.reportPath = facterJson; }
-          ];
         in
-        (machineImports settings)
-        ++ facterModules
-        ++ [
+        [
           {
             # Autoinclude configuration.nix and hardware-configuration.nix
             imports = builtins.filter builtins.pathExists [
               "${directory}/machines/${name}/configuration.nix"
               hwConfig
             ];
-            config.warnings =
-              lib.optionals
-                (builtins.all builtins.pathExists [
-                  hwConfig
-                  facterJson
-                ])
-                [
-                  ''
-                    Duplicate hardware facts: '${hwConfig}' and '${facterJson}' exist.
-                    Using both is not recommended.
-
-                    It is recommended to use the hardware facts from '${facterJson}', please remove '${hwConfig}'.
-                  ''
-                ];
           }
-          settings
           clan-core.nixosModules.clanCore
           extraConfig
           (machines.${name} or { })
@@ -115,7 +65,7 @@ let
               # Machine specific settings
               clan.core.machineName = name;
               networking.hostName = lib.mkDefault name;
-              nixpkgs.hostPlatform = lib.mkDefault system;
+              nixpkgs.hostPlatform = lib.mkIf (system != null) (lib.mkDefault system);
 
               # speeds up nix commands by using the nixpkgs from the host system (especially useful in VMs)
               nix.registry.nixpkgs.to = {
@@ -132,38 +82,7 @@ let
       } // specialArgs;
     };
 
-  # TODO: Will be deprecated
-  # We must migrate the tests, that create a settings.json to add a machine.
-  ##################################################
-  testMachines =
-    lib.mapAttrs
-      (name: _: {
-        inherit name;
-        system = (machineSettings name).nixpkgs.hostSystem or null;
-      })
-      (
-        lib.filterAttrs (
-          machineName: _:
-          if builtins.pathExists "${directory}/machines/${machineName}/settings.json" then
-            lib.warn ''
-              The use of ./machines/<machine>/settings.json is deprecated.
-              If your settings.json is empty, you can safely remove it.
-              !!! Consider using the inventory system. !!!
-
-              File: ${directory + /machines/${machineName}/settings.json}
-
-              If there are still features missing in the inventory system, please open an issue on the clan-core repository.
-            '' true
-          else
-            false
-        ) machinesDirs
-      );
-  machinesDirs = lib.optionalAttrs (builtins.pathExists "${directory}/machines") (
-    builtins.readDir (directory + /machines)
-  );
-  ##################################################
-
-  allMachines = inventory.machines or { } // machines // testMachines;
+  allMachines = inventory.machines or { } // machines;
 
   supportedSystems = [
     "x86_64-linux"

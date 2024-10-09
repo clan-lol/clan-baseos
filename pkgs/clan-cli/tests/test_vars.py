@@ -1,5 +1,5 @@
 import json
-import subprocess
+import shutil
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
@@ -9,7 +9,7 @@ from age_keys import SopsSetup
 from clan_cli.clan_uri import FlakeId
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
-from clan_cli.nix import nix_eval, nix_shell, run
+from clan_cli.nix import nix_eval, run
 from clan_cli.vars.check import check_vars
 from clan_cli.vars.generate import generate_vars_for_machine
 from clan_cli.vars.list import stringify_all_vars
@@ -83,12 +83,14 @@ def test_generate_public_var(
     temporary_home: Path,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo hello > $out/my_value"
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -122,12 +124,14 @@ def test_generate_secret_var_sops(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
     my_generator["script"] = "echo hello > $out/my_secret"
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -162,6 +166,7 @@ def test_generate_secret_var_sops_with_default_group(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     config["clan"]["core"]["sops"]["defaultGroups"] = ["my_group"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
@@ -169,6 +174,7 @@ def test_generate_secret_var_sops_with_default_group(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -193,6 +199,7 @@ def test_generated_shared_secret_sops(
     sops_setup: SopsSetup,
 ) -> None:
     m1_config = nested_dict()
+    m1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = m1_config["clan"]["core"]["vars"]["generators"][
         "my_shared_generator"
     ]
@@ -200,12 +207,14 @@ def test_generated_shared_secret_sops(
     shared_generator["files"]["my_shared_secret"]["secret"] = True
     shared_generator["script"] = "echo hello > $out/my_shared_secret"
     m2_config = nested_dict()
+    m2_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     m2_config["clan"]["core"]["vars"]["generators"]["my_shared_generator"] = (
         shared_generator.copy()
     )
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"machine1": m1_config, "machine2": m2_config},
     )
     monkeypatch.chdir(flake.path)
@@ -233,8 +242,10 @@ def test_generated_shared_secret_sops(
 def test_generate_secret_var_password_store(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
+    test_root: Path,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     config["clan"]["core"]["vars"]["settings"]["secretStore"] = "password-store"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
@@ -248,33 +259,18 @@ def test_generate_secret_var_password_store(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
     gnupghome = temporary_home / "gpg"
-    gnupghome.mkdir(mode=0o700)
+    shutil.copytree(test_root / "data" / "gnupg-home", gnupghome)
     monkeypatch.setenv("GNUPGHOME", str(gnupghome))
+
+    password_store_dir = temporary_home / "pass"
+    shutil.copytree(test_root / "data" / "password-store", password_store_dir)
     monkeypatch.setenv("PASSWORD_STORE_DIR", str(temporary_home / "pass"))
-    gpg_key_spec = temporary_home / "gpg_key_spec"
-    gpg_key_spec.write_text(
-        """
-        Key-Type: 1
-        Key-Length: 1024
-        Name-Real: Root Superuser
-        Name-Email: test@local
-        Expire-Date: 0
-        %no-protection
-    """
-    )
-    subprocess.run(
-        nix_shell(
-            ["nixpkgs#gnupg"], ["gpg", "--batch", "--gen-key", str(gpg_key_spec)]
-        ),
-        check=True,
-    )
-    subprocess.run(
-        nix_shell(["nixpkgs#pass"], ["pass", "init", "test@local"]), check=True
-    )
+
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     assert not check_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
@@ -318,6 +314,7 @@ def test_generate_secret_for_multiple_machines(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"machine1": machine1_config, "machine2": machine2_config},
     )
     monkeypatch.chdir(flake.path)
@@ -363,6 +360,7 @@ def test_dependant_generators(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -402,6 +400,7 @@ def test_prompt(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -421,6 +420,7 @@ def test_share_flag(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
     shared_generator["share"] = True
     shared_generator["files"]["my_secret"]["secret"] = True
@@ -440,6 +440,7 @@ def test_share_flag(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -490,6 +491,7 @@ def test_prompt_create_file(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -518,6 +520,7 @@ def test_api_get_prompts(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -546,6 +549,7 @@ def test_api_set_prompts(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -592,6 +596,7 @@ def test_commit_message(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -641,6 +646,7 @@ def test_default_value(
     temporary_home: Path,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["files"]["my_value"]["value"]["_type"] = "override"
@@ -650,6 +656,7 @@ def test_default_value(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -683,6 +690,7 @@ def test_stdout_of_generate(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo -n hello > $out/my_value"
@@ -694,6 +702,7 @@ def test_stdout_of_generate(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -761,6 +770,7 @@ def test_migration_skip(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
     my_service["secret"]["my_value"] = {}
     my_service["generator"]["script"] = "echo -n hello > $secrets/my_value"
@@ -772,6 +782,7 @@ def test_migration_skip(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -792,6 +803,7 @@ def test_migration(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
     my_service["public"]["my_value"] = {}
     my_service["generator"]["script"] = "echo -n hello > $facts/my_value"
@@ -802,6 +814,7 @@ def test_migration(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)
@@ -822,6 +835,7 @@ def test_fails_when_files_are_left_from_other_backend(
     sops_setup: SopsSetup,
 ) -> None:
     config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_secret_generator = config["clan"]["core"]["vars"]["generators"][
         "my_secret_generator"
     ]
@@ -835,6 +849,7 @@ def test_fails_when_files_are_left_from_other_backend(
     flake = generate_flake(
         temporary_home,
         flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
         machine_configs={"my_machine": config},
     )
     monkeypatch.chdir(flake.path)

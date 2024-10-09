@@ -15,6 +15,7 @@ pytest_plugins = [
     "host_group",
     "fixtures_flakes",
     "stdout",
+    "nix_config",
 ]
 
 

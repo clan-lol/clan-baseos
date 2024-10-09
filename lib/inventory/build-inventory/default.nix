@@ -154,9 +154,6 @@ let
       ) [ ] inventory.services
       # Append each machine config
       ++ [
-        (lib.optionalAttrs (machineConfig.system or null != null) {
-          config.nixpkgs.hostPlatform = machineConfig.system;
-        })
         (lib.optionalAttrs (machineConfig.deploy.targetHost or null != null) {
           config.clan.core.networking.targetHost = machineConfig.deploy.targetHost;
         })

@@ -33,13 +33,11 @@
           ));
       };
       flakeLockFile = builtins.toFile "clan-core-flake.lock" (builtins.toJSON flakeLockVendoredDeps);
-      clanCoreWithVendoredDeps =
-        lib.trace flakeLockFile pkgs.runCommand "clan-core-with-vendored-deps" { }
-          ''
-            cp -r ${self} $out
-            chmod +w -R $out
-            cp ${flakeLockFile} $out/flake.lock
-          '';
+      clanCoreWithVendoredDeps = pkgs.runCommand "clan-core-with-vendored-deps" { } ''
+        cp -r ${self} $out
+        chmod +w -R $out
+        cp ${flakeLockFile} $out/flake.lock
+      '';
     in
     {
       devShells.clan-cli = pkgs.callPackage ./shell.nix {

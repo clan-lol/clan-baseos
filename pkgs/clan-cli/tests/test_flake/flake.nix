@@ -12,23 +12,11 @@
       inputs = inputs' // {
         clan-core = fake-clan-core;
       };
-      machineSettings = (
-        if builtins.getEnv "CLAN_MACHINE_SETTINGS_FILE" != "" then
-          builtins.fromJSON (builtins.readFile (builtins.getEnv "CLAN_MACHINE_SETTINGS_FILE"))
-        else if builtins.pathExists ./machines/machine1/settings.json then
-          builtins.fromJSON (builtins.readFile ./machines/machine1/settings.json)
-        else
-          { }
-      );
-      machineImports = map (module: fake-clan-core.clanModules.${module}) (
-        machineSettings.clanImports or [ ]
-      );
     in
     {
       nixosConfigurations.machine1 = inputs.nixpkgs.lib.nixosSystem {
-        modules = machineImports ++ [
+        modules = [
           ./nixosModules/machine1.nix
-          machineSettings
           (
             {
               lib,
