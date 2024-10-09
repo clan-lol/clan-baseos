@@ -71,7 +71,7 @@
           ];
 
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
+            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema-abstract}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
 
             python docs.py reference
             mkdir -p $out
@@ -85,29 +85,20 @@
 
           buildInputs = [
             pkgs.python3
-            self'.packages.json2ts
-            # TODO: see postFixup clan-cli/default.nix:L188
-            self'.packages.clan-cli.propagatedBuildInputs
+            pkgs.json2ts
           ];
 
           installPhase = ''
-            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
+            ${self'.packages.classgen}/bin/classgen ${self'.packages.inventory-schema-abstract}/schema.json ./clan_cli/inventory/classes.py --stop-at "Service"
             mkdir -p $out
+            # Retrieve python API Typescript types
             python api.py > $out/API.json
-            ${self'.packages.json2ts}/bin/json2ts --input $out/API.json > $out/API.ts
-            ${self'.packages.json2ts}/bin/json2ts --input ${self'.packages.inventory-schema}/schema.json > $out/Inventory.ts
-            cp ${self'.packages.inventory-schema}/schema.json $out/inventory-schema.json
+            json2ts --input $out/API.json > $out/API.ts
+
+            # Retrieve python API Typescript types
+            json2ts --input ${self'.legacyPackages.schemas.inventory}/schema.json > $out/Inventory.ts
+            cp ${self'.legacyPackages.schemas.inventory}/* $out
           '';
-        };
-        json2ts = pkgs.buildNpmPackage {
-          name = "json2ts";
-          src = pkgs.fetchFromGitHub {
-            owner = "bcherny";
-            repo = "json-schema-to-typescript";
-            rev = "118d6a8e7a5a9397d1d390ce297f127ae674a623";
-            hash = "sha256-ldAFfw3E0A0lIJyDSsshgPRPR7OmV/FncPsDhC3waT8=";
-          };
-          npmDepsHash = "sha256-kLKau4SBxI9bMAd7X8/FQfCza2sYl/+0bg2LQcOQIJo=";
         };
 
         default = self'.packages.clan-cli;

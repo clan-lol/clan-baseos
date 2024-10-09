@@ -23,6 +23,7 @@ let
   };
 
   inventorySchema = jsonLib.parseModule (import ../build-inventory/interface.nix);
+
   renderSchema = pkgs.writers.writePython3Bin "render-schema" {
     flakeIgnore = [
       "F401"

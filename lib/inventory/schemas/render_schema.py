@@ -36,13 +36,19 @@ def service_roles_to_schema(
     schema: dict[str, Any],
     service_name: str,
     roles: list[str],
-    roles_schemas: list[dict[str, Any]],
+    roles_schemas: dict[str, dict[str, Any]],
     # Original service properties: {'config': Schema, 'machines': Schema, 'meta': Schema, 'extraModules': Schema, ...?}
     orig: dict[str, Any],
 ) -> dict[str, Any]:
     """
     Add roles to the service schema
     """
+    # collect all the roles for the service, to form a type union
+    all_roles_schema: list[dict[str, Any]] = []
+    for role_name, role_schema in roles_schemas.items():
+        role_schema["title"] = f"{module_name}-config-role-{role_name}"
+        all_roles_schema.append(role_schema)
+
     role_schema = {}
     for role in roles:
         role_schema[role] = {
@@ -51,8 +57,8 @@ def service_roles_to_schema(
             "properties": {
                 **orig["roles"]["additionalProperties"]["properties"],
                 "config": {
+                    **roles_schemas.get(role, {}),
                     "title": f"{service_name}-config-role-{role}",
-                    "oneOf": roles_schemas,
                     "type": "object",
                     "default": {},
                     "additionalProperties": False,
@@ -68,7 +74,7 @@ def service_roles_to_schema(
                 **orig["machines"]["additionalProperties"]["properties"],
                 "config": {
                     "title": f"{service_name}-config",
-                    "oneOf": roles_schemas,
+                    "oneOf": all_roles_schema,
                     "type": "object",
                     "default": {},
                     "additionalProperties": False,
@@ -95,7 +101,7 @@ def service_roles_to_schema(
                 "machines": machines_schema,
                 "config": {
                     "title": f"{service_name}-config",
-                    "oneOf": roles_schemas,
+                    "oneOf": all_roles_schema,
                     "type": "object",
                     "default": {},
                     "additionalProperties": False,
@@ -134,17 +140,10 @@ if __name__ == "__main__":
         "additionalProperties": False,
     }
 
-    for module_name, roles_schema in modules_schema.items():
-        # collect all the roles for the service
-        roles_schemas = []
-        for role_name, role_schema in roles_schema.items():
-            role_schema["title"] = f"{module_name}-config-role-{role_name}"
-            roles_schemas.append(role_schema)
-
+    for module_name, roles_schemas in modules_schema.items():
         # Add the roles schemas to the service schema
-        if roles_schemas:
-            roles = list(roles_schema.keys())
-
+        roles = list(roles_schemas.keys())
+        if roles:
             services = service_roles_to_schema(
                 services,
                 module_name,
