@@ -37,7 +37,7 @@ def upload_secrets(machine: Machine) -> None:
                     "--delete",
                     "--chmod=D700,F600",
                     f"{tempdir!s}/",
-                    f"{host.target}:{machine.secrets_upload_directory}/",
+                    f"{host.target_for_rsync}:{machine.secrets_upload_directory}/",
                 ],
             ),
             log=Log.BOTH,

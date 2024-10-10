@@ -218,6 +218,13 @@ class Host:
     def target(self) -> str:
         return f"{self.user or 'root'}@{self.host}"
 
+    @property
+    def target_for_rsync(self) -> str:
+        host = self.host
+        if ":" in host:
+            host = f"[{host}]"
+        return f"{self.user or 'root'}@{host}"
+
     def _prefix_output(
         self,
         displayed_cmd: str,
