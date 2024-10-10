@@ -159,6 +159,7 @@ def test_generate_secret_var_sops(
     )
 
 
+# TODO: it doesn't actually test if the group has access
 @pytest.mark.impure
 def test_generate_secret_var_sops_with_default_group(
     monkeypatch: pytest.MonkeyPatch,
