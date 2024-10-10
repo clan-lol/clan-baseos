@@ -1,15 +1,20 @@
-import datetime
+import contextlib
 import logging
 import os
 import select
 import shlex
+import signal
 import subprocess
 import sys
+import timeit
 import weakref
-from datetime import timedelta
+from collections.abc import Iterator
+from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
 from typing import IO, Any
+
+from clan_cli.errors import ClanError
 
 from .custom_logger import get_caller
 from .errors import ClanCmdError, CmdOut
@@ -58,6 +63,27 @@ def handle_output(process: subprocess.Popen, log: Log) -> tuple[str, str]:
             sys.stderr.flush()
         stderr_buf += ret
     return stdout_buf.decode("utf-8", "replace"), stderr_buf.decode("utf-8", "replace")
+
+
+@contextmanager
+def terminate_process_group(process: subprocess.Popen) -> Iterator[None]:
+    process_group = os.getpgid(process.pid)
+    if process_group == os.getpgid(os.getpid()):
+        msg = "Bug! Refusing to terminate the current process group"
+        raise ClanError(msg)
+    try:
+        yield
+    finally:
+        try:
+            os.killpg(process_group, signal.SIGTERM)
+            try:
+                with contextlib.suppress(subprocess.TimeoutExpired):
+                    # give the process time to terminate
+                    process.wait(3)
+            finally:
+                os.killpg(process_group, signal.SIGKILL)
+        except ProcessLookupError:  # process already terminated
+            pass
 
 
 class TimeTable:
@@ -120,13 +146,17 @@ def run(
     tstart = datetime.datetime.now(tz=datetime.UTC)
 
     # Start the subprocess
-    with subprocess.Popen(
-        cmd,
-        cwd=str(cwd),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ) as process:
+    with (
+        subprocess.Popen(
+            cmd,
+            cwd=str(cwd),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        ) as process,
+        terminate_process_group(process),
+    ):
         stdout_buf, stderr_buf = handle_output(process, log)
 
         if input:

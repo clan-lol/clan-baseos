@@ -122,10 +122,7 @@ def zerotier_controller() -> Iterator[ZerotierController]:
             str(home),
         ]
 
-        with subprocess.Popen(
-            cmd,
-            preexec_fn=os.setsid,
-        ) as p:
+        with subprocess.Popen(cmd, start_new_session=True) as p:
             process_group = os.getpgid(p.pid)
             try:
                 print(
