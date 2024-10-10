@@ -373,6 +373,9 @@ def run_command(
 
     vm: VmConfig = inspect_vm(machine=machine_obj)
 
+    if not os.environ.get("WAYLAND_DISPLAY"):
+        vm.waypipe = False
+
     portmap = dict(p.split(":") for p in args.publish)
 
     runtime_config = RuntimeConfig(
