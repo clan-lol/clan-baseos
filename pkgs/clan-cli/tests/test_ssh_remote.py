@@ -1,5 +1,7 @@
 import subprocess
 
+import pytest
+from clan_cli.errors import ClanError
 from clan_cli.ssh import Host, HostGroup, HostKeyCheck, parse_deployment_address
 
 
@@ -10,6 +12,10 @@ def test_parse_ipv6() -> None:
     host = parse_deployment_address("foo", "[fe80::1%eth0]", HostKeyCheck.STRICT)
     assert host.host == "fe80::1%eth0"
     assert host.port is None
+
+    with pytest.raises(ClanError):
+        # We instruct the user to use brackets for IPv6 addresses
+        host = parse_deployment_address("foo", "fe80::1%eth0", HostKeyCheck.STRICT)
 
 
 def test_run(host_group: HostGroup) -> None:

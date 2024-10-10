@@ -18,6 +18,7 @@ from shlex import quote
 from threading import Thread
 from typing import IO, Any, Generic, TypeVar
 
+from clan_cli.cmd import terminate_process_group
 from clan_cli.errors import ClanError
 
 # https://no-color.org
@@ -218,6 +219,13 @@ class Host:
     def target(self) -> str:
         return f"{self.user or 'root'}@{self.host}"
 
+    @property
+    def target_for_rsync(self) -> str:
+        host = self.host
+        if ":" in host:
+            host = f"[{host}]"
+        return f"{self.user or 'root'}@{host}"
+
     def _prefix_output(
         self,
         displayed_cmd: str,
@@ -287,7 +295,7 @@ class Host:
             elapsed = now - start
             if now - last_output > NO_OUTPUT_TIMEOUT:
                 elapsed_msg = time.strftime("%H:%M:%S", time.gmtime(elapsed))
-                cmdlog.warn(
+                cmdlog.warning(
                     f"still waiting for '{displayed_cmd}' to finish... ({elapsed_msg} elapsed)",
                     extra={"command_prefix": self.command_prefix},
                 )
@@ -359,7 +367,9 @@ class Host:
                 stderr=stderr_write,
                 env=env,
                 cwd=cwd,
+                start_new_session=True,
             ) as p:
+                stack.enter_context(terminate_process_group(p))
                 if write_std_fd is not None:
                     write_std_fd.close()
                 if write_err_fd is not None:
@@ -380,11 +390,7 @@ class Host:
                     stderr_read,
                     timeout,
                 )
-                try:
-                    ret = p.wait(timeout=max(0, timeout - (time.time() - start)))
-                except subprocess.TimeoutExpired:
-                    p.kill()
-                    raise
+                ret = p.wait(timeout=max(0, timeout - (time.time() - start)))
                 if ret != 0:
                     if check:
                         raise subprocess.CalledProcessError(
@@ -845,6 +851,10 @@ def parse_deployment_address(
         meta = {}
     parts = host.split("@")
     user: str | None = None
+    # count the number of : in the hostname
+    if host.count(":") > 1 and not host.startswith("["):
+        msg = f"Invalid hostname: {host}. IPv6 addresses must be enclosed in brackets , e.g. [::1]"
+        raise ClanError(msg)
     if len(parts) > 1:
         user = parts[0]
         hostname = parts[1]
