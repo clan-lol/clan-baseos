@@ -19,7 +19,7 @@ from clan_cli.errors import ClanError
 from .custom_logger import get_caller
 from .errors import ClanCmdError, CmdOut
 
-glog = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Log(Enum):
@@ -93,7 +93,7 @@ class TimeTable:
     """
 
     def __init__(self) -> None:
-        self.table: dict[str, timedelta] = {}
+        self.table: dict[str, float] = {}
         weakref.finalize(self, self.table_print)
 
     def table_print(self) -> None:
@@ -106,14 +106,14 @@ class TimeTable:
 
         for k, v in sorted_table:
             # Check if timedelta is greater than 1 second
-            if v.total_seconds() > 1:
+            if v > 1:
                 # Print in red
                 print(f"\033[91mTook {v}s\033[0m for command: '{k}'")
             else:
                 # Print in default color
                 print(f"Took {v} for command: '{k}'")
 
-    def add(self, cmd: str, time: timedelta) -> None:
+    def add(self, cmd: str, time: float) -> None:
         if cmd in self.table:
             self.table[cmd] += time
         else:
@@ -138,12 +138,12 @@ def run(
     if cwd is None:
         cwd = Path.cwd()
     if input:
-        glog.debug(
+        logger.debug(
             f"""$: echo "{input.decode('utf-8', 'replace')}" | {shlex.join(cmd)} \nCaller: {get_caller()}"""
         )
     else:
-        glog.debug(f"$: {shlex.join(cmd)} \nCaller: {get_caller()}")
-    tstart = datetime.datetime.now(tz=datetime.UTC)
+        logger.debug(f"$: {shlex.join(cmd)} \nCaller: {get_caller()}")
+    start = timeit.default_timer()
 
     # Start the subprocess
     with (
@@ -161,11 +161,10 @@ def run(
 
         if input:
             process.communicate(input)
-        tend = datetime.datetime.now(tz=datetime.UTC)
 
     global TIME_TABLE
     if TIME_TABLE:
-        TIME_TABLE.add(shlex.join(cmd), tend - tstart)
+        TIME_TABLE.add(shlex.join(cmd), start - timeit.default_timer())
 
     # Wait for the subprocess to finish
     cmd_out = CmdOut(
