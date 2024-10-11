@@ -73,7 +73,7 @@ def flash_machine(
             if system_config.language not in list_possible_languages():
                 msg = (
                     f"Language '{system_config.language}' is not a valid language. "
-                    f"Run 'clan flash --list-languages' to see a list of possible languages."
+                    f"Run 'clan flash list languages' to see a list of possible languages."
                 )
                 raise ClanError(msg)
             system_config_nix["i18n"] = {"defaultLocale": system_config.language}
@@ -82,10 +82,13 @@ def flash_machine(
             if system_config.keymap not in list_possible_keymaps():
                 msg = (
                     f"Keymap '{system_config.keymap}' is not a valid keymap. "
-                    f"Run 'clan flash --list-keymaps' to see a list of possible keymaps."
+                    f"Run 'clan flash list keymaps' to see a list of possible keymaps."
                 )
                 raise ClanError(msg)
             system_config_nix["console"] = {"keyMap": system_config.keymap}
+            system_config_nix["services"] = {
+                "xserver": {"xkb": {"layout": system_config.keymap}}
+            }
 
         if system_config.ssh_keys_path:
             root_keys = []

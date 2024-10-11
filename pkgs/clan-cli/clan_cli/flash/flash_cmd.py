@@ -101,7 +101,7 @@ def flash_command(args: argparse.Namespace) -> None:
     )
 
 
-def register_flash_apply_parser(parser: argparse.ArgumentParser) -> None:
+def register_flash_write_parser(parser: argparse.ArgumentParser) -> None:
     machines_parser = parser.add_argument(
         "machine",
         type=str,
