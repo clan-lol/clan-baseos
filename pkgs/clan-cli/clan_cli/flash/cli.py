@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 import argparse
 
-from .flash_cmd import register_flash_apply_parser
+from .flash_cmd import register_flash_write_parser
 from .list import register_flash_list_parser
 
 
@@ -14,11 +14,13 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
         required=True,
     )
 
-    apply_parser = subparser.add_parser(
-        "apply",
-        help="Flash a machine",
+    write_parser = subparser.add_parser(
+        "write",
+        help="Flash a machine to a disk",
     )
-    register_flash_apply_parser(apply_parser)
+    register_flash_write_parser(write_parser)
 
-    list_parser = subparser.add_parser("list", help="List options")
+    list_parser = subparser.add_parser(
+        "list", help="List possible keymaps or languages"
+    )
     register_flash_list_parser(list_parser)

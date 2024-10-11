@@ -182,9 +182,8 @@ For more detailed information, visit: {help_hyperlink("getting-started", "https:
         epilog=(
             f"""
 Examples:
-  $ clan flash import installer
-  $ clan flash apply installer --disk main /dev/sd<X> --ssh-pubkey ~/.ssh/id_rsa.pub
-  Will create and flash a custom installer nixos image onto a drive
+  $ clan flash write mymachine --disk main /dev/sd<X> --ssh-pubkey ~/.ssh/id_rsa.pub
+  Will flash the machine 'mymachine' to the disk '/dev/sd<X>' with the ssh public key '~/.ssh/id_rsa.pub'.
 
 For more detailed information, visit: {help_hyperlink("getting-started", "https://docs.clan.lol/getting-started/installer")}
             """

@@ -60,11 +60,11 @@ def list_possible_keymaps() -> list[str]:
 
 
 def list_command(args: argparse.Namespace) -> None:
-    if args.options == "languages":
+    if args.cmd == "languages":
         languages = list_possible_languages()
         for language in languages:
             print(language)
-    elif args.options == "keymaps":
+    elif args.cmd == "keymaps":
         keymaps = list_possible_keymaps()
         for keymap in keymaps:
             print(keymap)
@@ -72,7 +72,7 @@ def list_command(args: argparse.Namespace) -> None:
 
 def register_flash_list_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "OPTION",
+        "cmd",
         choices=["languages", "keymaps"],
         type=str,
         help="list possible languages or keymaps",

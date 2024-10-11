@@ -42,7 +42,7 @@
           testScript = ''
             start_all()
 
-            machine.succeed("clan flash apply --debug --flake ${../..} --yes --disk main /dev/vdb test-install-machine")
+            machine.succeed("clan flash write --debug --flake ${../..} --yes --disk main /dev/vdb test-install-machine")
           '';
         } { inherit pkgs self; };
       };

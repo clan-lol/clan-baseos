@@ -70,7 +70,7 @@ in
 {
   clan = {
     # To directly flash the installer to a disk, use the following command:
-    # $ clan flash flash-installer --disk main /dev/sdX --yes
+    # $ clan flash write flash-installer --disk main /dev/sdX --yes
     # This will include your ssh public keys in the installer.
     machines.flash-installer = {
       imports = [ flashInstallerModule ];
