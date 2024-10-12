@@ -21,10 +21,11 @@ in
         flip mapAttrsToList vars.generators (
           gen_name: generator:
           flip mapAttrsToList (relevantFiles generator) (
-            fname: _file: {
+            fname: file: {
               name = fname;
               generator = gen_name;
               inherit (generator) share;
+              inherit (file) owner group;
             }
           )
         )
