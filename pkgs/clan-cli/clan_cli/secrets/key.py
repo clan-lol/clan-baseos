@@ -9,7 +9,7 @@ from clan_cli.git import commit_files
 from . import sops
 from .secrets import update_secrets
 from .sops import (
-    default_admin_key_path,
+    default_admin_private_key_path,
     generate_private_key,
     maybe_get_admin_public_key,
 )
@@ -23,7 +23,7 @@ def generate_key() -> sops.SopsKey:
         print(f"{key.key_type.name} key {key.pubkey} is already set")
         return key
 
-    path = default_admin_key_path()
+    path = default_admin_private_key_path()
     _, pub_key = generate_private_key(out_file=path)
     print(
         f"Generated age private key at '{path}' for your user. Please back it up on a secure location or you will lose access to your secrets."
@@ -62,8 +62,9 @@ def register_key_parser(parser: argparse.ArgumentParser) -> None:
     parser_generate = subparser.add_parser(
         "generate",
         description=(
-            "Generate an age key for the Clan, "
-            "to use PGP set `SOPS_PGP_FP` in your environment."
+            "Generate an age key for the Clan, if you already have an age "
+            "or PGP key, then use it to create your user, see: "
+            "`clan secrets users add --help'"
         ),
     )
     parser_generate.set_defaults(func=generate_command)

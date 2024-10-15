@@ -114,8 +114,8 @@ def deploy_machine(machines: MachineGroup) -> None:
 
     def deploy(machine: Machine) -> None:
         host = machine.build_host
-        generate_facts([machine])
-        generate_vars([machine])
+        generate_facts([machine], service=None, regenerate=False)
+        generate_vars([machine], generator_name=None, regenerate=False)
 
         upload_secrets(machine)
         upload_secret_vars(machine)
