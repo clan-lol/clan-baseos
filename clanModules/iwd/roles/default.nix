@@ -17,9 +17,9 @@ let
           [Settings]
             AutoConnect=${if value.AutoConnect then "true" else "false"}
           [Security]
-            Passphrase=$prompt_value
+            Passphrase=\"$prompt_value\"
           "
-          echo "$config" > $secrets/${secret_name}
+          echo "$config" > "$secrets/${secret_name}"
         '';
       };
   };
