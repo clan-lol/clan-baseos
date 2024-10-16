@@ -27,7 +27,7 @@ This documentation is structured into the following sections
 
     ---
 
-    Important Core Concepts that should be inderstood to get the best experience.
+    Important Core Concepts that should be understood to get the best experience.
 
     [:octicons-arrow-right-24: Core Concepts](./concepts/index.md)
 
