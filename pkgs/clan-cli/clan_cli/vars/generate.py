@@ -195,9 +195,8 @@ def _ask_prompts(
         for prompt_name, _prompt in prompts.items():
             if generator not in prompt_values:
                 prompt_values[generator] = {}
-            prompt_values[generator][prompt_name] = ask(
-                _prompt["description"], _prompt["type"]
-            )
+            var_id = f"{generator}/{prompt_name}"
+            prompt_values[generator][prompt_name] = ask(var_id, _prompt["type"])
     return prompt_values
 
 
