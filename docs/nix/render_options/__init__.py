@@ -421,7 +421,7 @@ It can be set via the `inventory` attribute of the [`buildClan`](./buildclan.md#
 
 """
     # Inventory options are already included under the buildClan attribute
-    # We just omited them in the buildClan docs, because we want a seperate output for the inventory model
+    # We just omitted them in the buildClan docs, because we want a separate output for the inventory model
     with Path(BUILD_CLAN_PATH).open() as f:
         options: dict[str, dict[str, Any]] = json.load(f)
 
@@ -429,7 +429,7 @@ It can be set via the `inventory` attribute of the [`buildClan`](./buildclan.md#
             name, _info = item
             parts = name.split(".") if "." in name else ["root", "sub"]
 
-            # Make everything fixed lenght.
+            # Make everything fixed length.
             remain = 10 - len(parts)
             parts.extend(["A"] * remain)
             category = parts[1]
