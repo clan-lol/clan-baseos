@@ -147,7 +147,7 @@ Generate the `hardware-configuration.nix` file for your machine by executing the
 clan machines update-hardware-config [MACHINE_NAME]
 ```
 
-replace `[MACHINE_NAME]` with the name of the machine i.e. `jon` and `[HOSTNAME]` with the `ip_adress` or `hostname` of the machine within the network. i.e. `<IP>`
+replace `[MACHINE_NAME]` with the name of the machine i.e. `jon` and `[HOSTNAME]` with the `ip_address` or `hostname` of the machine within the network. i.e. `<IP>`
 
 !!! Example
     ```bash
