@@ -51,7 +51,8 @@ from clan_cli.errors import ClanError
 def sanitize_string(s: str) -> str:
     # Using the native string sanitizer to handle all edge cases
     # Remove the outer quotes '"string"'
-    return json.dumps(s)[1:-1]
+    # return json.dumps(s)[1:-1]
+    return s
 
 
 def dataclass_to_dict(obj: Any, *, use_alias: bool = True) -> Any:
