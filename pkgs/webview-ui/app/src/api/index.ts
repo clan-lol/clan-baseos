@@ -150,14 +150,13 @@ export const callApi = <K extends OperationNames>(
 
 const deserialize =
   <T>(fn: (response: T) => void) =>
-  (str: string) => {
+  (r: unknown) => {
     try {
-      const r = JSON.parse(str) as T;
-      fn(r);
+      fn(r as T);
     } catch (e) {
-      console.log("Error parsing JSON: ", e);
-      window.localStorage.setItem("error", str);
-      console.error(str);
+      console.error("Error parsing JSON: ", e);
+      window.localStorage.setItem("error", JSON.stringify(r));
+      console.error(r);
       console.error("See localStorage 'error'");
       alert(`Error parsing JSON: ${e}`);
     }

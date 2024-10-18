@@ -11,27 +11,25 @@ from clan_cli.api import (
 def test_sanitize_string() -> None:
     # Simple strings
     assert sanitize_string("Hello World") == "Hello World"
-    assert sanitize_string("Hello\nWorld") == "Hello\\nWorld"
-    assert sanitize_string("Hello\tWorld") == "Hello\\tWorld"
-    assert sanitize_string("Hello\rWorld") == "Hello\\rWorld"
-    assert sanitize_string("Hello\fWorld") == "Hello\\fWorld"
-    assert sanitize_string("Hello\vWorld") == "Hello\\u000bWorld"
-    assert sanitize_string("Hello\bWorld") == "Hello\\bWorld"
-    assert sanitize_string("Hello\\World") == "Hello\\\\World"
-    assert sanitize_string('Hello"World') == 'Hello\\"World'
+    assert sanitize_string("Hello\nWorld") == "Hello\nWorld"
+    assert sanitize_string("Hello\tWorld") == "Hello\tWorld"
+    assert sanitize_string("Hello\rWorld") == "Hello\rWorld"
+    assert sanitize_string("Hello\fWorld") == "Hello\fWorld"
+    assert sanitize_string("Hello\vWorld") == "Hello\u000bWorld"
+    assert sanitize_string("Hello\bWorld") == "Hello\bWorld"
+    assert sanitize_string("Hello\\World") == "Hello\\World"
+    assert sanitize_string('Hello"World') == 'Hello"World'
     assert sanitize_string("Hello'World") == "Hello'World"
-    assert sanitize_string("Hello\0World") == "Hello\\u0000World"
+    assert sanitize_string("Hello\0World") == "Hello\x00World"
     # Console escape characters
 
-    assert sanitize_string("\033[1mBold\033[0m") == "\\u001b[1mBold\\u001b[0m"  # Red
-    assert sanitize_string("\033[31mRed\033[0m") == "\\u001b[31mRed\\u001b[0m"  # Blue
-    assert (
-        sanitize_string("\033[42mGreen\033[0m") == "\\u001b[42mGreen\\u001b[0m"
-    )  # Green
-    assert sanitize_string("\033[4mUnderline\033[0m") == "\\u001b[4mUnderline\\u001b[0m"
+    assert sanitize_string("\033[1mBold\033[0m") == "\033[1mBold\033[0m"  # Red
+    assert sanitize_string("\033[31mRed\033[0m") == "\033[31mRed\033[0m"  # Blue
+    assert sanitize_string("\033[42mGreen\033[0m") == "\033[42mGreen\033[0m"  # Green
+    assert sanitize_string("\033[4mUnderline\033[0m") == "\033[4mUnderline\033[0m"
     assert (
         sanitize_string("\033[91m\033[1mBold Red\033[0m")
-        == "\\u001b[91m\\u001b[1mBold Red\\u001b[0m"
+        == "\033[91m\033[1mBold Red\033[0m"
     )
 
 
