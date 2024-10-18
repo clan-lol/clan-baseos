@@ -42,6 +42,7 @@
     "@solidjs/router": "^0.14.2",
     "@tanstack/eslint-plugin-query": "^5.51.12",
     "@tanstack/solid-query": "^5.51.2",
+    "@types/json-schema": "^7.0.15",
     "material-icons": "^1.13.12",
     "nanoid": "^5.0.7",
     "solid-js": "^1.8.11",
