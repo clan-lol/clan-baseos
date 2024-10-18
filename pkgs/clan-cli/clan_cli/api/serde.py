@@ -30,7 +30,6 @@ Note: This module assumes the presence of other modules and classes such as `Cla
 """
 
 import dataclasses
-import json
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
 from pathlib import Path
@@ -162,7 +161,7 @@ def construct_value(
             msg = f"Expected string, got {field_value}"
             raise ClanError(msg, location=f"{loc}")
 
-        return json.loads(f'"{field_value}"')
+        return field_value
 
     if t is int and not isinstance(field_value, str):
         return int(field_value)  # type: ignore
