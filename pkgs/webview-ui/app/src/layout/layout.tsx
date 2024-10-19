@@ -1,6 +1,7 @@
 import { Component, createEffect, Show } from "solid-js";
 import { Header } from "./header";
 import { Sidebar } from "../Sidebar";
+import {Sidebar as SidebarUpdate} from "@/src/components/Sidebar"
 import { activeURI, clanList } from "../App";
 import { redirect, RouteSectionProps, useNavigate } from "@solidjs/router";
 
@@ -16,6 +17,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
       navigate("/welcome");
     }
   });
+
   return (
     <div class="h-screen bg-base-100 p-4">
       <div class="drawer lg:drawer-open ">
@@ -42,6 +44,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
             aria-label="close sidebar"
             class="drawer-overlay"
           ></label>
+          <SidebarUpdate/>
           <Sidebar {...props} />
         </div>
       </div>

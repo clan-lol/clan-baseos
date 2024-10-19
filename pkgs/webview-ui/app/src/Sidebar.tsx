@@ -19,7 +19,7 @@ export const Sidebar = (props: RouteSectionProps) => {
   }));
 
   return (
-    <aside class="w-80 rounded-xl border border-slate-900 bg-slate-800  pb-10">
+    <aside class="w-80 rounded-xl border border-slate-900 bg-slate-800 pb-10">
       <div class="m-4 flex flex-col text-center capitalize text-white">
         <span class="text-lg">{clanQuery.data?.name}</span>
         <span class="text-sm">{clanQuery.data?.description}</span>

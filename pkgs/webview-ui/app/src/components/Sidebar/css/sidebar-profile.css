@@ -1,0 +1,11 @@
+.sidebar__profile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: theme(width.8);
+    height: theme(height.8);
+
+    background: rgb(var(--clr-bg-inv-4));
+    border-radius: 50%;
+}

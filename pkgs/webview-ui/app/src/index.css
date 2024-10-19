@@ -1,3 +1,4 @@
+
 @import "material-icons/iconfont/filled.css";
 /* List of icons: https://marella.me/material-icons/demo/ */
 
@@ -20,6 +21,46 @@
   font-weight: 600;
   src: url(../.fonts/Archiv0-Bold.otf) format("opentype");
 }
+
+:root {
+  --clr-bg-def-1: theme(colors.white);
+  --clr-bg-def-2: theme(colors.clan-secondary.50);
+  --clr-bg-def-3: theme(colors.clan-secondary.100);
+  --clr-bg-def-4: theme(colors.clan-secondary.200);
+  --clr-bg-def-5: theme(colors.clan-secondary.300);
+
+  --clr-border-def-1: theme(colors.clan-primary.50);
+  --clr-border-def-2: theme(colors.clan-primary.100);
+  --clr-border-def-3: theme(colors.clan-primary.200);
+  --clr-border-def-4: theme(colors.clan-primary.300);
+  --clr-border-def-5: theme(colors.clan-primary.400);
+
+  --clr-bg-inv-1: theme(colors.clan-primary.600);
+  --clr-bg-inv-2: theme(colors.clan-primary.700);
+  --clr-bg-inv-3: theme(colors.clan-primary.800);
+  --clr-bg-inv-4: theme(colors.clan-primary.900);
+  --clr-bg-inv-5: theme(colors.clan-primary.950);
+
+  --clr-border-inv-1: theme(colors.clan-primary.800);
+  --clr-border-inv-2: theme(colors.clan-primary.900);
+  --clr-border-inv-3: theme(colors.clan-primary.900);
+  --clr-border-inv-4: theme(colors.clan-primary.950);
+  --clr-border-inv-5: theme(colors.black);
+
+  --clr-bg-inv-acc-1: theme(colors.clan-secondary.500);
+  --clr-bg-inv-acc-2: theme(colors.clan-secondary.600);
+  --clr-bg-inv-acc-3: theme(colors.clan-secondary.700);
+
+  --clr-fg-def-1: theme(colors.clan-secondary.950);
+  --clr-fg-def-2: theme(colors.clan-secondary.900);
+  --clr-fg-def-3: theme(colors.clan-secondary.700);
+  --clr-fg-def-4: theme(colors.clan-secondary.500);
+
+  --clr-fg-inv-1: theme(colors.white);
+  --clr-fg-inv-2: theme(colors.clan-secondary.100);
+  --clr-fg-inv-3: theme(colors.clan-secondary.300);
+  --clr-fg-inv-4: theme(colors.clan-secondary.400);
+} 
 
 html {
   @apply font-sans;

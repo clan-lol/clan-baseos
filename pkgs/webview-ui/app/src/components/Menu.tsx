@@ -1,4 +1,4 @@
-import { children, Component, createSignal, type JSX } from "solid-js";
+import { children, createSignal, type JSX } from "solid-js";
 import { useFloating } from "@/src/floating";
 import {
   autoUpdate,

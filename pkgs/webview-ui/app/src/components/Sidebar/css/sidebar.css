@@ -1,0 +1,27 @@
+/* Sidebar Elements */
+
+@import './sidebar-header';
+@import './sidebar-flyout';
+@import './sidebar-list-item';
+@import './sidebar-profile';
+
+/* Sidebar Structure */
+
+.sidebar {
+    background-color: rgb(var(--clr-bg-inv-2));
+    border: 1px solid rgb(var(--clr-border-inv-2)); 
+    border-radius: theme(borderRadius.xl);
+}
+
+.sidebar__body {
+    display: flex;
+    flex-direction: column;
+    gap: theme(padding.2);
+    padding: theme(padding.4) theme(padding.2);
+}
+
+.sidebar__section {
+    padding: theme(padding.2);
+    background-color: rgba(var(--clr-bg-inv-3)/0.9);
+    border-radius: theme(borderRadius.md);
+}
