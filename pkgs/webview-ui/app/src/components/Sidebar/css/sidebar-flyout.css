@@ -14,8 +14,7 @@
     height: inherit;
     
     padding: theme(padding.12) theme(padding.3) theme(padding.3);
-    background-color: rgba(var(--clr-bg-inv-4)/0.90);
-    border: 1px solid var(--clr-border-inv-4);
-
+    background-color: rgba(var(--clr-bg-inv-4)/0.95);
+    border: 1px solid rgb(var(--clr-border-inv-4));
     border-radius: theme(borderRadius.lg);
 }

@@ -9,3 +9,7 @@
     background: rgb(var(--clr-bg-inv-4));
     border-radius: 50%;
 }
+
+.sidebar__profile--flyout{
+    background: rgb(var(--clr-bg-def-2));
+}

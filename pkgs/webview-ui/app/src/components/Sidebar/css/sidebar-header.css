@@ -1,15 +1,20 @@
 .sidebar__header {
     position: relative;
     padding: 1px 1px 0;
+    cursor: pointer;
     
 
     &:after {
         content: '';
         position: absolute;
+        top: 0;
+        left: 0;
 
         width: 100%;
         height: 100%;
         background: rgb(var(--clr-bg-inv-3));
+        
+        border-bottom: 1px solid var(--clr-border-inv-3);
         border-top-left-radius: theme(borderRadius.xl);
         border-top-right-radius: theme(borderRadius.xl);
     }

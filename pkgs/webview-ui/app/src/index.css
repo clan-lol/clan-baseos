@@ -29,11 +29,11 @@
   --clr-bg-def-4: theme(colors.clan-secondary.200);
   --clr-bg-def-5: theme(colors.clan-secondary.300);
 
-  --clr-border-def-1: theme(colors.clan-primary.50);
-  --clr-border-def-2: theme(colors.clan-primary.100);
-  --clr-border-def-3: theme(colors.clan-primary.200);
-  --clr-border-def-4: theme(colors.clan-primary.300);
-  --clr-border-def-5: theme(colors.clan-primary.400);
+  --clr-border-def-1: theme(colors.clan-secondary.50);
+  --clr-border-def-2: theme(colors.clan-secondary.100);
+  --clr-border-def-3: theme(colors.clan-secondary.200);
+  --clr-border-def-4: theme(colors.clan-secondary.300);
+  --clr-border-def-5: theme(colors.clan-secondary.400);
 
   --clr-bg-inv-1: theme(colors.clan-primary.600);
   --clr-bg-inv-2: theme(colors.clan-primary.700);
@@ -41,10 +41,10 @@
   --clr-bg-inv-4: theme(colors.clan-primary.900);
   --clr-bg-inv-5: theme(colors.clan-primary.950);
 
-  --clr-border-inv-1: theme(colors.clan-primary.800);
-  --clr-border-inv-2: theme(colors.clan-primary.900);
-  --clr-border-inv-3: theme(colors.clan-primary.900);
-  --clr-border-inv-4: theme(colors.clan-primary.950);
+  --clr-border-inv-1: theme(colors.clan-secondary.800);
+  --clr-border-inv-2: theme(colors.clan-secondary.900);
+  --clr-border-inv-3: theme(colors.clan-secondary.900);
+  --clr-border-inv-4: theme(colors.clan-secondary.950);
   --clr-border-inv-5: theme(colors.black);
 
   --clr-bg-inv-acc-1: theme(colors.clan-secondary.500);
