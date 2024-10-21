@@ -1,0 +1,27 @@
+@import './typography-hierarchy/';
+@import './typography-color.css';
+
+.fnt-weight-normal {
+    font-weight: normal;
+}
+
+.fnt-weight-medium {
+    font-weight: medium;
+}
+
+.fnt-weight-bold {
+    font-weight: bold;
+}
+
+
+.fnt-weight-normal.fnt-clr--inverted {
+    font-weight: light;
+}
+
+.fnt-weight-medium.fnt-clr--inverted {
+    font-weight: normal;
+}
+
+.fnt-weight-bold.fnt-clr--inverted {
+    font-weight: 600;
+}

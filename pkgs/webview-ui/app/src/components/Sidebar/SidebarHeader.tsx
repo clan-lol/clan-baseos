@@ -1,10 +1,17 @@
 import {SidebarFlyout} from './SidebarFlyout'
+import {Typography} from '@/src/components/Typography'
 
-export const SidebarHeader = ()=>{
+interface SidebarHeader {
+    clanName?: string
+}
+
+export const SidebarHeader = (props:SidebarHeader)=>{
+    const {clanName} = props
+    
     return <header class="sidebar__header">
         <div class="sidebar__header__inner">
             <div class="sidebar__profile">P</div>
-            <h3 class="sidebar__title">Paul's Clan</h3>
+            <Typography classes='sidebar__title' tag='h3' hierarchy='body' size='default' weight='medium' color='primary' inverted={true}>{clanName || 'Untitled'}</Typography>
         </div>
         <SidebarFlyout/>
     </header>
