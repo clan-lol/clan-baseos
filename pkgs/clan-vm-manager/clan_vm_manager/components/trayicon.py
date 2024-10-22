@@ -531,12 +531,12 @@ class StatusNotifierImplementation(BaseImplementation):
             ):
                 self.add_method(method_name, in_args, out_args, callback)
 
-            for signal_name, value in (
+            for signal_name, signal_value in (
                 ("NewIcon", ()),
                 ("NewIconThemePath", ("s",)),
                 ("NewStatus", ("s",)),
             ):
-                self.add_signal(signal_name, value)
+                self.add_signal(signal_name, signal_value)
 
         def register(self):
             self.menu.register()
