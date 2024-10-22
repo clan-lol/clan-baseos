@@ -26,8 +26,7 @@ let
 
   # Exclude the option if its type is in the excludedTypes list
   # or if the option has a defaultText attribute
-  isExcludedOption =
-    option: ((lib.elem (option.type.name or null) excludedTypes) || (option ? defaultText));
+  isExcludedOption = option: (lib.elem (option.type.name or null) excludedTypes);
 
   filterExcluded = lib.filter (opt: !isExcludedOption opt);
 
@@ -57,6 +56,24 @@ rec {
       };
     in
     parseOptions evaled.options { };
+
+  # get default value from option
+
+  # Returns '{ default = Value; }'
+  # - '{}' if no default is present.
+  # - Value is "<thunk>" (string literal) if the option has a defaultText attribute. This means we cannot evaluate default safely
+  getDefaultFrom =
+    opt:
+    if !includeDefaults then
+      { }
+    else if opt ? defaultText then
+      {
+        default = "<thunk>";
+      }
+    else
+      lib.optionalAttrs (opt ? default) {
+        default = opt.default;
+      };
 
   parseOptions' = lib.flip parseOptions { addHeader = false; };
 
@@ -92,7 +109,7 @@ rec {
   parseOption =
     option:
     let
-      default = lib.optionalAttrs (option ? default && includeDefaults) { inherit (option) default; };
+      default = getDefaultFrom option;
       example = lib.optionalAttrs (option ? example) {
         examples =
           if (builtins.typeOf option.example) == "list" then option.example else [ option.example ];
