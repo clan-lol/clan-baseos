@@ -16,6 +16,7 @@
   runCommand,
   setuptools,
   stdenv,
+  nixVersions,
 
   # custom args
   clan-core-path,
@@ -67,24 +68,33 @@ let
   '';
 
   # Create a custom nixpkgs for use within the project
-  nixpkgs' = runCommand "nixpkgs" { nativeBuildInputs = [ nix ]; } ''
-    mkdir $out
-    cat > $out/flake.nix << EOF
-    {
-      description = "dependencies for the clan-cli";
 
-      inputs = {
-        nixpkgs.url = "path://${nixpkgs}";
-      };
+  nixpkgs' =
+    runCommand "nixpkgs"
+      {
+        nativeBuildInputs = [
+          # old nix version doesn't support --flake flag
+          (if lib.versionAtLeast nix.version "2.24" then nix else nixVersions.latest)
+        ];
+      }
+      ''
+        mkdir $out
+        cat > $out/flake.nix << EOF
+        {
+          description = "dependencies for the clan-cli";
 
-      outputs = _inputs: { };
-    }
-    EOF
-    ln -sf ${nixpkgs} $out/path
-    nix flake update $out \
-      --store ./. \
-      --extra-experimental-features 'nix-command flakes'
-  '';
+          inputs = {
+            nixpkgs.url = "path://${nixpkgs}";
+          };
+
+          outputs = _inputs: { };
+        }
+        EOF
+        ln -sf ${nixpkgs} $out/path
+        HOME=$TMPDIR nix flake update --flake $out \
+          --store ./. \
+          --extra-experimental-features 'nix-command flakes'
+      '';
 in
 python3.pkgs.buildPythonApplication {
   name = "clan-cli";
