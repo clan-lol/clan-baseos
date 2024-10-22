@@ -25,7 +25,7 @@ writeShellScriptBin "deploy-docs" ''
   tmpdir=$(mktemp -d)
   trap "rm -rf $tmpdir" EXIT
 
-  if [ -n "$SSH_HOMEPAGE_KEY" ]; then
+  if [ -n "''${SSH_HOMEPAGE_KEY-}" ]; then
     echo "$SSH_HOMEPAGE_KEY" > "$tmpdir/ssh_key"
     chmod 600 "$tmpdir/ssh_key"
     sshExtraArgs="-i $tmpdir/ssh_key"
@@ -40,6 +40,7 @@ writeShellScriptBin "deploy-docs" ''
   ###########################
 
   rsync \
+    --checksum \
     -e "ssh -o StrictHostKeyChecking=no $sshExtraArgs" \
     -a ${docs}/ \
     www@clan.lol:/var/www/docs.clan.lol
