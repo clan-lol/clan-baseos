@@ -15,6 +15,8 @@ import { Flash } from "./routes/flash/view";
 import { HostList } from "./routes/hosts/view";
 import { Welcome } from "./routes/welcome";
 import { Toaster } from "solid-toast";
+import { ModuleList } from "./routes/modules/list";
+import { ModuleDetails } from "./routes/modules/details";
 
 export const client = new QueryClient();
 
@@ -85,6 +87,24 @@ export const routes: AppRoute[] = [
         label: "Details",
         hidden: true,
         component: () => <ClanDetails />,
+      },
+    ],
+  },
+  {
+    path: "/modules",
+    label: "Modules",
+    icon: "apps",
+    children: [
+      {
+        path: "/",
+        label: "App Store",
+        component: () => <ModuleList />,
+      },
+      {
+        path: "/:id",
+        label: "Details",
+        hidden: true,
+        component: () => <ModuleDetails />,
       },
     ],
   },

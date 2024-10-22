@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
 import gi
@@ -9,7 +10,7 @@ from clan_app.api import GObjApi, GResult, ImplFunc
 from clan_app.api.file import open_file
 
 gi.require_version("WebKit", "6.0")
-from gi.repository import GLib, GObject, WebKit
+from gi.repository import Gio, GLib, GObject, WebKit
 
 log = logging.getLogger(__name__)
 
@@ -122,21 +123,46 @@ class WebExecutor(GObject.Object):
 
     def on_result(self, source: ImplFunc, data: GResult) -> None:
         result = dataclass_to_dict(data.result)
-        serialized = json.dumps(result, indent=4)
+        # Important:
+        # 2. ensure_ascii = False. non-ASCII characters are correctly handled, instead of being escaped.
+        serialized = json.dumps(result, indent=4, ensure_ascii=False)
         log.debug(f"Result for {data.method_name}: {serialized}")
 
         # Use idle_add to queue the response call to js on the main GTK thread
         self.return_data_to_js(data.method_name, serialized)
 
     def return_data_to_js(self, method_name: str, serialized: str) -> bool:
+        js = f"""
+        window.clan.{method_name}({serialized});
+        """
+
+        def dump_failed_code() -> None:
+            tmp_file = Path("/tmp/clan-pyjs-bridge-error.js")
+            with tmp_file.open("w") as f:
+                f.write(js)
+            log.debug(f"Failed code dumped in JS file: {tmp_file}")
+
+        # Error handling if the JavaScript evaluation fails
+        def on_js_evaluation_finished(
+            webview: WebKit.WebView, task: Gio.AsyncResult
+        ) -> None:
+            try:
+                # Get the result of the JavaScript evaluation
+                value = webview.evaluate_javascript_finish(task)
+                if not value:
+                    log.exception("No value returned")
+                    dump_failed_code()
+            except GLib.Error:
+                log.exception("Error evaluating JS")
+                dump_failed_code()
+
         self.webview.evaluate_javascript(
-            f"""
-            window.clan.{method_name}(`{serialized}`);
-            """,
+            js,
             -1,
             None,
             None,
             None,
+            on_js_evaluation_finished,
         )
         return GLib.SOURCE_REMOVE
 

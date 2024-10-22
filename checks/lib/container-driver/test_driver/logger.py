@@ -241,7 +241,7 @@ class TerminalLogger(AbstractLogger):
 
 class XMLLogger(AbstractLogger):
     def __init__(self, outfile: str) -> None:
-        self.logfile_handle = codecs.open(outfile, "wb")
+        self.logfile_handle = codecs.open(outfile, "wb")  # noqa: SIM115
         self.xml = XMLGenerator(self.logfile_handle, encoding="utf-8")
         self.queue: Queue[dict[str, str]] = Queue()
 

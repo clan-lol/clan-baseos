@@ -6,7 +6,7 @@ import { A, RouteSectionProps } from "@solidjs/router";
 import { AppRoute, routes } from "./index";
 
 export const Sidebar = (props: RouteSectionProps) => {
-  const query = createQuery(() => ({
+  const clanQuery = createQuery(() => ({
     queryKey: [activeURI(), "meta"],
     queryFn: async () => {
       const curr = activeURI();
@@ -21,8 +21,8 @@ export const Sidebar = (props: RouteSectionProps) => {
   return (
     <aside class="w-80 rounded-xl border border-slate-900 bg-slate-800  pb-10">
       <div class="m-4 flex flex-col text-center capitalize text-white">
-        <span class="text-lg">{query.data?.name}</span>
-        <span class="text-sm">{query.data?.description}</span>
+        <span class="text-lg">{clanQuery.data?.name}</span>
+        <span class="text-sm">{clanQuery.data?.description}</span>
         <RouteMenu class="menu px-4 py-2" routes={routes} />
       </div>
     </aside>

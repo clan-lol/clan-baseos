@@ -134,9 +134,10 @@ def get_roles(module_path: Path) -> None | list[str]:
 @dataclass
 class ModuleInfo:
     description: str
-    categories: list[str] | None
+    readme: str
+    categories: list[str]
     roles: list[str] | None
-    readme: str | None = None
+    features: list[str] = field(default_factory=list)
 
 
 def get_modules(base_path: str) -> dict[str, str]:
@@ -179,7 +180,7 @@ def get_module_info(
     """
     Retrieves information about a module
     """
-    if not module_path:
+    if not module_path.exists():
         msg = "Module not found"
         raise ClanError(
             msg,
@@ -205,6 +206,7 @@ def get_module_info(
         categories=frontmatter.categories,
         roles=get_roles(module_path),
         readme=readme_content,
+        features=["inventory"] if has_inventory_feature(module_path) else [],
     )
 
 

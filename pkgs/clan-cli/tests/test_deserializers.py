@@ -217,8 +217,8 @@ def test_none_or_string() -> None:
 
 
 def test_roundtrip_escape() -> None:
-    assert from_dict(str, "\\n") == "\n"
-    assert dataclass_to_dict("\n") == "\\n"
+    assert from_dict(str, "\n") == "\n"
+    assert dataclass_to_dict("\n") == "\n"
 
     # Test that the functions are inverses of each other
     # f(g(x)) == x
