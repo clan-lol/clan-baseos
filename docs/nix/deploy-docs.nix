@@ -22,11 +22,13 @@ writeShellScriptBin "deploy-docs" ''
   # DO NOT PRINT THE SSH KEY TO THE LOGS  #
   #                                       #
   #########################################
-  set +x
-  if [ -n "''${SSH_HOMEPAGE_KEY:-}" ]; then
-    echo "$SSH_HOMEPAGE_KEY" > ./ssh_key
-    chmod 600 ./ssh_key
-    sshExtraArgs="-i ./ssh_key"
+  tmpdir=$(mktemp -d)
+  trap "rm -rf $tmpdir" EXIT
+
+  if [ -n "$SSH_HOMEPAGE_KEY" ]; then
+    echo "$SSH_HOMEPAGE_KEY" > "$tmpdir/ssh_key"
+    chmod 600 "$tmpdir/ssh_key"
+    sshExtraArgs="-i $tmpdir/ssh_key"
   else
     sshExtraArgs=
   fi
@@ -36,7 +38,6 @@ writeShellScriptBin "deploy-docs" ''
   #    END OF DANGER ZONE   #
   #                         #
   ###########################
-
 
   rsync \
     -e "ssh -o StrictHostKeyChecking=no $sshExtraArgs" \
