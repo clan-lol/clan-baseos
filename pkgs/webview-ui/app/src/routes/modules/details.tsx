@@ -1,14 +1,22 @@
-import { callApi, SuccessData } from "@/src/api";
+import { callApi } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { createModulesQuery } from "@/src/queries";
 import { useParams } from "@solidjs/router";
-import { createEffect, For, Match, Show, Switch } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  For,
+  JSX,
+  Match,
+  Show,
+  Switch,
+} from "solid-js";
 import { SolidMarkdown } from "solid-markdown";
 import toast from "solid-toast";
 import { ModuleInfo } from "./list";
 import { createQuery } from "@tanstack/solid-query";
-import { JSONSchema4 } from "json-schema";
+import { JSONSchema7 } from "json-schema";
 import { TextInput } from "@/src/components/TextInput";
 import {
   createForm,
@@ -53,7 +61,6 @@ function deepMerge(
       }
     }
   }
-
   return result;
 }
 
@@ -118,9 +125,9 @@ const Details = (props: DetailsProps) => {
   );
 };
 
-type ModuleSchemasType = Record<string, Record<string, JSONSchema4>>;
+type ModuleSchemasType = Record<string, Record<string, JSONSchema7>>;
 
-const Unsupported = (props: { schema: JSONSchema4; what: string }) => (
+const Unsupported = (props: { schema: JSONSchema7; what: string }) => (
   <div>
     Cannot render {props.what}
     <pre>
@@ -138,7 +145,7 @@ function removeTrailingS(str: string) {
 }
 interface SchemaFormProps {
   title: string;
-  schema: JSONSchema4;
+  schema: JSONSchema7;
   path: string[];
 }
 
@@ -167,6 +174,14 @@ export const ModuleForm = (props: { id: string }) => {
   ) => {
     console.log("Submitted form values", values);
   };
+
+  const [newKey, setNewKey] = createSignal<string>("");
+
+  const handleChangeKey: JSX.ChangeEventHandler<HTMLInputElement, Event> = (
+    e,
+  ) => {
+    setNewKey(e.currentTarget.value);
+  };
   const SchemaForm = (props: SchemaFormProps) => {
     return (
       <div>
@@ -185,11 +200,17 @@ export const ModuleForm = (props: { id: string }) => {
                 {(properties) => (
                   <For each={Object.entries(properties())}>
                     {([key, value]) => (
-                      <SchemaForm
-                        title={key}
-                        schema={value}
-                        path={[...props.path, key]}
-                      />
+                      <Switch fallback={`Cannot render sub-schema of ${value}`}>
+                        <Match when={typeof value === "object" && value}>
+                          {(sub) => (
+                            <SchemaForm
+                              title={key}
+                              schema={sub()}
+                              path={[...props.path, key]}
+                            />
+                          )}
+                        </Match>
+                      </Switch>
                     )}
                   </For>
                 )}
@@ -229,19 +250,44 @@ export const ModuleForm = (props: { id: string }) => {
                               )}
                             </For>
                           </Show>
+                          <input
+                            value={newKey()}
+                            onChange={handleChangeKey}
+                            type={"text"}
+                            placeholder={`Name of ${removeTrailingS(props.title)}`}
+                            required
+                          />
                           <button
                             class="btn btn-ghost"
                             onClick={(e) => {
                               e.preventDefault();
                               const value = getValue(formStore, props.title);
-                              setValue(formStore, props.title, {
-                                // @ts-expect-error: TODO: check to be an object
-                                ...value,
-                                foo: {},
-                              });
+                              if (!newKey()) return;
+
+                              if (value === undefined) {
+                                setValue(formStore, props.title, {
+                                  [newKey()]: {},
+                                });
+                                setNewKey("");
+                              } else if (
+                                typeof value === "object" &&
+                                value !== null &&
+                                !(newKey() in value)
+                              ) {
+                                setValue(formStore, props.title, {
+                                  ...value,
+                                  [newKey()]: {},
+                                });
+                                setNewKey("");
+                              } else {
+                                console.debug(
+                                  "Unsupported key value pair. (attrsOf t)",
+                                  { value },
+                                );
+                              }
                             }}
                           >
-                            Add
+                            Add new {removeTrailingS(props.title)}
                           </button>
                         </>
                       )}
@@ -264,7 +310,12 @@ export const ModuleForm = (props: { id: string }) => {
                   label={props.title}
                   // @ts-expect-error: It is a string, otherwise the json schema would be invalid
                   value={field.value ?? ""}
+                  placeholder={`${props.schema.default || ""}`.replace(
+                    "\u2039name\u203a",
+                    `${props.path.at(-2)}`,
+                  )}
                   error={field.error}
+                  required={!props.schema.default}
                 />
               )}
             </Field>
