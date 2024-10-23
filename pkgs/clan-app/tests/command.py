@@ -49,6 +49,7 @@ class Command:
         for p in reversed(self.processes):
             with contextlib.suppress(OSError):
                 os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+                p.wait()
 
 
 @pytest.fixture
