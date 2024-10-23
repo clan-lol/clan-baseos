@@ -30,7 +30,7 @@ def pause_automounting(devices: list[Path]) -> Generator[None, None, None]:
 
     str_devs = [str(dev) for dev in devices]
     cmd = ["sudo", str(inhibit_path), "enable", *str_devs]
-    result = run(cmd, log=Log.BOTH, check=False)
+    result = run(cmd, log=Log.BOTH, check=False, needs_user_terminal=True)
     if result.returncode != 0:
         log.error("Failed to inhibit automounting")
     yield None
