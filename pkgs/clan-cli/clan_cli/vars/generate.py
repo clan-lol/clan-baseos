@@ -58,7 +58,6 @@ def decrypt_dependencies(
     generator_name: str,
     secret_vars_store: SecretStoreBase,
     public_vars_store: FactStoreBase,
-    shared: bool,
 ) -> dict[str, dict[str, bytes]]:
     generator = machine.vars_generators[generator_name]
     dependencies = set(generator["dependencies"])
@@ -66,6 +65,7 @@ def decrypt_dependencies(
     for dep_generator in dependencies:
         decrypted_dependencies[dep_generator] = {}
         dep_files = machine.vars_generators[dep_generator]["files"]
+        shared = machine.vars_generators[dep_generator]["share"]
         for file_name, file in dep_files.items():
             if file["secret"]:
                 decrypted_dependencies[dep_generator][file_name] = (
@@ -110,7 +110,10 @@ def execute_generator(
 
     # build temporary file tree of dependencies
     decrypted_dependencies = decrypt_dependencies(
-        machine, generator_name, secret_vars_store, public_vars_store, shared=is_shared
+        machine,
+        generator_name,
+        secret_vars_store,
+        public_vars_store,
     )
 
     def get_prompt_value(prompt_name: str) -> str:
