@@ -126,6 +126,7 @@ def sshd(
                     str(port),
                     "true",
                 ],
+                check=False,
             ).returncode
             == 0
         ):

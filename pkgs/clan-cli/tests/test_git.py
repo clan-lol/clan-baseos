@@ -46,8 +46,8 @@ def test_clan_flake_in_subdir(git_repo: Path, monkeypatch: pytest.MonkeyPatch) -
     # change to the clan_flake subdirectory
     monkeypatch.chdir(git_repo / "clan_flake")
     # commit files to git
-    subprocess.run(["git", "add", "."], cwd=git_repo)
-    subprocess.run(["git", "commit", "-m", "init"], cwd=git_repo)
+    subprocess.run(["git", "add", "."], cwd=git_repo, check=True)
+    subprocess.run(["git", "commit", "-m", "init"], cwd=git_repo, check=True)
     # add a new file under ./clan_flake
     (git_repo / "clan_flake" / "test.txt").touch()
     # commit the file

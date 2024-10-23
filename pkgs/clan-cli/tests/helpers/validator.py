@@ -9,7 +9,11 @@ class Error(Exception):
 def is_valid_age_key(secret_key: str) -> bool:
     # Run the age-keygen command with the -y flag to check the key format
     result = subprocess.run(
-        ["age-keygen", "-y"], input=secret_key, capture_output=True, text=True
+        ["age-keygen", "-y"],
+        input=secret_key,
+        capture_output=True,
+        text=True,
+        check=False,
     )
 
     if result.returncode == 0:
@@ -25,7 +29,10 @@ def is_valid_ssh_key(secret_key: str, ssh_pub: str) -> bool:
         temp.flush()
         # Run the ssh-keygen command with the -y flag to check the key format
         result = subprocess.run(
-            ["ssh-keygen", "-y", "-f", temp.name], capture_output=True, text=True
+            ["ssh-keygen", "-y", "-f", temp.name],
+            capture_output=True,
+            text=True,
+            check=False,
         )
 
         if result.returncode == 0:

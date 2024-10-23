@@ -62,6 +62,7 @@ class SecretStore(SecretStoreBase):
                     ],
                 ),
                 stdout=subprocess.PIPE,
+                check=False,
             ).stdout.strip()
         )
         for symlink in Path(password_store).glob(f"machines/{self.machine.name}/**/*"):
@@ -81,6 +82,7 @@ class SecretStore(SecretStoreBase):
                             ],
                         ),
                         stdout=subprocess.PIPE,
+                        check=False,
                     ).stdout.strip()
                 )
 

@@ -25,4 +25,4 @@ cmd = [
 
 print("Running:", shlex.join(cmd))
 
-subprocess.run(cmd)
+subprocess.run(cmd, check=True)

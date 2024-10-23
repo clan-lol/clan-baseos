@@ -51,7 +51,7 @@ def ssh(
         cmd_args.insert(0, "torify")
 
     cmd = nix_shell(packages, cmd_args)
-    subprocess.run(cmd)
+    subprocess.run(cmd, check=True)
 
 
 def qrcode_scan(picture_file: str) -> str:

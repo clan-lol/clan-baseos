@@ -88,6 +88,7 @@ class SecretStore(SecretStoreBase):
                     ],
                 ),
                 stdout=subprocess.PIPE,
+                check=False,
             ).stdout.strip()
         )
         shared_dir = Path(self._password_store_dir) / self.entry_prefix / "shared"
@@ -114,6 +115,7 @@ class SecretStore(SecretStoreBase):
                             ],
                         ),
                         stdout=subprocess.PIPE,
+                        check=False,
                     ).stdout.strip()
                 )
 

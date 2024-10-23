@@ -45,6 +45,7 @@ def list_devshells() -> list[str]:
             f"{project_root}#devShells.x86_64-linux",
         ],
         stdout=subprocess.PIPE,
+        check=True,
     )
     names = json.loads(flake_show.stdout.decode())
     return names
