@@ -152,4 +152,9 @@ def flash_machine(
                 ["nixpkgs#disko"],
                 disko_install,
             )
-            run(cmd, log=Log.BOTH, error_msg=f"Failed to flash {machine}")
+            run(
+                cmd,
+                log=Log.BOTH,
+                error_msg=f"Failed to flash {machine}",
+                needs_user_terminal=True,
+            )

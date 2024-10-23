@@ -134,6 +134,7 @@ def run(
     log: Log = Log.STDERR,
     check: bool = True,
     error_msg: str | None = None,
+    needs_user_terminal: bool = False,
 ) -> CmdOut:
     if cwd is None:
         cwd = Path.cwd()
@@ -153,9 +154,11 @@ def run(
             env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            start_new_session=True,
+            start_new_session=not needs_user_terminal,
         ) as process,
-        terminate_process_group(process),
+        terminate_process_group(process)
+        if not needs_user_terminal
+        else contextlib.suppress(),  # NOQA: B022
     ):
         stdout_buf, stderr_buf = handle_output(process, log)
 
