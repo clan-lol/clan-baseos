@@ -41,6 +41,7 @@ lint.select = [
   "TID",
   "TRY",
   "U",
+  "W",
   "YTT",
 ]
 lint.ignore = [

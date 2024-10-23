@@ -243,6 +243,7 @@ def test_flake(
             ["git", "diff", "--exit-code", "./sops"],
             cwd=temporary_home / "test_flake",
             stderr=sp.PIPE,
+            check=False,
         )
         if git_proc.returncode != 0:
             log.error(git_proc.stderr.decode())

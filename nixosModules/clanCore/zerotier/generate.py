@@ -167,7 +167,7 @@ def create_identity() -> Identity:
         tmpdir = Path(d)
         private = tmpdir / "identity.secret"
         public = tmpdir / "identity.public"
-        subprocess.run(["zerotier-idtool", "generate", private, public])
+        subprocess.run(["zerotier-idtool", "generate", private, public], check=True)
         return Identity(tmpdir)
 
 

@@ -24,7 +24,7 @@ def main() -> None:
         f.write(json.dumps(moon_json))
         f.flush()
         Path(moons_d).mkdir(parents=True, exist_ok=True)
-        subprocess.run(["zerotier-idtool", "genmoon", f.name], cwd=moons_d)
+        subprocess.run(["zerotier-idtool", "genmoon", f.name], cwd=moons_d, check=True)
 
 
 if __name__ == "__main__":

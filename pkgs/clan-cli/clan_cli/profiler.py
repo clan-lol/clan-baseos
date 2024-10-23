@@ -15,14 +15,14 @@ cProfile Output Columns Explanation:
 
 - ncalls: The number of calls to the function. This includes both direct and indirect (recursive) calls.
 
-- tottime: The total time spent in the given function alone, excluding time spent in calls to sub-functions. 
+- tottime: The total time spent in the given function alone, excluding time spent in calls to sub-functions.
   This measures the function's own overhead and execution time.
 
 - percall (first instance): Represents the average time spent in the function per call, calculated as tottime divided by ncalls.
   This value excludes time spent in sub-function calls, focusing on the function's own processing time.
 
-- cumtime: The cumulative time spent in this function and all the sub-functions it calls (both directly and indirectly). 
-  This includes all execution time within the function, from the start of its invocation to its return, 
+- cumtime: The cumulative time spent in this function and all the sub-functions it calls (both directly and indirectly).
+  This includes all execution time within the function, from the start of its invocation to its return,
   including all calls to other functions and the time those calls take.
 
 - percall (second instance): Represents the average time per call, including time spent in this function and in all sub-function calls.

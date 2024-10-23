@@ -60,7 +60,7 @@ Examples:
   $ clan facts list [MACHINE]
   Will list facts for the specified machine.
 
-   
+
 For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
         """
         ),
@@ -89,7 +89,7 @@ Examples:
 
   $ clan facts generate
   Will generate facts for all machines.
-   
+
   $ clan facts generate [MACHINE]
   Will generate facts for the specified machine.
 
@@ -124,7 +124,7 @@ Examples:
 
   $ clan facts upload [MACHINE]
   Will upload secrets to a specific machine.
-   
+
 For more detailed information, visit: {help_hyperlink("secrets", "https://docs.clan.lol/getting-started/secrets")}
         """
         ),
