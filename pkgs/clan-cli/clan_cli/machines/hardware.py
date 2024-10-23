@@ -157,7 +157,7 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
             *config_command,
         ],
     )
-    out = run(cmd)
+    out = run(cmd, needs_user_terminal=True)
     if out.returncode != 0:
         log.error(out)
         msg = f"Failed to inspect {opts.machine}. Address: {opts.target_host}"
