@@ -55,27 +55,6 @@
         "type": "github"
       }
     },
-    "nixos-images": {
-      "inputs": {
-        "nixos-stable": [],
-        "nixos-unstable": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1729127036,
-        "narHash": "sha256-NGLgmG+s6jY15TImq8i3GS0IuCCcNSt2McS20q9xRCs=",
-        "owner": "nix-community",
-        "repo": "nixos-images",
-        "rev": "3103f26e0631a543963c03c583f03fd42fd9d51a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "nixos-images",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1729265718,
@@ -97,7 +76,6 @@
         "disko": "disko",
         "flake-parts": "flake-parts",
         "nixos-facter-modules": "nixos-facter-modules",
-        "nixos-images": "nixos-images",
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix",
         "systems": "systems",
