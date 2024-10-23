@@ -194,6 +194,7 @@ def run_no_stdout(
     log: Log = Log.STDERR,
     check: bool = True,
     error_msg: str | None = None,
+    needs_user_terminal: bool = False,
 ) -> CmdOut:
     """
     Like run, but automatically suppresses stdout, if not in DEBUG log level.
@@ -204,4 +205,11 @@ def run_no_stdout(
     if logging.getLogger(__name__.split(".")[0]).isEnabledFor(logging.DEBUG):
         return run(cmd, env=env, log=log, check=check, error_msg=error_msg)
     log = Log.NONE
-    return run(cmd, env=env, log=log, check=check, error_msg=error_msg)
+    return run(
+        cmd,
+        env=env,
+        log=log,
+        check=check,
+        error_msg=error_msg,
+        needs_user_terminal=needs_user_terminal,
+    )

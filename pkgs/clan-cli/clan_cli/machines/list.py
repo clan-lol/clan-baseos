@@ -121,7 +121,7 @@ def check_machine_online(
         ],
     )
     try:
-        proc = run_no_stdout(cmd)
+        proc = run_no_stdout(cmd, needs_user_terminal=True)
         if proc.returncode != 0:
             return "Offline"
     except ClanCmdError:

@@ -154,7 +154,7 @@ def show_block_devices(options: BlockDeviceOptions) -> Blockdevices:
             "PATH,NAME,RM,SIZE,RO,MOUNTPOINTS,TYPE,ID-LINK",
         ],
     )
-    proc = run_no_stdout(cmd)
+    proc = run_no_stdout(cmd, needs_user_terminal=True)
     res = proc.stdout.strip()
 
     blk_info: dict[str, Any] = json.loads(res)

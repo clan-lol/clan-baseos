@@ -42,6 +42,7 @@ def upload_secrets(machine: Machine) -> None:
                 ],
             ),
             log=Log.BOTH,
+            needs_user_terminal=True,
         )
 
 
