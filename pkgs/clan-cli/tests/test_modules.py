@@ -68,7 +68,7 @@ def test_add_module_to_inventory(
             }
         )
     )
-    subprocess.run(["git", "add", "."], cwd=test_flake_with_core.path)
+    subprocess.run(["git", "add", "."], cwd=test_flake_with_core.path, check=True)
 
     inventory = load_inventory_json(base_path)
 
