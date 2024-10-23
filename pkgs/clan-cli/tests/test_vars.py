@@ -477,6 +477,37 @@ def test_share_flag(
 
 
 @pytest.mark.impure
+def test_depending_on_shared_secret_succeeds(
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+    sops_setup: SopsSetup,
+) -> None:
+    config = nested_dict()
+    shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
+    shared_generator["share"] = True
+    shared_generator["files"]["my_secret"]["secret"] = True
+    shared_generator["script"] = "echo hello > $out/my_secret"
+    dependent_generator = config["clan"]["core"]["vars"]["generators"][
+        "dependent_generator"
+    ]
+    dependent_generator["share"] = False
+    dependent_generator["files"]["my_secret"]["secret"] = True
+    dependent_generator["dependencies"] = ["shared_generator"]
+    dependent_generator["script"] = (
+        "cat $in/shared_generator/my_secret > $out/my_secret"
+    )
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
+        machine_configs={"my_machine": config},
+    )
+    monkeypatch.chdir(flake.path)
+    sops_setup.init()
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+
+
+@pytest.mark.impure
 def test_prompt_create_file(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
