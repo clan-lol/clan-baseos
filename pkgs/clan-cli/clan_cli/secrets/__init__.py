@@ -30,7 +30,10 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
     import_sops_parser = subparser.add_parser("import-sops", help="import a sops file")
     register_import_sops_parser(import_sops_parser)
 
-    parser_key = subparser.add_parser("key", help="create and show age keys")
+    parser_key = subparser.add_parser(
+        "key",
+        help="create, show, or update the key for the clan",
+    )
     register_key_parser(parser_key)
 
     register_secrets_parser(subparser)
