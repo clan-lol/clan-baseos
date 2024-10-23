@@ -33,7 +33,6 @@ in
         inventory = {
           meta.name = "test";
         };
-        pkgsForSystem = _system: { };
       };
     in
     {
