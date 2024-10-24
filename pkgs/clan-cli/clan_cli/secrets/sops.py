@@ -245,6 +245,11 @@ def maybe_get_admin_public_key() -> None | SopsKey:
         return None
 
     if len(keyring) > 1:
+        # louis@(2024-10-22):
+        #
+        # This is confusing when it shows up and you have no information
+        # about where each key is going from, could we log the discovery
+        # of each key?
         msg = (
             f"Found more than {len(keyring)} public keys in your "
             f"environment/system and cannot decide which one to "
