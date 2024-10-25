@@ -127,7 +127,7 @@ python3.pkgs.buildPythonApplication rec {
             export HOME=.home
 
             fc-cache --verbose
-            # > fc-cache succeded
+            # > fc-cache succeeded
 
             echo "Loaded the following fonts ..."
             fc-list
@@ -167,7 +167,7 @@ python3.pkgs.buildPythonApplication rec {
     export HOME=.home
 
     fc-cache --verbose
-    # > fc-cache succeded
+    # > fc-cache succeeded
 
     echo "Loaded the following fonts ..."
     fc-list

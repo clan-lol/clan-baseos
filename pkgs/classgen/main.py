@@ -143,7 +143,7 @@ def field_def_from_default_value(
         return finalize_field(
             field_types=field_types,
             default_factory="dict",
-            type_apendix=" | dict[str,Any]",
+            type_appendix=" | dict[str,Any]",
         )
     if default_value == "‹name›":
         return None
@@ -171,10 +171,10 @@ def get_field_def(
     field_types: set[str],
     default: str | None = None,
     default_factory: str | None = None,
-    type_apendix: str = "",
+    type_appendix: str = "",
 ) -> str:
     sorted_field_types = sorted(field_types)
-    serialised_types = " | ".join(sorted_field_types) + type_apendix
+    serialised_types = " | ".join(sorted_field_types) + type_appendix
     if not default and not default_factory and not field_meta:
         return f"{field_name}: {serialised_types}"
     field_init = "field("
