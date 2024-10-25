@@ -10,5 +10,5 @@ throw ''
 
   'ssh root@<hostname> nixos-generate-config --no-filesystems --show-hardware-config > hardware-configuration.nix'
 
-  And manually eplace this file with the generated "hardware-configuration.nix".
+  And manually replace this file with the generated "hardware-configuration.nix".
 ''
