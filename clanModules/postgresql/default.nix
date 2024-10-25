@@ -5,7 +5,7 @@
   ...
 }:
 let
-  createDatatbaseState =
+  createDatabaseState =
     db:
     let
       folder = "/var/backup/postgres/${db.name}";
@@ -173,7 +173,7 @@ in
     '';
 
     clan.core.state = lib.mapAttrs' (
-      _: db: lib.nameValuePair db.service (createDatatbaseState db)
+      _: db: lib.nameValuePair db.service (createDatabaseState db)
     ) config.clan.postgresql.databases;
 
     environment.systemPackages = builtins.map (
