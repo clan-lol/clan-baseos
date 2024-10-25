@@ -302,7 +302,7 @@ rec {
         additionalProperties = true;
       }
     # parse attrsOf
-    # TODO: if nested option is excluded, the parent sould be excluded too
+    # TODO: if nested option is excluded, the parent should be excluded too
     else if
       option.type.name == "attrsOf" || option.type.name == "lazyAttrsOf"
     # return jsonschema property definition for attrs

@@ -45,7 +45,7 @@ let
 
   extraModulesOption = lib.mkOption {
     description = ''
-      List of addtionally imported `.nix` expressions.
+      List of additionally imported `.nix` expressions.
 
       Supported types:
 

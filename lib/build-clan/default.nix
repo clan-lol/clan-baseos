@@ -13,7 +13,7 @@
   # This improves performance, but all nipxkgs.* options will be ignored.
   # deadnix: skip
   inventory ? { },
-  ## Sepcial inputs (not passed to the module system as config)
+  ## Special inputs (not passed to the module system as config)
   specialArgs ? { }, # Extra arguments to pass to nixosSystem i.e. useful to make self available # A set containing clan meta: name :: string, icon :: string, description :: string
   ##
   ...

@@ -99,7 +99,7 @@ in
       type = types.submodule {
         options = {
           # Those options are interfaced by the CLI
-          # We don't speficy the type here, for better performance.
+          # We don't specify the type here, for better performance.
           inventory = lib.mkOption { type = lib.types.raw; };
           inventoryFile = lib.mkOption { type = lib.types.raw; };
           clanModules = lib.mkOption { type = lib.types.raw; };
