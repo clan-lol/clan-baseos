@@ -327,6 +327,7 @@ class Host:
         cwd: None | str | Path = None,
         check: bool = True,
         timeout: float = math.inf,
+        needs_user_terminal: bool = False,
     ) -> subprocess.CompletedProcess[str]:
         if extra_env is None:
             extra_env = {}
@@ -367,9 +368,10 @@ class Host:
                 stderr=stderr_write,
                 env=env,
                 cwd=cwd,
-                start_new_session=True,
+                start_new_session=not needs_user_terminal,
             ) as p:
-                stack.enter_context(terminate_process_group(p))
+                if not needs_user_terminal:
+                    stack.enter_context(terminate_process_group(p))
                 if write_std_fd is not None:
                     write_std_fd.close()
                 if write_err_fd is not None:
@@ -517,6 +519,8 @@ class Host:
             cwd=cwd,
             check=check,
             timeout=timeout,
+            # all ssh commands can potentially ask for a password
+            needs_user_terminal=True,
         )
 
     def nix_ssh_env(self, env: dict[str, str] | None) -> dict[str, str]:
