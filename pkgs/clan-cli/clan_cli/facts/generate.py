@@ -49,6 +49,7 @@ def bubblewrap_cmd(generator: str, facts_dir: Path, secrets_dir: Path) -> list[s
             "--ro-bind", "/nix/store", "/nix/store",
             "--tmpfs",  "/usr/lib/systemd",
             "--dev", "/dev",
+            "--proc", "/proc",
             "--bind", str(facts_dir), str(facts_dir),
             "--bind", str(secrets_dir), str(secrets_dir),
             "--unshare-all",
