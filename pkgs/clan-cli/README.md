@@ -4,7 +4,7 @@ The clan-cli contains the command line interface
 
 ## Hacking on the cli
 
-We recommend setting up [direnv](https://direnv.net/) to load the developement with nix.
+We recommend setting up [direnv](https://direnv.net/) to load the development with nix.
 If you do not have it set up you can also use `nix develop` directly like this:
 
 ```

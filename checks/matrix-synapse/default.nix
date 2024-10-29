@@ -32,7 +32,7 @@
 
             clan.core.facts.secretStore = "vm";
 
-            # because we use systemd-tmpfiles to copy the secrets, we need to a seperate systemd-tmpfiles call to provison them.
+            # because we use systemd-tmpfiles to copy the secrets, we need to a separate systemd-tmpfiles call to provision them.
             boot.postBootCommands = "${config.systemd.package}/bin/systemd-tmpfiles --create /etc/tmpfiles.d/00-vmsecrets.conf";
 
             systemd.tmpfiles.settings."00-vmsecrets" = {

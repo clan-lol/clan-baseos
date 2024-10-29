@@ -180,7 +180,7 @@ python3.pkgs.buildPythonApplication {
   '';
 
   # Clean up after the package to avoid leaking python packages into a devshell
-  # TODO: factor seperate cli / API packages
+  # TODO: factor separate cli / API packages
   postFixup = ''
     rm $out/nix-support/propagated-build-inputs
   '';

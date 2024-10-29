@@ -105,7 +105,7 @@ class GObjApi:
         for m_name, m_signature in fn_signatures.items():
             if m_name not in overwrite_fns:
                 continue
-            # check if the signature of the overriden method matches
+            # check if the signature of the overridden method matches
             # the implementation signature
             exp_args = []
             exp_return = m_signature.return_annotation

@@ -5,7 +5,7 @@ features = [ "inventory" ]
 ---
 # Primary Disk Layout
 
-A module for the "disk-layout" category MUST be choosen.
+A module for the "disk-layout" category MUST be chosen.
 
 There is exactly one slot for this type of module in the UI, if you don't fill the slot, your machine cannot boot
 
