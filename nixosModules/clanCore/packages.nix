@@ -1,4 +1,3 @@
-{ pkgs, ... }:
 {
   pkgs,
   lib,
@@ -15,8 +14,10 @@
       pkgs.jq
       pkgs.htop
 
-    pkgs.nixos-facter # for `clan machines update-hardware-config --backend nixos-facter`
-    # needed to deploy via `clan machines update` if the flake has a git input
-    pkgs.gitMinimal
-  ];
+      pkgs.nixos-facter # for `clan machines update-hardware-config --backend nixos-facter`
+    ]
+    ++ lib.optional (lib.versionAtLeast config.nix.package.version "2.24")
+      # needed to deploy via `clan machines update` if the flake has a git input
+      # newer version of nix do have `libgit2`
+      pkgs.gitMinimal;
 }
