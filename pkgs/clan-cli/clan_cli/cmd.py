@@ -9,7 +9,7 @@ import sys
 import timeit
 import weakref
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from enum import Enum
 from pathlib import Path
 from typing import IO, Any
@@ -86,6 +86,23 @@ def terminate_process_group(process: subprocess.Popen) -> Iterator[None]:
             pass
 
 
+@contextmanager
+def terminate_process(process: subprocess.Popen) -> Iterator[None]:
+    try:
+        yield
+    finally:
+        try:
+            process.terminate()
+            try:
+                with contextlib.suppress(subprocess.TimeoutExpired):
+                    # give the process time to terminate
+                    process.wait(3)
+            finally:
+                process.kill()
+        except ProcessLookupError:
+            pass
+
+
 class TimeTable:
     """
     This class is used to store the time taken by each command
@@ -146,20 +163,24 @@ def run(
         logger.debug(f"$: {shlex.join(cmd)} \nCaller: {get_caller()}")
     start = timeit.default_timer()
 
-    # Start the subprocess
-    with (
-        subprocess.Popen(
-            cmd,
-            cwd=str(cwd),
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            start_new_session=not needs_user_terminal,
-        ) as process,
-        terminate_process_group(process)
-        if not needs_user_terminal
-        else contextlib.suppress(),  # NOQA: B022
-    ):
+    with ExitStack() as stack:
+        process = stack.enter_context(
+            subprocess.Popen(
+                cmd,
+                cwd=str(cwd),
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                start_new_session=not needs_user_terminal,
+            )
+        )
+
+        if needs_user_terminal:
+            # we didn't allocat a new session, so we can't terminate the process group
+            stack.enter_context(terminate_process(process))
+        else:
+            stack.enter_context(terminate_process_group(process))
+
         stdout_buf, stderr_buf = handle_output(process, log)
 
         if input:
