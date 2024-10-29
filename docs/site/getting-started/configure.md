@@ -144,7 +144,7 @@ These steps will allow you to update your machine later.
 Generate the `hardware-configuration.nix` file for your machine by executing the following command:
 
 ```bash
-clan machines update-hardware-config [MACHINE_NAME]
+clan machines update-hardware-config [MACHINE_NAME] [HOSTNAME]
 ```
 
 replace `[MACHINE_NAME]` with the name of the machine i.e. `jon` and `[HOSTNAME]` with the `ip_address` or `hostname` of the machine within the network. i.e. `<IP>`
