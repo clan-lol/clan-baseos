@@ -67,7 +67,17 @@ in
               '';
               type = attrsOf (
                 submodule (file: {
-                  imports = [ config.settings.fileModule ];
+                  imports = [
+                    config.settings.fileModule
+                    (lib.mkRenamedOptionModule [ "owner" ] [
+                      "sops"
+                      "owner"
+                    ])
+                    (lib.mkRenamedOptionModule [ "group" ] [
+                      "sops"
+                      "group"
+                    ])
+                  ];
                   options = options {
                     name = {
                       type = lib.types.str;
@@ -119,14 +129,18 @@ in
                       '';
                       type = str;
                     };
-                    owner = {
-                      description = "The user name or id that will own the secret file. This option is currently only implemented for sops";
-                      default = "root";
+
+                    sops = {
+                      owner = {
+                        description = "The user name or id that will own the secret file. This option is currently only implemented for sops";
+                        default = "root";
+                      };
+                      group = {
+                        description = "The group name or id that will own the secret file. This option is currently only implemented for sops";
+                        default = "root";
+                      };
                     };
-                    group = {
-                      description = "The group name or id that will own the secret file. This option is currently only implemented for sops";
-                      default = "root";
-                    };
+
                     value =
                       {
                         description = ''
