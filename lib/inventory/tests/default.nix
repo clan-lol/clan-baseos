@@ -171,7 +171,7 @@ in
       expr = configs;
       expectedError = {
         type = "ThrownError";
-        msg = "Module doesn't have role.*";
+        msg = "Roles roleXYZ are not defined in the service borgbackup.";
       };
     };
   test_inventory_tag_doesnt_exist =

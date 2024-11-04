@@ -31,6 +31,7 @@ def install_nixos(
     password: str | None = None,
     no_reboot: bool = False,
     extra_args: list[str] | None = None,
+    build_on_remote: bool = False,
 ) -> None:
     if extra_args is None:
         extra_args = []
@@ -70,6 +71,9 @@ def install_nixos(
         if no_reboot:
             cmd.append("--no-reboot")
 
+        if build_on_remote:
+            cmd.append("--build-on-remote")
+
         if password:
             cmd += [
                 "--env-password",
@@ -104,6 +108,7 @@ class InstallOptions:
     debug: bool = False
     no_reboot: bool = False
     json_ssh_deploy: dict[str, str] | None = None
+    build_on_remote: bool = False
     nix_options: list[str] = field(default_factory=list)
 
 
@@ -119,6 +124,7 @@ def install_machine(opts: InstallOptions, password: str | None) -> None:
         password=password,
         no_reboot=opts.no_reboot,
         extra_args=opts.nix_options,
+        build_on_remote=opts.build_on_remote,
     )
 
 
@@ -159,6 +165,7 @@ def install_command(args: argparse.Namespace) -> None:
             no_reboot=args.no_reboot,
             json_ssh_deploy=json_ssh_deploy,
             nix_options=args.option,
+            build_on_remote=args.build_on_remote,
         ),
         password,
     )
@@ -190,6 +197,12 @@ def register_install_parser(parser: argparse.ArgumentParser) -> None:
         "--no-reboot",
         action="store_true",
         help="do not reboot after installation",
+        default=False,
+    )
+    parser.add_argument(
+        "--build-on-remote",
+        action="store_true",
+        help="build the NixOS configuration on the remote machine",
         default=False,
     )
     parser.add_argument(
