@@ -49,7 +49,7 @@ class SopsKey:
         }
 
 
-class ExitStatus(enum.IntEnum): # see: cmd/sops/codes/codes.go
+class ExitStatus(enum.IntEnum):  # see: cmd/sops/codes/codes.go
     ERROR_GENERIC = 1
     COULD_NOT_READ_INPUT_FILE = 2
     COULD_NOT_WRITE_OUTPUT_FILE = 3
@@ -130,7 +130,7 @@ class Operation(enum.StrEnum):
                     #
                     # [1]: https://github.com/getsops/sops/blob/8c567aa8a7cf4802e251e87efc84a1c50b69d4f0/cmd/sops/main.go#L2229
                     for var in os.environ:
-                        if var.startswith("SOPS_") and var not in { # allowed:
+                        if var.startswith("SOPS_") and var not in {  # allowed:
                             "SOPS_GPG_EXEC",
                             "SOPS_AGE_KEY",
                             "SOPS_AGE_KEY_FILE",
@@ -290,8 +290,8 @@ def collect_private_age_keys() -> Sequence[str]:
     def maybe_read_from_path(key_path: Path) -> None:
         try:
             contents = Path(key_path).read_text().strip()
-            lines = contents.splitlines() # as in parse.go in age:
-            private_age_keys.extend(l for l in lines if l and not l.startswith("#"))
+            lines = contents.splitlines()  # as in parse.go in age:
+            private_age_keys.extend(ln for ln in lines if ln and not ln.startswith("#"))
         except FileNotFoundError:
             return
         except Exception as ex:
