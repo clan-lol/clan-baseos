@@ -62,6 +62,7 @@
                 "flakes"
               ];
             };
+            system.extraDependencies = dependencies;
           };
           nodes.client = {
             environment.systemPackages = [
