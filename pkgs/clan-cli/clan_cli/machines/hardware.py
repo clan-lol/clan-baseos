@@ -180,6 +180,8 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
     )
     try:
         show_machine_hardware_platform(opts.flake.path, opts.machine)
+        if backup_file:
+            backup_file.unlink(missing_ok=True)
     except ClanCmdError as e:
         log.exception("Failed to evaluate hardware-configuration.nix")
         # Restore the backup file
