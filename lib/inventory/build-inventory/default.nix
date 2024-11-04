@@ -39,11 +39,9 @@ let
 
   checkService =
     serviceName:
-    let
-      frontmatter = clan-core.lib.modules.getFrontmatter serviceName;
-    in
-    if builtins.elem "inventory" frontmatter.features or [ ] then true else false;
+    builtins.elem "inventory" (clan-core.lib.modules.getFrontmatter serviceName).features or [ ];
 
+  trimExtension = name: builtins.substring 0 (builtins.stringLength name - 4) name;
   /*
     Returns a NixOS configuration for every machine in the inventory.
 
@@ -65,18 +63,29 @@ let
           acc2: instanceName: serviceConfig:
 
           let
-            resolvedRoles = builtins.mapAttrs (
-              roleName: members:
+            roles = lib.mapAttrsToList (name: _value: trimExtension name) (
+              lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
+                builtins.readDir (
+                  if clan-core.clanModules ? ${serviceName} then
+                    clan-core.clanModules.${serviceName} + "/roles"
+                  else
+                    throw "ClanModule not found: '${serviceName}'. Make sure the module is added in the 'clanModules' attribute of clan-core."
+                )
+              )
+            );
+
+            resolvedRoles = lib.genAttrs roles (
+              roleName:
               resolveTags {
+                members = serviceConfig.roles.${roleName} or { };
                 inherit
                   serviceName
                   instanceName
                   roleName
                   inventory
-                  members
                   ;
               }
-            ) serviceConfig.roles;
+            );
 
             isInService = builtins.any (members: builtins.elem machineName members.machines) (
               builtins.attrValues resolvedRoles
@@ -98,18 +107,12 @@ let
             # TODO: maybe optimize this dont lookup the role in inverse roles. Imports are not lazy
             roleModules = builtins.map (
               role:
-              let
-                # Check the module exists
-                module =
-                  clan-core.clanModules.${serviceName}
-                    or (throw "ClanModule not found: '${serviceName}'. Make sure the module is added in the 'clanModules' attribute of clan-core.");
-
-                path = module + "/roles/${role}.nix";
-              in
-              if builtins.pathExists path then
-                path
+              if builtins.elem role roles && clan-core.clanModules ? ${serviceName} then
+                clan-core.clanModules.${serviceName} + "/roles/${role}.nix"
               else
-                throw "Module doesn't have role: '${role}'. Role: ${role}.nix not found."
+                throw "Module ${serviceName} doesn't have role: '${role}'. Role: ${
+                  clan-core.clanModules.${serviceName}
+                }/roles/${role}.nix not found."
             ) machineRoles;
 
             roleServiceConfigs = builtins.filter (m: m != { }) (
@@ -119,8 +122,14 @@ let
             extraModules = map (s: if builtins.typeOf s == "string" then "${directory}/${s}" else s) (
               globalExtraModules ++ machineExtraModules ++ roleServiceExtraModules
             );
+
+            nonExistingRoles = builtins.filter (role: !(builtins.elem role roles)) (
+              builtins.attrNames (serviceConfig.roles or { })
+            );
           in
-          if !(serviceConfig.enabled or true) then
+          if (nonExistingRoles != [ ]) then
+            throw "Roles ${builtins.toString nonExistingRoles} are not defined in the service ${serviceName}."
+          else if !(serviceConfig.enabled or true) then
             acc2
           else if isInService then
             acc2
@@ -139,14 +148,13 @@ let
                   );
                 }
               )
-
-              {
-                config.clan.inventory.services.${serviceName}.${instanceName} = {
+              ({
+                clan.inventory.services.${serviceName}.${instanceName} = {
                   roles = resolvedRoles;
                   # TODO: Add inverseRoles to the service config if needed
                   # inherit inverseRoles;
                 };
-              }
+              })
             ]
           else
             acc2
