@@ -201,3 +201,4 @@ Or you can also use the [nix breakpoint hook](https://nixos.org/manual/nixpkgs/s
 - Every new module name should be in kebab-case.
 - Every fact definition, where possible should be in kebab-case.
 - Every vars definition, where possible should be in kebab-case.
+- Command line help descriptions should start capitalized and should not end in a period.

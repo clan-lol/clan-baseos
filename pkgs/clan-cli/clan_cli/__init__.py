@@ -94,7 +94,7 @@ def register_common_flags(parser: argparse.ArgumentParser) -> None:
 def create_parser(prog: str | None = None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=prog,
-        description="The clan cli tool.",
+        description="The clan cli tool",
         epilog=(
             f"""
 Online reference for the clan cli tool: {help_hyperlink("cli reference", "https://docs.clan.lol/reference/cli/")}
@@ -109,8 +109,8 @@ For more detailed information, visit: {help_hyperlink("docs", "https://docs.clan
     # Commands directly under the root i.e. "clan show"
     show_parser = subparsers.add_parser(
         "show",
-        help="Show meta about the clan if present.",
-        description="Show meta about the clan if present.",
+        help="Show meta about the clan if present",
+        description="Show meta about the clan if present",
         epilog=(
             """
 This command prints the metadata of a clan.
@@ -131,8 +131,8 @@ Note: The meta results from clan/meta.json and manual flake arguments. It may no
 
     parser_backups = subparsers.add_parser(
         "backups",
-        help="manage backups of clan machines",
-        description="manage backups of clan machines",
+        help="Manage backups of clan machines",
+        description="Manage backups of clan machines",
         epilog=(
             f"""
 This subcommand provides an interface to backups that clan machines expose.
@@ -158,8 +158,8 @@ For more detailed information visit: {help_hyperlink("backups", "https://docs.cl
 
     parser_flake = subparsers.add_parser(
         "flakes",
-        help="create a clan flake inside the current directory",
-        description="create a clan flake inside the current directory",
+        help="Create a clan flake inside the current directory",
+        description="Create a clan flake inside the current directory",
         epilog=(
             f"""
 Examples:
@@ -177,8 +177,8 @@ For more detailed information, visit: {help_hyperlink("getting-started", "https:
 
     parser_flash = subparsers.add_parser(
         "flash",
-        help="flashes your machine to an USB drive",
-        description="flashes your machine to an USB drive",
+        help="Flashes your machine to an USB drive",
+        description="Flashes your machine to an USB drive",
         epilog=(
             f"""
 Examples:
@@ -194,8 +194,8 @@ For more detailed information, visit: {help_hyperlink("getting-started", "https:
 
     parser_ssh = subparsers.add_parser(
         "ssh",
-        help="ssh to a remote machine",
-        description="ssh to a remote machine",
+        help="Ssh to a remote machine",
+        description="Ssh to a remote machine",
         epilog=(
             f"""
 This subcommand allows seamless ssh access to the nixos-image builders.
@@ -216,8 +216,8 @@ For more detailed information, visit: {help_hyperlink("deploy", "https://docs.cl
 
     parser_secrets = subparsers.add_parser(
         "secrets",
-        help="manage secrets",
-        description="manage secrets",
+        help="Manage secrets",
+        description="Manage secrets",
         epilog=(
             f"""
 This subcommand provides an interface to secret facts.
@@ -240,8 +240,8 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
 
     parser_facts = subparsers.add_parser(
         "facts",
-        help="manage facts",
-        description="manage facts",
+        help="Manage facts",
+        description="Manage facts",
         epilog=(
             f"""
 
@@ -278,8 +278,8 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
     # like facts but with vars instead of facts
     parser_vars = subparsers.add_parser(
         "vars",
-        help="WIP: manage vars",
-        description="WIP: manage vars",
+        help="WIP: Manage vars",
+        description="WIP: Manage vars",
         epilog=(
             f"""
 This subcommand provides an interface to vars of clan machines.
@@ -314,8 +314,8 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
 
     parser_machine = subparsers.add_parser(
         "machines",
-        help="manage machines and their configuration",
-        description="manage machines and their configuration",
+        help="Manage machines and their configuration",
+        description="Manage machines and their configuration",
         epilog=(
             f"""
 This subcommand provides an interface to machines managed by clan.
@@ -340,21 +340,21 @@ For more detailed information, visit: {help_hyperlink("deploy", "https://docs.cl
     machines.register_parser(parser_machine)
 
     parser_vms = subparsers.add_parser(
-        "vms", help="manage virtual machines", description="manage virtual machines"
+        "vms", help="Manage virtual machines", description="Manage virtual machines"
     )
     vms.register_parser(parser_vms)
 
     parser_history = subparsers.add_parser(
         "history",
-        help="manage history",
-        description="manage history",
+        help="Manage history",
+        description="Manage history",
     )
     history.register_parser(parser_history)
 
     parser_state = subparsers.add_parser(
         "state",
-        help="query state information about machines",
-        description="query state information about machines",
+        help="Query state information about machines",
+        description="Query state information about machines",
         epilog=(
             f"""
 This subcommand provides an interface to the state managed by clan.
