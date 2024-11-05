@@ -52,8 +52,8 @@ export const MachineListItem = (props: MachineListItemProps) => {
           target_host: info?.deploy.targetHost,
           debug: true,
           nix_options: [],
+          password: null,
         },
-        password: null,
       }),
       {
         loading: "Installing...",

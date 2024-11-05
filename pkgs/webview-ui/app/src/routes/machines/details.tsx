@@ -76,12 +76,12 @@ const InstallMachine = (props: InstallMachineProps) => {
     queryFn: async () => {
       const curr = activeURI();
       if (curr && props.name) {
-        const result = await callApi("show_machine_hardware_info", {
+        const result = await callApi("show_machine_hardware_config", {
           clan_dir: curr,
           machine_name: props.name,
         });
         if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data?.backend === "nixos-facter" || null;
+        return result.data === "NIXOS_FACTER" || null;
       }
       return null;
     },
@@ -107,8 +107,8 @@ const InstallMachine = (props: InstallMachineProps) => {
         },
         machine: props.name,
         target_host: props.targetHost,
+        password: "",
       },
-      password: "",
     });
     toast.dismiss(loading_toast);
 
@@ -158,7 +158,7 @@ const InstallMachine = (props: InstallMachineProps) => {
         machine: props.name,
         keyfile: props.sshKey?.name,
         target_host: props.targetHost,
-        backend: "nixos-facter",
+        backend: "NIXOS_FACTER",
       },
     });
     toast.dismiss(loading_toast);

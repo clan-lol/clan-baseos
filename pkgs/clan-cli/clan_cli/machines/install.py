@@ -12,6 +12,7 @@ from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import Log, run
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.facts.generate import generate_facts
+from clan_cli.machines.hardware import HardwareConfig
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh.cli import is_ipv6, is_reachable, qrcode_scan
@@ -24,17 +25,27 @@ class ClanError(Exception):
     pass
 
 
-def install_nixos(
-    machine: Machine,
-    kexec: str | None = None,
-    debug: bool = False,
-    password: str | None = None,
-    no_reboot: bool = False,
-    extra_args: list[str] | None = None,
-    build_on_remote: bool = False,
-) -> None:
-    if extra_args is None:
-        extra_args = []
+@dataclass
+class InstallOptions:
+    # flake to install
+    flake: FlakeId
+    machine: str
+    target_host: str
+    kexec: str | None = None
+    debug: bool = False
+    no_reboot: bool = False
+    json_ssh_deploy: dict[str, str] | None = None
+    build_on_remote: bool = False
+    nix_options: list[str] = field(default_factory=list)
+    update_hardware_config: HardwareConfig = HardwareConfig.NONE
+    password: str | None = None
+
+
+@API.register
+def install_machine(opts: InstallOptions) -> None:
+    machine = Machine(opts.machine, flake=opts.flake)
+    machine.override_target_host = opts.target_host
+
     secret_facts_module = importlib.import_module(machine.secret_facts_module)
     log.info(f"installing {machine.name}")
     secret_facts_store = secret_facts_module.SecretStore(machine=machine)
@@ -56,8 +67,8 @@ def install_nixos(
         upload_dir.mkdir(parents=True)
         secret_facts_store.upload(upload_dir)
 
-        if password:
-            os.environ["SSHPASS"] = password
+        if opts.password:
+            os.environ["SSHPASS"] = opts.password
 
         cmd = [
             "nixos-anywhere",
@@ -65,16 +76,28 @@ def install_nixos(
             f"{machine.flake}#{machine.name}",
             "--extra-files",
             str(tmpdir),
-            *extra_args,
         ]
 
-        if no_reboot:
+        if opts.no_reboot:
             cmd.append("--no-reboot")
 
-        if build_on_remote:
+        if opts.build_on_remote:
             cmd.append("--build-on-remote")
 
-        if password:
+        if opts.update_hardware_config is not HardwareConfig.NONE:
+            cmd.extend(
+                [
+                    "--generate-hardware-config",
+                    str(opts.update_hardware_config),
+                    str(
+                        opts.update_hardware_config.config_path(
+                            opts.flake.path, machine.name
+                        )
+                    ),
+                ]
+            )
+
+        if opts.password:
             cmd += [
                 "--env-password",
                 "--ssh-option",
@@ -83,9 +106,9 @@ def install_nixos(
 
         if machine.target_host.port:
             cmd += ["--ssh-port", str(machine.target_host.port)]
-        if kexec:
-            cmd += ["--kexec", kexec]
-        if debug:
+        if opts.kexec:
+            cmd += ["--kexec", opts.kexec]
+        if opts.debug:
             cmd.append("--debug")
         cmd.append(target_host)
 
@@ -98,37 +121,10 @@ def install_nixos(
         )
 
 
-@dataclass
-class InstallOptions:
-    # flake to install
-    flake: FlakeId
-    machine: str
-    target_host: str
-    kexec: str | None = None
-    debug: bool = False
-    no_reboot: bool = False
-    json_ssh_deploy: dict[str, str] | None = None
-    build_on_remote: bool = False
-    nix_options: list[str] = field(default_factory=list)
-
-
-@API.register
-def install_machine(opts: InstallOptions, password: str | None) -> None:
-    machine = Machine(opts.machine, flake=opts.flake)
-    machine.override_target_host = opts.target_host
-
-    install_nixos(
-        machine,
-        kexec=opts.kexec,
-        debug=opts.debug,
-        password=password,
-        no_reboot=opts.no_reboot,
-        extra_args=opts.nix_options,
-        build_on_remote=opts.build_on_remote,
-    )
-
-
 def install_command(args: argparse.Namespace) -> None:
+    if args.flake is None:
+        msg = "Could not find clan flake toplevel directory"
+        raise ClanError(msg)
     json_ssh_deploy = None
     if args.json:
         json_file = Path(args.json)
@@ -166,8 +162,9 @@ def install_command(args: argparse.Namespace) -> None:
             json_ssh_deploy=json_ssh_deploy,
             nix_options=args.option,
             build_on_remote=args.build_on_remote,
+            update_hardware_config=HardwareConfig(args.update_hardware_config),
+            password=password,
         ),
-        password,
     )
 
 
@@ -210,6 +207,13 @@ def register_install_parser(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="do not ask for confirmation",
         default=False,
+    )
+    parser.add_argument(
+        "--update-hardware-config",
+        type=str,
+        default="none",
+        help="update the hardware configuration",
+        choices=[x.value for x in HardwareConfig],
     )
 
     machines_parser = parser.add_argument(

@@ -2,13 +2,14 @@ import argparse
 import json
 import logging
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
-from typing import Literal
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run, run_no_stdout
 from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.git import commit_file
 from clan_cli.machines.machines import Machine
@@ -19,33 +20,40 @@ from .types import machine_name_type
 log = logging.getLogger(__name__)
 
 
-@dataclass
-class HardwareReport:
-    backend: Literal["nixos-generate-config", "nixos-facter"]
+class HardwareConfig(Enum):
+    NIXOS_FACTER = "nixos-facter"
+    NIXOS_GENERATE_CONFIG = "nixos-generate-config"
+    NONE = "none"
 
+    def config_path(self, clan_dir: Path, machine_name: str) -> Path:
+        machine_dir = specific_machine_dir(clan_dir, machine_name)
+        if self == HardwareConfig.NIXOS_FACTER:
+            return machine_dir / "facter.json"
+        return machine_dir / "hardware-configuration.nix"
 
-hw_nix_file = "hardware-configuration.nix"
-facter_file = "facter.json"
+    @classmethod
+    def detect_type(
+        cls: type["HardwareConfig"], clan_dir: Path, machine_name: str
+    ) -> "HardwareConfig":
+        hardware_config = HardwareConfig.NIXOS_GENERATE_CONFIG.config_path(
+            clan_dir, machine_name
+        )
+
+        if hardware_config.exists() and "throw" not in hardware_config.read_text():
+            return HardwareConfig.NIXOS_GENERATE_CONFIG
+
+        if HardwareConfig.NIXOS_FACTER.config_path(clan_dir, machine_name).exists():
+            return HardwareConfig.NIXOS_FACTER
+
+        return HardwareConfig.NONE
 
 
 @API.register
-def show_machine_hardware_info(
-    clan_dir: Path, machine_name: str
-) -> HardwareReport | None:
+def show_machine_hardware_config(clan_dir: Path, machine_name: str) -> HardwareConfig:
     """
     Show hardware information for a machine returns None if none exist.
     """
-
-    hw_file = Path(clan_dir) / "machines" / machine_name / hw_nix_file
-    is_template = hw_file.exists() and "throw" in hw_file.read_text()
-
-    if hw_file.exists() and not is_template:
-        return HardwareReport("nixos-generate-config")
-
-    if Path(f"{clan_dir}/machines/{machine_name}/{facter_file}").exists():
-        return HardwareReport("nixos-facter")
-
-    return None
+    return HardwareConfig.detect_type(clan_dir, machine_name)
 
 
 @API.register
@@ -96,14 +104,14 @@ def show_machine_hardware_platform(clan_dir: Path, machine_name: str) -> str | N
 class HardwareGenerateOptions:
     flake: FlakeId
     machine: str
-    backend: Literal["nixos-generate-config", "nixos-facter"]
+    backend: HardwareConfig
     target_host: str | None = None
     keyfile: str | None = None
     password: str | None = None
 
 
 @API.register
-def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareReport:
+def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareConfig:
     """
     Generate hardware information for a machine
     and place the resulting *.nix file in the machine's directory.
@@ -113,15 +121,10 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
     if opts.target_host is not None:
         machine.override_target_host = opts.target_host
 
-    hw_file = opts.flake.path / "machines" / opts.machine
-    if opts.backend == "nixos-generate-config":
-        hw_file /= hw_nix_file
-    else:
-        hw_file /= facter_file
-
+    hw_file = opts.backend.config_path(opts.flake.path, opts.machine)
     hw_file.parent.mkdir(parents=True, exist_ok=True)
 
-    if opts.backend == "nixos-facter":
+    if opts.backend == HardwareConfig.NIXOS_FACTER:
         config_command = ["nixos-facter"]
     else:
         config_command = [
@@ -196,7 +199,7 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareRep
             description=f"Configuration at '{hw_file}' is invalid. Please check the file and try again.",
         ) from e
 
-    return HardwareReport(opts.backend)
+    return opts.backend
 
 
 def update_hardware_config_command(args: argparse.Namespace) -> None:
@@ -205,7 +208,7 @@ def update_hardware_config_command(args: argparse.Namespace) -> None:
         machine=args.machine,
         target_host=args.target_host,
         password=args.password,
-        backend=args.backend,
+        backend=HardwareConfig(args.backend),
     )
     generate_machine_hardware_info(opts)
 
