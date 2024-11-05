@@ -50,7 +50,7 @@ def show_clan_meta(uri: str | Path) -> Meta:
                 raise ClanError(
                     msg,
                     location=f"show_clan {uri}",
-                    description="Icon path must be a URL or a relative path.",
+                    description="Icon path must be a URL or a relative path",
                 )
 
             icon_path = str((Path(uri) / meta_icon).resolve())
@@ -59,7 +59,7 @@ def show_clan_meta(uri: str | Path) -> Meta:
             raise ClanError(
                 msg,
                 location=f"show_clan {uri}",
-                description="Icon path must be a URL or a relative path.",
+                description="Icon path must be a URL or a relative path",
             )
 
     return Meta(
