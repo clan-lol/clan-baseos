@@ -1,10 +1,4 @@
-import {
-  callApi,
-  ClanService,
-  Services,
-  SuccessData,
-  SuccessQuery,
-} from "@/src/api";
+import { callApi, ClanService, SuccessData, SuccessQuery } from "@/src/api";
 import { set_single_disk_id } from "@/src/api/disk";
 import { get_iwd_service } from "@/src/api/wifi";
 import { activeURI } from "@/src/App";
@@ -17,25 +11,11 @@ import {
   createForm,
   FieldValues,
   getValue,
-  reset,
   setValue,
 } from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
-import {
-  createQuery,
-  QueryObserver,
-  useQueryClient,
-} from "@tanstack/solid-query";
-import {
-  createSignal,
-  For,
-  Show,
-  Switch,
-  Match,
-  JSXElement,
-  createEffect,
-  createMemo,
-} from "solid-js";
+import { createQuery, useQueryClient } from "@tanstack/solid-query";
+import { createSignal, For, Show, Switch, Match, JSXElement } from "solid-js";
 import toast from "solid-toast";
 
 type MachineFormInterface = MachineData & {
@@ -58,6 +38,12 @@ interface InstallMachineProps {
   disks: Disks;
 }
 const InstallMachine = (props: InstallMachineProps) => {
+  const curr = activeURI();
+  const { name } = props;
+  if (!curr || !name) {
+    return <span>No Clan selected</span>;
+  }
+
   const diskPlaceholder = "Select the boot disk of the remote machine";
 
   const [formStore, { Form, Field }] = createForm<InstallForm>();
@@ -67,23 +53,14 @@ const InstallMachine = (props: InstallMachineProps) => {
   const [confirmDisk, setConfirmDisk] = createSignal(!hasDisk());
 
   const hwInfoQuery = createQuery(() => ({
-    queryKey: [
-      activeURI(),
-      "machine",
-      props.name,
-      "show_machine_hardware_info",
-    ],
+    queryKey: [curr, "machine", name, "show_machine_hardware_config"],
     queryFn: async () => {
-      const curr = activeURI();
-      if (curr && props.name) {
-        const result = await callApi("show_machine_hardware_config", {
-          clan_dir: curr,
-          machine_name: props.name,
-        });
-        if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data === "NIXOS_FACTER" || null;
-      }
-      return null;
+      const result = await callApi("show_machine_hardware_config", {
+        clan_dir: curr,
+        machine_name: name,
+      });
+      if (result.status === "error") throw new Error("Failed to fetch data");
+      return result.data === "NIXOS_FACTER";
     },
   }));
 
