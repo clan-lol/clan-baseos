@@ -346,8 +346,7 @@ For more detailed information, visit: {help_hyperlink("deploy", "https://docs.cl
 
     parser_history = subparsers.add_parser(
         "history",
-        help="Manage history",
-        description="Manage history",
+        description="manage history",
     )
     history.register_parser(parser_history)
 
