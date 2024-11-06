@@ -4,6 +4,8 @@ import { callApi } from "../api";
 import { Accessor, Show } from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
+import ArrowBottom from "@/icons/arrow-bottom.svg";
+
 interface HeaderProps {
   clan_dir: Accessor<string | null>;
 }
@@ -48,7 +50,7 @@ export const Header = (props: HeaderProps) => {
             <div class="tooltip tooltip-right" data-tip={activeURI()}>
               <div class="avatar placeholder online mx-4">
                 <div class="w-10 rounded-full bg-slate-700 text-3xl text-neutral-content">
-                  {meta().name.slice(0, 1)}
+                  <ArrowBottom />
                 </div>
               </div>
             </div>

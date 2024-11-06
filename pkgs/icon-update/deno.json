@@ -1,0 +1,14 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "imports": {
+    "@libs/diff": "jsr:@libs/diff@^2.0.0",
+    "@std/assert": "jsr:@std/assert@1",
+    "svgo": "npm:svgo@^3.3.2",
+    "typescript": "npm:typescript@^5.6.3"
+  },
+  "compilerOptions": {
+    "lib": ["dom", "deno.ns"]
+  }
+}
