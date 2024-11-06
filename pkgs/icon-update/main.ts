@@ -72,7 +72,7 @@ if (urlSet.err !== null) {
 const getNamefromType = (str: string) => {
   const [_type, name] = str.split("=");
   if (!name) {
-    console.error("Icon doesnt have name");
+    console.error("Icon doesnt have name", str);
     Deno.exit(1);
   }
   return name;
