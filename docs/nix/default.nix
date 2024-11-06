@@ -45,6 +45,9 @@ pkgs.stdenv.mkDerivation {
     # Link to fonts
     ln -snf ${roboto}/share/fonts/truetype/Roboto-Regular.ttf ./site/static/
     ln -snf ${fira-code}/share/fonts/truetype/FiraCode-VF.ttf ./site/static/
+
+    # Copy icons into place
+    cp -af ../pkgs/webview-ui/app/icons ./site/static/
   '';
 
   buildPhase = ''

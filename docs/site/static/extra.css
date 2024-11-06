@@ -11,3 +11,7 @@
   --md-text-font: "Roboto";
   --md-code-font: "Fira Code";
 }
+
+.md-header img {
+  filter: invert(100%) brightness(100%);
+}
