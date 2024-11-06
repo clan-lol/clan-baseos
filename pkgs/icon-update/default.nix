@@ -12,7 +12,8 @@ pkgs.writeShellApplication {
   };
 
   text = ''
-    OUT_DIR="$(realpath ../webview-ui/app/icons)"
+    REPO_ROOT="$(git rev-parse --show-toplevel)"
+    OUT_DIR="$(realpath "$REPO_ROOT"/pkgs/webview-ui/app/icons)"
     export OUT_DIR
     deno run --allow-all ${src}/main.ts
   '';
