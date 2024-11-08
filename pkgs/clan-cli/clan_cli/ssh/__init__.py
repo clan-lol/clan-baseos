@@ -395,9 +395,8 @@ class Host:
                 ret = p.wait(timeout=max(0, timeout - (time.time() - start)))
                 if ret != 0:
                     if check:
-                        raise subprocess.CalledProcessError(
-                            ret, cmd=cmd, output=stdout_data, stderr=stderr_data
-                        )
+                        msg = f"Command {shlex.join(cmd)} failed with return code {ret}"
+                        raise ClanError(msg)
                     cmdlog.warning(
                         f"[Command failed: {ret}] {displayed_cmd}",
                         extra={"command_prefix": self.command_prefix},
@@ -602,7 +601,6 @@ def _worker(
     try:
         results[idx] = HostResult(host, func(host))
     except Exception as e:
-        kitlog.exception(e)
         results[idx] = HostResult(host, e)
 
 
@@ -644,7 +642,6 @@ class HostGroup:
             )
             results.append(HostResult(host, proc))
         except Exception as e:
-            kitlog.exception(e)
             results.append(HostResult(host, e))
 
     def _run_remote(
@@ -677,7 +674,6 @@ class HostGroup:
             )
             results.append(HostResult(host, proc))
         except Exception as e:
-            kitlog.exception(e)
             results.append(HostResult(host, e))
 
     def _reraise_errors(self, results: list[HostResult[Any]]) -> None:
