@@ -1,3 +1,13 @@
 ---
-description = "Enables secure remote access to the machine over ssh"
+description = "Enables secure remote access to the machine over ssh."
+categories = ["System"]
+features = [ "inventory" ]
 ---
+
+This module will setup the opensshd service.
+It will generate a host key for each machine
+
+
+## Roles
+
+### 
