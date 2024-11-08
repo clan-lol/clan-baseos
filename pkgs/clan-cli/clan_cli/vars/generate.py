@@ -364,7 +364,7 @@ def generate_vars(
             raise ClanError(msg) from errors[0]
 
     if not was_regenerated:
-        print("All secrets and facts are already up to date")
+        print("All vars are already up to date")
     return was_regenerated
 
 
