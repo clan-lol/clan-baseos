@@ -250,7 +250,7 @@ in
         rules = [
           {
             not = false;
-            or = false;
+            "or" = false;
             type = "ACTION_ACCEPT";
           }
         ];

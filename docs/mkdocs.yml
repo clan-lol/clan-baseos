@@ -66,22 +66,23 @@ nav:
   - Reference:
       - Overview: reference/index.md
       - Clan Modules:
-          - reference/clanModules/index.md
           - reference/clanModules/admin.md
+
           - reference/clanModules/borgbackup-static.md
           - reference/clanModules/borgbackup.md
           - reference/clanModules/deltachat.md
-          - reference/clanModules/dyndns.md
           - reference/clanModules/disk-id.md
+          - reference/clanModules/dyndns.md
           - reference/clanModules/ergochat.md
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
           - reference/clanModules/heisenbridge.md
+          - reference/clanModules/index.md
           - reference/clanModules/iwd.md
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
-          - reference/clanModules/matrix-synapse.md
           - reference/clanModules/machine-id.md
+          - reference/clanModules/matrix-synapse.md
           - reference/clanModules/moonlight.md
           - reference/clanModules/mumble.md
           - reference/clanModules/nginx.md
@@ -101,9 +102,11 @@ nav:
           - reference/clanModules/vaultwarden.md
           - reference/clanModules/xfce.md
           - reference/clanModules/zerotier-static-peers.md
+          - reference/clanModules/zerotier.md
           - reference/clanModules/zt-tcp-relay.md
       - CLI:
           - reference/cli/index.md
+
           - reference/cli/backups.md
           - reference/cli/facts.md
           - reference/cli/flakes.md
@@ -117,6 +120,7 @@ nav:
           - reference/cli/vms.md
       - Clan Core:
           - reference/clan-core/index.md
+
           - reference/clan-core/backups.md
           - reference/clan-core/facts.md
           - reference/clan-core/sops.md
