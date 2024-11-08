@@ -24,7 +24,10 @@ def map_json_type(
             res |= map_json_type(t)
         return res
     if isinstance(json_type, dict):
-        return map_json_type(json_type.get("type"))
+        items = json_type.get("items")
+        if items:
+            nested_types = map_json_type(items)
+        return map_json_type(json_type.get("type"), nested_types)
     if json_type == "string":
         return {"str"}
     if json_type == "integer":

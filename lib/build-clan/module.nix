@@ -162,6 +162,8 @@ in
     #
     # config.inventory.meta <- config.meta
     { inventory.meta = config.meta; }
+    # Set default for computed tags
+    ./computed-tags.nix
   ];
 
   inherit nixosConfigurations;

@@ -24,7 +24,6 @@ let
     in
     evaledConfig.options.opt;
 in
-
 {
   testNoDefaultNoDescription =
     let

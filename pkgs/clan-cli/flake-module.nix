@@ -88,6 +88,7 @@
           buildInputs = [
             pkgs.python3
             pkgs.json2ts
+            pkgs.jq
           ];
 
           installPhase = ''
@@ -98,7 +99,9 @@
             json2ts --input $out/API.json > $out/API.ts
 
             # Retrieve python API Typescript types
-            json2ts --input ${self'.legacyPackages.schemas.inventory}/schema.json > $out/Inventory.ts
+            # delete the reserved tags from typechecking because the conversion library doesn't support them
+            jq 'del(.properties.tags.properties)' ${self'.legacyPackages.schemas.inventory}/schema.json > schema.json
+            json2ts --input schema.json > $out/Inventory.ts
             cp ${self'.legacyPackages.schemas.inventory}/* $out
           '';
         };
