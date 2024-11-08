@@ -15,6 +15,10 @@
           description = "Flake-parts";
           path = ./flake-parts;
         };
+        minimal-flake-parts = {
+          description = "Minimal flake-parts clan template";
+          path = ./minimal-flake-parts;
+        };
         machineTemplates = {
           description = "Machine templates";
           path = ./machineTemplates;
