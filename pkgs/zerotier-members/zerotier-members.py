@@ -101,7 +101,7 @@ def list_members(args: argparse.Namespace) -> None:
             print(
                 member_id,
                 compute_zerotier_ip(network_id, data["id"]),
-                data["authorized"] or "false",
+                data.get("authorized", False)
             )
 
 
