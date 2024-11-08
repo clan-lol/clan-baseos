@@ -12,6 +12,7 @@ from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanError
 from clan_cli.facts import public_modules as facts_public_modules
 from clan_cli.facts import secret_modules as facts_secret_modules
+from clan_cli.machines import host_platform
 from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata
 from clan_cli.ssh import Host, HostKeyCheck, parse_deployment_address
 from clan_cli.vars.public_modules import FactStoreBase
@@ -45,6 +46,35 @@ class Machine:
 
     def __repr__(self) -> str:
         return str(self)
+
+    @property
+    def host_platform(self) -> host_platform.HostPlatform:
+        # We filter out function attributes because they are not serializable.
+        attr = f"""
+            (let
+                machine = ((builtins.getFlake "{self.flake}").nixosConfigurations.{self.name});
+                lib = machine.lib;
+                removeFunctionAttrs = attrset:
+                    lib.filterAttrs (name: value: lib.isFunction value == false && name != "parsed") attrset;
+            in
+            {{ x = removeFunctionAttrs machine.pkgs.stdenv.hostPlatform; }}).x
+            """
+        if attr in self._eval_cache:
+            output = self._eval_cache[attr]
+        else:
+            output = run_no_stdout(
+                nix_eval(["--impure", "--expr", attr])
+            ).stdout.strip()
+            self._eval_cache[attr] = output
+        value = json.loads(output)
+        return host_platform.HostPlatform.from_dict(value)
+
+    @property
+    def can_build_locally(self) -> bool:
+        # TODO: We could also use the function pkgs.stdenv.hostPlatform.canExecute
+        # but this is good enough for now.
+        output = nix_config()
+        return self.host_platform.system == output["system"]
 
     @property
     def deployment(self) -> dict:
@@ -173,7 +203,6 @@ class Machine:
         method: Literal["eval", "build"],
         attr: str,
         extra_config: None | dict = None,
-        impure: bool = False,
         nix_options: list[str] | None = None,
     ) -> str | Path:
         """
@@ -215,12 +244,6 @@ class Machine:
                 "dirtyRevision" in metadata
                 or "dirtyRev" in metadata["locks"]["nodes"]["clan-core"]["locked"]
             ):
-                # if not impure:
-                #     raise ClanError(
-                #         "The machine has a dirty revision, and impure mode is not allowed"
-                #     )
-                # else:
-                #     args += ["--impure"]
                 args += ["--impure"]
 
             args += [
@@ -254,7 +277,6 @@ class Machine:
         attr: str,
         refresh: bool = False,
         extra_config: None | dict = None,
-        impure: bool = False,
         nix_options: list[str] | None = None,
     ) -> str:
         """
@@ -266,7 +288,7 @@ class Machine:
         if attr in self._eval_cache and not refresh and extra_config is None:
             return self._eval_cache[attr]
 
-        output = self.nix("eval", attr, extra_config, impure, nix_options)
+        output = self.nix("eval", attr, extra_config, nix_options)
         if isinstance(output, str):
             self._eval_cache[attr] = output
             return output
@@ -278,7 +300,6 @@ class Machine:
         attr: str,
         refresh: bool = False,
         extra_config: None | dict = None,
-        impure: bool = False,
         nix_options: list[str] | None = None,
     ) -> Path:
         """
@@ -291,7 +312,7 @@ class Machine:
         if attr in self._build_cache and not refresh and extra_config is None:
             return self._build_cache[attr]
 
-        output = self.nix("build", attr, extra_config, impure, nix_options)
+        output = self.nix("build", attr, extra_config, nix_options)
         if isinstance(output, Path):
             self._build_cache[attr] = output
             return output

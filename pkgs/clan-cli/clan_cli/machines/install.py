@@ -15,6 +15,7 @@ from clan_cli.completions import (
     complete_machines,
     complete_target_host,
 )
+from clan_cli.errors import ClanError
 from clan_cli.facts.generate import generate_facts
 from clan_cli.machines.hardware import HardwareConfig
 from clan_cli.machines.machines import Machine
@@ -23,10 +24,6 @@ from clan_cli.ssh.cli import is_ipv6, is_reachable, qrcode_scan
 from clan_cli.vars.generate import generate_vars
 
 log = logging.getLogger(__name__)
-
-
-class ClanError(Exception):
-    pass
 
 
 @dataclass
@@ -85,9 +82,6 @@ def install_machine(opts: InstallOptions) -> None:
         if opts.no_reboot:
             cmd.append("--no-reboot")
 
-        if opts.build_on_remote:
-            cmd.append("--build-on-remote")
-
         if opts.update_hardware_config is not HardwareConfig.NONE:
             cmd.extend(
                 [
@@ -107,6 +101,10 @@ def install_machine(opts: InstallOptions) -> None:
                 "--ssh-option",
                 "IdentitiesOnly=yes",
             ]
+
+        if not machine.can_build_locally or opts.build_on_remote:
+            log.info("Architecture mismatch. Building on remote machine")
+            cmd.append("--build-on-remote")
 
         if machine.target_host.port:
             cmd += ["--ssh-port", str(machine.target_host.port)]
