@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, config, ... }:
 let
   types = lib.types;
 
@@ -88,7 +88,9 @@ let
 in
 {
 
-  imports = [ ./assertions.nix ];
+  imports = [
+    ./assertions.nix
+  ];
   options = {
     assertions = lib.mkOption {
       type = types.listOf types.unspecified;
@@ -100,6 +102,81 @@ in
       type = lib.types.submoduleWith {
         modules = [
           ./meta-interface.nix
+        ];
+      };
+    };
+    tags = lib.mkOption {
+      default = { };
+      description = ''
+        Tags of the inventory are used to group machines together.
+
+        It is recommended to use [`machine.tags`](#machinestags) to define the tags of the machines.
+
+        This can be used to define custom tags that are either statically set or dynamically computed.
+
+        #### Static Tags
+
+        ???+ example "Static Tag Example"
+            ```nix
+            inventory.tags = {
+              foo = [ "machineA" "machineB" ];
+            };
+            ```
+
+            The tag `foo` will always be added to `machineA` and `machineB`.
+
+        #### Dynamic Tags
+
+        It is possible to compute tags based on the machines properties or based on other tags.
+
+        !!! danger
+            This is a powerfull feature and should be used with caution.
+
+            It is possible to cause infinite recursion by computing tags based on the machines properties or based on other tags.
+
+        ???+ example "Dynamic Tag Example"
+
+            allButFoo is a computed tag. It will be added to all machines except 'foo'
+
+            `all` is a predefined tag. See the docs of [`tags.all`](#tagsall).
+
+            ```nix
+            #  inventory.tags ↓       ↓ inventory.machines
+            inventory.tags = {config, machines...}: {
+              #                                                        ↓↓↓ The "all" tag
+              allButFoo = builtins.filter (name: name != "foo") config.all;
+            };
+            ```
+
+        !!! warning
+            Do NOT compute `tags` from `machine.tags` this will cause infinite recursion.
+      '';
+      type = types.submoduleWith {
+        specialArgs = {
+          inherit (config) machines;
+        };
+        modules = [
+          {
+            freeformType = with lib.types; lazyAttrsOf (listOf str);
+            # Reserved tags
+            # Defined as options here to show them in advance
+            options = {
+              # 'All machines' tag
+              all = lib.mkOption {
+                type = with lib.types; listOf str;
+                defaultText = "[ <All Machines> ]";
+                description = ''
+                  !!! example "Predefined Tag"
+
+                      Will be added to all machines
+
+                      ```nix
+                      inventory.machines.machineA.tags = [ "all" ];
+                      ```
+                '';
+              };
+            };
+          }
         ];
       };
     };

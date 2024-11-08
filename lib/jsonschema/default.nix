@@ -30,7 +30,10 @@ let
 
   filterExcluded = lib.filter (opt: !isExcludedOption opt);
 
-  filterExcludedAttrs = lib.filterAttrs (_name: opt: !isExcludedOption opt);
+  excludedOptionNames = [ "_freeformOptions" ];
+  filterExcludedAttrs = lib.filterAttrs (
+    name: opt: !isExcludedOption opt && !builtins.elem name excludedOptionNames
+  );
 
   # Filter out options where the visible attribute is set to false
   filterInvisibleOpts = lib.filterAttrs (_name: opt: opt.visible or true);
@@ -95,6 +98,27 @@ rec {
       requiredProps = lib.filterAttrs (_: prop: isRequired prop) properties;
       required = lib.optionalAttrs (requiredProps != { }) { required = lib.attrNames requiredProps; };
       header' = if addHeader then header else { };
+
+      # freeformType is a special type
+      freeformDefs = (options._module.freeformType.definitions or [ ]);
+      checkFreeformDefs =
+        defs:
+        if (builtins.length defs) != 1 then
+          throw "parseOptions: freeformType definitions not supported"
+        else
+          defs;
+      # It seems that freeformType has [ null ]
+      freeformProperties =
+        if freeformDefs != [ ] && builtins.head freeformDefs != null then
+          # freeformType has only one definition
+          parseOption {
+            # options._module.freeformType.definitions
+            type = (builtins.head (checkFreeformDefs freeformDefs));
+            _type = "option";
+            loc = options._module.freeformType.loc;
+          }
+        else
+          { };
     in
     # return jsonschema
     header'
@@ -103,7 +127,8 @@ rec {
       type = "object";
       inherit properties;
       additionalProperties = false;
-    };
+    }
+    // freeformProperties;
 
   # parses and evaluated nixos option to a jsonschema property definition
   parseOption =

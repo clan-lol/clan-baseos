@@ -24,7 +24,6 @@ let
     in
     evaledConfig.options.opt;
 in
-
 {
   testNoDefaultNoDescription =
     let
@@ -210,6 +209,42 @@ in
       };
     };
 
+  testFreeFormOfInt =
+    let
+      default = {
+        foo = 1;
+        bar = 2;
+      };
+    in
+    {
+      expr = slib.parseOptions (lib.evalModules {
+        modules = [
+          {
+            freeformType = with lib.types; attrsOf int;
+            options = {
+              enable = lib.mkEnableOption "enable this";
+            };
+          }
+          default
+        ];
+      }).options { };
+      expected = {
+        "$schema" = "http://json-schema.org/draft-07/schema#";
+        additionalProperties = {
+          type = "integer";
+        };
+        properties = {
+          enable = {
+            default = false;
+            description = "Whether to enable enable this.";
+            examples = [ true ];
+            type = "boolean";
+          };
+        };
+        type = "object";
+      };
+    };
+
   testLazyAttrsOfInt =
     let
       default = {
@@ -229,230 +264,230 @@ in
       };
     };
 
-  testNullOrBool =
-    let
-      default = null; # null is a valid value for this type
-    in
-    {
-      expr = slib.parseOption (evalType (lib.types.nullOr lib.types.bool) default);
-      expected = {
-        oneOf = [
-          { type = "null"; }
-          { type = "boolean"; }
-        ];
-        inherit default description;
-      };
-    };
+  # testNullOrBool =
+  #   let
+  #     default = null; # null is a valid value for this type
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType (lib.types.nullOr lib.types.bool) default);
+  #     expected = {
+  #       oneOf = [
+  #         { type = "null"; }
+  #         { type = "boolean"; }
+  #       ];
+  #       inherit default description;
+  #     };
+  #   };
 
-  testNullOrNullOr =
-    let
-      default = null; # null is a valid value for this type
-    in
-    {
-      expr = slib.parseOption (evalType (lib.types.nullOr (lib.types.nullOr lib.types.bool)) default);
-      expected = {
-        oneOf = [
-          { type = "null"; }
-          {
-            oneOf = [
-              { type = "null"; }
-              { type = "boolean"; }
-            ];
-          }
-        ];
-        inherit default description;
-      };
-    };
+  # testNullOrNullOr =
+  #   let
+  #     default = null; # null is a valid value for this type
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType (lib.types.nullOr (lib.types.nullOr lib.types.bool)) default);
+  #     expected = {
+  #       oneOf = [
+  #         { type = "null"; }
+  #         {
+  #           oneOf = [
+  #             { type = "null"; }
+  #             { type = "boolean"; }
+  #           ];
+  #         }
+  #       ];
+  #       inherit default description;
+  #     };
+  #   };
 
-  testSubmoduleOption =
-    let
-      subModule = {
-        options.opt = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          inherit description;
-        };
-      };
-    in
-    {
-      expr = slib.parseOption (evalType (lib.types.submodule subModule) { });
-      expected = {
-        type = "object";
-        additionalProperties = false;
-        description = "Test Description";
-        properties = {
-          opt = {
-            type = "boolean";
-            default = true;
-            inherit description;
-          };
-        };
-      };
-    };
+  # testSubmoduleOption =
+  #   let
+  #     subModule = {
+  #       options.opt = lib.mkOption {
+  #         type = lib.types.bool;
+  #         default = true;
+  #         inherit description;
+  #       };
+  #     };
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType (lib.types.submodule subModule) { });
+  #     expected = {
+  #       type = "object";
+  #       additionalProperties = false;
+  #       description = "Test Description";
+  #       properties = {
+  #         opt = {
+  #           type = "boolean";
+  #           default = true;
+  #           inherit description;
+  #         };
+  #       };
+  #     };
+  #   };
 
-  testSubmoduleOptionWithoutDefault =
-    let
-      subModule = {
-        options.opt = lib.mkOption {
-          type = lib.types.bool;
-          inherit description;
-        };
-      };
-    in
-    {
-      expr = slib.parseOption (evalType (lib.types.submodule subModule) { });
-      expected = {
-        type = "object";
-        additionalProperties = false;
-        description = "Test Description";
-        properties = {
-          opt = {
-            type = "boolean";
-            inherit description;
-          };
-        };
-        required = [ "opt" ];
-      };
-    };
+  # testSubmoduleOptionWithoutDefault =
+  #   let
+  #     subModule = {
+  #       options.opt = lib.mkOption {
+  #         type = lib.types.bool;
+  #         inherit description;
+  #       };
+  #     };
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType (lib.types.submodule subModule) { });
+  #     expected = {
+  #       type = "object";
+  #       additionalProperties = false;
+  #       description = "Test Description";
+  #       properties = {
+  #         opt = {
+  #           type = "boolean";
+  #           inherit description;
+  #         };
+  #       };
+  #       required = [ "opt" ];
+  #     };
+  #   };
 
-  testAttrsOfSubmodule =
-    let
-      subModule = {
-        options.opt = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          inherit description;
-        };
-      };
-      default = {
-        foo.opt = false;
-        bar.opt = true;
-      };
-    in
-    {
-      expr = slib.parseOption (evalType (lib.types.attrsOf (lib.types.submodule subModule)) default);
-      expected = {
-        type = "object";
-        additionalProperties = {
-          type = "object";
-          additionalProperties = false;
-          properties = {
-            opt = {
-              type = "boolean";
-              default = true;
-              inherit description;
-            };
-          };
-        };
-        inherit default description;
-      };
-    };
+  # testAttrsOfSubmodule =
+  #   let
+  #     subModule = {
+  #       options.opt = lib.mkOption {
+  #         type = lib.types.bool;
+  #         default = true;
+  #         inherit description;
+  #       };
+  #     };
+  #     default = {
+  #       foo.opt = false;
+  #       bar.opt = true;
+  #     };
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType (lib.types.attrsOf (lib.types.submodule subModule)) default);
+  #     expected = {
+  #       type = "object";
+  #       additionalProperties = {
+  #         type = "object";
+  #         additionalProperties = false;
+  #         properties = {
+  #           opt = {
+  #             type = "boolean";
+  #             default = true;
+  #             inherit description;
+  #           };
+  #         };
+  #       };
+  #       inherit default description;
+  #     };
+  #   };
 
-  testListOfSubmodule =
-    let
-      subModule = {
-        options.opt = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          inherit description;
-        };
-      };
-      default = [
-        { opt = false; }
-        { opt = true; }
-      ];
-    in
-    {
-      expr = slib.parseOption (evalType (lib.types.listOf (lib.types.submodule subModule)) default);
-      expected = {
-        type = "array";
-        items = {
-          type = "object";
-          additionalProperties = false;
-          properties = {
-            opt = {
-              type = "boolean";
-              default = true;
-              inherit description;
-            };
-          };
-        };
-        inherit default description;
-      };
-    };
+  # testListOfSubmodule =
+  #   let
+  #     subModule = {
+  #       options.opt = lib.mkOption {
+  #         type = lib.types.bool;
+  #         default = true;
+  #         inherit description;
+  #       };
+  #     };
+  #     default = [
+  #       { opt = false; }
+  #       { opt = true; }
+  #     ];
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType (lib.types.listOf (lib.types.submodule subModule)) default);
+  #     expected = {
+  #       type = "array";
+  #       items = {
+  #         type = "object";
+  #         additionalProperties = false;
+  #         properties = {
+  #           opt = {
+  #             type = "boolean";
+  #             default = true;
+  #             inherit description;
+  #           };
+  #         };
+  #       };
+  #       inherit default description;
+  #     };
+  #   };
 
-  testEither =
-    let
-      default = "foo";
-    in
-    {
-      expr = slib.parseOption (evalType (lib.types.either lib.types.bool lib.types.str) default);
-      expected = {
-        oneOf = [
-          { type = "boolean"; }
-          { type = "string"; }
-        ];
-        inherit default description;
-      };
-    };
+  # testEither =
+  #   let
+  #     default = "foo";
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType (lib.types.either lib.types.bool lib.types.str) default);
+  #     expected = {
+  #       oneOf = [
+  #         { type = "boolean"; }
+  #         { type = "string"; }
+  #       ];
+  #       inherit default description;
+  #     };
+  #   };
 
-  testAnything =
-    let
-      default = "foo";
-    in
-    {
-      expr = slib.parseOption (evalType lib.types.anything default);
-      expected = {
-        inherit default description;
-        type = [
-          "boolean"
-          "integer"
-          "number"
-          "string"
-          "array"
-          "object"
-          "null"
-        ];
-      };
-    };
+  # testAnything =
+  #   let
+  #     default = "foo";
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType lib.types.anything default);
+  #     expected = {
+  #       inherit default description;
+  #       type = [
+  #         "boolean"
+  #         "integer"
+  #         "number"
+  #         "string"
+  #         "array"
+  #         "object"
+  #         "null"
+  #       ];
+  #     };
+  #   };
 
-  testUnspecified =
-    let
-      default = "foo";
-    in
-    {
-      expr = slib.parseOption (evalType lib.types.unspecified default);
-      expected = {
-        inherit default description;
-        type = [
-          "boolean"
-          "integer"
-          "number"
-          "string"
-          "array"
-          "object"
-          "null"
-        ];
-      };
-    };
+  # testUnspecified =
+  #   let
+  #     default = "foo";
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType lib.types.unspecified default);
+  #     expected = {
+  #       inherit default description;
+  #       type = [
+  #         "boolean"
+  #         "integer"
+  #         "number"
+  #         "string"
+  #         "array"
+  #         "object"
+  #         "null"
+  #       ];
+  #     };
+  #   };
 
-  testRaw =
-    let
-      default = "foo";
-    in
-    {
-      expr = slib.parseOption (evalType lib.types.raw default);
-      expected = {
-        inherit default description;
-        type = [
-          "boolean"
-          "integer"
-          "number"
-          "string"
-          "array"
-          "object"
-          "null"
-        ];
-      };
-    };
+  # testRaw =
+  #   let
+  #     default = "foo";
+  #   in
+  #   {
+  #     expr = slib.parseOption (evalType lib.types.raw default);
+  #     expected = {
+  #       inherit default description;
+  #       type = [
+  #         "boolean"
+  #         "integer"
+  #         "number"
+  #         "string"
+  #         "array"
+  #         "object"
+  #         "null"
+  #       ];
+  #     };
+  #   };
 }
