@@ -90,6 +90,8 @@ def list_members(args: argparse.Namespace) -> None:
     networks = ZEROTIER_STATE_DIR / "controller.d" / "network" / network_id / "member"
     if not networks.exists():
         return
+    if not args.no_headers:
+        print(f"{'Member ID':<10} {'Ipv6 Address':<39} {'Authorized'}")
     for member in networks.iterdir():
         with member.open() as f:
             data = json.load(f)
@@ -98,16 +100,14 @@ def list_members(args: argparse.Namespace) -> None:
             except KeyError as e:
                 msg = f"error: {member} does not contain an id"
                 raise ClanError(msg) from e
-            print(
-                member_id,
-                compute_zerotier_ip(network_id, data["id"]),
-                data.get("authorized", False)
-            )
+            ip = str(compute_zerotier_ip(network_id, member_id))
+            authorized = str(data.get("authorized", False))
+            print(f"{member_id:<10} {ip:<39} {authorized}")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    subparser = parser.add_subparsers(dest="command")
+    parser = argparse.ArgumentParser(description="Manage zerotier members")
+    subparser = parser.add_subparsers(dest="command", required=True)
     parser_allow = subparser.add_parser("allow", help="Allow a member to join")
     parser_allow.add_argument(
         "--member-ip",
@@ -118,6 +118,9 @@ def main() -> None:
     parser_allow.set_defaults(func=allow_member)
 
     parser_list = subparser.add_parser("list", help="List members")
+    parser_list.add_argument(
+        "--no-headers", action="store_true", help="Do not print headers"
+    )
     parser_list.set_defaults(func=list_members)
 
     args = parser.parse_args()
