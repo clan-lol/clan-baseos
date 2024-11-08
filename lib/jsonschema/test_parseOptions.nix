@@ -36,4 +36,41 @@
         type = "object";
       };
     };
+
+  testFreeFormOfInt =
+    let
+      default = {
+        foo = 1;
+        bar = 2;
+      };
+    in
+    {
+      expr = slib.parseOptions (lib.evalModules {
+        modules = [
+          {
+            freeformType = with lib.types; attrsOf int;
+            options = {
+              enable = lib.mkEnableOption "enable this";
+            };
+          }
+          default
+        ];
+      }).options { };
+      expected = {
+        "$schema" = "http://json-schema.org/draft-07/schema#";
+        additionalProperties = {
+          type = "integer";
+        };
+        properties = {
+          enable = {
+            default = false;
+            description = "Whether to enable enable this.";
+            examples = [ true ];
+            type = "boolean";
+          };
+        };
+        type = "object";
+      };
+    };
+
 }
