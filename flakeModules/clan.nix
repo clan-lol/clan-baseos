@@ -13,6 +13,7 @@ in
 {
 
   options.clan = lib.mkOption {
+    default = { };
     type = types.submoduleWith {
       specialArgs = {
         inherit clan-core self;
