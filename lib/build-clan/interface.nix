@@ -3,6 +3,7 @@ let
   types = lib.types;
 in
 {
+
   options = {
     # Required options
     directory = lib.mkOption {
@@ -69,18 +70,6 @@ in
       default = { };
     };
 
-    pkgsForSystem = lib.mkOption {
-      type = types.functionTo (types.nullOr types.attrs);
-      default = _: null;
-      defaultText = "Lambda :: String -> { ... } | null";
-      description = ''
-        A function that maps from architecture to pkg. `( string -> pkgs )`
-
-        If specified this nixpkgs will be only imported once for each system.
-        This improves performance, but all nipxkgs.* options will be ignored.
-      '';
-    };
-
     # Outputs
     nixosConfigurations = lib.mkOption {
       # Hide from documentation.
@@ -112,4 +101,5 @@ in
       };
     };
   };
+
 }
