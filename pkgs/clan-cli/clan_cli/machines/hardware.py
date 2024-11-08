@@ -220,22 +220,22 @@ def register_update_hardware_config(parser: argparse.ArgumentParser) -> None:
         help="the name of the machine",
         type=machine_name_type,
     )
-    machine_parser = parser.add_argument(
+    add_dynamic_completer(machine_parser, complete_machines)
+    parser.add_argument(
         "target_host",
         type=str,
         nargs="?",
         help="ssh address to install to in the form of user@host:2222",
     )
-    machine_parser = parser.add_argument(
+    parser.add_argument(
         "--password",
         help="Pre-provided password the cli will prompt otherwise if needed.",
         type=str,
         required=False,
     )
-    machine_parser = parser.add_argument(
+    parser.add_argument(
         "--backend",
         help="The type of hardware report to generate.",
         choices=["nixos-generate-config", "nixos-facter"],
         default="nixos-generate-config",
     )
-    add_dynamic_completer(machine_parser, complete_machines)
