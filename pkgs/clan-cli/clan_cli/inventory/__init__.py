@@ -34,7 +34,7 @@ from .classes import (
 )
 
 # Re export classes here
-# This allows to rename classes in the generated code
+# This allows to renaming of classes in the generated code
 __all__ = [
     "from_dict",
     "dataclass_to_dict",
