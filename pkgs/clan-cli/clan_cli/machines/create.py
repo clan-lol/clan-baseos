@@ -133,7 +133,6 @@ def create_machine(opts: CreateOptions) -> None:
         merge_template_inventory(inventory, template_inventory, machine_name)
 
     # TODO: We should allow the template to specify machine metadata if not defined by user
-    #
     new_machine = InventoryMachine(name=machine_name, deploy=MachineDeploy())
     inventory.machines.update({new_machine.name: dataclass_to_dict(new_machine)})
     set_inventory(inventory, clan_dir, "Imported machine from template")
