@@ -8,7 +8,6 @@
 
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
-
   };
 
   outputs =
@@ -27,6 +26,7 @@
           ./checks.nix
           ./clan.nix
           ./devshells.nix
+          ./formatter.nix
         ];
       }
     );
