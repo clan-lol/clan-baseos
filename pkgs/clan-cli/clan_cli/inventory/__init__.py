@@ -34,7 +34,7 @@ from .classes import (
 )
 
 # Re export classes here
-# This allows to rename classes in the generated code
+# This allows to renaming of classes in the generated code
 __all__ = [
     "from_dict",
     "dataclass_to_dict",
@@ -97,7 +97,7 @@ def load_inventory_json(
 ) -> Inventory:
     """
     Load the inventory file from the flake directory
-    If not file is found, returns the default inventory
+    If no file is found, returns the default inventory
     """
     inventory = default
 
