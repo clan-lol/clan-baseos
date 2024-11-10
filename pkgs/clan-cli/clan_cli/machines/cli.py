@@ -99,8 +99,10 @@ This subcommand provides an interface to install machines managed by clan.
 
 Examples:
 
-  $ clan machines install [MACHINE] [TARGET_HOST]
-  Will install the specified machine [MACHINE], to the specified [TARGET_HOST].
+  $ clan machines install [MACHINE] --target-host [TARGET_HOST]
+  Will install the specified machine [MACHINE] to the specified [TARGET_HOST].
+  If the `--target-host` flag is omitted will try to find host information by
+  checking the deployment configuration inside the specified machine.
 
   $ clan machines install [MACHINE] --json [JSON]
   Will install the specified machine [MACHINE] to the host exposed by

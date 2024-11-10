@@ -329,8 +329,10 @@ Examples:
   Will update the specified machine [MACHINE], if [MACHINE] is omitted, the command
   will attempt to update every configured machine.
 
-  $ clan machines install [MACHINES] [TARGET_HOST]
-  Will install the specified machine [MACHINE], to the specified [TARGET_HOST].
+  $ clan machines install [MACHINE] --target-host [TARGET_HOST]
+  Will install the specified machine [MACHINE] to the specified [TARGET_HOST].
+  If the `--target-host` flag is omitted will try to find host information by
+  checking the deployment configuration inside the specified machine.
 
 For more detailed information, visit: {help_hyperlink("deploy", "https://docs.clan.lol/deploy")}
         """

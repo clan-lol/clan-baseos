@@ -105,7 +105,7 @@
             client.succeed("test -f test-flake/machines/test-install-machine/hardware-configuration.nix")
             client.succeed("clan machines update-hardware-config --backend nixos-facter --flake test-flake test-install-machine root@target>&2")
             client.succeed("test -f test-flake/machines/test-install-machine/facter.json")
-            client.succeed("clan machines install --debug --flake ${../..} --yes test-install-machine root@target >&2")
+            client.succeed("clan machines install --debug --flake ${../..} --yes test-install-machine --target-host root@target >&2")
             try:
               target.shutdown()
             except BrokenPipeError:
