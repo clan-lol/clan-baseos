@@ -112,7 +112,7 @@ This process involves preparing a suitable hardware and disk partitioning config
     1. **SSH with Password Authentication**
         Run the following command to install using SSH:
         ```bash
-        clan machines install [MACHINE] <IP>
+        clan machines install [MACHINE] --target-host <IP>
         ```
 
     2. **Scanning a QR Code for Installation Details**
@@ -133,7 +133,7 @@ This process involves preparing a suitable hardware and disk partitioning config
     Replace `<target_host>` with the **target computers' ip address**:
 
     ```bash
-    clan machines install [MACHINE] <target_host>
+    clan machines install [MACHINE] --target-host <target_host>
     ```
 
 
