@@ -204,7 +204,7 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
         nargs="*",
         default=[],
         metavar="MACHINE",
-        help="machine to update. If no machine is specified, all machines will be updated.",
+        help="Machine to update. If no machine is specified, all machines will be updated.",
     )
 
     add_dynamic_completer(machines_parser, complete_machines)
@@ -212,13 +212,13 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
         "--host-key-check",
         choices=["strict", "ask", "tofu", "none"],
         default="ask",
-        help="Host key (.ssh/known_hosts) check mode",
+        help="Host key (.ssh/known_hosts) check mode.",
     )
 
     parser.add_argument(
         "--target-host",
         type=str,
-        help="address of the machine to update, in the format of user@host:1234",
+        help="Address of the machine to update, in the format of user@host:1234.",
     )
     parser.add_argument(
         "--darwin",
