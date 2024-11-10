@@ -42,6 +42,7 @@ def validate_directory(root_dir: Path) -> None:
 class CreateOptions:
     clan_dir: FlakeId
     machine: InventoryMachine
+    target_host: str | None = None
     template_src: FlakeId | None = None
     template_name: str | None = None
 
@@ -132,8 +133,10 @@ def create_machine(opts: CreateOptions) -> None:
         template_inventory = load_inventory_json(dst)
         merge_template_inventory(inventory, template_inventory, machine_name)
 
+    deploy = MachineDeploy()
+    deploy.targetHost = opts.target_host
     # TODO: We should allow the template to specify machine metadata if not defined by user
-    new_machine = InventoryMachine(name=machine_name, deploy=MachineDeploy())
+    new_machine = InventoryMachine(name=machine_name, deploy=deploy)
     inventory.machines.update({new_machine.name: dataclass_to_dict(new_machine)})
     set_inventory(inventory, clan_dir, "Imported machine from template")
 
@@ -161,6 +164,7 @@ def create_command(args: argparse.Namespace) -> None:
         clan_dir=clan_dir,
         machine=machine,
         template_name=args.template_name,
+        target_host=args.target_host,
     )
     create_machine(opts)
 
@@ -182,4 +186,9 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
         "--template-name",
         type=str,
         help="The name of the template machine to import",
+    )
+    parser.add_argument(
+        "--target-host",
+        type=str,
+        help="Address of the machine to install and update, in the format of user@host:1234",
     )
