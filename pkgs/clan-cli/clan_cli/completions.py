@@ -260,6 +260,46 @@ def complete_groups(
     return groups_dict
 
 
+def complete_target_host(
+    prefix: str, parsed_args: argparse.Namespace, **kwargs: Any
+) -> Iterable[str]:
+    """
+    Provides completion functionality for target_host for a specific machine
+    """
+    target_hosts: list[str] = []
+    machine: str = parsed_args.machine
+
+    def run_cmd() -> None:
+        try:
+            if (clan_dir_result := clan_dir(None)) is not None:
+                flake = clan_dir_result
+            else:
+                flake = "."
+            target_host_result = json.loads(
+                run(
+                    nix_eval(
+                        flags=[
+                            f"{flake}#nixosConfigurations.{machine}.config.clan.core.networking.targetHost",
+                        ],
+                    ),
+                ).stdout.strip()
+            )
+
+            target_hosts.append(target_host_result)
+        except subprocess.CalledProcessError:
+            pass
+
+    thread = threading.Thread(target=run_cmd)
+    thread.start()
+    thread.join(timeout=COMPLETION_TIMEOUT)
+
+    if thread.is_alive():
+        return iter([])
+
+    providers_dict = {name: "target_host" for name in target_hosts}
+    return providers_dict
+
+
 def add_dynamic_completer(
     action: argparse.Action,
     completer: Callable[..., Iterable[str]],
