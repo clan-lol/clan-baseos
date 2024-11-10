@@ -208,8 +208,8 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
         metavar="MACHINE",
         help="Machine to update. If no machine is specified, all machines will be updated.",
     )
-
     add_dynamic_completer(machines_parser, complete_machines)
+
     parser.add_argument(
         "--host-key-check",
         choices=["strict", "ask", "tofu", "none"],
