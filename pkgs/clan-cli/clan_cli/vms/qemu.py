@@ -22,7 +22,7 @@ def graphics_options(vm: VmConfig) -> GraphicOptions:
         "driver=pa,model=virtio",
     ]
 
-    if vm.waypipe:
+    if vm.waypipe.enable:
         # FIXME: check for collisions
         cid = random.randint(1, 2**32)
         # fmt: off

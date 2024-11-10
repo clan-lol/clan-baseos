@@ -28,7 +28,7 @@ class VmConfig:
     machine_description: str | None
     machine_icon: Path | None
 
-    waypipe: bool = False
+    waypipe: WaypipeConfig | None = None
 
     def __post_init__(self) -> None:
         if isinstance(self.flake_url, str):
