@@ -8,7 +8,11 @@ import sys
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run
-from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.completions import (
+    add_dynamic_completer,
+    complete_machines,
+    complete_target_host,
+)
 from clan_cli.errors import ClanError
 from clan_cli.facts.generate import generate_facts
 from clan_cli.facts.upload import upload_secrets
@@ -217,11 +221,13 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
         help="Host key (.ssh/known_hosts) check mode.",
     )
 
-    parser.add_argument(
+    target_host_parser = parser.add_argument(
         "--target-host",
         type=str,
         help="Address of the machine to update, in the format of user@host:1234.",
     )
+    add_dynamic_completer(target_host_parser, complete_target_host)
+
     parser.add_argument(
         "--darwin",
         type=str,
