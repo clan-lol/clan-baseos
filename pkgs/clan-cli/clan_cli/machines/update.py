@@ -182,7 +182,9 @@ def update(args: argparse.Namespace) -> None:
 
             if not machines and ignored_machines != []:
                 print(
-                    "WARNING: No machines to update. The following defined machines were ignored because they do not have `clan.core.networking.targetHost` nixos option set:",
+                    "WARNING: No machines to update."
+                    "The following defined machines were ignored because they"
+                    "do not have the `clan.core.networking.targetHost` nixos option set:",
                     file=sys.stderr,
                 )
                 for machine in ignored_machines:
