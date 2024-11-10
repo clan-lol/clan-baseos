@@ -118,7 +118,7 @@ def create_machine(opts: CreateOptions) -> None:
 
         def log_copy(src: str, dst: str) -> None:
             relative_dst = dst.replace(f"{clan_dir}/", "")
-            log.info(f"Add file: {relative_dst}")
+            log.info(f"Adding file: {relative_dst}")
             shutil.copy2(src, dst)
 
         shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
