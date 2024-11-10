@@ -170,7 +170,7 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "machine_name",
         type=str,
-        help="The name of the machine to import",
+        help="The name of the machine to create",
     )
     parser.add_argument(
         "--tags",
