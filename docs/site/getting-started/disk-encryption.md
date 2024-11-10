@@ -96,7 +96,7 @@ blkdiscard /dev/disk/by-id/nvme-eui.002538b931b59865
 4. Run the `clan` machine installation with the following command:
 
 ```bash
-clan machines install gchq-local root@nixos-installer --yes --no-reboot
+clan machines install gchq-local --target-host root@nixos-installer --yes --no-reboot
 ```
 
 ### Step 2: ZFS Pool Import and System Installation
