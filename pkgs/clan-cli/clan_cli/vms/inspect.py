@@ -1,7 +1,9 @@
 import argparse
+import dataclasses
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
@@ -12,6 +14,13 @@ from clan_cli.machines.machines import Machine
 class WaypipeConfig:
     enable: bool
     command: list[str]
+
+    @classmethod
+    def from_json(cls: type["WaypipeConfig"], data: dict[str, Any]) -> "WaypipeConfig":
+        return cls(
+            enable=data["enable"],
+            command=data["command"],
+        )
 
 
 @dataclass
@@ -28,20 +37,28 @@ class VmConfig:
     machine_description: str | None
     machine_icon: Path | None
 
-    waypipe: bool = False
+    waypipe: WaypipeConfig
 
-    def __post_init__(self) -> None:
-        if isinstance(self.flake_url, str):
-            self.flake_url = FlakeId(self.flake_url)
-        if isinstance(self.waypipe, dict):
-            self.waypipe = WaypipeConfig(**self.waypipe)
-        if isinstance(self.flake_url, dict):
-            self.flake_url = FlakeId(**self.flake_url)
+    @classmethod
+    def from_json(cls: type["VmConfig"], data: dict[str, Any]) -> "VmConfig":
+        return cls(
+            machine_name=data["machine_name"],
+            flake_url=FlakeId.from_json(data["flake_url"]),
+            cores=data["cores"],
+            memory_size=data["memory_size"],
+            graphics=data["graphics"],
+            clan_name=data["clan_name"],
+            machine_description=data.get("machine_description"),
+            machine_icon=data.get("machine_icon"),
+            waypipe=WaypipeConfig.from_json(data["waypipe"]),
+        )
 
 
 def inspect_vm(machine: Machine) -> VmConfig:
     data = json.loads(machine.eval_nix("config.clan.core.vm.inspect"))
-    return VmConfig(flake_url=machine.flake, **data)
+    # HACK!
+    data["flake_url"] = dataclasses.asdict(machine.flake)
+    return VmConfig.from_json(data)
 
 
 @dataclass

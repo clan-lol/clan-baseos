@@ -22,7 +22,7 @@ def graphics_options(vm: VmConfig) -> GraphicOptions:
         "driver=pa,model=virtio",
     ]
 
-    if vm.waypipe:
+    if vm.waypipe.enable:
         # FIXME: check for collisions
         cid = random.randint(1, 2**32)
         # fmt: off
@@ -103,7 +103,7 @@ def qemu_command(
         f'regInfo={nixos_config["regInfo"]}/registration',
         "console=hvc0",
     ]
-    if not vm.waypipe:
+    if not vm.waypipe.enable:
         kernel_cmdline.append("console=tty0")
     hostfwd = ",".join(f"hostfwd=tcp::{h}-:{g}" for h, g in portmap.items())
     # fmt: off

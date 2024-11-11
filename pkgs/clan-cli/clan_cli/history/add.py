@@ -22,9 +22,13 @@ class HistoryEntry:
     flake: FlakeConfig
     settings: dict[str, Any] = dataclasses.field(default_factory=dict)
 
-    def __post_init__(self) -> None:
-        if isinstance(self.flake, dict):
-            self.flake = FlakeConfig(**self.flake)
+    @classmethod
+    def from_json(cls: type["HistoryEntry"], data: dict[str, Any]) -> "HistoryEntry":
+        return cls(
+            last_used=data["last_used"],
+            flake=FlakeConfig.from_json(data["flake"]),
+            settings=data.get("settings", {}),
+        )
 
 
 def _merge_dicts(d1: dict, d2: dict) -> dict:
@@ -52,7 +56,7 @@ def list_history() -> list[HistoryEntry]:
         for i, p in enumerate(parsed.copy()):
             # Everything from the settings dict is merged into the flake dict, and can override existing values
             parsed[i] = _merge_dicts(p, p.get("settings", {}))
-        logs = [HistoryEntry(**p) for p in parsed]
+        logs = [HistoryEntry.from_json(p) for p in parsed]
     except (json.JSONDecodeError, TypeError) as ex:
         msg = f"History file at {user_history_file()} is corrupted"
         raise ClanError(msg) from ex

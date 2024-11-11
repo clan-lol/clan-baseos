@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run
@@ -31,11 +32,19 @@ class FlakeConfig:
     revision: str | None
     vm: VmConfig
 
-    def __post_init__(self) -> None:
-        if isinstance(self.vm, dict):
-            self.vm = VmConfig(**self.vm)
-        if isinstance(self.flake_url, dict):
-            self.flake_url = FlakeId(**self.flake_url)
+    @classmethod
+    def from_json(cls: type["FlakeConfig"], data: dict[str, Any]) -> "FlakeConfig":
+        return cls(
+            flake_url=FlakeId.from_json(data["flake_url"]),
+            flake_attr=data["flake_attr"],
+            clan_name=data["clan_name"],
+            nar_hash=data["nar_hash"],
+            icon=data.get("icon"),
+            description=data.get("description"),
+            last_updated=data["last_updated"],
+            revision=data.get("revision"),
+            vm=VmConfig.from_json(data["vm"]),
+        )
 
 
 def run_cmd(cmd: list[str]) -> str:
