@@ -9,7 +9,6 @@ let
   inherit (config)
     directory
     machines
-    pkgsForSystem
     specialArgs
     ;
 
@@ -58,7 +57,7 @@ let
               # Settings
               clan.core.clanDir = directory;
               # Inherited from clan wide settings
-              # TODO: remove these
+              # TODO: remove these`
               clan.core.name = config.inventory.meta.name;
               clan.core.icon = config.inventory.meta.icon;
 
@@ -105,7 +104,12 @@ let
           name: _:
           nixosConfiguration {
             inherit name system;
-            pkgs = pkgsForSystem system;
+
+            # We removed pkgsForSystems because we have the problem that nixpkgs.* options are then ignored
+            # However our current model is to have the hardware config read and then set nixpkgs.hostPlatform automatically
+            # which gets ignored if we set pkgsForSystems. pkgsForSystems also needed to be set as else 
+            # pkgs was equals to null in nixosConfiguration above which broke something else
+            pkgs = nixpkgs.legacyPackages.${system};
           }
         ) allMachines
       )
@@ -122,7 +126,7 @@ let
             args
             // {
               inherit name system;
-              pkgs = pkgsForSystem system;
+              pkgs = nixpkgs.legacyPackages.${system};
             }
           )
         ) allMachines
