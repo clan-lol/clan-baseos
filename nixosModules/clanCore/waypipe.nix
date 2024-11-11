@@ -52,6 +52,7 @@
         "wheel"
         "video"
       ];
+      isNormalUser = true;
       home = "/home/user";
       shell = "/run/current-system/sw/bin/bash";
     };
