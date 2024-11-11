@@ -103,7 +103,7 @@ def qemu_command(
         f'regInfo={nixos_config["regInfo"]}/registration',
         "console=hvc0",
     ]
-    if not vm.waypipe:
+    if not vm.waypipe.enable:
         kernel_cmdline.append("console=tty0")
     hostfwd = ",".join(f"hostfwd=tcp::{h}-:{g}" for h, g in portmap.items())
     # fmt: off

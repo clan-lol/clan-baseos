@@ -280,7 +280,7 @@ def spawn_vm(
         packages = ["nixpkgs#qemu"]
 
         extra_env = {}
-        if vm.graphics and not vm.waypipe:
+        if vm.graphics and not vm.waypipe.enable:
             packages.append("nixpkgs#virt-viewer")
             remote_viewer_mimetypes = module_root() / "vms" / "mimetypes"
             extra_env["XDG_DATA_DIRS"] = (
@@ -374,7 +374,7 @@ def run_command(
     vm: VmConfig = inspect_vm(machine=machine_obj)
 
     if not os.environ.get("WAYLAND_DISPLAY"):
-        vm.waypipe = False
+        vm.waypipe.enable = False
 
     portmap = dict(p.split(":") for p in args.publish)
 

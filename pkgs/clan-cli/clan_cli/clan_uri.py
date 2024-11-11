@@ -3,16 +3,16 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
 class FlakeId:
     loc: str
 
-    def __post_init__(self) -> None:
-        assert isinstance(
-            self.loc, str
-        ), f"Flake {self.loc} has an invalid format: {type(self.loc)}"
+    @classmethod
+    def from_json(cls: type["FlakeId"], data: dict[str, Any]) -> "FlakeId":
+        return cls(loc=data["loc"])
 
     def __str__(self) -> str:
         return str(self.loc)
