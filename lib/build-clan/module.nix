@@ -9,6 +9,7 @@ let
   inherit (config)
     directory
     machines
+    pkgsForSystem
     specialArgs
     ;
 
@@ -57,7 +58,7 @@ let
               # Settings
               clan.core.clanDir = directory;
               # Inherited from clan wide settings
-              # TODO: remove these`
+              # TODO: remove these
               clan.core.name = config.inventory.meta.name;
               clan.core.icon = config.inventory.meta.icon;
 
@@ -126,7 +127,7 @@ let
             args
             // {
               inherit name system;
-              pkgs = nixpkgs.legacyPackages.${system};
+              pkgs = pkgsForSystem system;
             }
           )
         ) allMachines
