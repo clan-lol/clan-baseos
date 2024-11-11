@@ -94,6 +94,7 @@ def register_common_flags(parser: argparse.ArgumentParser) -> None:
 def create_parser(prog: str | None = None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=prog,
+        usage="%(prog)s [-h] [SUBCOMMAND]",
         description="The clan cli tool",
         epilog=(
             f"""
