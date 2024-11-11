@@ -21,6 +21,7 @@ from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_command, nix_metadata
 from clan_cli.ssh import HostKeyCheck
 from clan_cli.vars.generate import generate_vars
+from clan_cli.vars.upload import upload_secret_vars
 
 from .inventory import get_all_machines, get_selected_machines
 from .machine_group import MachineGroup
@@ -120,6 +121,7 @@ def deploy_machine(machines: MachineGroup) -> None:
         generate_vars([machine], None, False)
 
         upload_secrets(machine)
+        upload_secret_vars(machine)
 
         path = upload_sources(
             machine,

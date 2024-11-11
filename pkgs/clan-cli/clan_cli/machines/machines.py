@@ -152,6 +152,10 @@ class Machine:
         return self.deployment["facts"]["secretUploadDirectory"]
 
     @property
+    def secret_vars_upload_directory(self) -> str:
+        return self.deployment["vars"]["secretUploadDirectory"]
+
+    @property
     def flake_dir(self) -> Path:
         if self.flake.is_local():
             return self.flake.path
