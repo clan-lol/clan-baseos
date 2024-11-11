@@ -107,7 +107,8 @@ let
 
             # We removed pkgsForSystems because we have the problem that nixpkgs.* options are then ignored
             # However our current model is to have the hardware config read and then set nixpkgs.hostPlatform automatically
-            # which gets ignored if we set pkgsForSystems
+            # which gets ignored if we set pkgsForSystems. pkgsForSystems also needed to be set as else 
+            # pkgs was equals to null in nixosConfiguration above which broke something else
             pkgs = nixpkgs.legacyPackages.${system};
           }
         ) allMachines
