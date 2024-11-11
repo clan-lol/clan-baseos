@@ -1,5 +1,6 @@
 import inspect
 import logging
+import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -57,26 +58,49 @@ class ThreadFormatter(logging.Formatter):
         return FORMATTER[record.levelno](record, False).format(record)
 
 
-def get_caller() -> str:
+def get_callers(start: int = 2, end: int = 2) -> list[str]:
+    """
+    Get a list of caller information for a given range in the call stack.
+
+    :param start: The starting position in the call stack (1 being directly above in the call stack).
+    :param end: The end position in the call stack.
+    :return: A list of strings, each containing the file, line number, and function of the caller.
+    """
+
     frame = inspect.currentframe()
     if frame is None:
-        return "unknown"
-    caller_frame = frame.f_back
-    if caller_frame is None:
-        return "unknown"
-    caller_frame = caller_frame.f_back
-    if caller_frame is None:
-        return "unknown"
-    frame_info = inspect.getframeinfo(caller_frame)
+        return ["unknown"]
 
-    try:
-        filepath = Path(frame_info.filename).resolve()
-        filepath = Path("~", filepath.relative_to(Path.home()))
-    except Exception:
-        filepath = Path(frame_info.filename)
+    callers = []
+    current_frame = frame.f_back  # start from the caller of this function
 
-    ret = f"{filepath}:{frame_info.lineno}::{frame_info.function}"
-    return ret
+    # Skip `start - 1` frames.
+    for _ in range(start - 1):
+        if current_frame is not None:
+            current_frame = current_frame.f_back
+        else:
+            # If there aren't enough frames, return what we have as "unknown".
+            return ["unknown"] * (end - start + 1)
+
+    # Collect frame info until the `end` position.
+    for _ in range(end - start + 1):
+        if current_frame is not None:
+            frame_info = inspect.getframeinfo(current_frame)
+
+            try:
+                filepath = Path(frame_info.filename).resolve()
+                filepath = Path("~", filepath.relative_to(Path.home()))
+            except Exception:
+                filepath = Path(frame_info.filename)
+
+            ret = f"{filepath}:{frame_info.lineno}::{frame_info.function}"
+            callers.append(ret)
+            current_frame = current_frame.f_back
+        else:
+            # If there are no more frames but we haven't reached `end`, append "unknown".
+            callers.append("unknown")
+
+    return callers
 
 
 def setup_logging(level: Any, root_log_name: str = __name__.split(".")[0]) -> None:
@@ -89,7 +113,8 @@ def setup_logging(level: Any, root_log_name: str = __name__.split(".")[0]) -> No
 
     # Create and add your custom handler
     default_handler.setLevel(level)
-    default_handler.setFormatter(CustomFormatter(str(level) == str(logging.DEBUG)))
+    trace_depth = bool(int(os.environ.get("TRACE_DEPTH", "0")))
+    default_handler.setFormatter(CustomFormatter(trace_depth))
     main_logger.addHandler(default_handler)
 
     # Set logging level for other modules used by this module

@@ -14,9 +14,9 @@ from enum import Enum
 from pathlib import Path
 from typing import IO, Any
 
-from clan_cli.errors import ClanError
+from clan_cli.errors import ClanError, indent_command
 
-from .custom_logger import get_caller
+from .custom_logger import get_callers
 from .errors import ClanCmdError, CmdOut
 
 logger = logging.getLogger(__name__)
@@ -155,14 +155,33 @@ def run(
 ) -> CmdOut:
     if cwd is None:
         cwd = Path.cwd()
-    if input:
-        logger.debug(
-            f"""$: echo "{input.decode('utf-8', 'replace')}" | {shlex.join(cmd)} \nCaller: {get_caller()}"""
-        )
-    else:
-        logger.debug(f"$: {shlex.join(cmd)} \nCaller: {get_caller()}")
-    start = timeit.default_timer()
 
+    def print_trace(msg: str) -> None:
+        trace_depth = int(os.environ.get("TRACE_DEPTH", "0"))
+        callers = get_callers(3, 4 + trace_depth)
+
+        if "run_no_stdout" in callers[0]:
+            callers = callers[1:]
+        else:
+            callers.pop()
+
+        if len(callers) == 1:
+            callers_str = f"Caller: {callers[0]}\n"
+        else:
+            callers_str = "\n".join(
+                f"{i+1}: {caller}" for i, caller in enumerate(callers)
+            )
+            callers_str = f"Callers:\n{callers_str}"
+        logger.debug(f"{msg} \n{callers_str}")
+
+    if input:
+        print_trace(
+            f"$: echo '{input.decode('utf-8', 'replace')}' | {indent_command(cmd)}"
+        )
+    elif logger.isEnabledFor(logging.DEBUG):
+        print_trace(f"$: {indent_command(cmd)}")
+
+    start = timeit.default_timer()
     with ExitStack() as stack:
         process = stack.enter_context(
             subprocess.Popen(
@@ -223,7 +242,7 @@ def run_no_stdout(
     """
     if cwd is None:
         cwd = Path.cwd()
-    if logging.getLogger(__name__.split(".")[0]).isEnabledFor(logging.DEBUG):
+    if logger.isEnabledFor(logging.DEBUG):
         return run(cmd, env=env, log=log, check=check, error_msg=error_msg)
     log = Log.NONE
     return run(
