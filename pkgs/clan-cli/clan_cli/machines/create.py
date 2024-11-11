@@ -10,6 +10,7 @@ from clan_cli.api import API
 from clan_cli.clan.create import git_command
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import Log, run
+from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.dirs import clan_templates, get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
 from clan_cli.inventory import Machine as InventoryMachine
@@ -176,12 +177,13 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
         type=str,
         help="The name of the machine to create",
     )
-    parser.add_argument(
+    tag_parser = parser.add_argument(
         "--tags",
         nargs="+",
         default=[],
         help="Tags to associate with the machine. Can be used to assign multiple machines to services.",
     )
+    add_dynamic_completer(tag_parser, complete_tags)
     parser.add_argument(
         "--template-name",
         type=str,
