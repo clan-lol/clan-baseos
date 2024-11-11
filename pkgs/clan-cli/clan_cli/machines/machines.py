@@ -49,21 +49,14 @@ class Machine:
     @property
     def system(self) -> str:
         # We filter out function attributes because they are not serializable.
-        attr = f"""
-            (let
-                machine = ((builtins.getFlake "{self.flake}").nixosConfigurations.{self.name});
-            in
-            {{ x =  machine.pkgs.stdenv.hostPlatform.system; }}).x
-            """
-        if attr in self._eval_cache:
-            output = self._eval_cache[attr]
-        else:
+        attr = f'(builtins.getFlake "{self.flake}").nixosConfigurations.{self.name}.pkgs.hostPlatform.system'
+        output = self._eval_cache.get(attr)
+        if output is None:
             output = run_no_stdout(
                 nix_eval(["--impure", "--expr", attr])
             ).stdout.strip()
             self._eval_cache[attr] = output
-        value = json.loads(output)
-        return value
+        return json.loads(output)
 
     @property
     def can_build_locally(self) -> bool:
