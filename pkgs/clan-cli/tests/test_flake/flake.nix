@@ -19,7 +19,6 @@
           ./nixosModules/machine1.nix
           (
             {
-              lib,
               ...
             }:
             {
@@ -28,13 +27,6 @@
                 # speed up by not instantiating nixpkgs twice and disable documentation
                 nixpkgs.pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
                 documentation.enable = false;
-              };
-              options.clanImports = lib.mkOption {
-                type = lib.types.listOf lib.types.str;
-                description = ''
-                  A list of imported module names imported from clan-core.clanModules.<name>
-                  The buildClan function will automatically import these modules for the current machine.
-                '';
               };
             }
           )
