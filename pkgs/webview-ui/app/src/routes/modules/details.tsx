@@ -24,6 +24,7 @@ import {
   setValue,
   SubmitHandler,
 } from "@modular-forms/solid";
+import { DynForm } from "@/src/Form/form";
 
 export const ModuleDetails = () => {
   const params = useParams();
@@ -167,162 +168,11 @@ export const ModuleForm = (props: { id: string }) => {
     console.log("Schema Query", schemaQuery.data?.[props.id]);
   });
 
-  const [formStore, { Form, Field }] = createForm();
   const handleSubmit: SubmitHandler<NonNullable<unknown>> = async (
     values,
     event,
   ) => {
     console.log("Submitted form values", values);
-  };
-
-  const [newKey, setNewKey] = createSignal<string>("");
-
-  const handleChangeKey: JSX.ChangeEventHandler<HTMLInputElement, Event> = (
-    e,
-  ) => {
-    setNewKey(e.currentTarget.value);
-  };
-  const SchemaForm = (props: SchemaFormProps) => {
-    return (
-      <div>
-        <Switch
-          fallback={<Unsupported what={"schema"} schema={props.schema} />}
-        >
-          <Match when={props.schema.type === "object"}>
-            <Switch
-              fallback={<Unsupported what={"object"} schema={props.schema} />}
-            >
-              <Match
-                when={
-                  !props.schema.additionalProperties && props.schema.properties
-                }
-              >
-                {(properties) => (
-                  <For each={Object.entries(properties())}>
-                    {([key, value]) => (
-                      <Switch fallback={`Cannot render sub-schema of ${value}`}>
-                        <Match when={typeof value === "object" && value}>
-                          {(sub) => (
-                            <SchemaForm
-                              title={key}
-                              schema={sub()}
-                              path={[...props.path, key]}
-                            />
-                          )}
-                        </Match>
-                      </Switch>
-                    )}
-                  </For>
-                )}
-              </Match>
-              <Match
-                when={
-                  typeof props.schema.additionalProperties == "object" &&
-                  props.schema.additionalProperties
-                }
-              >
-                {(additionalProperties) => (
-                  <>
-                    <div>{props.title}</div>
-                    {/* @ts-expect-error: We don't know the field names ahead of time */}
-                    <Field name={props.title}>
-                      {(f, p) => (
-                        <>
-                          <Show when={f.value}>
-                            <For
-                              each={Object.entries(
-                                f.value as Record<string, unknown>,
-                              )}
-                            >
-                              {(v) => (
-                                <div>
-                                  <div>
-                                    {removeTrailingS(props.title)}: {v[0]}
-                                  </div>
-                                  <div>
-                                    <SchemaForm
-                                      path={[...props.path, v[0]]}
-                                      schema={additionalProperties()}
-                                      title={v[0]}
-                                    />{" "}
-                                  </div>
-                                </div>
-                              )}
-                            </For>
-                          </Show>
-                          <input
-                            value={newKey()}
-                            onChange={handleChangeKey}
-                            type={"text"}
-                            placeholder={`Name of ${removeTrailingS(props.title)}`}
-                            required
-                          />
-                          <button
-                            class="btn btn-ghost"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              const value = getValue(formStore, props.title);
-                              if (!newKey()) return;
-
-                              if (value === undefined) {
-                                setValue(formStore, props.title, {
-                                  [newKey()]: {},
-                                });
-                                setNewKey("");
-                              } else if (
-                                typeof value === "object" &&
-                                value !== null &&
-                                !(newKey() in value)
-                              ) {
-                                setValue(formStore, props.title, {
-                                  ...value,
-                                  [newKey()]: {},
-                                });
-                                setNewKey("");
-                              } else {
-                                console.debug(
-                                  "Unsupported key value pair. (attrsOf t)",
-                                  { value },
-                                );
-                              }
-                            }}
-                          >
-                            Add new {removeTrailingS(props.title)}
-                          </button>
-                        </>
-                      )}
-                    </Field>
-                  </>
-                )}
-              </Match>
-            </Switch>
-          </Match>
-          <Match when={props.schema.type === "array"}>
-            TODO: Array field "{props.title}"
-          </Match>
-          <Match when={props.schema.type === "string"}>
-            {/* @ts-expect-error: We dont know the field names ahead of time */}
-            <Field name={props.path.join(".")}>
-              {(field, fieldProps) => (
-                <TextInput
-                  formStore={formStore}
-                  inputProps={fieldProps}
-                  label={props.title}
-                  // @ts-expect-error: It is a string, otherwise the json schema would be invalid
-                  value={field.value ?? ""}
-                  placeholder={`${props.schema.default || ""}`.replace(
-                    "\u2039name\u203a",
-                    `${props.path.at(-2)}`,
-                  )}
-                  error={field.error}
-                  required={!props.schema.default}
-                />
-              )}
-            </Field>
-          </Match>
-        </Switch>
-      </div>
-    );
   };
 
   return (
@@ -337,11 +187,13 @@ export const ModuleForm = (props: { id: string }) => {
                 {([role, schema]) => (
                   <div class="my-2">
                     <h4 class="text-xl">{role}</h4>
-                    <Form onSubmit={handleSubmit}>
-                      <SchemaForm title={role} schema={schema} path={[]} />
-                      <br />
-                      <button class="btn btn-primary">Save</button>
-                    </Form>
+                    <DynForm
+                      handleSubmit={handleSubmit}
+                      schema={schema}
+                      components={{
+                        after: <button class="btn btn-primary">Submit</button>,
+                      }}
+                    />
                   </div>
                 )}
               </For>
