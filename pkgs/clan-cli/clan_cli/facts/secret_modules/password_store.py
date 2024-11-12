@@ -92,7 +92,7 @@ class SecretStore(SecretStoreBase):
         return b"\n".join(hashes)
 
     @override
-    def update_check(self) -> bool:
+    def needs_upload(self) -> bool:
         local_hash = self.generate_hash()
         remote_hash = self.machine.target_host.run(
             # TODO get the path to the secrets from the machine
@@ -103,9 +103,9 @@ class SecretStore(SecretStoreBase):
 
         if not remote_hash:
             print("remote hash is empty")
-            return False
+            return True
 
-        return local_hash.decode() == remote_hash
+        return local_hash.decode() != remote_hash
 
     def upload(self, output_dir: Path) -> None:
         os.umask(0o077)
