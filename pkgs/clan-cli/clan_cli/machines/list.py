@@ -7,6 +7,7 @@ from typing import Literal
 
 from clan_cli.api import API
 from clan_cli.cmd import run_no_stdout
+from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.inventory import Machine, load_inventory_eval, set_inventory
 from clan_cli.nix import nix_eval, nix_shell
@@ -147,4 +148,5 @@ def register_list_parser(parser: argparse.ArgumentParser) -> None:
         default=[],
         help="Tags that machines should be queried for. Multiple tags will intersect.",
     )
+    add_dynamic_completer(tag_parser, complete_tags)
     parser.set_defaults(func=list_command)
