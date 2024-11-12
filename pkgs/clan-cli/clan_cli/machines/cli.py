@@ -57,6 +57,13 @@ Examples:
 
   $ clan machines list
   Lists all the machines and their descriptions.
+
+  $ clan machines list --tags [TAGS..]
+  Lists all the machines that have the specified tags associated through the inventory.
+  If multiple tags are specified machines are matched against both tags.
+
+  $ clan machines list --tags vm
+  Lists all machines that are associated with the "vm" tag through the inventory.
         """
         ),
         formatter_class=argparse.RawTextHelpFormatter,
