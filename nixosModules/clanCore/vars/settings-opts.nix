@@ -23,10 +23,10 @@
   };
 
   secretUploadDirectory = lib.mkOption {
-    type = lib.types.nullOr lib.types.path;
-    default = null;
+    type = lib.types.path;
     description = ''
       The directory where secrets are uploaded into, This is backend specific.
+      This is usally set by the secret store backend.
     '';
   };
 
@@ -63,10 +63,10 @@
   };
 
   publicDirectory = lib.mkOption {
-    type = lib.types.nullOr lib.types.path;
-    default = null;
+    type = lib.types.path;
     description = ''
       The directory where public facts are stored.
+      This is usally set by the public store backend.
     '';
   };
 }
