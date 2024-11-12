@@ -38,6 +38,7 @@ let
   # Filter out options where the visible attribute is set to false
   filterInvisibleOpts = lib.filterAttrs (_name: opt: opt.visible or true);
 
+  # Constant: Used for the 'any' type
   allBasicTypes = [
     "boolean"
     "integer"
@@ -78,7 +79,26 @@ rec {
         default = opt.default;
       };
 
-  parseOptions' = lib.flip parseOptions { addHeader = false; };
+  parseSubOptions =
+    {
+      option,
+      prefix ? [ ],
+    }:
+    let
+      subOptions = option.type.getSubOptions option.loc;
+    in
+    parseOptions subOptions {
+      addHeader = false;
+      path = option.loc ++ prefix;
+    };
+
+  makeModuleInfo =
+    { path }:
+    {
+      "$exportedModuleInfo" = {
+        inherit path;
+      };
+    };
 
   # parses a set of evaluated nixos options to a jsonschema
   parseOptions =
@@ -88,11 +108,12 @@ rec {
       # Can be customized if needed
       # By default the header is not added to the schema
       addHeader ? true,
+      path ? [ "<root>" ],
     }:
     let
       options' = filterInvisibleOpts (filterExcludedAttrs (clean options));
       # parse options to jsonschema properties
-      properties = lib.mapAttrs (_name: option: parseOption option) options';
+      properties = lib.mapAttrs (_name: option: (parseOption' (path ++ [ _name ]) option)) options';
       # TODO: figure out how to handle if prop.anyOf is used
       isRequired = prop: !(prop ? default || prop.type or null == "object");
       requiredProps = lib.filterAttrs (_: prop: isRequired prop) properties;
@@ -100,7 +121,7 @@ rec {
       header' = if addHeader then header else { };
 
       # freeformType is a special type
-      freeformDefs = (options._module.freeformType.definitions or [ ]);
+      freeformDefs = options._module.freeformType.definitions or [ ];
       checkFreeformDefs =
         defs:
         if (builtins.length defs) != 1 then
@@ -113,15 +134,21 @@ rec {
           # freeformType has only one definition
           parseOption {
             # options._module.freeformType.definitions
-            type = (builtins.head (checkFreeformDefs freeformDefs));
+            type = builtins.head (checkFreeformDefs freeformDefs);
             _type = "option";
-            loc = options._module.freeformType.loc;
+            loc = path;
           }
         else
           { };
+
+      # Metadata about the module that is made available to the schema via '$propagatedModuleInfo'
+      exportedModuleInfo = lib.optionalAttrs true (makeModuleInfo {
+        inherit path;
+      });
     in
     # return jsonschema
     header'
+    // exportedModuleInfo
     // required
     // {
       type = "object";
@@ -131,8 +158,9 @@ rec {
     // freeformProperties;
 
   # parses and evaluated nixos option to a jsonschema property definition
-  parseOption =
-    option:
+  parseOption = parseOption' [ ];
+  parseOption' =
+    currentPath: option:
     let
       default = getDefaultFrom option;
       example = lib.optionalAttrs (option ? example) {
@@ -141,6 +169,9 @@ rec {
       };
       description = lib.optionalAttrs (option ? description) {
         description = option.description.text or option.description;
+      };
+      exposedModuleInfo = makeModuleInfo {
+        path = option.loc;
       };
     in
     # either type
@@ -164,10 +195,14 @@ rec {
         ];
         optionsList = filterExcluded optionsList';
       in
-      default // example // description // { oneOf = map parseOption optionsList; }
+      exposedModuleInfo // default // example // description // { oneOf = map parseOption optionsList; }
     # handle nested options (not a submodule)
+    # foo.bar = mkOption { type = str; };
     else if !option ? _type then
-      parseOptions' option
+      (parseOptions option {
+        addHeader = false;
+        path = currentPath;
+      })
     # throw if not an option
     else if option._type != "option" && option._type != "option-type" then
       throw "parseOption: not an option"
@@ -184,6 +219,7 @@ rec {
         };
       in
       default
+      // exposedModuleInfo
       // example
       // description
       // {
@@ -196,19 +232,19 @@ rec {
       option.type.name == "bool"
     # return jsonschema property definition for bool
     then
-      default // example // description // { type = "boolean"; }
+      exposedModuleInfo // default // example // description // { type = "boolean"; }
     # parse float
     else if
       option.type.name == "float"
     # return jsonschema property definition for float
     then
-      default // example // description // { type = "number"; }
+      exposedModuleInfo // default // example // description // { type = "number"; }
     # parse int
     else if
       (option.type.name == "int" || option.type.name == "positiveInt")
     # return jsonschema property definition for int
     then
-      default // example // description // { type = "integer"; }
+      exposedModuleInfo // default // example // description // { type = "integer"; }
     # TODO: Add support for intMatching in jsonschema
     # parse port type aka. "unsignedInt16"
     else if
@@ -217,7 +253,7 @@ rec {
       || option.type.name == "pkcs11"
       || option.type.name == "intBetween"
     then
-      default // example // description // { type = "integer"; }
+      exposedModuleInfo // default // example // description // { type = "integer"; }
     # parse string
     # TODO: parse more precise string types
     else if
@@ -227,55 +263,56 @@ rec {
       || option.type.name == "passwdEntry path"
     # return jsonschema property definition for string
     then
-      default // example // description // { type = "string"; }
+      exposedModuleInfo // default // example // description // { type = "string"; }
     # TODO: Add support for stringMatching in jsonschema
     # parse stringMatching
     else if lib.strings.hasPrefix "strMatching" option.type.name then
-      default // example // description // { type = "string"; }
+      exposedModuleInfo // default // example // description // { type = "string"; }
     # TODO: Add support for separatedString in jsonschema
     else if lib.strings.hasPrefix "separatedString" option.type.name then
-      default // example // description // { type = "string"; }
+      exposedModuleInfo // default // example // description // { type = "string"; }
     # parse string
     else if
       option.type.name == "path"
     # return jsonschema property definition for path
     then
-      default // example // description // { type = "string"; }
+      exposedModuleInfo // default // example // description // { type = "string"; }
     # parse anything
     else if
       option.type.name == "anything"
     # return jsonschema property definition for anything
     then
-      default // example // description // { type = allBasicTypes; }
+      exposedModuleInfo // default // example // description // { type = allBasicTypes; }
     # parse unspecified
     else if
       option.type.name == "unspecified"
     # return jsonschema property definition for unspecified
     then
-      default // example // description // { type = allBasicTypes; }
+      exposedModuleInfo // default // example // description // { type = allBasicTypes; }
     # parse raw
     else if
       option.type.name == "raw"
     # return jsonschema property definition for raw
     then
-      default // example // description // { type = allBasicTypes; }
+      exposedModuleInfo // default // example // description // { type = allBasicTypes; }
     # parse enum
     else if
       option.type.name == "enum"
     # return jsonschema property definition for enum
     then
-      default // example // description // { enum = option.type.functor.payload; }
+      exposedModuleInfo // default // example // description // { enum = option.type.functor.payload; }
     # parse listOf submodule
     else if
-      option.type.name == "listOf" && option.type.functor.wrapped.name == "submodule"
+      option.type.name == "listOf" && option.type.nestedTypes.elemType.name == "submodule"
     # return jsonschema property definition for listOf submodule
     then
       default
+      // exposedModuleInfo
       // example
       // description
       // {
         type = "array";
-        items = parseOptions' (option.type.functor.wrapped.getSubOptions option.loc);
+        items = parseSubOptions { inherit option; };
       }
     # parse list
     else if
@@ -284,12 +321,13 @@ rec {
     then
       let
         nestedOption = {
-          type = option.type.functor.wrapped;
+          type = option.type.nestedTypes.elemType;
           _type = "option";
           loc = option.loc;
         };
       in
       default
+      // exposedModuleInfo
       // example
       // description
       // {
@@ -298,21 +336,25 @@ rec {
       // (lib.optionalAttrs (!isExcludedOption nestedOption) { items = parseOption nestedOption; })
     # parse list of unspecified
     else if
-      (option.type.name == "listOf") && (option.type.functor.wrapped.name == "unspecified")
+      (option.type.name == "listOf") && (option.type.nestedTypes.elemType.name == "unspecified")
     # return jsonschema property definition for list
     then
-      default // example // description // { type = "array"; }
+      exposedModuleInfo // default // example // description // { type = "array"; }
     # parse attrsOf submodule
     else if
       option.type.name == "attrsOf" && option.type.nestedTypes.elemType.name == "submodule"
     # return jsonschema property definition for attrsOf submodule
     then
       default
+      // exposedModuleInfo
       // example
       // description
       // {
         type = "object";
-        additionalProperties = parseOptions' (option.type.nestedTypes.elemType.getSubOptions option.loc);
+        additionalProperties = parseSubOptions {
+          inherit option;
+          prefix = [ "<name>" ];
+        };
       }
     # parse attrs
     else if
@@ -320,6 +362,7 @@ rec {
     # return jsonschema property definition for attrs
     then
       default
+      // exposedModuleInfo
       // example
       // description
       // {
@@ -340,6 +383,7 @@ rec {
         };
       in
       default
+      // exposedModuleInfo
       // example
       // description
       // {
@@ -360,7 +404,7 @@ rec {
     # return jsonschema property definition for submodule
     # then (lib.attrNames (option.type.getSubOptions option.loc).opt)
     then
-      example // description // parseOptions' (option.type.getSubOptions option.loc)
+      exposedModuleInfo // example // description // parseSubOptions { inherit option; }
     # throw error if option type is not supported
     else
       notSupported option;
