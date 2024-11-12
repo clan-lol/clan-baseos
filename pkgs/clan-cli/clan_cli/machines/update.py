@@ -120,6 +120,7 @@ def deploy_machine(machines: MachineGroup) -> None:
         generate_vars([machine], None, False)
 
         upload_secrets(machine)
+
         path = upload_sources(
             machine,
         )
@@ -151,7 +152,10 @@ def deploy_machine(machines: MachineGroup) -> None:
         if ret.returncode != 0:
             ret = host.run(cmd, extra_env=env)
 
-    machines.run_function(deploy)
+    if len(machines.group.hosts) > 1:
+        machines.run_function(deploy)
+    else:
+        deploy(machines.machines[0])
 
 
 def update(args: argparse.Namespace) -> None:

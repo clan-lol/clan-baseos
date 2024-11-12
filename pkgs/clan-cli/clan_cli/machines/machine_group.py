@@ -10,6 +10,7 @@ T = TypeVar("T")
 
 class MachineGroup:
     def __init__(self, machines: list[Machine]) -> None:
+        self.machines = machines
         self.group = HostGroup([m.target_host for m in machines])
 
     def __repr__(self) -> str:
