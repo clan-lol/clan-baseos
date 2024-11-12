@@ -45,17 +45,10 @@ in
 
   config = {
     assertions = [
+      # TODO: This should also be checked via frontmatter constraints
       {
         assertion = builtins.length instanceNames == 1;
         message = "The zerotier module currently only supports one instance per machine, but found ${builtins.toString instanceNames}";
-      }
-      {
-        assertion = builtins.length roles.controller.machines == 1;
-        message = "The zerotier module requires exactly one controller, but found ${builtins.toString roles.controller.machines}";
-      }
-      {
-        assertion = builtins.length roles.moons.machines <= 7;
-        message = "The zerotier module allows at most for seven moons , but found ${builtins.toString roles.moons.machines}";
       }
     ];
 

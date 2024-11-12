@@ -42,6 +42,7 @@ let
     builtins.elem "inventory" (clan-core.lib.modules.getFrontmatter serviceName).features or [ ];
 
   trimExtension = name: builtins.substring 0 (builtins.stringLength name - 4) name;
+
   /*
     Returns a NixOS configuration for every machine in the inventory.
 
@@ -126,6 +127,10 @@ let
             nonExistingRoles = builtins.filter (role: !(builtins.elem role roles)) (
               builtins.attrNames (serviceConfig.roles or { })
             );
+            constraintAssertions = clan-core.lib.modules.checkConstraints {
+              moduleName = serviceName;
+              inherit resolvedRoles;
+            };
           in
           if (nonExistingRoles != [ ]) then
             throw "Roles ${builtins.toString nonExistingRoles} are not defined in the service ${serviceName}."
@@ -149,6 +154,7 @@ let
                 }
               )
               ({
+                assertions = constraintAssertions;
                 clan.inventory.services.${serviceName}.${instanceName} = {
                   roles = resolvedRoles;
                   # TODO: Add inverseRoles to the service config if needed
