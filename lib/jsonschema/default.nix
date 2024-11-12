@@ -108,7 +108,7 @@ rec {
       # Can be customized if needed
       # By default the header is not added to the schema
       addHeader ? true,
-      path ? [ "<root>" ],
+      path ? [ ],
     }:
     let
       options' = filterInvisibleOpts (filterExcludedAttrs (clean options));

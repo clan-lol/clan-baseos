@@ -20,12 +20,24 @@
       expr = slib.parseOptions evaled.options { };
       expected = {
         "$schema" = "http://json-schema.org/draft-07/schema#";
+        "$exportedModuleInfo" = {
+          path = [ ];
+        };
         additionalProperties = false;
         properties = {
           foo = {
+            "$exportedModuleInfo" = {
+              path = [ "foo" ];
+            };
             additionalProperties = false;
             properties = {
               bar = {
+                "$exportedModuleInfo" = {
+                  path = [
+                    "foo"
+                    "bar"
+                  ];
+                };
                 type = "boolean";
               };
             };
@@ -58,11 +70,20 @@
       }).options { };
       expected = {
         "$schema" = "http://json-schema.org/draft-07/schema#";
+        "$exportedModuleInfo" = {
+          path = [ ];
+        };
         additionalProperties = {
+          "$exportedModuleInfo" = {
+            path = [ ];
+          };
           type = "integer";
         };
         properties = {
           enable = {
+            "$exportedModuleInfo" = {
+              path = [ "enable" ];
+            };
             default = false;
             description = "Whether to enable enable this.";
             examples = [ true ];

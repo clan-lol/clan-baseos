@@ -1,32 +1,39 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$exportedModuleInfo": { "path": [] },
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "name": {
+      "$exportedModuleInfo": { "path": ["name"] },
       "type": "string",
       "default": "John Doe",
       "description": "The name of the user"
     },
     "age": {
+      "$exportedModuleInfo": { "path": ["age"] },
       "type": "integer",
       "default": 42,
       "description": "The age of the user"
     },
     "isAdmin": {
+      "$exportedModuleInfo": { "path": ["isAdmin"] },
       "type": "boolean",
       "default": false,
       "description": "Is the user an admin?"
     },
     "kernelModules": {
+      "$exportedModuleInfo": { "path": ["kernelModules"] },
       "type": "array",
       "items": {
+        "$exportedModuleInfo": { "path": ["kernelModules"] },
         "type": "string"
       },
       "default": ["nvme", "xhci_pci", "ahci"],
       "description": "A list of enabled kernel modules"
     },
     "userIds": {
+      "$exportedModuleInfo": { "path": ["userIds"] },
       "type": "object",
       "default": {
         "horst": 1,
@@ -34,15 +41,18 @@
         "albrecht": 3
       },
       "additionalProperties": {
+        "$exportedModuleInfo": { "path": ["userIds"] },
         "type": "integer"
       },
       "description": "Some attributes"
     },
     "services": {
+      "$exportedModuleInfo": { "path": ["services"] },
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "opt": {
+          "$exportedModuleInfo": { "path": ["services", "opt"] },
           "type": "string",
           "default": "foo",
           "description": "A submodule option"
@@ -50,14 +60,22 @@
       }
     },
     "destinations": {
+      "$exportedModuleInfo": { "path": ["destinations"] },
       "additionalProperties": {
+        "$exportedModuleInfo": { "path": ["destinations", "<name>"] },
         "properties": {
           "name": {
+            "$exportedModuleInfo": {
+              "path": ["destinations", "<name>", "name"]
+            },
             "default": "‹name›",
             "description": "the name of the backup job",
             "type": "string"
           },
           "repo": {
+            "$exportedModuleInfo": {
+              "path": ["destinations", "<name>", "repo"]
+            },
             "description": "the borgbackup repository to backup to",
             "type": "string"
           }
