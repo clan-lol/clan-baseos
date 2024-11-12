@@ -17,7 +17,11 @@ def get_var(machine: Machine, var_id: str) -> Var:
     vars_ = get_vars(machine)
     results = []
     for var in vars_:
-        if var_id in var.id:
+        if var.id == var_id:
+            # exact match
+            results = [var]
+            break
+        if var.id.startswith(var_id):
             results.append(var)
     if len(results) == 0:
         msg = f"No var found for search string: {var_id}"
