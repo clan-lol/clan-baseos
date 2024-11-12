@@ -9,7 +9,8 @@ let
   instanceName = builtins.head instanceNames;
   zeroTierInstance = config.clan.inventory.services.zerotier.${instanceName};
   roles = zeroTierInstance.roles;
-  stringSet = list: builtins.attrNames (builtins.groupBy lib.id list);
+  # TODO(@mic92): This should be upstreamed to nixpkgs
+  uniqueStrings = list: builtins.attrNames (builtins.groupBy lib.id list);
 in
 {
   imports = [
@@ -18,7 +19,7 @@ in
   config = {
     systemd.services.zerotier-inventory-autoaccept =
       let
-        machines = stringSet (roles.moon.machines ++ roles.controller.machines ++ roles.peer.machines);
+        machines = uniqueStrings (roles.moon.machines ++ roles.controller.machines ++ roles.peer.machines);
         networkIps = builtins.foldl' (
           ips: name:
           if builtins.pathExists "${config.clan.core.clanDir}/machines/${name}/facts/zerotier-ip" then
