@@ -63,6 +63,7 @@ in
   options.clan.inventory.assertions = lib.mkOption {
     default = { };
     internal = true;
+    visible = false;
     type = lib.types.attrsOf (
       # TODO: use NixOS upstream type
       lib.types.submodule {
