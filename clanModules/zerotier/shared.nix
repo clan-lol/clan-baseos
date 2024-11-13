@@ -48,7 +48,7 @@ in
       # TODO: This should also be checked via frontmatter constraints
       {
         assertion = builtins.length instanceNames == 1;
-        message = "The zerotier module currently only supports one instance per machine, but found ${builtins.toString instanceNames}";
+        message = "The zerotier module currently only supports one instance per machine, but found ${builtins.toString instanceNames} on machine ${config.clan.core.machineName}";
       }
     ];
 
