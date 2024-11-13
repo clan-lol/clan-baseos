@@ -55,15 +55,12 @@ let
   evalClanModulesWithRoles =
     clanModules:
     let
-      getRoles = clan-core.lib.modules.getRoles;
       res = builtins.mapAttrs (
         moduleName: module:
         let
-          # module must be a path to the clanModule root by convention
-          # See: clanModules/flake-module.nix
           roles =
             assert lib.isPath module;
-            getRoles module;
+            clan-core.lib.modules.getRoles' moduleName;
         in
         lib.listToAttrs (
           lib.map (role: {

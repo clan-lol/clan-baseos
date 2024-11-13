@@ -2,53 +2,51 @@
   lib,
   config,
   resolvedRoles,
+  instanceName,
   moduleName,
   ...
 }:
+let
+  inherit (config) roles;
+in
 {
   imports = [
     ./interface.nix
-  ];
-  config.assertions = lib.foldl' (
-    ass: roleName:
-    let
-      roleConstraints = config.roles.${roleName};
-      members = resolvedRoles.${roleName}.machines;
-      memberCount = builtins.length members;
-      # Checks
-      eqCheck =
-        if roleConstraints.eq != null then
-          [
-            {
-              assertion = memberCount == roleConstraints.eq;
-              message = "The ${moduleName} module requires exactly ${builtins.toString roleConstraints.eq} '${roleName}', but found ${builtins.toString memberCount}: ${builtins.toString members}";
-            }
-          ]
-        else
-          [ ];
-
-      minCheck =
-        if roleConstraints.min > 0 then
-          [
-            {
+    # Role assertions
+    {
+      config.assertions = lib.foldlAttrs (
+        ass: roleName: roleConstraints:
+        let
+          members = resolvedRoles.${roleName}.machines;
+          memberCount = builtins.length members;
+          # Checks
+          minCheck = lib.optionalAttrs (roleConstraints.min > 0) {
+            "${moduleName}.${instanceName}.roles.${roleName}.min" = {
               assertion = memberCount >= roleConstraints.min;
-              message = "The ${moduleName} module requires at least ${builtins.toString roleConstraints.min} '${roleName}'s, but found ${builtins.toString memberCount}: ${builtins.toString members}";
-            }
-          ]
-        else
-          [ ];
+              message = ''
+                The ${moduleName} module requires at least ${builtins.toString roleConstraints.min} '${roleName}'s
+                but found '${builtins.toString memberCount}' within instance '${instanceName}':
 
-      maxCheck =
-        if roleConstraints.max != null then
-          [
-            {
+                ${lib.concatLines members}
+              '';
+            };
+          };
+
+          maxCheck = lib.optionalAttrs (roleConstraints.max != null) {
+            "${moduleName}.${instanceName}.roles.${roleName}.max" = {
               assertion = memberCount <= roleConstraints.max;
-              message = "The ${moduleName} module allows at most for ${builtins.toString roleConstraints.max} '${roleName}'s, but found ${builtins.toString memberCount}: ${builtins.toString members}";
-            }
-          ]
-        else
-          [ ];
-    in
-    eqCheck ++ minCheck ++ maxCheck ++ ass
-  ) [ ] (lib.attrNames config.roles);
+              message = ''
+                The ${moduleName} module allows at most for ${builtins.toString roleConstraints.max} '${roleName}'s
+                but found '${builtins.toString memberCount}' within instance '${instanceName}':
+
+                ${lib.concatLines members}
+              '';
+            };
+          };
+
+        in
+        ass // maxCheck // minCheck
+      ) { } roles;
+    }
+  ];
 }
