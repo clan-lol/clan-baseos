@@ -25,6 +25,7 @@ class Frontmatter:
     description: str
     categories: list[str] = field(default_factory=lambda: ["Uncategorized"])
     features: list[str] = field(default_factory=list)
+    constraints: dict[str, Any] = field(default_factory=dict)
 
     @property
     def categories_info(self) -> dict[str, CategoryInfo]:

@@ -16,6 +16,15 @@
     }
   },
   "services": {
+    "zerotier": {
+      "1": {
+        "roles": {
+          "controller": {
+            "machines": ["test-inventory-machine"]
+          }
+        }
+      }
+    },
     "borgbackup": {
       "simple": {
         "roles": {

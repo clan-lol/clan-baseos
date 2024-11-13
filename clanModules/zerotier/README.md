@@ -1,6 +1,9 @@
 ---
 description = "Configures [Zerotier VPN](https://zerotier.com) secure and efficient networking within a Clan.."
 features = [ "inventory" ]
+
+constraints.roles.controller.eq = 1
+constraints.roles.moon.max = 7
 ---
 
 ## Overview

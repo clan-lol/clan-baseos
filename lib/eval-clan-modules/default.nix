@@ -55,21 +55,7 @@ let
   evalClanModulesWithRoles =
     clanModules:
     let
-      getRoles =
-        modulePath:
-        let
-          rolesDir = "${modulePath}/roles";
-        in
-        if builtins.pathExists rolesDir then
-          lib.pipe rolesDir [
-            builtins.readDir
-            (lib.filterAttrs (_n: v: v == "regular"))
-            lib.attrNames
-            (lib.filter (fileName: lib.hasSuffix ".nix" fileName))
-            (map (fileName: lib.removeSuffix ".nix" fileName))
-          ]
-        else
-          [ ];
+      getRoles = clan-core.lib.modules.getRoles;
       res = builtins.mapAttrs (
         moduleName: module:
         let

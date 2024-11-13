@@ -192,3 +192,17 @@ Assuming that there is a common code path or a common interface between `server`
         Many modules use `roles/default.nix` which registers the role `default`.
 
         If you are a clan module author and your module has only one role where you cannot determine the name, then we would like you to follow the convention.
+
+
+`constraints.roles.<roleName>.<constraintType>` (Optional `int`) (Experimental)
+:   Contraints for the module
+
+    The following example requires exactly one `server`
+    and supports up to `7` clients
+
+    ```md
+    ---
+    constraints.roles.server.eq = 1
+    constraints.roles.client.max = 7
+    ---
+    ```
