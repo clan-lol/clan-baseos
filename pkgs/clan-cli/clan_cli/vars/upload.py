@@ -12,8 +12,8 @@ from clan_cli.nix import nix_shell
 log = logging.getLogger(__name__)
 
 
-def upload_secrets(machine: Machine) -> None:
-    secret_store_module = importlib.import_module(machine.secret_facts_module)
+def upload_secret_vars(machine: Machine) -> None:
+    secret_store_module = importlib.import_module(machine.secret_vars_module)
     secret_store = secret_store_module.SecretStore(machine=machine)
 
     if not secret_store.needs_upload():
@@ -38,7 +38,7 @@ def upload_secrets(machine: Machine) -> None:
                     "--delete",
                     "--chmod=D700,F600",
                     f"{tempdir!s}/",
-                    f"{host.target_for_rsync}:{machine.secrets_upload_directory}/",
+                    f"{host.target_for_rsync}:{machine.secret_vars_upload_directory}/",
                 ],
             ),
             log=Log.BOTH,
@@ -48,7 +48,7 @@ def upload_secrets(machine: Machine) -> None:
 
 def upload_command(args: argparse.Namespace) -> None:
     machine = Machine(name=args.machine, flake=args.flake)
-    upload_secrets(machine)
+    upload_secret_vars(machine)
 
 
 def register_upload_parser(parser: argparse.ArgumentParser) -> None:

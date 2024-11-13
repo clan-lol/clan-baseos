@@ -1,9 +1,9 @@
 import os
-import subprocess
 from itertools import chain
 from pathlib import Path
 from typing import override
 
+from clan_cli.cmd import run
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 
@@ -36,7 +36,7 @@ class SecretStore(SecretStoreBase):
         shared: bool = False,
         deployed: bool = True,
     ) -> Path | None:
-        subprocess.run(
+        run(
             nix_shell(
                 ["nixpkgs#pass"],
                 [
@@ -52,7 +52,7 @@ class SecretStore(SecretStoreBase):
         return None  # we manage the files outside of the git repo
 
     def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
-        return subprocess.run(
+        return run(
             nix_shell(
                 ["nixpkgs#pass"],
                 [
@@ -61,9 +61,7 @@ class SecretStore(SecretStoreBase):
                     str(self.entry_dir(generator_name, name, shared)),
                 ],
             ),
-            check=True,
-            stdout=subprocess.PIPE,
-        ).stdout
+        ).stdout.encode()
 
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
         return (
@@ -74,7 +72,7 @@ class SecretStore(SecretStoreBase):
     def generate_hash(self) -> bytes:
         hashes = []
         hashes.append(
-            subprocess.run(
+            run(
                 nix_shell(
                     ["nixpkgs#git"],
                     [
@@ -87,9 +85,10 @@ class SecretStore(SecretStoreBase):
                         self.entry_prefix,
                     ],
                 ),
-                stdout=subprocess.PIPE,
                 check=False,
-            ).stdout.strip()
+            )
+            .stdout.strip()
+            .encode()
         )
         shared_dir = Path(self._password_store_dir) / self.entry_prefix / "shared"
         machine_dir = (
@@ -101,7 +100,7 @@ class SecretStore(SecretStoreBase):
         for symlink in chain(shared_dir.glob("**/*"), machine_dir.glob("**/*")):
             if symlink.is_symlink():
                 hashes.append(
-                    subprocess.run(
+                    run(
                         nix_shell(
                             ["nixpkgs#git"],
                             [
@@ -114,9 +113,10 @@ class SecretStore(SecretStoreBase):
                                 str(symlink),
                             ],
                         ),
-                        stdout=subprocess.PIPE,
                         check=False,
-                    ).stdout.strip()
+                    )
+                    .stdout.strip()
+                    .encode()
                 )
 
         # we sort the hashes to make sure that the order is always the same
@@ -128,9 +128,8 @@ class SecretStore(SecretStoreBase):
         local_hash = self.generate_hash()
         remote_hash = self.machine.target_host.run(
             # TODO get the path to the secrets from the machine
-            ["cat", f"{self.machine.secrets_upload_directory}/.pass_info"],
+            ["cat", f"{self.machine.secret_vars_upload_directory}/.pass_info"],
             check=False,
-            stdout=subprocess.PIPE,
         ).stdout.strip()
 
         if not remote_hash:
@@ -143,10 +142,15 @@ class SecretStore(SecretStoreBase):
         for secret_var in self.get_all():
             if not secret_var.deployed:
                 continue
-            rel_dir = self.rel_dir(
-                secret_var.generator, secret_var.name, secret_var.shared
-            )
-            with (output_dir / rel_dir).open("wb") as f:
+            if secret_var.shared:
+                output_file = (
+                    output_dir / "shared" / secret_var.generator / secret_var.name
+                )
+            else:
+                output_file = output_dir / secret_var.generator / secret_var.name
+
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            with (output_file).open("wb") as f:
                 f.write(
                     self.get(secret_var.generator, secret_var.name, secret_var.shared)
                 )
