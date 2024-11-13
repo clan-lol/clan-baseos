@@ -25,8 +25,8 @@ class SecretStoreBase(ABC):
     def exists(self, service: str, name: str) -> bool:
         pass
 
-    def update_check(self) -> bool:
-        return False
+    def needs_upload(self) -> bool:
+        return True
 
     @abstractmethod
     def upload(self, output_dir: Path) -> None:

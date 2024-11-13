@@ -16,8 +16,8 @@ def upload_secrets(machine: Machine) -> None:
     secret_facts_module = importlib.import_module(machine.secret_facts_module)
     secret_facts_store = secret_facts_module.SecretStore(machine=machine)
 
-    if secret_facts_store.update_check():
-        log.info("Secrets already up to date")
+    if not secret_facts_store.needs_upload():
+        log.info("Secrets already uploaded")
         return
     with TemporaryDirectory(prefix="facts-upload-") as tempdir:
         secret_facts_store.upload(Path(tempdir))

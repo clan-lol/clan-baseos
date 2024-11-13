@@ -9,8 +9,8 @@ class SecretStoreBase(StoreBase):
     def is_secret_store(self) -> bool:
         return True
 
-    def update_check(self) -> bool:
-        return False
+    def needs_upload(self) -> bool:
+        return True
 
     @abstractmethod
     def upload(self, output_dir: Path) -> None:
