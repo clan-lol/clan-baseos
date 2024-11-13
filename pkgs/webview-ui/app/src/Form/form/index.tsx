@@ -36,7 +36,7 @@ import cx from "classnames";
 import { Label } from "../base/label";
 import { SelectInput } from "../fields/Select";
 
-function generateDefaults(schema: JSONSchema7): any {
+function generateDefaults(schema: JSONSchema7): unknown {
   switch (schema.type) {
     case "string":
       return ""; // Default value for string
@@ -51,11 +51,12 @@ function generateDefaults(schema: JSONSchema7): any {
     case "array":
       return []; // Default empty array if no items schema or items is true/false
 
-    case "object":
-      const obj: { [key: string]: any } = {};
+    case "object": {
+      const obj: Record<string, unknown> = {};
       if (schema.properties) {
         Object.entries(schema.properties).forEach(([key, propSchema]) => {
           if (typeof propSchema === "boolean") {
+            obj[key] = false;
           } else {
             // if (schema.required  schema.required.includes(key))
             obj[key] = generateDefaults(propSchema);
@@ -63,6 +64,7 @@ function generateDefaults(schema: JSONSchema7): any {
         });
       }
       return obj;
+    }
 
     default:
       return null; // Default for unknown types or nulls
@@ -359,7 +361,7 @@ export function ListValueDisplay<T extends FieldValues, R extends ResponseData>(
     e.preventDefault();
     remove(
       props.formStore,
-      // @ts-ignore
+      // @ts-expect-error: listFieldName is not known ahead of time
       props.listFieldName,
       { at: props.idx },
     );
@@ -368,7 +370,7 @@ export function ListValueDisplay<T extends FieldValues, R extends ResponseData>(
     e.preventDefault();
     move(
       props.formStore,
-      // @ts-ignore
+      // @ts-expect-error: listFieldName is not known ahead of time
       props.listFieldName,
       { from: props.idx, to: props.idx + dir },
     );
@@ -377,10 +379,10 @@ export function ListValueDisplay<T extends FieldValues, R extends ResponseData>(
   const bottomMost = () => props.idx === 0;
 
   return (
-    <div class="border-l-4 border-gray-300 w-full">
-      <div class="flex w-full gap-2 items-end px-4">
+    <div class="w-full border-l-4 border-gray-300">
+      <div class="flex w-full items-end gap-2 px-4">
         {props.children}
-        <div class="pb-4 ml-4 min-w-fit">
+        <div class="ml-4 min-w-fit pb-4">
           <button class="btn" onClick={moveItemBy(1)} disabled={topMost()}>
             ↓
           </button>
@@ -396,7 +398,7 @@ export function ListValueDisplay<T extends FieldValues, R extends ResponseData>(
   );
 }
 
-const findDuplicates = (arr: any[]) => {
+const findDuplicates = (arr: unknown[]) => {
   const seen = new Set();
   const duplicates: number[] = [];
 
@@ -475,20 +477,19 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                   when={itemsSchema().type === "string" && itemsSchema().enum}
                 >
                   <Field
-                    // @ts-ignore
+                    // @ts-expect-error: listFieldName is not known ahead of time
                     name={listFieldName}
-                    // @ts-ignore
+                    // @ts-expect-error: type is known due to schema
                     type="string[]"
                     validateOn="touched"
                     revalidateOn="touched"
                     validate={() => {
                       let error = "";
-                      // @ts-ignore
-                      const values: any[] = getValues(
+                      const values: unknown[] = getValues(
                         props.formStore,
-                        // @ts-ignore
+                        // @ts-expect-error: listFieldName is not known ahead of time
                         listFieldName,
-                        // @ts-ignore
+                        // @ts-expect-error: assumption based on the behavior of selectInput
                       )?.strings?.selection;
                       console.log("vali", { values });
                       if (props.schema.uniqueItems) {
@@ -543,17 +544,17 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                 >
                   {/* !Important: Register the parent field to gain access to array items*/}
                   <FieldArray
-                    // @ts-ignore
+                    // @ts-expect-error: listFieldName is not known ahead of time
                     name={listFieldName}
                     of={props.formStore}
                     validateOn="touched"
                     revalidateOn="touched"
                     validate={() => {
                       let error = "";
-                      // @ts-ignore
-                      const values: any[] = getValues(
+                      // @ts-expect-error: listFieldName is not known ahead of time
+                      const values: unknown[] = getValues(
                         props.formStore,
-                        // @ts-ignore
+                        // @ts-expect-error: listFieldName is not known ahead of time
                         listFieldName,
                       );
                       if (props.schema.uniqueItems) {
@@ -596,7 +597,7 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                               of={fieldArray.items.length}
                             >
                               <Field
-                                // @ts-ignore: field names are not know ahead of time
+                                // @ts-expect-error: field names are not know ahead of time
                                 name={`${listFieldName}.${idx()}`}
                               >
                                 {(f, fp) => (
@@ -642,25 +643,29 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                           }}
                           // Add the new item to the FieldArray
                           handleSubmit={(values, event) => {
-                            // @ts-ignore
-                            const prev: any[] = getValues(
+                            // @ts-expect-error: listFieldName is not known ahead of time
+                            const prev: unknown[] = getValues(
                               props.formStore,
-                              // @ts-ignore
+
+                              // @ts-expect-error: listFieldName is not known ahead of time
                               listFieldName,
                             );
                             if (itemsSchema().type === "object") {
                               const newIdx = prev.length;
                               setValue(
                                 props.formStore,
-                                // @ts-ignore
+
+                                // @ts-expect-error: listFieldName is not known ahead of time
                                 `${listFieldName}.${newIdx}`,
-                                // @ts-ignore
+
+                                // @ts-expect-error: listFieldName is not known ahead of time
                                 values.root,
                               );
                             }
-                            // @ts-ignore
+
+                            // @ts-expect-error: listFieldName is not known ahead of time
                             insert(props.formStore, listFieldName, {
-                              // @ts-ignore
+                              // @ts-expect-error: listFieldName is not known ahead of time
                               value: values.root,
                             });
                           }}
@@ -685,7 +690,7 @@ interface ObjectFieldPropertyLabelProps {
 export function ObjectFieldPropertyLabel(props: ObjectFieldPropertyLabelProps) {
   return (
     <Switch fallback={props.fallback}>
-      {/* @ts-ignore */}
+      {/* @ts-expect-error: $exportedModuleInfo should exist since we export it */}
       <Match when={props.schema?.$exportedModuleInfo?.path}>
         {(path) => path()[path().length - 1]}
       </Match>
@@ -724,6 +729,7 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
           <For each={Object.entries(properties())}>
             {([propName, propSchema]) => (
               <div
+                // eslint-disable-next-line tailwindcss/no-custom-classname
                 class={cx(
                   "w-full grid grid-cols-1 gap-4 justify-items-start",
                   `p-${props.path.length * 2}`,
@@ -780,7 +786,7 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
               {(itemSchema) => (
                 <Field
                   // Important!: Register the object field to gain access to the dynamic object properties
-                  // @ts-ignore
+                  // @ts-expect-error: fieldName is not known ahead of time
                   name={fieldName}
                 >
                   {(objectField, fp) => (
@@ -802,11 +808,11 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
                       >
                         {([key, relatedValue]) => (
                           <Field
-                            // @ts-ignore
+                            // @ts-expect-error: fieldName is not known ahead of time
                             name={`${fieldName}.${key}`}
                           >
                             {(f, fp) => (
-                              <div class="border-l-4 border-gray-300 pl-4 w-full">
+                              <div class="w-full border-l-4 border-gray-300 pl-4">
                                 <DynForm
                                   formProps={{
                                     class: cx("w-full"),
@@ -820,19 +826,19 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
                                           {key}
                                         </span>
                                         <button
-                                          class="btn btn-sm btn-warning ml-auto"
+                                          class="btn btn-warning btn-sm ml-auto"
                                           type="button"
                                           onClick={(_e) => {
                                             const copy = {
-                                              // @ts-ignore
+                                              // @ts-expect-error: fieldName is not known ahead of time
                                               ...objectField.value,
                                             };
+                                            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                                             delete copy[key];
                                             setValue(
                                               props.formStore,
-                                              // @ts-ignore
+                                              // @ts-expect-error: fieldName is not known ahead of time
                                               `${fieldName}`,
-                                              // @ts-ignore
                                               copy,
                                             );
                                           }}
@@ -862,9 +868,9 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
                         handleSubmit={(values, event) => {
                           setValue(
                             props.formStore,
-                            // @ts-ignore
+                            // @ts-expect-error: fieldName is not known ahead of time
                             `${fieldName}`,
-                            // @ts-ignore
+                            // @ts-expect-error: fieldName is not known ahead of time
                             { ...objectField.value, [values[""]]: {} },
                           );
                         }}

@@ -12,7 +12,11 @@ import { Label } from "../base/label";
 import { useFloating } from "../base";
 import { autoUpdate, flip, hide, shift, size } from "@floating-ui/dom";
 
-export type Option = { value: string; label: string };
+export interface Option {
+  value: string;
+  label: string;
+}
+
 interface SelectInputpProps {
   value: string[] | string;
   selectProps: JSX.InputHTMLAttributes<HTMLSelectElement>;
@@ -81,7 +85,7 @@ export function SelectInput(props: SelectInputpProps) {
 
   const handleClickOption = (opt: Option) => {
     if (!props.multiple) {
-      // @ts-ignore
+      // @ts-expect-error: fieldName is not known ahead of time
       props.selectProps.onInput({
         currentTarget: {
           value: opt.value,
@@ -96,7 +100,7 @@ export function SelectInput(props: SelectInputpProps) {
     } else {
       currValues.push(opt.value);
     }
-    // @ts-ignore
+    // @ts-expect-error: fieldName is not known ahead of time
     props.selectProps.onInput({
       currentTarget: {
         options: currValues.map((value) => ({
@@ -128,17 +132,17 @@ export function SelectInput(props: SelectInputpProps) {
             {props.adornment?.content}
           </Show>
           {props.inlineLabel}
-          <div class="flex flex-row gap-2 cursor-default">
+          <div class="flex cursor-default flex-row gap-2">
             <For each={getValues()} fallback={"Select"}>
               {(item) => (
-                <div class="text-sm rounded-xl bg-slate-800 text-white px-4 py-1">
+                <div class="rounded-xl bg-slate-800 px-4 py-1 text-sm text-white">
                   {item}
                   <Show when={props.multiple}>
                     <button
-                      class="btn-xs btn-ghost"
+                      class="btn-ghost btn-xs"
                       type="button"
                       onClick={(_e) => {
-                        // @ts-ignore
+                        // @ts-expect-error: fieldName is not known ahead of time
                         props.selectProps.onInput({
                           currentTarget: {
                             options: getValues()
@@ -188,9 +192,9 @@ export function SelectInput(props: SelectInputpProps) {
               top: `${position.y ?? 0}px`,
               left: `${position.x ?? 0}px`,
             }}
-            class="dropdown-content bg-base-100 rounded-b-box z-[1] shadow"
+            class="dropdown-content z-[1] rounded-b-box bg-base-100 shadow"
           >
-            <ul class="menu flex flex-col gap-1 max-h-96 overflow-y-scroll overflow-x-hidden">
+            <ul class="menu flex max-h-96 flex-col gap-1 overflow-x-hidden overflow-y-scroll">
               <For each={props.options}>
                 {(opt) => (
                   <>
