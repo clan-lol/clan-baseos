@@ -58,9 +58,13 @@ let
       res = builtins.mapAttrs (
         moduleName: module:
         let
+          frontmatter = clan-core.lib.modules.getFrontmatter moduleName;
           roles =
-            assert lib.isPath module;
-            clan-core.lib.modules.getRoles' moduleName;
+            if builtins.elem "inventory" frontmatter.features or [ ] then
+              assert lib.isPath module;
+              clan-core.lib.modules.getRoles' moduleName
+            else
+              [ ];
         in
         lib.listToAttrs (
           lib.map (role: {
