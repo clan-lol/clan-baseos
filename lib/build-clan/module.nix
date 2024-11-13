@@ -68,7 +68,7 @@ let
               nixpkgs.hostPlatform = lib.mkIf (system != null) (lib.mkDefault system);
 
               # speeds up nix commands by using the nixpkgs from the host system (especially useful in VMs)
-              nix.registry.nixpkgs.to = {
+              nix.registry.nixpkgs.to = lib.mkDefault {
                 type = "path";
                 path = lib.mkDefault nixpkgs;
               };

@@ -10,7 +10,9 @@ in
     hostPkgs = pkgs;
     # speed-up evaluation
     defaults = {
-      nix.package = pkgs.nixVersions.latest;
+      imports = [
+        ./minify.nix
+      ];
       documentation.enable = lib.mkDefault false;
       boot.isContainer = true;
 
