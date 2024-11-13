@@ -5,8 +5,6 @@ let
   );
 in
 {
-  flake.inventory = import ./example.nix { inherit self; };
-
   perSystem =
     {
       pkgs,
