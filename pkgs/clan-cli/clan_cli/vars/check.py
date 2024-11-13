@@ -8,7 +8,9 @@ from clan_cli.machines.machines import Machine
 log = logging.getLogger(__name__)
 
 
-def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
+def vars_status(
+    machine: Machine, generator_name: None | str = None
+) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
     secret_vars_module = importlib.import_module(machine.secret_vars_module)
     secret_vars_store = secret_vars_module.SecretStore(machine=machine)
     public_vars_module = importlib.import_module(machine.public_vars_module)
@@ -16,6 +18,8 @@ def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
 
     missing_secret_vars = []
     missing_public_vars = []
+    # signals if a var needs to be updated (eg. needs re-encryption due to new users added)
+    outdated_secret_vars = []
     if generator_name:
         generators = [generator_name]
     else:
@@ -23,24 +27,39 @@ def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
     for generator_name in generators:
         shared = machine.vars_generators[generator_name]["share"]
         for name, file in machine.vars_generators[generator_name]["files"].items():
-            if file["secret"] and not secret_vars_store.exists(
-                generator_name, name, shared=shared
-            ):
+            if file["secret"]:
+                if not secret_vars_store.exists(generator_name, name, shared=shared):
+                    log.info(
+                        f"Secret var '{name}' for service '{generator_name}' in machine {machine.name} is missing."
+                    )
+                    missing_secret_vars.append((generator_name, name))
+                else:
+                    needs_update, msg = secret_vars_store.needs_fix(
+                        generator_name, name, shared=shared
+                    )
+                    if needs_update:
+                        log.info(
+                            f"Secret var '{name}' for service '{generator_name}' in machine {machine.name} needs update: {msg}"
+                        )
+                        outdated_secret_vars.append((generator_name, name))
+
+            elif not public_vars_store.exists(generator_name, name, shared=shared):
                 log.info(
-                    f"Secret fact '{name}' for service '{generator_name}' in machine {machine.name} is missing."
-                )
-                missing_secret_vars.append((generator_name, name))
-            if not file["secret"] and not public_vars_store.exists(
-                generator_name, name, shared=shared
-            ):
-                log.info(
-                    f"Public fact '{name}' for service '{generator_name}' in machine {machine.name} is missing."
+                    f"Public var '{name}' for service '{generator_name}' in machine {machine.name} is missing."
                 )
                 missing_public_vars.append((generator_name, name))
 
     log.debug(f"missing_secret_vars: {missing_secret_vars}")
     log.debug(f"missing_public_vars: {missing_public_vars}")
-    return not (missing_secret_vars or missing_public_vars)
+    log.debug(f"outdated_secret_vars: {outdated_secret_vars}")
+    return missing_secret_vars, missing_public_vars, outdated_secret_vars
+
+
+def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
+    missing_secret_vars, missing_public_vars, outdated_secret_vars = vars_status(
+        machine, generator_name=generator_name
+    )
+    return not (missing_secret_vars or missing_public_vars or outdated_secret_vars)
 
 
 def check_command(args: argparse.Namespace) -> None:

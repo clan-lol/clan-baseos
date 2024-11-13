@@ -103,7 +103,7 @@ def update_group_keys(flake_dir: Path, group: str) -> list[Path]:
         if (secret / "groups" / group).is_symlink():
             updated_paths += update_keys(
                 secret,
-                sorted(secrets.collect_keys_for_path(secret)),
+                secrets.collect_keys_for_path(secret),
             )
     return updated_paths
 
