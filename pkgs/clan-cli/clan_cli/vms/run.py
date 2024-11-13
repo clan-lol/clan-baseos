@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from clan_cli.cmd import CmdOut, Log, handle_output, run
+from clan_cli.cmd import CmdOut, Log, handle_io, run
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import module_root, user_cache_dir, vm_state_dir
 from clan_cli.errors import ClanCmdError, ClanError
@@ -339,7 +339,7 @@ def run_vm(
         ) as vm,
         ThreadPoolExecutor(max_workers=1) as executor,
     ):
-        future = executor.submit(handle_output, vm.process, Log.BOTH)
+        future = executor.submit(handle_io, vm.process, input_bytes=None, log=Log.BOTH)
         args: list[str] = vm.process.args  # type: ignore[assignment]
 
         if runtime_config.command is not None:

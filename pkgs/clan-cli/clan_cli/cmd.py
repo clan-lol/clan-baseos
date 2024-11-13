@@ -29,14 +29,17 @@ class Log(Enum):
     NONE = 4
 
 
-def handle_output(process: subprocess.Popen, log: Log) -> tuple[str, str]:
+def handle_io(
+    process: subprocess.Popen, input_bytes: bytes | None, log: Log
+) -> tuple[str, str]:
     rlist = [process.stdout, process.stderr]
+    wlist = [process.stdin] if input_bytes is not None else []
     stdout_buf = b""
     stderr_buf = b""
 
-    while len(rlist) != 0:
-        readlist, _, _ = select.select(rlist, [], [], 0.1)
-        if len(readlist) == 0:  # timeout in select
+    while len(rlist) != 0 or len(wlist) != 0:
+        readlist, writelist, _ = select.select(rlist, wlist, [], 0.1)
+        if len(readlist) == 0 and len(writelist) == 0:
             if process.poll() is None:
                 continue
             # Process has exited
@@ -62,12 +65,31 @@ def handle_output(process: subprocess.Popen, log: Log) -> tuple[str, str]:
             sys.stderr.buffer.write(ret)
             sys.stderr.flush()
         stderr_buf += ret
+
+        if process.stdin in writelist:
+            if input_bytes:
+                try:
+                    assert process.stdin is not None
+                    written = os.write(process.stdin.fileno(), input_bytes)
+                except BrokenPipeError:
+                    wlist.remove(process.stdin)
+                else:
+                    input_bytes = input_bytes[written:]
+                    if len(input_bytes) == 0:
+                        wlist.remove(process.stdin)
+                    process.stdin.flush()
+                    process.stdin.close()
+            else:
+                wlist.remove(process.stdin)
     return stdout_buf.decode("utf-8", "replace"), stderr_buf.decode("utf-8", "replace")
 
 
 @contextmanager
 def terminate_process_group(process: subprocess.Popen) -> Iterator[None]:
-    process_group = os.getpgid(process.pid)
+    try:
+        process_group = os.getpgid(process.pid)
+    except ProcessLookupError:
+        return
     if process_group == os.getpgid(os.getpid()):
         msg = "Bug! Refusing to terminate the current process group"
         raise ClanError(msg)
@@ -183,11 +205,13 @@ def run(
 
     start = timeit.default_timer()
     with ExitStack() as stack:
+        stdin = subprocess.PIPE if input is not None else None
         process = stack.enter_context(
             subprocess.Popen(
                 cmd,
                 cwd=str(cwd),
                 env=env,
+                stdin=stdin,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=not needs_user_terminal,
@@ -200,10 +224,8 @@ def run(
         else:
             stack.enter_context(terminate_process_group(process))
 
-        stdout_buf, stderr_buf = handle_output(process, log)
-
-        if input:
-            process.communicate(input)
+        stdout_buf, stderr_buf = handle_io(process, input, log)
+        process.wait()
 
     global TIME_TABLE
     if TIME_TABLE:
