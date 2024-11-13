@@ -8,9 +8,11 @@ in
   hostPkgs = pkgs;
   # speed-up evaluation
   defaults = {
+    imports = [
+      ./minify.nix
+    ];
     documentation.enable = lib.mkDefault false;
     nix.settings.min-free = 0;
-    nix.package = pkgs.nixVersions.latest;
   };
 
   # to accept external dependencies such as disko
