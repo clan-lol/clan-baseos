@@ -150,9 +150,7 @@ class SecretStore(SecretStoreBase):
         secret_folder = self.secret_path(generator_name, name, shared)
         if not (secret_folder / "secret").exists():
             return False
-        if not shared:
-            return True
-        return self.machine_has_access(generator_name, name, shared)
+        return not shared or self.machine_has_access(generator_name, name, shared)
 
     def collect_keys_for_secret(self, path: Path) -> set[tuple[str, KeyType]]:
         from clan_cli.secrets.secrets import (
