@@ -1,27 +1,26 @@
 { clan-core, lib }:
 let
-  getRoles =
-    modulePath:
-    let
-      rolesDir = modulePath + "/roles";
-    in
-    if builtins.pathExists rolesDir then
-      lib.pipe rolesDir [
-        builtins.readDir
-        (lib.filterAttrs (_n: v: v == "regular"))
-        lib.attrNames
-        (lib.filter (fileName: lib.hasSuffix ".nix" fileName))
-        (map (fileName: lib.removeSuffix ".nix" fileName))
-      ]
-    else
-      [ ];
+  trimExtension = name: builtins.substring 0 (builtins.stringLength name - 4) name;
+
+  getRoles' =
+    serviceName:
+    lib.mapAttrsToList (name: _value: trimExtension name) (
+      lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
+        builtins.readDir (
+          if clan-core.clanModules ? ${serviceName} then
+            clan-core.clanModules.${serviceName} + "/roles"
+          else
+            throw "ClanModule not found: '${serviceName}'. Make sure the module is added in the 'clanModules' attribute of clan-core."
+        )
+      )
+    );
 
   getConstraints =
     modulename:
     let
       eval = lib.evalModules {
         specialArgs = {
-          allRoles = getRoles clan-core.clanModules.${modulename};
+          allRoles = getRoles' modulename;
         };
         modules = [
           ./constraints/interface.nix
@@ -32,23 +31,22 @@ let
     eval.config.roles;
 
   checkConstraints =
-    { moduleName, resolvedRoles }:
+    {
+      moduleName,
+      resolvedRoles,
+      instanceNames,
+      instanceName,
+    }:
     let
       eval = lib.evalModules {
         specialArgs = {
-          inherit moduleName;
-          allRoles = getRoles clan-core.clanModules.${moduleName};
-          resolvedRoles = {
-            controller = {
-              machines = [ "test-inventory-machine" ];
-            };
-            moon = {
-              machines = [ ];
-            };
-            peer = {
-              machines = [ ];
-            };
-          };
+          inherit
+            moduleName
+            instanceNames
+            instanceName
+            resolvedRoles
+            ;
+          allRoles = getRoles' moduleName;
         };
         modules = [
           ./constraints/default.nix
@@ -101,7 +99,7 @@ in
   inherit
     getFrontmatter
     getReadme
-    getRoles
+    getRoles'
     getConstraints
     checkConstraints
     ;

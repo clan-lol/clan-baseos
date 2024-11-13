@@ -55,15 +55,16 @@ let
   evalClanModulesWithRoles =
     clanModules:
     let
-      getRoles = clan-core.lib.modules.getRoles;
       res = builtins.mapAttrs (
         moduleName: module:
         let
-          # module must be a path to the clanModule root by convention
-          # See: clanModules/flake-module.nix
+          frontmatter = clan-core.lib.modules.getFrontmatter moduleName;
           roles =
-            assert lib.isPath module;
-            getRoles module;
+            if builtins.elem "inventory" frontmatter.features or [ ] then
+              assert lib.isPath module;
+              clan-core.lib.modules.getRoles' moduleName
+            else
+              [ ];
         in
         lib.listToAttrs (
           lib.map (role: {

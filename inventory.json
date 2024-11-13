@@ -17,7 +17,7 @@
   },
   "services": {
     "zerotier": {
-      "1": {
+      "one": {
         "roles": {
           "controller": {
             "machines": ["test-inventory-machine"]

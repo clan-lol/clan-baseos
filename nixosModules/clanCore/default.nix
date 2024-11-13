@@ -3,7 +3,7 @@
   imports = [
     ./backups.nix
     ./facts
-    ./inventory/interface.nix
+    ./inventory
     ./manual.nix
     ./meta/interface.nix
     ./metadata.nix

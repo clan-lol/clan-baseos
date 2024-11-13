@@ -60,4 +60,22 @@ in
     '';
     type = lib.types.attrsOf (lib.types.attrsOf instanceOptions);
   };
+  options.clan.inventory.assertions = lib.mkOption {
+    default = { };
+    internal = true;
+    visible = false;
+    type = lib.types.attrsOf (
+      # TODO: use NixOS upstream type
+      lib.types.submodule {
+        options = {
+          assertion = lib.mkOption {
+            type = lib.types.bool;
+          };
+          message = lib.mkOption {
+            type = lib.types.str;
+          };
+        };
+      }
+    );
+  };
 }
