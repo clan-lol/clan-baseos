@@ -1,13 +1,23 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
-from clan_cli.secrets.folders import sops_machines_folder, sops_secrets_folder
+from clan_cli.secrets.folders import (
+    sops_machines_folder,
+    sops_secrets_folder,
+    sops_users_folder,
+)
 from clan_cli.secrets.machines import add_machine, add_secret, has_machine
-from clan_cli.secrets.secrets import decrypt_secret, encrypt_secret, has_secret
-from clan_cli.secrets.sops import generate_private_key
+from clan_cli.secrets.secrets import (
+    collect_keys_for_path,
+    decrypt_secret,
+    encrypt_secret,
+    has_secret,
+)
+from clan_cli.secrets.sops import KeyType, generate_private_key
 
 from . import SecretStoreBase
 
@@ -55,6 +65,18 @@ class SecretStore(SecretStoreBase):
     @property
     def store_name(self) -> str:
         return "sops"
+
+    def user_has_access(
+        self, user: str, generator_name: str, secret_name: str, shared: bool
+    ) -> bool:
+        secret_path = self.secret_path(generator_name, secret_name, shared=shared)
+        secret = json.loads((secret_path / "secret").read_text())
+        recipients = [r["recipient"] for r in (secret["sops"].get("age") or [])]
+        users_folder_path = sops_users_folder(self.machine.flake_dir)
+        user_pubkey = json.loads((users_folder_path / user / "key.json").read_text())[
+            "publickey"
+        ]
+        return user_pubkey in recipients
 
     def machine_has_access(
         self, generator_name: str, secret_name: str, shared: bool
@@ -131,3 +153,53 @@ class SecretStore(SecretStoreBase):
         if not shared:
             return True
         return self.machine_has_access(generator_name, name, shared)
+
+    def collect_keys_for_secret(self, path: Path) -> set[tuple[str, KeyType]]:
+        from clan_cli.secrets.secrets import (
+            collect_keys_for_path,
+            collect_keys_for_type,
+        )
+
+        keys = collect_keys_for_path(path)
+        for group in self.machine.deployment["sops"]["defaultGroups"]:
+            keys.update(
+                collect_keys_for_type(
+                    self.machine.flake_dir / "sops" / "groups" / group / "machines"
+                )
+            )
+            keys.update(
+                collect_keys_for_type(
+                    self.machine.flake_dir / "sops" / "groups" / group / "users"
+                )
+            )
+        return keys
+
+    @override
+    def needs_fix(
+        self, generator_name: str, name: str, shared: bool
+    ) -> tuple[bool, str | None]:
+        secret_path = self.secret_path(generator_name, name, shared)
+        recipients_ = json.loads((secret_path / "secret").read_text())["sops"]["age"]
+        current_recipients = {r["recipient"] for r in recipients_}
+        wanted_recipients = {
+            key[0] for key in self.collect_keys_for_secret(secret_path)
+        }
+        needs_update = current_recipients != wanted_recipients
+        recipients_to_add = wanted_recipients - current_recipients
+        var_id = f"{generator_name}/{name}"
+        msg = (
+            f"One or more recipient keys were added to secret{' shared' if shared else ''} var '{var_id}', but it was never re-encrypted. "
+            f"This could have been a malicious actor trying to add their keys, please investigate. "
+            f"Added keys: {', '.join(recipients_to_add)}"
+        )
+        return needs_update, msg
+
+    @override
+    def fix(self, generator_name: str, name: str, shared: bool) -> None:
+        from clan_cli.secrets.secrets import update_keys
+
+        secret_path = self.secret_path(generator_name, name, shared)
+        update_keys(
+            secret_path,
+            collect_keys_for_path(secret_path),
+        )

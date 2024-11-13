@@ -1,7 +1,5 @@
 import argparse
-import functools
 import getpass
-import operator
 import os
 import shutil
 import sys
@@ -45,7 +43,7 @@ def update_secrets(
         changed_files.extend(
             update_keys(
                 secret_path,
-                sorted_keys(collect_keys_for_path(secret_path)),
+                collect_keys_for_path(secret_path),
             )
         )
     return changed_files
@@ -147,7 +145,7 @@ def encrypt_secret(
         )
 
     secret_path = secret_path / "secret"
-    encrypt_file(secret_path, value, sorted_keys(recipient_keys))
+    encrypt_file(secret_path, value, sorted(recipient_keys))
     files_to_commit.append(secret_path)
     if git_commit:
         commit_files(
@@ -231,7 +229,7 @@ def allow_member(
         changed.extend(
             update_keys(
                 group_folder.parent,
-                sorted_keys(collect_keys_for_path(group_folder.parent)),
+                collect_keys_for_path(group_folder.parent),
             )
         )
     return changed
@@ -257,12 +255,7 @@ def disallow_member(group_folder: Path, name: str) -> list[Path]:
     if len(os.listdir(group_folder.parent)) == 0:
         group_folder.parent.rmdir()
 
-    return update_keys(
-        target.parent.parent, sorted_keys(collect_keys_for_path(group_folder.parent))
-    )
-
-
-sorted_keys = functools.partial(sorted, key=operator.itemgetter(0))
+    return update_keys(target.parent.parent, collect_keys_for_path(group_folder.parent))
 
 
 def has_secret(secret_path: Path) -> bool:

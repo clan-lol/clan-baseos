@@ -4,7 +4,7 @@ import json
 import os
 import shutil
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
@@ -182,8 +182,9 @@ def sops_manifest(keys: list[tuple[str, KeyType]]) -> Iterator[Path]:
         yield Path(manifest.name)
 
 
-def update_keys(secret_path: Path, keys: list[tuple[str, KeyType]]) -> list[Path]:
-    with sops_manifest(keys) as manifest:
+def update_keys(secret_path: Path, keys: Iterable[tuple[str, KeyType]]) -> list[Path]:
+    keys_sorted = sorted(keys)
+    with sops_manifest(keys_sorted) as manifest:
         secret_path = secret_path / "secret"
         time_before = secret_path.stat().st_mtime
         cmd = nix_shell(

@@ -191,6 +191,31 @@ def test_generate_secret_var_sops_with_default_group(
     )
     assert sops_store.exists("my_generator", "my_secret")
     assert sops_store.get("my_generator", "my_secret").decode() == "hello\n"
+    # add another user and check if secret gets re-encrypted
+    from clan_cli.secrets.sops import generate_private_key
+
+    _, pubkey_uschi = generate_private_key()
+    cli.run(
+        [
+            "secrets",
+            "users",
+            "add",
+            "--flake",
+            str(flake.path),
+            "uschi",
+            pubkey_uschi,
+        ]
+    )
+    cli.run(["secrets", "groups", "add-user", "my_group", "uschi"])
+    with pytest.raises(ClanError):
+        cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    # apply fix
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine", "--fix"])
+    # check if new user can access the secret
+    monkeypatch.setenv("USER", "uschi")
+    assert sops_store.user_has_access(
+        "uschi", "my_generator", "my_secret", shared=False
+    )
 
 
 @pytest.mark.impure
@@ -746,6 +771,7 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=False,
+            fix=False,
         )
 
     assert "Updated var my_generator/my_value" in output.out
@@ -757,6 +783,7 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=True,
+            fix=False,
         )
     assert "Updated var my_generator/my_value" in output.out
     assert "old: world" in output.out
@@ -767,6 +794,7 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=True,
+            fix=False,
         )
     assert "Updated" not in output.out
     assert "hello" in output.out
@@ -775,6 +803,7 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_secret_generator",
             regenerate=False,
+            fix=False,
         )
     assert "Updated secret var my_secret_generator/my_secret" in output.out
     assert "hello" not in output.out
@@ -789,6 +818,7 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_secret_generator",
             regenerate=True,
+            fix=False,
         )
     assert "Updated secret var my_secret_generator/my_secret" in output.out
     assert "world" not in output.out
@@ -891,6 +921,7 @@ def test_fails_when_files_are_left_from_other_backend(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             generator,
             regenerate=False,
+            fix=False,
         )
     my_secret_generator["files"]["my_secret"]["secret"] = False
     my_value_generator["files"]["my_value"]["secret"] = True
@@ -902,6 +933,7 @@ def test_fails_when_files_are_left_from_other_backend(
                 Machine(name="my_machine", flake=FlakeId(str(flake.path))),
                 generator,
                 regenerate=False,
+                fix=False,
             )
 
 
