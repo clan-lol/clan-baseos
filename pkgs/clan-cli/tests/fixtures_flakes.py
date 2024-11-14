@@ -86,6 +86,7 @@ def generate_flake(
     # define the machines directly including their config
     machine_configs: dict[str, dict] | None = None,
     inventory: dict[str, dict] | None = None,
+    clan_modules: list[str] | None = None,
 ) -> FlakeForTest:
     """
     Creates a clan flake with the given name.
@@ -104,13 +105,13 @@ def generate_flake(
             )
         )
     """
-    # copy the template to a new temporary location
-    if inventory is None:
-        inventory = {}
     if machine_configs is None:
         machine_configs = {}
+    if inventory is None:
+        inventory = {}
+    if clan_modules is None:
+        clan_modules = []
     substitutions = {
-        "__CHANGE_ME__": "_test_vm_persistence",
         "git+https://git.clan.lol/clan/clan-core": "path://" + str(CLAN_CORE),
         "https://git.clan.lol/clan/clan-core/archive/main.tar.gz": "path://"
         + str(CLAN_CORE),
@@ -141,8 +142,17 @@ def generate_flake(
     for machine_name, machine_config in machine_configs.items():
         configuration_nix = flake / "machines" / machine_name / "configuration.nix"
         configuration_nix.parent.mkdir(parents=True, exist_ok=True)
-        configuration_nix.write_text("""
-           { imports = [ (builtins.fromJSON (builtins.readFile ./configuration.json)) ]; }
+        imports = "\n".join(
+            [f"clan-core.clanModules.{module}" for module in clan_modules]
+        )
+        configuration_nix.write_text(f"""
+            {{clan-core, ...}}:
+            {{
+                imports = [
+                    (builtins.fromJSON (builtins.readFile ./configuration.json))
+                    {imports}
+                ];
+            }}
         """)
         set_machine_settings(flake, machine_name, machine_config)
 
@@ -282,33 +292,3 @@ def test_local_democlan(
         raise FixtureError(msg)
 
     return FlakeForTest(democlan_p)
-
-
-@pytest.fixture
-def test_flake_with_core_and_pass(
-    monkeypatch: pytest.MonkeyPatch, temporary_home: Path
-) -> Iterator[FlakeForTest]:
-    if not (CLAN_CORE / "flake.nix").exists():
-        msg = "clan-core flake not found. This test requires the clan-core flake to be present"
-        raise FixtureError(msg)
-    yield from create_flake(
-        temporary_home=temporary_home,
-        flake_template="test_flake_with_core_and_pass",
-        clan_core_flake=CLAN_CORE,
-        monkeypatch=monkeypatch,
-    )
-
-
-@pytest.fixture
-def test_flake_minimal(
-    monkeypatch: pytest.MonkeyPatch, temporary_home: Path
-) -> Iterator[FlakeForTest]:
-    if not (CLAN_CORE / "flake.nix").exists():
-        msg = "clan-core flake not found. This test requires the clan-core flake to be present"
-        raise FixtureError(msg)
-    yield from create_flake(
-        temporary_home=temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        clan_core_flake=CLAN_CORE,
-    )
