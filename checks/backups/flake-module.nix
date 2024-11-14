@@ -133,7 +133,7 @@
       };
   };
   perSystem =
-    { nodes, pkgs, ... }:
+    { pkgs, ... }:
     {
       checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux) {
         test-backups = (import ../lib/test-base.nix) {
