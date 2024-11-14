@@ -17,7 +17,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
     }
   });
   return (
-    <div class="h-screen bg-gradient-to-b from-white to-base-100 p-4">
+    <div class="h-screen bg-base-100 p-4">
       <div class="drawer lg:drawer-open ">
         <input
           id="toplevel-drawer"

@@ -1,8 +1,9 @@
-const typography = require("@tailwindcss/typography");
-const daisyui = require("daisyui");
+import typography from "@tailwindcss/typography";
+import daisyui from "daisyui";
+import core from "./tailwind/core-plugin";
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {},
@@ -18,10 +19,13 @@ module.exports = {
           error: "#ff2c78",
           success: "#0ae856",
           warning: "#ffdd2c",
-          "base-100": "#d1dadb",
+          "base-100": "#F7F9FA",
+          "base-content": "#0D1416",
         },
       },
     ],
   },
-  plugins: [typography, daisyui],
+  plugins: [typography, daisyui, core],
 };
+
+export default config;

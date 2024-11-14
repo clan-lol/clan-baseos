@@ -1,10 +1,28 @@
 @import "material-icons/iconfont/filled.css";
 /* List of icons: https://marella.me/material-icons/demo/ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Archivo";
+  font-weight: 400;
+  src: url(../.fonts/Archiv0-Regular.otf) format("opentype");
+}
+@font-face {
+  font-family: "Archivo";
+  font-weight: 500;
+  src: url(../.fonts/Archiv0-Medium.otf) format("opentype");
+}
+@font-face {
+  font-family: "Archivo";
+  font-weight: 600;
+  src: url(../.fonts/Archiv0-Bold.otf) format("opentype");
+}
+
 html {
+  @apply font-sans;
   overflow-x: hidden;
   overflow-y: scroll;
 }
