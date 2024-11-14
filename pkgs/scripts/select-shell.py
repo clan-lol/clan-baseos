@@ -39,7 +39,6 @@ def list_devshells() -> list[str]:
             "nix",
             "eval",
             "--json",
-            "--no-write-lock-file",
             "--apply",
             "shells: builtins.mapAttrs (name: _shell: name) shells",
             f"{project_root}#devShells.x86_64-linux",
