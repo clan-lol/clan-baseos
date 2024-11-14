@@ -16,7 +16,7 @@ from root import CLAN_CORE
 log = logging.getLogger(__name__)
 
 
-# substitutes string sin a file.
+# Substitutes strings in a file.
 # This can be used on the flake.nix or default.nix of a machine
 def substitute(
     file: Path,
