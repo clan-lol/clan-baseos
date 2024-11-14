@@ -24,7 +24,6 @@
         imports = [
           self.clanModules.borgbackup
           self.clanModules.localbackup
-          self.clanModules.sshd
         ];
         clan.core.networking.targetHost = "machine";
         networking.hostName = "machine";
@@ -34,6 +33,16 @@
         programs.ssh.knownHosts = {
           machine.hostNames = [ "machine" ];
           machine.publicKey = builtins.readFile ../lib/ssh/pubkey;
+        };
+
+        services.openssh = {
+          enable = true;
+          hostKeys = [
+            {
+              path = "/root/.ssh/id_ed25519";
+              type = "ed25519";
+            }
+          ];
         };
 
         users.users.root.openssh.authorizedKeys.keyFiles = [ ../lib/ssh/pubkey ];
@@ -69,6 +78,8 @@
           };
         };
         clan.core.facts.secretStore = "vm";
+        # TODO: set this backend as well, once we have implemented it.
+        #clan.core.vars.settings.secretStore = "vm";
 
         environment.systemPackages = [ self.packages.${pkgs.system}.clan-cli ];
         environment.etc.install-closure.source = "${closureInfo}/store-paths";
