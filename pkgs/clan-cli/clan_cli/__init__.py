@@ -221,7 +221,7 @@ For more detailed information, visit: {help_hyperlink("deploy", "https://docs.cl
         description="Manage secrets",
         epilog=(
             f"""
-This subcommand provides an interface to secret facts.
+This subcommand provides an interface to secrets.
 
 Examples:
 
