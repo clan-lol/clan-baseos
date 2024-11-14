@@ -20,6 +20,7 @@
         preBuild = ''
           mkdir -p api
           cp -r ${config.packages.clan-ts-api}/* api
+          cp -r ${pkgs.texlivePackages.archivo.tex}/fonts/opentype/public/archivo ".fonts"
         '';
       };
       devShells.webview-ui = pkgs.mkShell {
@@ -32,6 +33,8 @@
           export PKG_ROOT="$GIT_ROOT/pkgs/webview-ui"
           export NODE_PATH="$PKG_ROOT/app/node_modules"
           export PATH="$NODE_PATH/.bin:$PATH"
+
+          cp -r ${pkgs.texlivePackages.archivo.tex}/fonts/opentype/public/archivo "$PKG_ROOT/app/.fonts"
 
           # Define the yellow color code
           YELLOW='\033[1;33m'
