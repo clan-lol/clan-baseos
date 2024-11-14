@@ -55,29 +55,41 @@ def default_flake() -> FlakeId | None:
 
 
 def add_common_flags(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument(
-        "--debug",
-        help="Enable debug logging",
-        action="store_true",
-        default=False,
-    )
+    def argument_exists(parser: argparse.ArgumentParser, arg: str) -> bool:
+        """
+        Check if an argparse argument already exists.
+        This is needed because the aliases subcommand doesn't *really*
+        create an alias - it duplicates the actual parser in the tree
+        making duplication inevitable while naively traversing.
+        """
+        return any(arg in action.option_strings for action in parser._actions)  # noqa: SLF001 -> private_member accessed
 
-    parser.add_argument(
-        "--option",
-        help="Nix option to set",
-        nargs=2,
-        metavar=("name", "value"),
-        action=AppendOptionAction,
-        default=[],
-    )
+    if not argument_exists(parser, "--debug"):
+        parser.add_argument(
+            "--debug",
+            help="Enable debug logging",
+            action="store_true",
+            default=False,
+        )
 
-    parser.add_argument(
-        "--flake",
-        help="path to the flake where the clan resides in, can be a remote flake or local, can be set through the [CLAN_DIR] environment variable",
-        default=default_flake(),
-        metavar="PATH",
-        type=flake_path,
-    )
+    if not argument_exists(parser, "--option"):
+        parser.add_argument(
+            "--option",
+            help="Nix option to set",
+            nargs=2,
+            metavar=("name", "value"),
+            action=AppendOptionAction,
+            default=[],
+        )
+
+    if not argument_exists(parser, "--flake"):
+        parser.add_argument(
+            "--flake",
+            help="path to the flake where the clan resides in, can be a remote flake or local, can be set through the [CLAN_DIR] environment variable",
+            default=default_flake(),
+            metavar="PATH",
+            type=flake_path,
+        )
 
 
 def register_common_flags(parser: argparse.ArgumentParser) -> None:
