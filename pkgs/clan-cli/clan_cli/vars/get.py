@@ -41,9 +41,9 @@ def get_var(machine: Machine, var_id: str) -> Var:
     raise ClanError(msg)
 
 
-def get_command(machine: str, var_id: str, flake: FlakeId) -> None:
-    _machine = Machine(name=machine, flake=flake)
-    var = get_var(_machine, var_id)
+def get_command(machine_name: str, var_id: str, flake: FlakeId) -> None:
+    machine = Machine(name=machine_name, flake=flake)
+    var = get_var(machine, var_id)
     if not var.exists:
         msg = f"Var {var.id} has not been generated yet"
         raise ClanError(msg)
@@ -57,7 +57,7 @@ def _get_command(
     args: argparse.Namespace,
 ) -> None:
     get_command(
-        machine=args.machine,
+        machine_name=args.machine,
         var_id=args.var_id,
         flake=args.flake,
     )
