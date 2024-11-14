@@ -28,7 +28,8 @@
             # import our test
             secrets = import ./secrets nixosTestArgs;
             container = import ./container nixosTestArgs;
-            deltachat = import ./deltachat nixosTestArgs;
+            # Deltachat is currently marked as broken
+            # deltachat = import ./deltachat nixosTestArgs;
             borgbackup = import ./borgbackup nixosTestArgs;
             matrix-synapse = import ./matrix-synapse nixosTestArgs;
             mumble = import ./mumble nixosTestArgs;
