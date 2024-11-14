@@ -142,13 +142,7 @@ class SecretStore(SecretStoreBase):
         for secret_var in self.get_all():
             if not secret_var.deployed:
                 continue
-            if secret_var.shared:
-                output_file = (
-                    output_dir / "shared" / secret_var.generator / secret_var.name
-                )
-            else:
-                output_file = output_dir / secret_var.generator / secret_var.name
-
+            output_file = output_dir / "vars" / secret_var.generator / secret_var.name
             output_file.parent.mkdir(parents=True, exist_ok=True)
             with (output_file).open("wb") as f:
                 f.write(
