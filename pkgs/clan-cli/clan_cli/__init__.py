@@ -107,7 +107,6 @@ For more detailed information, visit: {help_hyperlink("docs", "https://docs.clan
 
     subparsers = parser.add_subparsers()
 
-    # Commands directly under the root i.e. "clan show"
     show_parser = subparsers.add_parser(
         "show",
         help="Show meta about the clan if present",
