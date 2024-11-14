@@ -219,7 +219,7 @@ def run(
         )
 
         if needs_user_terminal:
-            # we didn't allocat a new session, so we can't terminate the process group
+            # we didn't allocate a new session, so we can't terminate the process group
             stack.enter_context(terminate_process(process))
         else:
             stack.enter_context(terminate_process_group(process))
