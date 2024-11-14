@@ -8,19 +8,48 @@ from clan_cli.machines.facts import machine_get_fact
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh import HostGroup
-from fixtures_flakes import FlakeForTest
+from fixtures_flakes import generate_flake
 from helpers import cli
+from helpers.nixos_config import nested_dict
 from helpers.validator import is_valid_ssh_key
+from root import CLAN_CORE
 
 
 @pytest.mark.impure
 def test_upload_secret(
     monkeypatch: pytest.MonkeyPatch,
-    test_flake_with_core_and_pass: FlakeForTest,
     temporary_home: Path,
     host_group: HostGroup,
 ) -> None:
-    monkeypatch.chdir(test_flake_with_core_and_pass.path)
+    config = nested_dict()
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
+    # clan.core.networking.zerotier.controller.enable = true;
+    config["clan"]["core"]["networking"]["zerotier"]["controller"]["enable"] = True
+    host = host_group.hosts[0]
+    addr = f"{host.user}@{host.host}:{host.port}?StrictHostKeyChecking=no&UserKnownHostsFile=/dev/null&IdentityFile={host.key}"
+    config["clan"]["core"]["networking"]["targetHost"] = addr
+    config["clan"]["user-password"]["user"] = "alice"
+    config["clan"]["user-password"]["prompt"] = False
+    facts = config["clan"]["core"]["facts"]
+    facts["secretStore"] = "password-store"
+    facts["secretUploadDirectory"]["_type"] = "override"
+    facts["secretUploadDirectory"]["content"] = str(
+        temporary_home / "flake" / "secrets"
+    )
+    facts["secretUploadDirectory"]["priority"] = 50
+
+    flake = generate_flake(
+        temporary_home,
+        flake_template=CLAN_CORE / "templates" / "minimal",
+        monkeypatch=monkeypatch,
+        machine_configs={"vm1": config},
+        clan_modules=[
+            "root-password",
+            "user-password",
+            "sshd",
+        ],
+    )
+    monkeypatch.chdir(flake.path)
     gnupghome = temporary_home / "gpg"
     gnupghome.mkdir(mode=0o700)
     monkeypatch.setenv("GNUPGHOME", str(gnupghome))
@@ -45,15 +74,11 @@ def test_upload_secret(
     subprocess.run(
         nix_shell(["nixpkgs#pass"], ["pass", "init", "test@local"]), check=True
     )
-    cli.run(["facts", "generate", "vm1"])
+    cli.run(["facts", "generate", "vm1", "--flake", str(flake.path)])
 
-    store = SecretStore(
-        Machine(name="vm1", flake=FlakeId(str(test_flake_with_core_and_pass.path)))
-    )
+    store = SecretStore(Machine(name="vm1", flake=FlakeId(str(flake.path))))
 
-    network_id = machine_get_fact(
-        test_flake_with_core_and_pass.path, "vm1", "zerotier-network-id"
-    )
+    network_id = machine_get_fact(flake.path, "vm1", "zerotier-network-id")
     assert len(network_id) == 16
     identity_secret = (
         temporary_home / "pass" / "machines" / "vm1" / "zerotier-identity-secret.gpg"
@@ -63,15 +88,8 @@ def test_upload_secret(
     # test idempotency
     cli.run(["facts", "generate", "vm1"])
     assert identity_secret.lstat().st_mtime_ns == secret1_mtime
-    flake = test_flake_with_core_and_pass.path.joinpath("flake.nix")
-    host = host_group.hosts[0]
-    addr = f"{host.user}@{host.host}:{host.port}?StrictHostKeyChecking=no&UserKnownHostsFile=/dev/null&IdentityFile={host.key}"
-    new_text = flake.read_text().replace("__CLAN_TARGET_ADDRESS__", addr)
-    flake.write_text(new_text)
     cli.run(["facts", "upload", "vm1"])
-    zerotier_identity_secret = (
-        test_flake_with_core_and_pass.path / "secrets" / "zerotier-identity-secret"
-    )
+    zerotier_identity_secret = flake.path / "secrets" / "zerotier-identity-secret"
     assert zerotier_identity_secret.exists()
     assert store.exists("", "zerotier-identity-secret")
 
@@ -84,9 +102,7 @@ def test_upload_secret(
 
     # Assert that the ssh key is valid
     ssh_secret = store.get("", "ssh.id_ed25519").decode()
-    ssh_pub = machine_get_fact(
-        test_flake_with_core_and_pass.path, "vm1", "ssh.id_ed25519.pub"
-    )
+    ssh_pub = machine_get_fact(flake.path, "vm1", "ssh.id_ed25519.pub")
     assert is_valid_ssh_key(ssh_secret, ssh_pub)
 
     # Assert that root-password is valid
