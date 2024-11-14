@@ -49,6 +49,8 @@ class Var:
     secret: bool
     shared: bool
     deployed: bool
+    owner: str
+    group: str
 
     @property
     def value(self) -> bytes:
@@ -184,6 +186,8 @@ class StoreBase(ABC):
                         secret=file["secret"],
                         shared=generator["share"],
                         deployed=file["deploy"],
+                        owner=file.get("owner", "root"),
+                        group=file.get("group", "root"),
                     )
                 )
         return all_vars

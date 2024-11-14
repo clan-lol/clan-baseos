@@ -68,14 +68,24 @@ in
                 submodule (file: {
                   imports = [
                     config.settings.fileModule
-                    (lib.mkRenamedOptionModule [ "owner" ] [
-                      "sops"
-                      "owner"
-                    ])
-                    (lib.mkRenamedOptionModule [ "group" ] [
-                      "sops"
-                      "group"
-                    ])
+                    (lib.mkRenamedOptionModule
+                      [
+                        "sops"
+                        "owner"
+                      ]
+                      [
+                        "owner"
+                      ]
+                    )
+                    (lib.mkRenamedOptionModule
+                      [
+                        "sops"
+                        "group"
+                      ]
+                      [
+                        "group"
+                      ]
+                    )
                   ];
                   options = {
                     name = lib.mkOption {
@@ -129,15 +139,13 @@ in
                       type = str;
                     };
 
-                    sops = {
-                      owner = lib.mkOption {
-                        description = "The user name or id that will own the secret file. This option is currently only implemented for sops";
-                        default = "root";
-                      };
-                      group = lib.mkOption {
-                        description = "The group name or id that will own the secret file. This option is currently only implemented for sops";
-                        default = "root";
-                      };
+                    owner = lib.mkOption {
+                      description = "The user name or id that will own the secret file.";
+                      default = "root";
+                    };
+                    group = lib.mkOption {
+                      description = "The group name or id that will own the secret file.";
+                      default = "root";
                     };
 
                     value =
