@@ -297,6 +297,10 @@ def _check_can_migrate(
             if machine.secret_vars_store.exists(
                 generator_name, fname, vars_generator["share"]
             ):
+                if vars_generator["deploy"]:
+                    machine.secret_vars_store.ensure_machine_has_access(
+                        generator_name, fname, vars_generator["share"]
+                    )
                 return False
         else:
             if machine.public_vars_store.exists(
