@@ -12,6 +12,11 @@ class SecretStoreBase(StoreBase):
     def needs_upload(self) -> bool:
         return True
 
+    def ensure_machine_has_access(
+        self, generator_name: str, name: str, shared: bool = False
+    ) -> None:
+        pass
+
     def needs_fix(
         self,
         generator_name: str,

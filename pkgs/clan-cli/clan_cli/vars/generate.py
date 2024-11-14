@@ -337,8 +337,12 @@ def ensure_consistent_state(
         for name, file in machine.vars_generators[generator_name]["files"].items():
             shared = machine.vars_generators[generator_name]["share"]
             if file["secret"] and machine.secret_vars_store.exists(
-                generator_name, name
+                generator_name, name, shared=shared
             ):
+                if file["deploy"]:
+                    machine.secret_vars_store.ensure_machine_has_access(
+                        generator_name, name, shared=shared
+                    )
                 needs_update, msg = machine.secret_vars_store.needs_fix(
                     generator_name, name, shared=shared
                 )
