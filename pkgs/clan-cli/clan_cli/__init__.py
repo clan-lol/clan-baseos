@@ -109,8 +109,8 @@ For more detailed information, visit: {help_hyperlink("docs", "https://docs.clan
 
     show_parser = subparsers.add_parser(
         "show",
-        help="Show meta about the clan if present",
-        description="Show meta about the clan if present",
+        help="Show meta information about the clan",
+        description="Show meta information about the clan",
         epilog=(
             """
 This command prints the metadata of a clan.
