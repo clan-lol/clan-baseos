@@ -110,20 +110,15 @@ class SecretStore(SecretStoreBase):
             self.backend_collision_error(secret_folder)
         # create directory if it doesn't exist
         secret_folder.mkdir(parents=True, exist_ok=True)
-        if shared and self.exists_shared(generator_name, name):
-            # secret exists, but this machine doesn't have access -> add machine
-            # add_secret will be a no-op if the machine is already added
-            add_secret(self.machine.flake_dir, self.machine.name, secret_folder)
-        else:
-            # initialize the secret
-            encrypt_secret(
-                self.machine.flake_dir,
-                secret_folder,
-                value,
-                add_machines=[self.machine.name] if deployed else [],
-                add_groups=self.machine.deployment["sops"]["defaultGroups"],
-                git_commit=False,
-            )
+        # initialize the secret
+        encrypt_secret(
+            self.machine.flake_dir,
+            secret_folder,
+            value,
+            add_machines=[self.machine.name] if deployed else [],
+            add_groups=self.machine.deployment["sops"]["defaultGroups"],
+            git_commit=False,
+        )
         return secret_folder
 
     def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
@@ -142,15 +137,17 @@ class SecretStore(SecretStoreBase):
         )
         (output_dir / "key.txt").write_text(key)
 
-    def exists_shared(self, generator_name: str, name: str) -> bool:
-        secret_folder = self.secret_path(generator_name, name, shared=True)
-        return (secret_folder / "secret").exists()
-
     def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
         secret_folder = self.secret_path(generator_name, name, shared)
-        if not (secret_folder / "secret").exists():
-            return False
-        return not shared or self.machine_has_access(generator_name, name, shared)
+        return (secret_folder / "secret").exists()
+
+    def ensure_machine_has_access(
+        self, generator_name: str, name: str, shared: bool = False
+    ) -> None:
+        if self.machine_has_access(generator_name, name, shared):
+            return
+        secret_folder = self.secret_path(generator_name, name, shared)
+        add_secret(self.machine.flake_dir, self.machine.name, secret_folder)
 
     def collect_keys_for_secret(self, path: Path) -> set[tuple[str, KeyType]]:
         from clan_cli.secrets.secrets import (
