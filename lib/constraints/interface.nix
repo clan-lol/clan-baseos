@@ -13,6 +13,7 @@ in
     type = types.str;
     default = moduleName;
     readOnly = true;
+    visible = false;
   };
   options.roles = lib.mapAttrs (
     _name: _:
@@ -37,24 +38,9 @@ in
     }
   ) rolesAttrs;
 
-  options.instances = mkOption {
-    default = { };
-    type = types.submoduleWith {
-      modules = [
-        {
-          options = {
-            max = mkOption {
-              type = types.nullOr types.int;
-              default = null;
-            };
-          };
-        }
-      ];
-    };
-  };
-
   # The resulting assertions
   options.assertions = mkOption {
+    visible = false;
     default = { };
     type = types.attrsOf (
       types.submoduleWith {

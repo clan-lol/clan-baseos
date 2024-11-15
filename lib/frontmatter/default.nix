@@ -1,8 +1,38 @@
 { clan-core, lib }:
 let
+  # Trim the .nix extension from a filename
   trimExtension = name: builtins.substring 0 (builtins.stringLength name - 4) name;
 
-  getRoles' =
+  evalFrontmatter =
+    {
+      moduleName,
+      instanceName,
+      resolvedRoles,
+    }:
+    lib.evalModules {
+      specialArgs = {
+        inherit moduleName resolvedRoles instanceName;
+        allRoles = getRoles moduleName;
+      };
+      modules = [
+        (getFrontmatter moduleName)
+        ./interface.nix
+      ];
+    };
+
+  frontmatterDocsOptions =
+    lib.optionAttrSetToDocList
+      (lib.evalModules {
+        specialArgs = {
+          moduleName = "{moduleName}";
+          allRoles = [ "{roleName}" ];
+        };
+        modules = [
+          ./interface.nix
+        ];
+      }).options;
+
+  getRoles =
     serviceName:
     lib.mapAttrsToList (name: _value: trimExtension name) (
       lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
@@ -15,46 +45,9 @@ let
       )
     );
 
-  getConstraints =
-    modulename:
-    let
-      eval = lib.evalModules {
-        specialArgs = {
-          allRoles = getRoles' modulename;
-        };
-        modules = [
-          ./constraints/interface.nix
-          (getFrontmatter modulename).constraints
-        ];
-      };
-    in
-    eval.config.roles;
+  getConstraints = modulename: (getFrontmatter modulename).constraints;
 
-  checkConstraints =
-    {
-      moduleName,
-      resolvedRoles,
-      instanceNames,
-      instanceName,
-    }:
-    let
-      eval = lib.evalModules {
-        specialArgs = {
-          inherit
-            moduleName
-            instanceNames
-            instanceName
-            resolvedRoles
-            ;
-          allRoles = getRoles' moduleName;
-        };
-        modules = [
-          ./constraints/default.nix
-          ((getFrontmatter moduleName).constraints or { })
-        ];
-      };
-    in
-    eval.config.assertions;
+  checkConstraints = args: (evalFrontmatter args).config.constraints.assertions;
 
   getReadme =
     modulename:
@@ -97,10 +90,13 @@ let
 in
 {
   inherit
+    evalFrontmatter
+    frontmatterDocsOptions
+
     getFrontmatter
     getReadme
-    getRoles'
     getConstraints
     checkConstraints
+    getRoles
     ;
 }
