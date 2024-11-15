@@ -94,7 +94,7 @@ let
         acc2: instanceName: serviceConfig:
 
         let
-          roles = clan-core.lib.modules.getRoles' serviceName;
+          roles = clan-core.lib.modules.getRoles serviceName;
 
           resolvedRoles = lib.genAttrs roles (
             roleName:
@@ -152,7 +152,6 @@ let
           constraintAssertions = clan-core.lib.modules.checkConstraints {
             moduleName = serviceName;
             inherit resolvedRoles instanceName;
-            instanceNames = builtins.attrNames serviceConfigs;
           };
         in
         if (nonExistingRoles != [ ]) then
