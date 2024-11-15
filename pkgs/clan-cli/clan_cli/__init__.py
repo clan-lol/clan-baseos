@@ -61,6 +61,9 @@ def add_common_flags(parser: argparse.ArgumentParser) -> None:
         This is needed because the aliases subcommand doesn't *really*
         create an alias - it duplicates the actual parser in the tree
         making duplication inevitable while naively traversing.
+
+        The error that would be thrown by argparse:
+        - argparse.ArgumentError
         """
         return any(arg in action.option_strings for action in parser._actions)  # noqa: SLF001 -> private_member accessed
 
