@@ -113,6 +113,6 @@ def profile(func: Callable) -> Callable:
             raise
         return res
 
-    if os.getenv("PERF", "0") == "1":
+    if os.getenv("CLAN_CLI_PERF", "0") == "1":
         return wrapper
     return func

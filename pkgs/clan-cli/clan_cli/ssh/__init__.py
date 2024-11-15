@@ -8,6 +8,7 @@ import select
 import shlex
 import subprocess
 import sys
+import tarfile
 import time
 import urllib.parse
 from collections.abc import Callable, Iterator
@@ -15,10 +16,12 @@ from contextlib import ExitStack, contextmanager
 from enum import Enum
 from pathlib import Path
 from shlex import quote
+from tempfile import TemporaryDirectory
 from threading import Thread
 from typing import IO, Any, Generic, TypeVar
 
-from clan_cli.cmd import terminate_process_group
+from clan_cli.cmd import Log, terminate_process_group
+from clan_cli.cmd import run as local_run
 from clan_cli.errors import ClanError
 
 # https://no-color.org
@@ -207,7 +210,7 @@ class Host:
         self.host_key_check = host_key_check
         self.meta = meta
         self.verbose_ssh = verbose_ssh
-        self.ssh_options = ssh_options
+        self._ssh_options = ssh_options
 
     def __repr__(self) -> str:
         return str(self)
@@ -525,29 +528,89 @@ class Host:
     def nix_ssh_env(self, env: dict[str, str] | None) -> dict[str, str]:
         if env is None:
             env = {}
-        env["NIX_SSHOPTS"] = " ".join(self.ssh_cmd_opts())
+        env["NIX_SSHOPTS"] = " ".join(self.ssh_cmd_opts)
         return env
 
+    def upload(
+        self,
+        local_src: Path,  # must be a directory
+        remote_dest: Path,  # must be a directory
+        file_user: str = "root",
+        file_group: str = "root",
+        dir_mode: int = 0o700,
+        file_mode: int = 0o400,
+    ) -> None:
+        # check if the remote destination is a directory (no suffix)
+        if remote_dest.suffix:
+            msg = "Only directories are allowed"
+            raise ClanError(msg)
+
+        if not local_src.is_dir():
+            msg = "Only directories are allowed"
+            raise ClanError(msg)
+
+        # Create the tarball from the temporary directory
+        with TemporaryDirectory(prefix="facts-upload-") as tardir:
+            tar_path = Path(tardir) / "upload.tar.gz"
+            # We set the permissions of the files and directories in the tarball to read only and owned by root
+            # As first uploading the tarball and then changing the permissions can lead an attacker to
+            # do a race condition attack
+            with tarfile.open(str(tar_path), "w:gz") as tar:
+                for root, dirs, files in local_src.walk():
+                    for mdir in dirs:
+                        dir_path = Path(root) / mdir
+                        tarinfo = tar.gettarinfo(
+                            dir_path, arcname=str(dir_path.relative_to(str(local_src)))
+                        )
+                        tarinfo.mode = dir_mode
+                        tarinfo.uname = file_user
+                        tarinfo.gname = file_group
+                        tar.addfile(tarinfo)
+                    for file in files:
+                        file_path = Path(root) / file
+                        tarinfo = tar.gettarinfo(
+                            file_path,
+                            arcname=str(file_path.relative_to(str(local_src))),
+                        )
+                        tarinfo.mode = file_mode
+                        tarinfo.uname = file_user
+                        tarinfo.gname = file_group
+                        with file_path.open("rb") as f:
+                            tar.addfile(tarinfo, f)
+
+            cmd = [
+                *self.ssh_cmd(),
+                "rm",
+                "-r",
+                str(remote_dest),
+                ";",
+                "mkdir",
+                f"--mode={dir_mode:o}",
+                "-p",
+                str(remote_dest),
+                "&&",
+                "tar",
+                "-C",
+                str(remote_dest),
+                "-xvzf",
+                "-",
+            ]
+
+            # TODO accept `input` to be  an IO object instead of bytes so that we don't have to read the tarfile into memory.
+            with tar_path.open("rb") as f:
+                local_run(cmd, input=f.read(), log=Log.BOTH, needs_user_terminal=True)
+
+    @property
     def ssh_cmd_opts(
         self,
-        verbose_ssh: bool = False,
-        tty: bool = False,
     ) -> list[str]:
         ssh_opts = ["-A"] if self.forward_agent else []
 
-        for k, v in self.ssh_options.items():
+        for k, v in self._ssh_options.items():
             ssh_opts.extend(["-o", f"{k}={shlex.quote(v)}"])
 
-        if self.port:
-            ssh_opts.extend(["-p", str(self.port)])
-        if self.key:
-            ssh_opts.extend(["-i", self.key])
-
         ssh_opts.extend(self.host_key_check.to_ssh_opt())
-        if verbose_ssh or self.verbose_ssh:
-            ssh_opts.extend(["-v"])
-        if tty:
-            ssh_opts.extend(["-t"])
+
         return ssh_opts
 
     def ssh_cmd(
@@ -555,10 +618,21 @@ class Host:
         verbose_ssh: bool = False,
         tty: bool = False,
     ) -> list[str]:
+        ssh_opts = self.ssh_cmd_opts
+        if verbose_ssh or self.verbose_ssh:
+            ssh_opts.extend(["-v"])
+        if tty:
+            ssh_opts.extend(["-t"])
+
+        if self.port:
+            ssh_opts.extend(["-p", str(self.port)])
+        if self.key:
+            ssh_opts.extend(["-i", self.key])
+
         return [
             "ssh",
             self.target,
-            *self.ssh_cmd_opts(verbose_ssh=verbose_ssh, tty=tty),
+            *ssh_opts,
         ]
 
 
@@ -658,6 +732,9 @@ class HostGroup:
         timeout: float = math.inf,
         tty: bool = False,
     ) -> None:
+        if cwd is not None:
+            msg = "cwd is not supported for remote commands"
+            raise ClanError(msg)
         if extra_env is None:
             extra_env = {}
         try:

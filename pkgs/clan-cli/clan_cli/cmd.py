@@ -197,9 +197,11 @@ def run(
         logger.debug(f"{msg} \n{callers_str}")
 
     if input:
-        print_trace(
-            f"$: echo '{input.decode('utf-8', 'replace')}' | {indent_command(cmd)}"
-        )
+        if any(not ch.isprintable() for ch in input.decode("ascii", "replace")):
+            filtered_input = "<<binary_blob>>"
+        else:
+            filtered_input = input.decode("ascii", "replace")
+        print_trace(f"$: echo '{filtered_input}' | {indent_command(cmd)}")
     elif logger.isEnabledFor(logging.DEBUG):
         print_trace(f"$: {indent_command(cmd)}")
 
@@ -229,7 +231,7 @@ def run(
 
     global TIME_TABLE
     if TIME_TABLE:
-        TIME_TABLE.add(shlex.join(cmd), start - timeit.default_timer())
+        TIME_TABLE.add(shlex.join(cmd), timeit.default_timer() - start)
 
     # Wait for the subprocess to finish
     cmd_out = CmdOut(

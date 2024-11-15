@@ -4,10 +4,8 @@ import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from clan_cli.cmd import Log, run
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.machines.machines import Machine
-from clan_cli.nix import nix_shell
 
 log = logging.getLogger(__name__)
 
@@ -19,30 +17,13 @@ def upload_secrets(machine: Machine) -> None:
     if not secret_facts_store.needs_upload():
         log.info("Secrets already uploaded")
         return
-    with TemporaryDirectory(prefix="facts-upload-") as tempdir:
-        secret_facts_store.upload(Path(tempdir))
-        host = machine.target_host
 
-        run(
-            nix_shell(
-                ["nixpkgs#rsync"],
-                [
-                    "rsync",
-                    "-e",
-                    " ".join(["ssh", *host.ssh_cmd_opts()]),
-                    "--recursive",
-                    "--links",
-                    "--times",
-                    "--compress",
-                    "--delete",
-                    "--chmod=D700,F600",
-                    f"{tempdir!s}/",
-                    f"{host.target_for_rsync}:{machine.secrets_upload_directory}/",
-                ],
-            ),
-            log=Log.BOTH,
-            needs_user_terminal=True,
-        )
+    with TemporaryDirectory(prefix="facts-upload-") as tempdir:
+        local_secret_dir = Path(tempdir)
+        secret_facts_store.upload(local_secret_dir)
+        remote_secret_dir = Path(machine.secrets_upload_directory)
+
+        machine.target_host.upload(local_secret_dir, remote_secret_dir)
 
 
 def upload_command(args: argparse.Namespace) -> None:

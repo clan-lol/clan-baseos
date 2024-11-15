@@ -5,3 +5,4 @@ MaxStartups 64:30:256
 AuthorizedKeysFile $host_key.pub
 AcceptEnv REALPATH
 PasswordAuthentication no
+Subsystem sftp $sftp_server
