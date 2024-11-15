@@ -9,7 +9,7 @@ from sshd import Sshd
 @pytest.fixture
 def host_group(sshd: Sshd) -> HostGroup:
     login = pwd.getpwuid(os.getuid()).pw_name
-    return HostGroup(
+    group = HostGroup(
         [
             Host(
                 "127.0.0.1",
@@ -20,3 +20,4 @@ def host_group(sshd: Sshd) -> HostGroup:
             )
         ]
     )
+    return group

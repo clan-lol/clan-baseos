@@ -11,7 +11,6 @@ from clan_cli.cmd import run
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
-    complete_target_host,
 )
 from clan_cli.errors import ClanError
 from clan_cli.facts.generate import generate_facts
@@ -19,7 +18,7 @@ from clan_cli.facts.upload import upload_secrets
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_command, nix_metadata
-from clan_cli.ssh import HostKeyCheck
+from clan_cli.ssh import Host, HostKeyCheck
 from clan_cli.vars.generate import generate_vars
 from clan_cli.vars.upload import upload_secret_vars
 
@@ -116,7 +115,6 @@ def deploy_machine(machines: MachineGroup) -> None:
 
     def deploy(machine: Machine) -> None:
         host = machine.build_host
-
         generate_facts([machine], None, False)
         generate_vars([machine], None, False)
 
@@ -127,9 +125,7 @@ def deploy_machine(machines: MachineGroup) -> None:
             machine,
         )
 
-        cmd = [
-            "nixos-rebuild",
-            "switch",
+        nix_options = [
             "--show-trace",
             "--fast",
             "--option",
@@ -144,15 +140,26 @@ def deploy_machine(machines: MachineGroup) -> None:
             "--flake",
             f"{path}#{machine.name}",
         ]
-        if target_host := host.meta.get("target_host"):
-            target_host = f"{target_host.user or 'root'}@{target_host.host}"
-            cmd.extend(["--target-host", target_host])
+        switch_cmd = ["nixos-rebuild", "switch", *nix_options]
+        test_cmd = ["nixos-rebuild", "test", *nix_options]
+
+        target_host: Host | None = host.meta.get("target_host")
+        if target_host:
+            switch_cmd.extend(["--target-host", target_host.target])
+            test_cmd.extend(["--target-host", target_host.target])
 
         env = host.nix_ssh_env(None)
-        ret = host.run(cmd, extra_env=env, check=False)
-        # re-retry switch if the first time fails
-        if ret.returncode != 0:
-            ret = host.run(cmd, extra_env=env)
+        ret = host.run(switch_cmd, extra_env=env, check=False)
+
+        # if the machine is mobile, we retry to deploy with the quirk method
+        is_mobile = machine.deployment.get("nixosMobileWorkaround", False)
+        if is_mobile and ret.returncode != 0:
+            log.info("Mobile machine detected, applying quirk deployment method")
+            ret = host.run(test_cmd, extra_env=env)
+
+        # retry nixos-rebuild switch if the first attempt failed
+        elif ret.returncode != 0:
+            ret = host.run(switch_cmd, extra_env=env)
 
     if len(machines.group.hosts) > 1:
         machines.run_function(deploy)
@@ -226,17 +233,9 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
         default="ask",
         help="Host key (.ssh/known_hosts) check mode.",
     )
-
-    target_host_parser = parser.add_argument(
+    parser.add_argument(
         "--target-host",
         type=str,
         help="Address of the machine to update, in the format of user@host:1234.",
-    )
-    add_dynamic_completer(target_host_parser, complete_target_host)
-
-    parser.add_argument(
-        "--darwin",
-        type=str,
-        help="Hack to deploy darwin machines. This will be removed in the future when we have full darwin integration.",
     )
     parser.set_defaults(func=update)

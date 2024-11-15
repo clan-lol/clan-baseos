@@ -26,12 +26,13 @@ class Sshd:
 
 class SshdConfig:
     def __init__(
-        self, path: Path, login_shell: Path, key: str, preload_lib: Path
+        self, path: Path, login_shell: Path, key: str, preload_lib: Path, log_file: Path
     ) -> None:
         self.path = path
         self.login_shell = login_shell
         self.key = key
         self.preload_lib = preload_lib
+        self.log_file = log_file
 
 
 @pytest.fixture(scope="session")
@@ -43,7 +44,14 @@ def sshd_config(test_root: Path) -> Iterator[SshdConfig]:
         host_key = test_root / "data" / "ssh_host_ed25519_key"
         host_key.chmod(0o600)
         template = (test_root / "data" / "sshd_config").read_text()
-        content = string.Template(template).substitute({"host_key": host_key})
+        sshd = shutil.which("sshd")
+        assert sshd is not None
+        sshdp = Path(sshd)
+        sftp_server = sshdp.parent.parent / "libexec" / "sftp-server"
+        assert sftp_server is not None
+        content = string.Template(template).substitute(
+            {"host_key": host_key, "sftp_server": sftp_server}
+        )
         config = tmpdir / "sshd_config"
         config.write_text(content)
         login_shell = tmpdir / "shell"
@@ -84,8 +92,8 @@ exec {bash} -l "${{@}}"
             ],
             check=True,
         )
-
-        yield SshdConfig(config, login_shell, str(host_key), lib_path)
+        log_file = tmpdir / "sshd.log"
+        yield SshdConfig(config, login_shell, str(host_key), lib_path, log_file)
 
 
 @pytest.fixture
@@ -106,7 +114,17 @@ def sshd(
         "LOGIN_SHELL": str(sshd_config.login_shell),
     }
     proc = command.run(
-        [sshd, "-f", str(sshd_config.path), "-D", "-p", str(port)], extra_env=env
+        [
+            sshd,
+            "-E",
+            str(sshd_config.log_file),
+            "-f",
+            str(sshd_config.path),
+            "-D",
+            "-p",
+            str(port),
+        ],
+        extra_env=env,
     )
     monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
     while True:

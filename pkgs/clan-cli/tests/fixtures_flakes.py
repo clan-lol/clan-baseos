@@ -38,7 +38,7 @@ def substitute(
                     str(clan_core_flake),
                 )
             line = line.replace("__CLAN_SOPS_KEY_PATH__", sops_key)
-            line = line.replace("__CLAN_SOPS_KEY_DIR__", str(flake))
+            line = line.replace("__CLAN_SOPS_KEY_DIR__", str(flake / "facts"))
             buf += line
     print(f"file: {file}")
     print(f"clan_core: {clan_core_flake}")

@@ -53,9 +53,11 @@ def test_secrets_upload(
     new_text = flake.read_text().replace("__CLAN_TARGET_ADDRESS__", addr)
 
     flake.write_text(new_text)
+
     cli.run(["facts", "upload", "--flake", str(test_flake_with_core.path), "vm1"])
 
     # the flake defines this path as the location where the sops key should be installed
-    sops_key = test_flake_with_core.path.joinpath("key.txt")
+    sops_key = test_flake_with_core.path / "facts" / "key.txt"
+    # breakpoint()
     assert sops_key.exists()
     assert sops_key.read_text() == age_keys[0].privkey
