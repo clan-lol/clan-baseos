@@ -1,4 +1,8 @@
+import io
+import logging
 import os
+import subprocess
+import tarfile
 from itertools import chain
 from pathlib import Path
 from typing import override
@@ -8,6 +12,8 @@ from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 
 from . import SecretStoreBase
+
+log = logging.getLogger(__name__)
 
 
 class SecretStore(SecretStoreBase):
@@ -130,6 +136,7 @@ class SecretStore(SecretStoreBase):
             # TODO get the path to the secrets from the machine
             ["cat", f"{self.machine.secret_vars_upload_directory}/.pass_info"],
             check=False,
+            stdout=subprocess.PIPE,
         ).stdout.strip()
 
         if not remote_hash:
@@ -139,13 +146,20 @@ class SecretStore(SecretStoreBase):
         return local_hash.decode() != remote_hash
 
     def upload(self, output_dir: Path) -> None:
-        for secret_var in self.get_all():
-            if not secret_var.deployed:
-                continue
-            output_file = output_dir / "vars" / secret_var.generator / secret_var.name
-            output_file.parent.mkdir(parents=True, exist_ok=True)
-            with (output_file).open("wb") as f:
-                f.write(
-                    self.get(secret_var.generator, secret_var.name, secret_var.shared)
-                )
+        with tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar:
+            for gen_name, generator in self.machine.vars_generators.items():
+                tar_dir = tarfile.TarInfo(name=gen_name)
+                tar_dir.type = tarfile.DIRTYPE
+                tar_dir.mode = 0o511
+                tar.addfile(tarinfo=tar_dir)
+                for f_name, file in generator["files"].items():
+                    if not file["deploy"]:
+                        continue
+                    tar_file = tarfile.TarInfo(name=f"{gen_name}/{f_name}")
+                    content = self.get(gen_name, f_name, generator["share"])
+                    tar_file.size = len(content)
+                    tar_file.mode = 0o440
+                    tar_file.uname = file.get("owner", "root")
+                    tar_file.gname = file.get("group", "root")
+                    tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
         (output_dir / ".pass_info").write_bytes(self.generate_hash())
