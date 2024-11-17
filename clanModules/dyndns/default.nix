@@ -169,51 +169,57 @@ in
 
         serviceConfig =
           let
-            pyscript = pkgs.writers.writePyPy3Bin "test.py" { libraries = [ ]; } ''
-              import json
-              from pathlib import Path
-              import os
+            pyscript =
+              pkgs.writers.writePyPy3Bin "test.py"
+                {
+                  libraries = [ ];
+                  doCheck = false;
+                }
+                ''
+                  import json
+                  from pathlib import Path
+                  import os
 
-              cred_dir = Path(os.getenv("CREDENTIALS_DIRECTORY"))
-              config_str = os.getenv("MYCONFIG")
+                  cred_dir = Path(os.getenv("CREDENTIALS_DIRECTORY"))
+                  config_str = os.getenv("MYCONFIG")
 
 
-              def get_credential(name):
-                  secret_p = cred_dir / name
-                  with open(secret_p, 'r') as f:
-                      return f.read().strip()
+                  def get_credential(name):
+                      secret_p = cred_dir / name
+                      with open(secret_p, 'r') as f:
+                          return f.read().strip()
 
 
-              config = json.loads(config_str)
-              print(f"Config: {config}")
-              for attrset in config["settings"]:
-                  if "password" in attrset:
-                      attrset['password'] = get_credential(attrset['password'])
-                  elif "token" in attrset:
-                      attrset['token'] = get_credential(attrset['token'])
-                  elif "api_key" in attrset:
-                      attrset['api_key'] = get_credential(attrset['api_key'])
-                  else:
-                      raise ValueError(f"Missing secret field in {attrset}")
+                  config = json.loads(config_str)
+                  print(f"Config: {config}")
+                  for attrset in config["settings"]:
+                      if "password" in attrset:
+                          attrset['password'] = get_credential(attrset['password'])
+                      elif "token" in attrset:
+                          attrset['token'] = get_credential(attrset['token'])
+                      elif "api_key" in attrset:
+                          attrset['api_key'] = get_credential(attrset['api_key'])
+                      else:
+                          raise ValueError(f"Missing secret field in {attrset}")
 
-              # create directory data if it does not exist
-              data_dir = Path('data')
-              data_dir.mkdir(mode=0o770, exist_ok=True)
+                  # create directory data if it does not exist
+                  data_dir = Path('data')
+                  data_dir.mkdir(mode=0o770, exist_ok=True)
 
-              # Write the config with secrets back
-              config_path = data_dir / 'config.json'
-              with open(config_path, 'w') as f:
-                  f.write(json.dumps(config, indent=4))
+                  # Write the config with secrets back
+                  config_path = data_dir / 'config.json'
+                  with open(config_path, 'w') as f:
+                      f.write(json.dumps(config, indent=4))
 
-              # Set file permissions to read and write
-              # only by the user and group
-              config_path.chmod(0o660)
+                  # Set file permissions to read and write
+                  # only by the user and group
+                  config_path.chmod(0o660)
 
-              # Set file permissions to read
-              # and write only by the user and group
-              for file in data_dir.iterdir():
-                  file.chmod(0o660)
-            '';
+                  # Set file permissions to read
+                  # and write only by the user and group
+                  for file in data_dir.iterdir():
+                      file.chmod(0o660)
+                '';
           in
           {
             ExecStartPre = lib.getExe pyscript;
