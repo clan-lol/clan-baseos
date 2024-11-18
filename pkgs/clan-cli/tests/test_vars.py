@@ -16,10 +16,8 @@ from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
 from clan_cli.vars.secret_modules import password_store, sops
 from clan_cli.vars.set import set_var
-from fixtures_flakes import generate_flake, set_machine_settings
+from fixtures_flakes import ClanFlake
 from helpers import cli
-from helpers.nixos_config import nested_dict
-from root import CLAN_CORE
 from stdout import CaptureOutput
 
 
@@ -80,19 +78,14 @@ def test_required_generators() -> None:
 @pytest.mark.impure
 def test_generate_public_var(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo hello > $out/my_value"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     assert not check_vars(machine)
@@ -120,20 +113,15 @@ def test_generate_public_var(
 @pytest.mark.impure
 def test_generate_secret_var_sops(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
     my_generator["script"] = "echo hello > $out/my_secret"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
@@ -163,21 +151,16 @@ def test_generate_secret_var_sops(
 @pytest.mark.impure
 def test_generate_secret_var_sops_with_default_group(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     config["clan"]["core"]["sops"]["defaultGroups"] = ["my_group"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
     my_generator["script"] = "echo hello > $out/my_secret"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["secrets", "groups", "add-user", "my_group", sops_setup.user])
@@ -221,10 +204,10 @@ def test_generate_secret_var_sops_with_default_group(
 @pytest.mark.impure
 def test_generated_shared_secret_sops(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    m1_config = nested_dict()
+    m1_config = flake.machines["machine1"]
     m1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = m1_config["clan"]["core"]["vars"]["generators"][
         "my_shared_generator"
@@ -232,17 +215,12 @@ def test_generated_shared_secret_sops(
     shared_generator["share"] = True
     shared_generator["files"]["my_shared_secret"]["secret"] = True
     shared_generator["script"] = "echo hello > $out/my_shared_secret"
-    m2_config = nested_dict()
+    m2_config = flake.machines["machine2"]
     m2_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     m2_config["clan"]["core"]["vars"]["generators"]["my_shared_generator"] = (
         shared_generator.copy()
     )
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"machine1": m1_config, "machine2": m2_config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     machine1 = Machine(name="machine1", flake=FlakeId(str(flake.path)))
@@ -267,10 +245,10 @@ def test_generated_shared_secret_sops(
 @pytest.mark.impure
 def test_generate_secret_var_password_store(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     test_root: Path,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     config["clan"]["core"]["vars"]["settings"]["secretStore"] = "password-store"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
@@ -282,20 +260,15 @@ def test_generate_secret_var_password_store(
     my_shared_generator["share"] = True
     my_shared_generator["files"]["my_shared_secret"]["secret"] = True
     my_shared_generator["script"] = "echo hello > $out/my_shared_secret"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
-    gnupghome = temporary_home / "gpg"
+    gnupghome = flake.path / "gpg"
     shutil.copytree(test_root / "data" / "gnupg-home", gnupghome)
     monkeypatch.setenv("GNUPGHOME", str(gnupghome))
 
-    password_store_dir = temporary_home / "pass"
+    password_store_dir = flake.path / "pass"
     shutil.copytree(test_root / "data" / "password-store", password_store_dir)
-    monkeypatch.setenv("PASSWORD_STORE_DIR", str(temporary_home / "pass"))
+    monkeypatch.setenv("PASSWORD_STORE_DIR", str(flake.path / "pass"))
 
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     assert not check_vars(machine)
@@ -316,10 +289,10 @@ def test_generate_secret_var_password_store(
 @pytest.mark.impure
 def test_generate_secret_for_multiple_machines(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    machine1_config = nested_dict()
+    machine1_config = flake.machines["machine1"]
     machine1_generator = machine1_config["clan"]["core"]["vars"]["generators"][
         "my_generator"
     ]
@@ -328,7 +301,7 @@ def test_generate_secret_for_multiple_machines(
     machine1_generator["script"] = (
         "echo machine1 > $out/my_secret && echo machine1 > $out/my_value"
     )
-    machine2_config = nested_dict()
+    machine2_config = flake.machines["machine2"]
     machine2_generator = machine2_config["clan"]["core"]["vars"]["generators"][
         "my_generator"
     ]
@@ -337,12 +310,7 @@ def test_generate_secret_for_multiple_machines(
     machine2_generator["script"] = (
         "echo machine2 > $out/my_secret && echo machine2 > $out/my_value"
     )
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"machine1": machine1_config, "machine2": machine2_config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["vars", "generate", "--flake", str(flake.path)])
@@ -373,9 +341,9 @@ def test_generate_secret_for_multiple_machines(
 @pytest.mark.impure
 def test_dependant_generators(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     parent_gen = config["clan"]["core"]["vars"]["generators"]["parent_generator"]
     parent_gen["files"]["my_value"]["secret"] = False
     parent_gen["script"] = "echo hello > $out/my_value"
@@ -383,12 +351,7 @@ def test_dependant_generators(
     child_gen["files"]["my_value"]["secret"] = False
     child_gen["dependencies"] = ["parent_generator"]
     child_gen["script"] = "cat $in/parent_generator/my_value > $out/my_value"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     in_repo_store = in_repo.FactStore(
@@ -412,23 +375,18 @@ def test_dependant_generators(
 )
 def test_prompt(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     prompt_type: str,
     input_value: str,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["prompts"]["prompt1"]["description"] = "dream2nix"
     my_generator["prompts"]["prompt1"]["createFile"] = False
     my_generator["prompts"]["prompt1"]["type"] = prompt_type
     my_generator["script"] = "cat $prompts/prompt1 > $out/my_value"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     monkeypatch.setattr("sys.stdin", StringIO(input_value))
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
@@ -442,10 +400,10 @@ def test_prompt(
 @pytest.mark.impure
 def test_share_flag(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
     shared_generator["share"] = True
@@ -463,12 +421,7 @@ def test_share_flag(
     unshared_generator["script"] = (
         "echo hello > $out/my_secret && echo hello > $out/my_value"
     )
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
@@ -504,10 +457,10 @@ def test_share_flag(
 @pytest.mark.impure
 def test_depending_on_shared_secret_succeeds(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
     shared_generator["share"] = True
     shared_generator["files"]["my_secret"]["secret"] = True
@@ -521,12 +474,7 @@ def test_depending_on_shared_secret_succeeds(
     dependent_generator["script"] = (
         "cat $in/shared_generator/my_secret > $out/my_secret"
     )
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
@@ -535,22 +483,17 @@ def test_depending_on_shared_secret_succeeds(
 @pytest.mark.impure
 def test_prompt_create_file(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
     """
     Test that the createFile flag in the prompt configuration works as expected
     """
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["prompts"]["prompt1"]["createFile"] = True
     my_generator["prompts"]["prompt2"]["createFile"] = False
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     monkeypatch.setattr("sys.stdin", StringIO("input1\ninput2\n"))
@@ -566,20 +509,15 @@ def test_prompt_create_file(
 @pytest.mark.impure
 def test_api_get_prompts(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
 ) -> None:
     from clan_cli.vars.list import get_prompts
 
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["prompts"]["prompt1"]["type"] = "line"
     my_generator["files"]["prompt1"]["secret"] = False
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     monkeypatch.setattr("sys.stdin", StringIO("input1"))
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
@@ -594,21 +532,16 @@ def test_api_get_prompts(
 @pytest.mark.impure
 def test_api_set_prompts(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
 ) -> None:
     from clan_cli.vars._types import GeneratorUpdate
     from clan_cli.vars.list import set_prompts
 
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["prompts"]["prompt1"]["type"] = "line"
     my_generator["files"]["prompt1"]["secret"] = False
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     set_prompts(
@@ -638,10 +571,10 @@ def test_api_set_prompts(
 @pytest.mark.impure
 def test_commit_message(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo hello > $out/my_value"
@@ -650,12 +583,7 @@ def test_commit_message(
     ]
     my_secret_generator["files"]["my_secret"]["secret"] = True
     my_secret_generator["script"] = "echo hello > $out/my_secret"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(
@@ -700,9 +628,9 @@ def test_commit_message(
 @pytest.mark.impure
 def test_default_value(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
@@ -710,12 +638,7 @@ def test_default_value(
     my_generator["files"]["my_value"]["value"]["priority"] = 1000  # mkDefault
     my_generator["files"]["my_value"]["value"]["content"] = "foo"
     my_generator["script"] = "echo -n hello > $out/my_value"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     # ensure evaluating the default value works without generating the value
     value_eval = run(
@@ -742,11 +665,11 @@ def test_default_value(
 @pytest.mark.impure
 def test_stdout_of_generate(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     capture_output: CaptureOutput,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
@@ -756,12 +679,7 @@ def test_stdout_of_generate(
     ]
     my_secret_generator["files"]["my_secret"]["secret"] = True
     my_secret_generator["script"] = "echo -n hello > $out/my_secret"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     from clan_cli.vars.generate import generate_vars_for_machine
@@ -828,10 +746,10 @@ def test_stdout_of_generate(
 @pytest.mark.impure
 def test_migration_skip(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
     my_service["secret"]["my_value"] = {}
@@ -841,12 +759,7 @@ def test_migration_skip(
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["migrateFact"] = "my_service"
     my_generator["script"] = "echo -n world > $out/my_value"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
@@ -861,10 +774,10 @@ def test_migration_skip(
 @pytest.mark.impure
 def test_migration(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
     my_service["public"]["my_value"] = {}
@@ -873,12 +786,7 @@ def test_migration(
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["migrateFact"] = "my_service"
     my_generator["script"] = "echo -n world > $out/my_value"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
@@ -893,10 +801,10 @@ def test_migration(
 @pytest.mark.impure
 def test_fails_when_files_are_left_from_other_backend(
     monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_secret_generator = config["clan"]["core"]["vars"]["generators"][
         "my_secret_generator"
@@ -908,12 +816,7 @@ def test_fails_when_files_are_left_from_other_backend(
     ]
     my_value_generator["files"]["my_value"]["secret"] = False
     my_value_generator["script"] = "echo hello > $out/my_value"
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"my_machine": config},
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     for generator in ["my_secret_generator", "my_value_generator"]:
@@ -925,7 +828,7 @@ def test_fails_when_files_are_left_from_other_backend(
         )
     my_secret_generator["files"]["my_secret"]["secret"] = False
     my_value_generator["files"]["my_value"]["secret"] = True
-    set_machine_settings(flake.path, "my_machine", config)
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     for generator in ["my_secret_generator", "my_value_generator"]:
         with pytest.raises(ClanError):

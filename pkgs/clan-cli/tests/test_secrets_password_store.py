@@ -8,22 +8,25 @@ from clan_cli.machines.facts import machine_get_fact
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh import HostGroup
-from fixtures_flakes import generate_flake
+from fixtures_flakes import ClanFlake
 from helpers import cli
-from helpers.nixos_config import nested_dict
 from helpers.validator import is_valid_ssh_key
-from root import CLAN_CORE
 
 
 @pytest.mark.impure
 def test_upload_secret(
     monkeypatch: pytest.MonkeyPatch,
+    flake: ClanFlake,
     temporary_home: Path,
     host_group: HostGroup,
 ) -> None:
-    config = nested_dict()
+    flake.clan_modules = [
+        "root-password",
+        "user-password",
+        "sshd",
+    ]
+    config = flake.machines["vm1"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    # clan.core.networking.zerotier.controller.enable = true;
     config["clan"]["core"]["networking"]["zerotier"]["controller"]["enable"] = True
     host = host_group.hosts[0]
     addr = f"{host.user}@{host.host}:{host.port}?StrictHostKeyChecking=no&UserKnownHostsFile=/dev/null&IdentityFile={host.key}"
@@ -38,17 +41,7 @@ def test_upload_secret(
     )
     facts["secretUploadDirectory"]["priority"] = 50
 
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"vm1": config},
-        clan_modules=[
-            "root-password",
-            "user-password",
-            "sshd",
-        ],
-    )
+    flake.refresh()
     monkeypatch.chdir(flake.path)
     gnupghome = temporary_home / "gpg"
     gnupghome.mkdir(mode=0o700)
