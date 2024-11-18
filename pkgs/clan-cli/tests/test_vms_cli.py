@@ -5,10 +5,8 @@ import pytest
 from clan_cli.clan_uri import FlakeId
 from clan_cli.machines.machines import Machine
 from clan_cli.vms.run import inspect_vm, spawn_vm
-from fixtures_flakes import FlakeForTest, generate_flake
+from fixtures_flakes import ClanFlake, FlakeForTest
 from helpers import cli
-from helpers.nixos_config import nested_dict
-from root import CLAN_CORE
 from stdout import CaptureOutput
 
 if TYPE_CHECKING:
@@ -59,33 +57,27 @@ def test_run(
 @pytest.mark.skipif(no_kvm, reason="Requires KVM")
 @pytest.mark.impure
 def test_vm_persistence(
-    monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
 ) -> None:
     # set up a clan flake with some systemd services to test persistence
-    config = nested_dict()
+    config = flake.machines["my_machine"]
     # logrotate-checkconf doesn't work in VM because /nix/store is owned by nobody
-    config["my_machine"]["systemd"]["services"]["logrotate-checkconf"]["enable"] = False
-    config["my_machine"]["services"]["getty"]["autologinUser"] = "root"
-    config["my_machine"]["clan"]["virtualisation"] = {"graphics": False}
-    config["my_machine"]["clan"]["core"]["networking"] = {"targetHost": "client"}
-    config["my_machine"]["clan"]["core"]["state"]["my_state"]["folders"] = [
+    config["systemd"]["services"]["logrotate-checkconf"]["enable"] = False
+    config["services"]["getty"]["autologinUser"] = "root"
+    config["clan"]["virtualisation"] = {"graphics": False}
+    config["clan"]["core"]["networking"] = {"targetHost": "client"}
+    config["clan"]["core"]["state"]["my_state"]["folders"] = [
         # to be owned by root
         "/var/my-state",
         # to be owned by user 'test'
         "/var/user-state",
     ]
-    config["my_machine"]["users"]["users"] = {
+    config["users"]["users"] = {
         "test": {"initialPassword": "test", "isSystemUser": True, "group": "users"},
         "root": {"initialPassword": "root"},
     }
 
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs=config,
-    )
+    flake.refresh()
 
     vm_config = inspect_vm(machine=Machine("my_machine", FlakeId(str(flake.path))))
 

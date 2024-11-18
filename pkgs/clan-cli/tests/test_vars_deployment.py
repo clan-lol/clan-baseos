@@ -1,6 +1,5 @@
 import json
 from contextlib import ExitStack
-from pathlib import Path
 
 import pytest
 from age_keys import SopsSetup
@@ -9,22 +8,19 @@ from clan_cli.clan_uri import FlakeId
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_eval, run
 from clan_cli.vms.run import inspect_vm, spawn_vm
-from fixtures_flakes import generate_flake
+from fixtures_flakes import ClanFlake
 from helpers import cli
-from helpers.nixos_config import nested_dict
 from nix_config import ConfigItem
-from root import CLAN_CORE
 
 
 @pytest.mark.impure
 def test_vm_deployment(
-    monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
+    flake: ClanFlake,
     nix_config: dict[str, ConfigItem],
     sops_setup: SopsSetup,
 ) -> None:
     # machine 1
-    machine1_config = nested_dict()
+    machine1_config = flake.machines["m1_machine"]
     machine1_config["nixpkgs"]["hostPlatform"] = nix_config["system"].value
     machine1_config["clan"]["virtualisation"]["graphics"] = False
     machine1_config["services"]["getty"]["autologinUser"] = "root"
@@ -50,7 +46,7 @@ def test_vm_deployment(
         echo hello > $out/no_deploy_secret
     """
     # machine 2
-    machine2_config = nested_dict()
+    machine2_config = flake.machines["m2_machine"]
     machine2_config["nixpkgs"]["hostPlatform"] = nix_config["system"].value
     machine2_config["clan"]["virtualisation"]["graphics"] = False
     machine2_config["services"]["getty"]["autologinUser"] = "root"
@@ -63,12 +59,7 @@ def test_vm_deployment(
         m1_shared_generator.copy()
     )
 
-    flake = generate_flake(
-        temporary_home,
-        flake_template=CLAN_CORE / "templates" / "minimal",
-        monkeypatch=monkeypatch,
-        machine_configs={"m1_machine": machine1_config, "m2_machine": machine2_config},
-    )
+    flake.refresh()
 
     sops_setup.init(flake.path)
     cli.run(["vars", "generate", "--flake", str(flake.path)])
