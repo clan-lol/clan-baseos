@@ -13,7 +13,7 @@ Automatically imported:
 
 - [x] ``machines/{machineName}/configuration.nix`
 - [x] ``machines/{machineName}/hardware-configuration.nix`
-- [x] ``machines/{machineName}/facter.json` Automatically configured, for further information see [nixos-facter](../blog/posts/nixos-facter.md)
+- [x] ``machines/{machineName}/facter.json` Automatically configured, for further information see [nixos-facter](https://clan.lol/blog/nixos-facter/)
 
 ## Manual declaration
 

@@ -23,13 +23,6 @@ This documentation is structured into the following sections
 
     [:octicons-arrow-right-24: Getting started](./getting-started/index.md)
 
--   :simple-abstract:{ .lg .middle } __Concepts__
-
-    ---
-
-    Important Core Concepts that should be understood to get the best experience.
-
-    [:octicons-arrow-right-24: Core Concepts](./concepts/index.md)
 
 -   :material-sign-direction:{ .lg .middle } __Guides__
 
