@@ -61,8 +61,8 @@ nav:
       - Authoring ClanModules:
           - clanmodules/index.md
       - Contribute: manual/contribute.md
-  - Concepts:
-      - Overview: concepts/index.md
+  # - Concepts:
+  #     - Overview: concepts/index.md
   - Reference:
       - Overview: reference/index.md
       - Clan Modules:
@@ -130,8 +130,6 @@ nav:
       - Nix API:
           - buildClan: reference/nix-api/buildclan.md
           - Inventory: reference/nix-api/inventory.md
-  - Blog:
-      - blog/index.md
 
 docs_dir: site
 site_dir: out
@@ -186,17 +184,4 @@ extra:
 
 plugins:
   - search
-  - blog
   - macros
-  - rss:
-      match_path: blog/posts/.*
-      use_git: false
-      date_from_meta:
-        as_creation: "date"
-        as_update: "date"
-        datetime_format: "%Y-%m-%d %H:%M"
-        default_timezone: Europe/Paris
-        default_time: "17:18"
-      categories:
-        - categories
-        - tags

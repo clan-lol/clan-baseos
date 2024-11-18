@@ -27,9 +27,7 @@ pkgs.stdenv.mkDerivation {
     ++ (with pkgs.python3Packages; [
       mkdocs
       mkdocs-material
-      mkdocs-rss-plugin
       mkdocs-macros
-      filelock # FIXME: this should be already provided by mkdocs-rss-plugin
     ]);
   configurePhase = ''
     pushd docs
