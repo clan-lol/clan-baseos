@@ -5,9 +5,7 @@ import core from "./tailwind/core-plugin";
 /** @type {import('tailwindcss').Config} */
 const config = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
-  theme: {
-    extend: {},
-  },
+  theme: {},
   daisyui: {
     themes: [
       {
@@ -25,7 +23,7 @@ const config = {
       },
     ],
   },
-  plugins: [typography, daisyui, core],
+  plugins: [typography, core, daisyui],
 };
 
 export default config;

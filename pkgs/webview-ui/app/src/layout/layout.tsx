@@ -1,8 +1,8 @@
 import { Component, createEffect, Show } from "solid-js";
 import { Header } from "./header";
-import { Sidebar } from "../Sidebar";
+import { Sidebar } from "@/src/components/Sidebar";
 import { activeURI, clanList } from "../App";
-import { redirect, RouteSectionProps, useNavigate } from "@solidjs/router";
+import { RouteSectionProps, useNavigate } from "@solidjs/router";
 
 export const Layout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
@@ -16,9 +16,10 @@ export const Layout: Component<RouteSectionProps> = (props) => {
       navigate("/welcome");
     }
   });
+
   return (
     <div class="h-screen bg-base-100 p-4">
-      <div class="drawer lg:drawer-open ">
+      <div class="drawer h-full lg:drawer-open ">
         <input
           id="toplevel-drawer"
           type="checkbox"

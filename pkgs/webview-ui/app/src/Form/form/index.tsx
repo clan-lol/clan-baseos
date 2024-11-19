@@ -132,7 +132,7 @@ interface UnsupportedProps {
 
 const Unsupported = (props: UnsupportedProps) => (
   <div>
-    {props.error && <div class="font-bold text-error">{props.error}</div>}
+    {props.error && <div class="font-bold text-error-700">{props.error}</div>}
     <span>
       Invalid or unsupported schema entry of type:{" "}
       <b>{JSON.stringify(props.schema.type)}</b>
@@ -193,7 +193,7 @@ export function StringField<T extends FieldValues, R extends ResponseData>(
     props.schema.type !== "integer"
   ) {
     return (
-      <span class="text-error">
+      <span class="text-error-700">
         Error cannot render the following as String input.
         <Unsupported schema={props.schema} />
       </span>
@@ -339,7 +339,9 @@ interface OptionSchemaProps {
 }
 export function OptionSchema(props: OptionSchemaProps) {
   return (
-    <Switch fallback={<option class="text-error">Item spec unhandled</option>}>
+    <Switch
+      fallback={<option class="text-error-700">Item spec unhandled</option>}
+    >
       <Match when={typeof props.itemSpec === "string" && props.itemSpec}>
         {(o) => <option>{o()}</option>}
       </Match>
@@ -444,7 +446,7 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
 ) {
   if (props.schema.type !== "array") {
     return (
-      <span class="text-error">
+      <span class="text-error-700">
         Error cannot render the following as array.
         <Unsupported schema={props.schema} />
       </span>
@@ -621,7 +623,7 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                             </ListValueDisplay>
                           )}
                         </For>
-                        <span class="label-text-alt font-bold text-error">
+                        <span class="label-text-alt font-bold text-error-700">
                           {fieldArray.error}
                         </span>
 
@@ -703,7 +705,7 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
 ) {
   if (props.schema.type !== "object") {
     return (
-      <span class="text-error">
+      <span class="text-error-700">
         Error cannot render the following as Object
         <Unsupported schema={props.schema} />
       </span>
@@ -748,7 +750,7 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
                   />
                 )}
                 {typeof propSchema === "boolean" && (
-                  <span class="text-error">
+                  <span class="text-error-700">
                     Schema: Object of Boolean not supported
                   </span>
                 )}

@@ -63,7 +63,9 @@ export function TextInput<T extends FieldValues, R extends ResponseData>(
         </Show>
       </div>
       {props.error && (
-        <span class="label-text-alt font-bold text-error">{props.error}</span>
+        <span class="label-text-alt font-bold text-error-700">
+          {props.error}
+        </span>
       )}
     </label>
   );

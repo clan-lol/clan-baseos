@@ -18,7 +18,7 @@ export const Welcome = () => {
               Build your own
             </button>
             <button
-              class="link w-full text-right text-primary"
+              class="link w-full text-right text-primary-800"
               onClick={async () => {
                 const uri = await registerClan();
                 if (uri) {

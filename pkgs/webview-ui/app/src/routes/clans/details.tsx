@@ -74,8 +74,8 @@ const EditClanForm = (props: EditClanFormProps) => {
           <>
             <figure class="p-1">
               <div class="flex flex-col items-center">
-                <div class="text-3xl text-primary">{curr_name()}</div>
-                <div class="text-secondary">Wide settings</div>
+                <div class="text-3xl text-primary-800">{curr_name()}</div>
+                <div class="text-secondary-800">Wide settings</div>
               </div>
             </figure>
             <figure>
@@ -100,7 +100,7 @@ const EditClanForm = (props: EditClanFormProps) => {
         )}
       </Field>
       <div class="card-body">
-        <span class="text-xl text-primary">General</span>
+        <span class="text-xl text-primary-800">General</span>
         <Field
           name="name"
           validate={[required("Please enter a unique name for the clan.")]}
@@ -108,7 +108,7 @@ const EditClanForm = (props: EditClanFormProps) => {
           {(field, props) => (
             <label class="form-control w-full">
               <div class="label">
-                <span class="label-text block after:ml-0.5 after:text-primary after:content-['*']">
+                <span class="label-text block after:ml-0.5 after:text-primary-800 after:content-['*']">
                   Name
                 </span>
               </div>
@@ -226,9 +226,9 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
   return (
     <Form onSubmit={handleSubmit}>
       <div class="card-body">
-        <span class="text-xl text-primary">Administration</span>
+        <span class="text-xl text-primary-800">Administration</span>
         <div class="grid grid-cols-12 gap-2">
-          <span class="col-span-12 text-lg text-neutral">
+          <span class="col-span-12 text-lg text-neutral-800">
             Each of the following keys can be used to authenticate on machines
           </span>
           <For each={keys()}>
