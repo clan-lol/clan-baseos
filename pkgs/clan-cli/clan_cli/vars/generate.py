@@ -297,6 +297,10 @@ def _check_can_migrate(
             if machine.secret_vars_store.exists(
                 generator_name, fname, vars_generator["share"]
             ):
+                if vars_generator["deploy"]:
+                    machine.secret_vars_store.ensure_machine_has_access(
+                        generator_name, fname, vars_generator["share"]
+                    )
                 return False
         else:
             if machine.public_vars_store.exists(
@@ -400,7 +404,7 @@ def generate_vars(
             )
             machine.flush_caches()
         except Exception as exc:
-            log.exception(f"Failed to generate facts for {machine.name}")
+            log.error(f"Failed to generate facts for {machine.name}: {exc}")  # noqa
             errors += [exc]
         if len(errors) > 0:
             msg = f"Failed to generate facts for {len(errors)} hosts. Check the logs above"

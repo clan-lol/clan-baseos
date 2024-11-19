@@ -13,6 +13,7 @@ in
     ];
     documentation.enable = lib.mkDefault false;
     nix.settings.min-free = 0;
+    system.stateVersion = lib.version;
   };
 
   # to accept external dependencies such as disko

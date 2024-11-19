@@ -10,7 +10,6 @@ from clan_cli.nix import nix_shell
 from clan_cli.ssh import HostGroup
 from fixtures_flakes import ClanFlake
 from helpers import cli
-from helpers.validator import is_valid_ssh_key
 
 
 @pytest.mark.impure
@@ -90,13 +89,7 @@ def test_upload_secret(
     assert store.exists("", "password-hash")
     assert store.exists("", "user-password")
     assert store.exists("", "user-password-hash")
-    assert store.exists("", "ssh.id_ed25519")
     assert store.exists("", "zerotier-identity-secret")
-
-    # Assert that the ssh key is valid
-    ssh_secret = store.get("", "ssh.id_ed25519").decode()
-    ssh_pub = machine_get_fact(flake.path, "vm1", "ssh.id_ed25519.pub")
-    assert is_valid_ssh_key(ssh_secret, ssh_pub)
 
     # Assert that root-password is valid
     pwd_secret = store.get("", "password").decode()

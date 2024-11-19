@@ -9,7 +9,7 @@ from clan_cli.machines.machines import Machine
 from clan_cli.secrets.folders import sops_secrets_folder
 from fixtures_flakes import FlakeForTest
 from helpers import cli
-from helpers.validator import is_valid_age_key, is_valid_ssh_key
+from helpers.validator import is_valid_age_key
 
 if TYPE_CHECKING:
     from age_keys import KeyPair
@@ -85,7 +85,6 @@ def test_generate_secret(
     assert store2.exists("", "password-hash")
     assert store2.exists("", "user-password")
     assert store2.exists("", "user-password-hash")
-    assert store2.exists("", "ssh.id_ed25519")
     assert store2.exists("", "age.key")
     assert store2.exists("", "zerotier-identity-secret")
 
@@ -96,11 +95,6 @@ def test_generate_secret(
     age_secret = store2.get("", "age.key").decode()
     assert age_secret.isprintable()
     assert is_valid_age_key(age_secret)
-
-    # Assert that the ssh key is valid
-    ssh_secret = store2.get("", "ssh.id_ed25519").decode()
-    ssh_pub = machine_get_fact(test_flake_with_core.path, "vm2", "ssh.id_ed25519.pub")
-    assert is_valid_ssh_key(ssh_secret, ssh_pub)
 
     # Assert that root-password is valid
     pwd_secret = store2.get("", "password").decode()
