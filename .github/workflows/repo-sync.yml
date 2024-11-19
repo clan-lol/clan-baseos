@@ -1,0 +1,25 @@
+name: Github<->Gitea sync
+on:
+  schedule:
+    - cron: "39 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repo-sync:
+    if: github.repository_owner == 'clan-lol'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: repo-sync
+        uses: repo-sync/github-sync@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          source_repo: "https://git.clan.lol/clan/clan-core.git"
+          source_branch: "main"
+          destination_branch: "main"
