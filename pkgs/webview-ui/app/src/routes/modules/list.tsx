@@ -14,7 +14,7 @@ const ModuleListItem = (props: { name: string; info: ModuleInfo }) => {
 
   return (
     <div class="stat">
-      <div class="stat-figure text-primary">
+      <div class="stat-figure text-primary-800">
         <div class="join">more</div>
       </div>
 

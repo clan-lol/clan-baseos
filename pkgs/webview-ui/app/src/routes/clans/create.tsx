@@ -103,7 +103,7 @@ export const CreateClan = () => {
             {(field, props) => (
               <label class="form-control w-full">
                 <div class="label">
-                  <span class="label-text block after:ml-0.5 after:text-primary after:content-['*']">
+                  <span class="label-text block after:ml-0.5 after:text-primary-800 after:content-['*']">
                     Name
                   </span>
                 </div>

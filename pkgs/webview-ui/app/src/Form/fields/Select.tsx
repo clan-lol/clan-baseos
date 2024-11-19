@@ -219,7 +219,7 @@ export function SelectInput(props: SelectInputpProps) {
             <span class="label-text text-neutral">{props.helperText}</span>
           )}
           {props.error && (
-            <span class="label-text-alt font-bold text-error">
+            <span class="label-text-alt font-bold text-error-700">
               {props.error}
             </span>
           )}

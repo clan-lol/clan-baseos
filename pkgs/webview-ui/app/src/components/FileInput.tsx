@@ -92,7 +92,9 @@ export function FileInput(props: FileInputProps) {
           aria-errormessage={`${props.name}-error`}
         />
         {props.error && (
-          <span class="label-text-alt font-bold text-error">{props.error}</span>
+          <span class="label-text-alt font-bold text-error-700">
+            {props.error}
+          </span>
         )}
       </div>
     </div>

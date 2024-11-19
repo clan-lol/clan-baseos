@@ -59,7 +59,7 @@ const ClanItem = (props: ClanItemProps) => {
 
   return (
     <div class="stat">
-      <div class="stat-figure text-primary">
+      <div class="stat-figure text-primary-800">
         <div class="join">
           <button
             class="join-item btn-sm"

@@ -431,7 +431,7 @@ const MachineForm = (props: MachineDetailsProps) => {
           </div>
         </figure>
         <div class="card-body">
-          <span class="text-xl text-primary">General</span>
+          <span class="text-xl text-primary-800">General</span>
           {/*
           <Field name="machine.tags" type="string[]">
             {(field, props) => field.value}
@@ -536,14 +536,14 @@ const MachineForm = (props: MachineDetailsProps) => {
           {(module) => (
             <>
               <div class="divider"></div>
-              <span class="text-xl text-primary">{module.name}</span>
+              <span class="text-xl text-primary-800">{module.name}</span>
               {module.component}
             </>
           )}
         </For>
         <div class="divider"></div>
 
-        <span class="text-xl text-primary">Actions</span>
+        <span class="text-xl text-primary-800">Actions</span>
         <div class="my-4 flex flex-col gap-6">
           <span class="max-w-md text-neutral">
             Installs the system for the first time. Used to bootstrap the remote

@@ -59,7 +59,7 @@ export const Header = (props: HeaderProps) => {
         <span class="flex flex-col">
           <Show when={query.data}>
             {(meta) => [
-              <span class="text-primary">{meta().name}</span>,
+              <span class="text-primary-800">{meta().name}</span>,
               <span class="text-neutral">{meta()?.description}</span>,
             ]}
           </Show>
