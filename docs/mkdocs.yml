@@ -79,6 +79,7 @@ nav:
           - reference/clanModules/heisenbridge.md
           - reference/clanModules/index.md
           - reference/clanModules/iwd.md
+          - reference/clanModules/importer.md
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
           - reference/clanModules/machine-id.md
