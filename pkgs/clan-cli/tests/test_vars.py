@@ -12,6 +12,7 @@ from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_eval, run
 from clan_cli.vars.check import check_vars
 from clan_cli.vars.generate import generate_vars_for_machine
+from clan_cli.vars.get import get_var
 from clan_cli.vars.list import stringify_all_vars
 from clan_cli.vars.public_modules import in_repo
 from clan_cli.vars.secret_modules import password_store, sops
@@ -858,3 +859,30 @@ def test_keygen(
     cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
     # check public key exists
     assert (temporary_home / "sops" / "users" / "user").is_dir()
+
+
+@pytest.mark.impure
+def test_vars_get(
+    monkeypatch: pytest.MonkeyPatch,
+    flake: ClanFlake,
+) -> None:
+    config = flake.machines["my_machine"]
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["script"] = "echo -n hello > $out/my_value"
+    my_shared_generator = config["clan"]["core"]["vars"]["generators"][
+        "my_shared_generator"
+    ]
+    my_shared_generator["share"] = True
+    my_shared_generator["files"]["my_shared_value"]["secret"] = False
+    my_shared_generator["script"] = "echo -n hello > $out/my_shared_value"
+    flake.refresh()
+    monkeypatch.chdir(flake.path)
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    # get the value of a public var
+    assert get_var(machine, "my_generator/my_value").printable_value == "hello"
+    assert (
+        get_var(machine, "my_shared_generator/my_shared_value").printable_value
+        == "hello"
+    )
