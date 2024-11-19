@@ -2,7 +2,13 @@ import { createQuery } from "@tanstack/solid-query";
 import { callApi } from "../api";
 import toast from "solid-toast";
 
-export const createModulesQuery = (uri: string | null) =>
+export interface ModulesFilter {
+  features: string[];
+}
+export const createModulesQuery = (
+  uri: string | null,
+  filter?: ModulesFilter,
+) =>
   createQuery(() => ({
     queryKey: [uri, "list_modules"],
     placeholderData: [],
@@ -17,7 +23,12 @@ export const createModulesQuery = (uri: string | null) =>
         if (response.status === "error") {
           toast.error("Failed to fetch data");
         } else {
-          return Object.entries(response.data);
+          if (!filter) {
+            return Object.entries(response.data);
+          }
+          return Object.entries(response.data).filter(([key, value]) =>
+            filter.features.every((f) => (value.features || []).includes(f)),
+          );
         }
       }
       return [];

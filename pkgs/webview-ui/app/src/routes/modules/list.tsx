@@ -28,7 +28,9 @@ const ModuleListItem = (props: { name: string; info: ModuleInfo }) => {
 };
 
 export const ModuleList = () => {
-  const modulesQuery = createModulesQuery(activeURI());
+  const modulesQuery = createModulesQuery(activeURI(), {
+    features: ["inventory"],
+  });
   return (
     <Switch fallback="Shit">
       <Match when={modulesQuery.isLoading}>Loading....</Match>
