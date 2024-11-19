@@ -13,3 +13,7 @@
 .sidebar__profile--flyout{
     background: rgb(var(--clr-bg-def-2));
 }
+
+.sidebar__profile--flyout > .sidebar__profile__character{
+    color: rgb(var(--clr-fg-def-1)) !important;
+}

@@ -7,6 +7,7 @@ import { redirect, RouteSectionProps, useNavigate } from "@solidjs/router";
 
 export const Layout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
+  +
   createEffect(() => {
     console.log("Layout props", props.location);
     console.log(
@@ -20,7 +21,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
 
   return (
     <div class="h-screen bg-base-100 p-4">
-      <div class="drawer lg:drawer-open ">
+      <div class="drawer h-full lg:drawer-open ">
         <input
           id="toplevel-drawer"
           type="checkbox"
@@ -44,8 +45,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
             aria-label="close sidebar"
             class="drawer-overlay"
           ></label>
-          <SidebarUpdate/>
-          <Sidebar {...props} />
+          <SidebarUpdate />
         </div>
       </div>
     </div>

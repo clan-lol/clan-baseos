@@ -56,7 +56,7 @@
   --clr-fg-def-3: theme(colors.clan-secondary.700);
   --clr-fg-def-4: theme(colors.clan-secondary.500);
 
-  --clr-fg-inv-1: theme(colors.white);
+  --clr-fg-inv-1: 255 255 255;
   --clr-fg-inv-2: theme(colors.clan-secondary.100);
   --clr-fg-inv-3: theme(colors.clan-secondary.300);
   --clr-fg-inv-4: theme(colors.clan-secondary.400);
@@ -66,4 +66,23 @@ html {
   @apply font-sans;
   overflow-x: hidden;
   overflow-y: scroll;
+}
+
+.accordeon {
+  display: flex;
+  flex-direction: column;
+  gap: theme(gap.3);
+}
+
+.accordeon__header {
+  padding: theme(padding.2) theme(padding[1.5]);
+  cursor: pointer;
+}
+
+.accordeon__header::-webkit-details-marker {
+  display: none;
+}
+
+.accordeon__body {
+  padding: theme(padding.2) 0 theme(padding.1);
 }

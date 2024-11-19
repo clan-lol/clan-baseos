@@ -5,7 +5,7 @@ export const SidebarFlyout= () =>{
     return <div class="sidebar__flyout">
         <div class="sidebar__flyout__inner">
             <List gapSize='small'>
-                <SidebarListItem title='Settings' delegateClick={()=>{}} />
+                <SidebarListItem href='/settings' title='Settings' />
             </List>
         </div>
     </div>

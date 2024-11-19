@@ -1,10 +1,10 @@
-import {createSignal} from 'solid-js'
+import {createSignal, Show} from 'solid-js'
 
 import {Typography} from '@/src/components/Typography'
 import {SidebarFlyout} from './SidebarFlyout'
 
 interface SidebarHeader {
-    clanName?: string
+    clanName: string
 }
 
 export const SidebarHeader = (props:SidebarHeader)=>{
@@ -15,15 +15,21 @@ export const SidebarHeader = (props:SidebarHeader)=>{
     function handleClick(){
         toggleFlyout(!showFlyout())
     }
+
+    const renderClanProfile = () => <div class={`sidebar__profile ${showFlyout() ? 'sidebar__profile--flyout' : ''}`}>
+        <Typography classes='sidebar__profile__character' tag='span' hierarchy='title' size='m' weight='bold' color='primary' inverted={true}>
+            {clanName.slice(0,1)}
+        </Typography>
+    </div>
+    
+
+    const renderClanTitle = () => 
+        <Typography classes='sidebar__title' tag='h3' hierarchy='body' size='default' weight='medium' color='primary' inverted={true}>{clanName}</Typography>
     
     return <header class="sidebar__header">
         <div onClick={handleClick} class="sidebar__header__inner">
-            <div class={`sidebar__profile ${showFlyout() ? 'sidebar__profile--flyout' : ''}`}>
-                <Typography classes='sidebar__title' tag='span' hierarchy='title' size='m' weight='bold' color='primary' inverted={!showFlyout()}>
-                    {clanName?.slice(0,1) || 'U'}
-                </Typography>    
-            </div>
-            <Typography classes='sidebar__title' tag='h3' hierarchy='body' size='default' weight='medium' color='primary' inverted={true}>{clanName || 'Untitled'}</Typography>
+            {renderClanProfile()}
+            {renderClanTitle()}
         </div>
         { showFlyout() &&
             <SidebarFlyout/>
