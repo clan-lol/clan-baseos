@@ -16,6 +16,13 @@
         evalClanModules = self.lib.evalClanModules;
       };
 
+      # Frontmatter for clanModules
+      clanModulesFrontmatter =
+        let
+          docs = pkgs.nixosOptionsDoc { options = self.lib.modules.frontmatterOptions; };
+        in
+        docs.optionsJSON;
+
       clanModulesFileInfo = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModules);
       # clanModulesReadmes = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModulesReadmes);
       # clanModulesMeta = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModulesMeta);
@@ -56,8 +63,6 @@
             buildInputs = [
               pkgs.python3
               self'.packages.clan-cli
-              # TODO: see postFixup clan-cli/default.nix:L188
-              self'.packages.clan-cli.propagatedBuildInputs
             ];
           }
           ''
@@ -65,6 +70,8 @@
             export CLAN_CORE_DOCS=${jsonDocs.clanCore}/share/doc/nixos/options.json
             # A file that contains the links to all clanModule docs
             export CLAN_MODULES=${clanModulesFileInfo}
+            # Frontmatter format for clanModules
+            export CLAN_MODULES_FRONTMATTER_DOCS=${clanModulesFrontmatter}/share/doc/nixos/options.json
 
             # buildClan options
             export BUILD_CLAN_PATH=${buildClanOptions}/share/doc/nixos/options.json

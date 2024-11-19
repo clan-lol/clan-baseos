@@ -22,6 +22,8 @@ let
     header = { };
   };
 
+  frontMatterSchema = jsonLib.parseOptions self.lib.modules.frontmatterOptions { };
+
   inventorySchema = jsonLib.parseModule (import ../build-inventory/interface.nix);
 
   renderSchema = pkgs.writers.writePython3Bin "render-schema" {
@@ -48,6 +50,7 @@ let
 in
 {
   inherit
+    frontMatterSchema
     inventorySchema
     modulesSchema
     renderSchema
