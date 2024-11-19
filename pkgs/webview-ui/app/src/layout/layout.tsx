@@ -1,13 +1,12 @@
 import { Component, createEffect, Show } from "solid-js";
 import { Header } from "./header";
-import { Sidebar } from "../Sidebar";
-import { Sidebar as SidebarUpdate } from "@/src/components/Sidebar";
+import { Sidebar } from "@/src/components/Sidebar";
 import { activeURI, clanList } from "../App";
-import { redirect, RouteSectionProps, useNavigate } from "@solidjs/router";
+import { RouteSectionProps, useNavigate } from "@solidjs/router";
 
 export const Layout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
-  +createEffect(() => {
+  createEffect(() => {
     console.log("Layout props", props.location);
     console.log(
       "empty ClanList, redirect to welcome page",
@@ -44,7 +43,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
             aria-label="close sidebar"
             class="drawer-overlay"
           ></label>
-          <SidebarUpdate {...props} />
+          <Sidebar {...props} />
         </div>
       </div>
     </div>
