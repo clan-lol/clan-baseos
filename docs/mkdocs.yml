@@ -67,19 +67,19 @@ nav:
       - Overview: reference/index.md
       - Clan Modules:
           - reference/clanModules/admin.md
-
           - reference/clanModules/borgbackup-static.md
           - reference/clanModules/borgbackup.md
           - reference/clanModules/deltachat.md
           - reference/clanModules/disk-id.md
           - reference/clanModules/dyndns.md
           - reference/clanModules/ergochat.md
+          - reference/clanModules/frontmatter/index.md
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
           - reference/clanModules/heisenbridge.md
+          - reference/clanModules/importer.md
           - reference/clanModules/index.md
           - reference/clanModules/iwd.md
-          - reference/clanModules/importer.md
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
           - reference/clanModules/machine-id.md
@@ -105,7 +105,6 @@ nav:
           - reference/clanModules/zerotier-static-peers.md
           - reference/clanModules/zerotier.md
           - reference/clanModules/zt-tcp-relay.md
-          - reference/clanModules/frontmatter/index.md
       - CLI:
           - reference/cli/index.md
 
