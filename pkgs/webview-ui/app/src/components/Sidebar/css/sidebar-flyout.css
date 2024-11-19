@@ -1,20 +1,20 @@
 .sidebar__flyout {
-    top: 0;
-    position: absolute;
-    z-index: theme(zIndex.30);
+  top: 0;
+  position: absolute;
+  z-index: theme(zIndex.30);
 
-    padding: theme(padding[1]);
-    width: 100%;
-    height: auto;
+  padding: theme(padding[1]);
+  width: 100%;
+  height: auto;
 }
 
 .sidebar__flyout__inner {
-    position: relative;
-    width: inherit;
-    height: inherit;
-    
-    padding: theme(padding.12) theme(padding.3) theme(padding.3);
-    background-color: rgba(var(--clr-bg-inv-4)/0.95);
-    border: 1px solid rgb(var(--clr-border-inv-4));
-    border-radius: theme(borderRadius.lg);
+  position: relative;
+  width: inherit;
+  height: inherit;
+
+  padding: theme(padding.12) theme(padding.3) theme(padding.3);
+  background-color: rgba(var(--clr-bg-inv-4) / 0.95);
+  border: 1px solid rgb(var(--clr-border-inv-4));
+  border-radius: theme(borderRadius.lg);
 }

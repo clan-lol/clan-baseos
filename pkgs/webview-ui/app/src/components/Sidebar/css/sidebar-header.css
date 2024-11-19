@@ -1,31 +1,30 @@
 .sidebar__header {
-    position: relative;
-    padding: 1px 1px 0;
-    cursor: pointer;
-    
+  position: relative;
+  padding: 1px 1px 0;
+  cursor: pointer;
 
-    &:after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
+  &:after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
 
-        width: 100%;
-        height: 100%;
-        background: rgb(var(--clr-bg-inv-3));
-        
-        border-bottom: 1px solid var(--clr-border-inv-3);
-        border-top-left-radius: theme(borderRadius.xl);
-        border-top-right-radius: theme(borderRadius.xl);
-    }
+    width: 100%;
+    height: 100%;
+    background: rgb(var(--clr-bg-inv-3));
+
+    border-bottom: 1px solid var(--clr-border-inv-3);
+    border-top-left-radius: theme(borderRadius.xl);
+    border-top-right-radius: theme(borderRadius.xl);
+  }
 }
 
 .sidebar__header__inner {
-    position: relative;
-    z-index: theme(zIndex.40);
-    display: flex;
-    align-items: center;
-    gap: 0 theme(gap.3);
+  position: relative;
+  z-index: theme(zIndex.40);
+  display: flex;
+  align-items: center;
+  gap: 0 theme(gap.3);
 
-    padding: theme(padding.3) theme(padding.3);
+  padding: theme(padding.3) theme(padding.3);
 }

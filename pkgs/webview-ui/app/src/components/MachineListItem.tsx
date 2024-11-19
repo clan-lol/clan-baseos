@@ -103,7 +103,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
   };
   return (
     <li>
-      <div class="card card-side m-2 timo">
+      <div class="card card-side m-2">
         <figure class="pl-2">
           <span
             class="material-icons content-center text-5xl"

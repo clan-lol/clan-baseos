@@ -1,46 +1,46 @@
 .sidebar__list__item {
-    position: relative;
-    cursor: theme(cursor.pointer);
+  position: relative;
+  cursor: theme(cursor.pointer);
 
-    &:after {
-        content: '';
-        position: absolute;
-        z-index: theme(zIndex.10);
-        top: 0;
-        left:0;
+  &:after {
+    content: "";
+    position: absolute;
+    z-index: theme(zIndex.10);
+    top: 0;
+    left: 0;
 
-        width: 100%;
-        height: 100%;
-        border-radius: theme(borderRadius.md);
-        transform: scale(0.98);
-        transition: transform 0.24s ease-in-out;
-    }
+    width: 100%;
+    height: 100%;
+    border-radius: theme(borderRadius.md);
+    transform: scale(0.98);
+    transition: transform 0.24s ease-in-out;
+  }
 
-    &:hover:after {
-        background: rgb(var(--clr-bg-inv-acc-2));
-        transform: scale(theme(scale.100));
-        transition: transform 0.24s ease-in-out;
-    }
+  &:hover:after {
+    background: rgb(var(--clr-bg-inv-acc-2));
+    transform: scale(theme(scale.100));
+    transition: transform 0.24s ease-in-out;
+  }
 
-    &:active {
-        transform: scale(0.99);
-        transition: transform 0.08s ease-in-out;
-    }
+  &:active {
+    transform: scale(0.99);
+    transition: transform 0.08s ease-in-out;
+  }
 
-    &:active:after {
-        background: rgb(var(--clr-bg-inv-acc-3));
-        transform: scale(theme(scale.100));
-    }
+  &:active:after {
+    background: rgb(var(--clr-bg-inv-acc-3));
+    transform: scale(theme(scale.100));
+  }
 }
 
 .sidebar__list__link {
-    position: relative;
-    z-index: 20;
-    display: block;
-    padding: theme(padding.3);
+  position: relative;
+  z-index: 20;
+  display: block;
+  padding: theme(padding.3);
 }
 
 .sidebar__list__content {
-    position: relative;
-    z-index: 20;
+  position: relative;
+  z-index: 20;
 }
