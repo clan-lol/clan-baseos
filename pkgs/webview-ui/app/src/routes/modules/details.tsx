@@ -2,7 +2,7 @@ import { callApi } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { createModulesQuery } from "@/src/queries";
-import { useParams } from "@solidjs/router";
+import { useParams, useNavigate } from "@solidjs/router";
 import {
   createEffect,
   createSignal,
@@ -70,6 +70,33 @@ interface DetailsProps {
   id: string;
 }
 const Details = (props: DetailsProps) => {
+  const navigate = useNavigate();
+  const add = async () => {
+    navigate(`/modules/add/${props.id}`);
+    // const uri = activeURI();
+    // if (!uri) return;
+    // const res = await callApi("get_inventory", { base_path: uri });
+    // if (res.status === "error") {
+    //   toast.error("Failed to fetch inventory");
+    //   return;
+    // }
+    // const inventory = res.data;
+    // const newInventory = deepMerge(inventory, {
+    //   services: {
+    //     [props.id]: {
+    //       default: {
+    //         enabled: false,
+    //       },
+    //     },
+    //   },
+    // });
+
+    // callApi("set_inventory", {
+    //   flake_dir: uri,
+    //   inventory: newInventory,
+    //   message: `Add module: ${props.id} in 'default' instance`,
+    // });
+  };
   return (
     <div class="flex w-full flex-col gap-2">
       <article class="prose">{props.data.description}</article>
@@ -89,37 +116,11 @@ const Details = (props: DetailsProps) => {
         <SolidMarkdown>{props.data.readme}</SolidMarkdown>
       </div>
       <div class="my-2 flex w-full gap-2">
-        <button
-          class="btn btn-primary"
-          onClick={async () => {
-            const uri = activeURI();
-            if (!uri) return;
-            const res = await callApi("get_inventory", { base_path: uri });
-            if (res.status === "error") {
-              toast.error("Failed to fetch inventory");
-              return;
-            }
-            const inventory = res.data;
-            const newInventory = deepMerge(inventory, {
-              services: {
-                [props.id]: {
-                  default: {
-                    enabled: false,
-                  },
-                },
-              },
-            });
-
-            callApi("set_inventory", {
-              flake_dir: uri,
-              inventory: newInventory,
-              message: `Add module: ${props.id} in 'default' instance`,
-            });
-          }}
-        >
+        <button class="btn btn-primary" onClick={add}>
           <span class="material-icons ">add</span>
           Add to Clan
         </button>
+        {/* Add -> Select (required) roles, assign Machine */}
       </div>
       <ModuleForm id={props.id} />
     </div>

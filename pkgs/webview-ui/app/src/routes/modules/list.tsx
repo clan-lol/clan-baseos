@@ -18,11 +18,12 @@ const ModuleListItem = (props: { name: string; info: ModuleInfo }) => {
         <div class="join">more</div>
       </div>
 
-      <A href={`/modules/${name}`}>
+      <A href={`/modules/details/${name}`}>
         <div class="stat-value underline">{name}</div>
       </A>
 
       <div>{info.description}</div>
+      <div>{JSON.stringify(info.constraints)}</div>
     </div>
   );
 };

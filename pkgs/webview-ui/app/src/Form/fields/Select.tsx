@@ -126,7 +126,16 @@ export function SelectInput(props: SelectInputpProps) {
           type="button"
           class="select select-bordered flex items-center gap-2"
           ref={setReference}
-          popovertarget={_id}
+          formnovalidate
+          onClick={() => {
+            const popover = document.getElementById(_id);
+            if (popover) {
+              popover.togglePopover(); // Show or hide the popover
+            }
+          }}
+          // TODO: Use native popover once Webkti supports it within <form>
+          // popovertarget={_id}
+          // popovertargetaction="toggle"
         >
           <Show when={props.adornment && props.adornment.position === "start"}>
             {props.adornment?.content}
