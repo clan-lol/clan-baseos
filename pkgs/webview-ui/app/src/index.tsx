@@ -17,6 +17,7 @@ import { Welcome } from "./routes/welcome";
 import { Toaster } from "solid-toast";
 import { ModuleList } from "./routes/modules/list";
 import { ModuleDetails } from "./routes/modules/details";
+import { ModuleDetails as AddModule } from "./routes/modules/add";
 
 export const client = new QueryClient();
 
@@ -101,10 +102,16 @@ export const routes: AppRoute[] = [
         component: () => <ModuleList />,
       },
       {
-        path: "/:id",
+        path: "details/:id",
         label: "Details",
         hidden: true,
         component: () => <ModuleDetails />,
+      },
+      {
+        path: "/add/:id",
+        label: "Details",
+        hidden: true,
+        component: () => <AddModule />,
       },
     ],
   },

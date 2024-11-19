@@ -1,6 +1,7 @@
 ---
 description = "Automatically provisions wifi credentials"
 features = [ "inventory" ]
+categories = [ "Network" ]
 ---
 
 !!! Warning

@@ -1,6 +1,6 @@
 ---
 description = "Enables secure remote access to the machine over ssh."
-categories = ["System"]
+categories = ["System", "Network"]
 features = [ "inventory" ]
 ---
 
@@ -9,5 +9,3 @@ It will generate a host key for each machine
 
 
 ## Roles
-
-### 

@@ -1,6 +1,8 @@
 import typography from "@tailwindcss/typography";
 import daisyui from "daisyui";
 import core from "./tailwind/core-plugin";
+// @ts-expect-error: Doesn't have types
+import { parseColor } from "tailwindcss/lib/util/color";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
