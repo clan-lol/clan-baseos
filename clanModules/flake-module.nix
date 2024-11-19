@@ -13,6 +13,7 @@
     golem-provider = ./golem-provider;
     heisenbridge = ./heisenbridge;
     iwd = ./iwd;
+    importer = ./importer;
     localbackup = ./localbackup;
     localsend = ./localsend;
     matrix-synapse = ./matrix-synapse;
