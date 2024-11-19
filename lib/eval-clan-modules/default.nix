@@ -15,7 +15,7 @@ let
   };
 
   # This function takes a list of module names and evaluates them
-  # evalClanModules :: [ module ] -> { config, options, ... }
+  # [ module ] -> { config, options, ... }
   evalClanModulesLegacy =
     modules:
     let
@@ -30,7 +30,7 @@ let
       };
     in
     # lib.warn ''
-    #   EvalClanModules doesn't respect role specific interfaces.
+    #   doesn't respect role specific interfaces.
 
     #   The following {module}/default.nix file trying to be imported.
 
