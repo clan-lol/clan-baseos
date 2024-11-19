@@ -1,3 +1,4 @@
+import dataclasses
 import enum
 import functools
 import io
@@ -8,7 +9,6 @@ import shutil
 import subprocess
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
-from dataclasses import dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import IO, Any, Protocol
@@ -34,11 +34,26 @@ class KeyType(enum.Enum):
             return cls.__members__.get(value.upper())
         return None
 
+    @property
+    def sops_recipient_attr(self) -> str:
+        """Name of the attribute to get the recipient key from a Sops file."""
+        if self == self.AGE:
+            return "recipient"
+        if self == self.PGP:
+            return "fp"
+        msg = (
+            f"KeyType is not properly implemented: "
+            f'"sops_recipient_attr" is missing for key type "{self.name}"'
+        )
+        raise ClanError(msg)
 
-@dataclass(frozen=True, eq=False)
+
+@dataclasses.dataclass(frozen=True)
 class SopsKey:
     pubkey: str
-    username: str
+    # Two SopsKey are considered equal even
+    # if they don't have the same username:
+    username: str = dataclasses.field(compare=False)
     key_type: KeyType
 
     def as_dict(self) -> dict[str, str]:
@@ -47,6 +62,13 @@ class SopsKey:
             "username": self.username,
             "type": self.key_type.name.lower(),
         }
+
+    @classmethod
+    def load_dir(cls, dir: Path) -> "SopsKey":  # noqa: ANN102
+        """Load from the file named `keys.json` in the given directory."""
+        pubkey, key_type = read_key(dir)
+        username = ""
+        return cls(pubkey, username, key_type)
 
 
 class ExitStatus(enum.IntEnum):  # see: cmd/sops/codes/codes.go
@@ -387,6 +409,19 @@ def decrypt_file(secret_path: Path) -> str:
     executor = functools.partial(run, error_msg=f"Could not decrypt {secret_path}")
     _, stdout = Operation.decrypt(secret_path, no_public_keys_needed, executor)
     return stdout
+
+
+def get_recipients(secret_path: Path) -> set[SopsKey]:
+    sops_attrs = json.loads((secret_path / "secret").read_text())["sops"]
+    return {
+        SopsKey(
+            pubkey=recipient[key_type.sops_recipient_attr],
+            username="",
+            key_type=key_type,
+        )
+        for key_type in KeyType
+        for recipient in sops_attrs[key_type.name.lower()]
+    }
 
 
 def get_meta(secret_path: Path) -> dict:
