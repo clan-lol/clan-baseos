@@ -20,17 +20,16 @@ let
       ];
     };
 
-  frontmatterDocsOptions =
-    lib.optionAttrSetToDocList
-      (lib.evalModules {
-        specialArgs = {
-          moduleName = "{moduleName}";
-          allRoles = [ "{roleName}" ];
-        };
-        modules = [
-          ./interface.nix
-        ];
-      }).options;
+  frontmatterOptions =
+    (lib.evalModules {
+      specialArgs = {
+        moduleName = "{moduleName}";
+        allRoles = [ "{roleName}" ];
+      };
+      modules = [
+        ./interface.nix
+      ];
+    }).options;
 
   getRoles =
     serviceName:
@@ -91,7 +90,7 @@ in
 {
   inherit
     evalFrontmatter
-    frontmatterDocsOptions
+    frontmatterOptions
 
     getFrontmatter
     getReadme

@@ -34,6 +34,7 @@ from clan_cli.errors import ClanError
 # Get environment variables
 CLAN_CORE_PATH = Path(os.environ["CLAN_CORE_PATH"])
 CLAN_CORE_DOCS = Path(os.environ["CLAN_CORE_DOCS"])
+CLAN_MODULES_FRONTMATTER_DOCS = os.environ.get("CLAN_MODULES_FRONTMATTER_DOCS")
 CLAN_MODULES = os.environ.get("CLAN_MODULES")
 BUILD_CLAN_PATH = os.environ.get("BUILD_CLAN_PATH")
 
@@ -155,6 +156,63 @@ Your can customize your machines behavior with the configuration [options](#modu
 options_head = "\n## Module Options\n"
 
 
+def produce_clan_modules_frontmatter_docs() -> None:
+    if not CLAN_MODULES_FRONTMATTER_DOCS:
+        msg = f"Environment variables are not set correctly: $CLAN_CORE_DOCS={CLAN_CORE_DOCS}"
+        raise ClanError(msg)
+
+    if not OUT:
+        msg = f"Environment variables are not set correctly: $out={OUT}"
+        raise ClanError(msg)
+
+    with Path(CLAN_MODULES_FRONTMATTER_DOCS).open() as f:
+        options: dict[str, dict[str, Any]] = json.load(f)
+
+        # header
+        output = """# Frontmatter
+
+Every clan module has a `frontmatter` section within its readme. It provides machine readable metadata about the module.
+
+!!! example
+
+    The used format is `TOML`
+
+    The content is separated by `---` and the frontmatter must be placed at the very top of the `README.md` file.
+
+    ```toml
+    ---
+    description = "A description of the module"
+    categories = ["category1", "category2"]
+
+    [constraints]
+    roles.client.max = 10
+    roles.server.min = 1
+    ---
+    # Readme content
+    ...
+    ```
+
+"""
+
+        output += """"## Overview
+
+This provides an overview of the available attributes of the `frontmatter` within the `README.md` of a clan module.
+
+"""
+        for option_name, info in options.items():
+            if option_name == "_module.args":
+                continue
+            output += render_option(option_name, info)
+
+        outfile = Path(OUT) / "clanModules/frontmatter/index.md"
+        outfile.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        with outfile.open("w") as of:
+            of.write(output)
+
+
 def produce_clan_core_docs() -> None:
     if not CLAN_CORE_DOCS:
         msg = f"Environment variables are not set correctly: $CLAN_CORE_DOCS={CLAN_CORE_DOCS}"
@@ -259,12 +317,10 @@ def produce_clan_modules_docs() -> None:
 
     for module_name, options_file in links.items():
         readme_file = CLAN_CORE_PATH / "clanModules" / module_name / "README.md"
-        print(module_name, readme_file)
         with readme_file.open() as f:
             readme = f.read()
             frontmatter: Frontmatter
             frontmatter, readme_content = extract_frontmatter(readme, str(readme_file))
-            print(frontmatter, readme_content)
 
         modules_index += build_option_card(module_name, frontmatter)
 
@@ -386,7 +442,6 @@ Each attribute is documented below
 """
     with Path(BUILD_CLAN_PATH).open() as f:
         options: dict[str, dict[str, Any]] = json.load(f)
-        # print(options)
         for option_name, info in options.items():
             # Skip underscore options
             if option_name.startswith("_"):
@@ -479,3 +534,5 @@ if __name__ == "__main__":  #
 
     produce_clan_core_docs()
     produce_clan_modules_docs()
+
+    produce_clan_modules_frontmatter_docs()

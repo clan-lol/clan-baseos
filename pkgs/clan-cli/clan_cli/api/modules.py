@@ -139,6 +139,7 @@ class ModuleInfo:
     categories: list[str]
     roles: list[str] | None
     features: list[str] = field(default_factory=list)
+    constraints: dict[str, Any] = field(default_factory=dict)
 
 
 def get_modules(base_path: str) -> dict[str, str]:
@@ -208,6 +209,7 @@ def get_module_info(
         roles=get_roles(module_path),
         readme=readme_content,
         features=["inventory"] if has_inventory_feature(module_path) else [],
+        constraints=frontmatter.constraints,
     )
 
 

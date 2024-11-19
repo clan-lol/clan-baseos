@@ -104,6 +104,7 @@ nav:
           - reference/clanModules/zerotier-static-peers.md
           - reference/clanModules/zerotier.md
           - reference/clanModules/zt-tcp-relay.md
+          - reference/clanModules/frontmatter/index.md
       - CLI:
           - reference/cli/index.md
 

@@ -18,6 +18,9 @@ in
   options.roles = lib.mapAttrs (
     _name: _:
     mkOption {
+      description = ''
+        Sub-attributes of `${_name}` are constraints for the role.
+      '';
       default = { };
       type = types.submoduleWith {
         modules = [
@@ -26,10 +29,16 @@ in
               max = mkOption {
                 type = types.nullOr types.int;
                 default = null;
+                description = ''
+                  Maximum number of instances of this role that can be assigned to a module of this type.
+                '';
               };
               min = mkOption {
                 type = types.int;
                 default = 0;
+                description = ''
+                  Minimum number of instances of this role that must at least be assigned to a module of this type.
+                '';
               };
             };
           }
