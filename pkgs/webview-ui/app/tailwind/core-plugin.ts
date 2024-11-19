@@ -9,10 +9,6 @@ export default plugin.withOptions(
     },
   // add configuration which is merged with the final config
   () => ({
-    corePlugins: {
-      // we are using our own preflight (see above)
-      preflight: false,
-    },
     theme: {
       ...typography,
     },
