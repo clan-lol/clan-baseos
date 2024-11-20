@@ -137,7 +137,9 @@ def create_machine(opts: CreateOptions) -> None:
     deploy = MachineDeploy()
     deploy.targetHost = opts.target_host
     # TODO: We should allow the template to specify machine metadata if not defined by user
-    new_machine = InventoryMachine(name=machine_name, deploy=deploy)
+    new_machine = InventoryMachine(
+        name=machine_name, deploy=deploy, tags=opts.machine.tags
+    )
     inventory.machines.update({new_machine.name: dataclass_to_dict(new_machine)})
     set_inventory(inventory, clan_dir, "Imported machine from template")
 
