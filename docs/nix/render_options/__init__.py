@@ -35,8 +35,14 @@ from clan_cli.errors import ClanError
 CLAN_CORE_PATH = Path(os.environ["CLAN_CORE_PATH"])
 CLAN_CORE_DOCS = Path(os.environ["CLAN_CORE_DOCS"])
 CLAN_MODULES_FRONTMATTER_DOCS = os.environ.get("CLAN_MODULES_FRONTMATTER_DOCS")
-CLAN_MODULES = os.environ.get("CLAN_MODULES")
 BUILD_CLAN_PATH = os.environ.get("BUILD_CLAN_PATH")
+
+## Clan modules ##
+# Some modules can be imported via nix natively
+CLAN_MODULES_VIA_NIX = os.environ.get("CLAN_MODULES_VIA_NIX")
+# Some modules can be imported via inventory
+CLAN_MODULES_VIA_ROLES = os.environ.get("CLAN_MODULES_VIA_ROLES")
+
 
 OUT = os.environ.get("out")
 
@@ -130,15 +136,28 @@ def render_option(
     return res
 
 
+def print_options(options_file: str, head: str, no_options: str) -> str:
+    res = ""
+    with (Path(options_file) / "share/doc/nixos/options.json").open() as f:
+        options: dict[str, dict[str, Any]] = json.load(f)
+
+        res += head if len(options.items()) else no_options
+        for option_name, info in options.items():
+            res += render_option(option_name, info, 4)
+    return res
+
+
 def module_header(module_name: str, has_inventory_feature: bool = False) -> str:
     indicator = " 🔹" if has_inventory_feature else ""
     return f"# {module_name}{indicator}\n\n"
 
 
-def module_usage(module_name: str) -> str:
-    return f"""## Usage
+def module_nix_usage(module_name: str) -> str:
+    return f"""## Usage via Nix
 
-To use this module, import it like th:
+**This module can be also imported directly in your nixos configuration. Although it is recommended to use the [inventory](../../reference/nix-api/inventory.md) interface if available.**
+
+Some modules are considered 'low-level' or 'expert modules' and are not available via the inventory interface.
 
 ```nix
 {{config, lib, inputs, ...}}: {{
@@ -146,6 +165,7 @@ To use this module, import it like th:
     # ...
 }}
 ```
+
 """
 
 
@@ -153,7 +173,11 @@ clan_core_descr = """`clan.core` is always included in each machine `config`.
 Your can customize your machines behavior with the configuration [options](#module-options) provided below.
 """
 
-options_head = "\n## Module Options\n"
+options_head = """
+### Module Options
+
+The following options are available for this module.
+"""
 
 
 def produce_clan_modules_frontmatter_docs() -> None:
@@ -260,13 +284,16 @@ def render_roles(roles: list[str] | None, module_name: str) -> str:
     if roles:
         roles_list = "\n".join([f"    - `{r}`" for r in roles])
         return f"""
-## Inventory Roles
+### Roles
 
-Predefined roles
+This module can be used via predefined roles
 
 {roles_list}
 
+Every role has its own configuration options. Which are each listed below.
+
 For more information, see the [inventory guide](../../manual/inventory.md).
+
 """
     return ""
 
@@ -295,8 +322,12 @@ def render_categories(categories: list[str], frontmatter: Frontmatter) -> str:
 
 
 def produce_clan_modules_docs() -> None:
-    if not CLAN_MODULES:
-        msg = f"Environment variables are not set correctly: $out={CLAN_MODULES}"
+    if not CLAN_MODULES_VIA_NIX:
+        msg = f"Environment variables are not set correctly: $CLAN_MODULES_VIA_NIX={CLAN_MODULES_VIA_NIX}"
+        raise ClanError(msg)
+
+    if not CLAN_MODULES_VIA_ROLES:
+        msg = f"Environment variables are not set correctly: $CLAN_MODULES_VIA_ROLES={CLAN_MODULES_VIA_ROLES}"
         raise ClanError(msg)
 
     if not CLAN_CORE_PATH:
@@ -307,15 +338,19 @@ def produce_clan_modules_docs() -> None:
         msg = f"Environment variables are not set correctly: $out={OUT}"
         raise ClanError(msg)
 
-    with Path(CLAN_MODULES).open() as f:
-        links: dict[str, str] = json.load(f)
-
     modules_index = "# Modules Overview\n\n"
     modules_index += clan_modules_descr
     modules_index += "## Overview\n\n"
     modules_index += '<div class="grid cards" markdown>\n\n'
 
+    with Path(CLAN_MODULES_VIA_ROLES).open() as f2:
+        role_links: dict[str, dict[str, str]] = json.load(f2)
+
+    with Path(CLAN_MODULES_VIA_NIX).open() as f:
+        links: dict[str, str] = json.load(f)
+
     for module_name, options_file in links.items():
+        print(f"Rendering {module_name}")
         readme_file = CLAN_CORE_PATH / "clanModules" / module_name / "README.md"
         with readme_file.open() as f:
             readme = f.read()
@@ -324,38 +359,79 @@ def produce_clan_modules_docs() -> None:
 
         modules_index += build_option_card(module_name, frontmatter)
 
-        with (Path(options_file) / "share/doc/nixos/options.json").open() as f:
-            options: dict[str, dict[str, Any]] = json.load(f)
-            print(f"Rendering options for {module_name}...")
-            output = module_header(module_name, "inventory" in frontmatter.features)
+        ##### Print module documentation #####
 
-            if frontmatter.description:
-                output += f"**{frontmatter.description}**\n\n"
+        # 1. Header
+        output = module_header(module_name, "inventory" in frontmatter.features)
 
-            output += "## Categories\n\n"
-            output += render_categories(frontmatter.categories, frontmatter)
-            output += "\n---\n\n"
+        # 2. Description from README.md
+        if frontmatter.description:
+            output += f"**{frontmatter.description}**\n\n"
 
-            output += f"{readme_content}\n"
+        # 3. Categories from README.md
+        output += "## Categories\n\n"
+        output += render_categories(frontmatter.categories, frontmatter)
+        output += "\n---\n\n"
 
-            # get_roles(str) -> list[str] | None
-            roles = get_roles(CLAN_CORE_PATH / "clanModules" / module_name)
-            if roles:
-                output += render_roles(roles, module_name)
+        # 3. README.md content
+        output += f"{readme_content}\n"
 
-            output += module_usage(module_name)
+        # 4. Usage
+        ##### Print usage via Inventory #####
 
-            output += options_head if len(options.items()) else ""
-            for option_name, info in options.items():
-                output += render_option(option_name, info)
+        # get_roles(str) -> list[str] | None
+        # if not isinstance(options_file, str):
+        roles = get_roles(CLAN_CORE_PATH / "clanModules" / module_name)
+        if roles:
+            # Render inventory usage
+            output += """## Usage via Inventory\n\n"""
+            output += render_roles(roles, module_name)
+            for role in roles:
+                role_options_file = role_links[module_name][role]
+                # Abort if the options file is not found
+                if not isinstance(role_options_file, str):
+                    print(
+                        f"Error: module: {module_name} in role: {role} - options file not found, Got {role_options_file}"
+                    )
+                    exit(1)
 
-            outfile = Path(OUT) / f"clanModules/{module_name}.md"
-            outfile.parent.mkdir(
-                parents=True,
-                exist_ok=True,
+                no_options = f"**The `{module_name}` `{role}` doesnt offer / require any options to be set.**"
+
+                heading = f"""### Options of `{role}` role
+
+The following options are available when using the `{role}` role.
+"""
+                output += print_options(role_options_file, heading, no_options)
+        else:
+            # No roles means no inventory usage
+            output += """## Usage via Inventory
+
+**This module cannot be used via the inventory interface.**
+"""
+
+        ##### Print usage via Nix / nixos #####
+        if not isinstance(options_file, str):
+            print(
+                f"Skipping {module_name}: Cannot be used via import clanModules.{module_name}"
             )
-            with outfile.open("w") as of:
-                of.write(output)
+            output += """## Usage via Nix
+
+**This module cannot be imported directly in your nixos configuration.**
+
+"""
+
+        else:
+            output += module_nix_usage(module_name)
+            no_options = "** This module doesnt require any options to be set.**"
+            output += print_options(options_file, options_head, no_options)
+
+        outfile = Path(OUT) / f"clanModules/{module_name}.md"
+        outfile.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        with outfile.open("w") as of:
+            of.write(output)
 
     modules_index += "</div>"
     modules_index += "\n"

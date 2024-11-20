@@ -14,6 +14,7 @@
       jsonDocs = pkgs.callPackage ./get-module-docs.nix {
         inherit (self) clanModules;
         evalClanModules = self.lib.evalClanModules;
+        modulesRolesOptions = self.lib.evalClanModulesWithRoles self.clanModules;
       };
 
       # Frontmatter for clanModules
@@ -23,9 +24,11 @@
         in
         docs.optionsJSON;
 
-      clanModulesFileInfo = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModules);
-      # clanModulesReadmes = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModulesReadmes);
-      # clanModulesMeta = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModulesMeta);
+      # Options available via ` imports = [ clanModules.${moduleName} ]; ` (Direct nix import)
+      clanModulesViaNix = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModulesViaNix);
+
+      # Options available when imported via ` inventory.${moduleName}....${rolesName} `
+      clanModulesViaRoles = pkgs.writeText "info.json" (builtins.toJSON jsonDocs.clanModulesViaRoles);
 
       # Simply evaluated options (JSON)
       renderOptions =
@@ -69,7 +72,8 @@
             export CLAN_CORE_PATH=${self}
             export CLAN_CORE_DOCS=${jsonDocs.clanCore}/share/doc/nixos/options.json
             # A file that contains the links to all clanModule docs
-            export CLAN_MODULES=${clanModulesFileInfo}
+            export CLAN_MODULES_VIA_ROLES=${clanModulesViaRoles}
+            export CLAN_MODULES_VIA_NIX=${clanModulesViaNix}
             # Frontmatter format for clanModules
             export CLAN_MODULES_FRONTMATTER_DOCS=${clanModulesFrontmatter}/share/doc/nixos/options.json
 
@@ -83,6 +87,9 @@
           '';
     in
     {
+      legacyPackages = {
+        inherit jsonDocs clanModulesViaNix clanModulesViaRoles;
+      };
       devShells.docs = pkgs.callPackage ./shell.nix {
         inherit (self'.packages) docs clan-cli-docs inventory-api-docs;
         inherit
