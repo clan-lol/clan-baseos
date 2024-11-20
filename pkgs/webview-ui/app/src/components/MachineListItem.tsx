@@ -4,6 +4,7 @@ import { Menu } from "./Menu";
 import { activeURI } from "../App";
 import toast from "solid-toast";
 import { A, useNavigate } from "@solidjs/router";
+import { RndThumbnail } from "./noiseThumbnail";
 
 type MachineDetails = SuccessQuery<"list_inventory_machines">["data"][string];
 
@@ -104,15 +105,8 @@ export const MachineListItem = (props: MachineListItemProps) => {
   return (
     <li>
       <div class="card card-side m-2">
-        <figure class="pl-2">
-          <span
-            class="material-icons content-center text-5xl"
-            classList={{
-              "text-neutral-500": nixOnly,
-            }}
-          >
-            devices_other
-          </span>
+        <figure class="h-fit rounded-xl border bg-def-2 border-def-5">
+          <RndThumbnail name={name} width={220} height={120} />
         </figure>
         <div class="card-body flex-row justify-between ">
           <div class="flex flex-col">
