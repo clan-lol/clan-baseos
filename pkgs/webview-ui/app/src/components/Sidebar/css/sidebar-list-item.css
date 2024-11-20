@@ -17,7 +17,7 @@
   }
 
   &:hover:after {
-    background: rgb(var(--clr-bg-inv-acc-2));
+    background: var(--clr-bg-inv-acc-2);
     transform: scale(theme(scale.100));
     transition: transform 0.24s ease-in-out;
   }
@@ -28,7 +28,7 @@
   }
 
   &:active:after {
-    background: rgb(var(--clr-bg-inv-acc-3));
+    background: var(--clr-bg-inv-acc-3);
     transform: scale(theme(scale.100));
   }
 }

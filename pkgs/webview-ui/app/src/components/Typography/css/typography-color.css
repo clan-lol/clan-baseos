@@ -1,23 +1,23 @@
 .fnt-clr-primary {
-  color: (rgb(--clr-fg-def-1));
+  color: var(--clr-fg-def-1);
 }
 
 .fnt-clr-secondary {
-  color: rgb(var(--clr-fg-def-2));
+  color: var(--clr-fg-def-2);
 }
 
 .fnt-clr-tertiary {
-  color: rgb(var(--clr-fg-def-3));
+  color: var(--clr-fg-def-3);
 }
 
 .fnt-clr-primary.fnt-clr--inverted {
-  color: rgb(var(--clr-fg-inv-1));
+  color: var(--clr-fg-inv-1);
 }
 
 .fnt-clr-secondary.fnt-clr--inverted {
-  color: rgb(var(--clr-fg-inv-2));
+  color: var(--clr-fg-inv-2);
 }
 
 .fnt-clr-tertiary.fnt-clr--inverted {
-  color: rgb(var(--clr-fg-inv-3));
+  color: var(--clr-fg-inv-3);
 }

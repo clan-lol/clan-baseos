@@ -6,14 +6,14 @@
   width: theme(width.8);
   height: theme(height.8);
 
-  background: rgb(var(--clr-bg-inv-4));
+  background: var(--clr-bg-inv-4);
   border-radius: 50%;
 }
 
 .sidebar__profile--flyout {
-  background: rgb(var(--clr-bg-def-2));
+  background: var(--clr-bg-def-2);
 }
 
 .sidebar__profile--flyout > .sidebar__profile__character {
-  color: rgb(var(--clr-fg-def-1)) !important;
+  color: var(--clr-fg-def-1) !important;
 }

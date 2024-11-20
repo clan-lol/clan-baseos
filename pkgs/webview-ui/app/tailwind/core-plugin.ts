@@ -4,11 +4,45 @@ import { typography } from "./typography";
 import { parseColor } from "tailwindcss/lib/util/color";
 
 /* Converts HEX color to RGB */
-const toRGB = (value: string) => parseColor(value).color.join(" ");
+const toRGB = (value: string) =>
+  "rgb(" + parseColor(value).color.join(" ") + ")";
 
 export default plugin.withOptions(
   (_options = {}) =>
-    () => {
+    ({ addUtilities, theme }) => {
+      addUtilities({
+        ".bg-def-1": {
+          backgroundColor: theme("colors.white"),
+        },
+        ".bg-def-2": {
+          backgroundColor: theme("colors.secondary.50"),
+        },
+        ".bg-def-3": {
+          backgroundColor: theme("colors.secondary.100"),
+        },
+        ".bg-def-4": {
+          backgroundColor: theme("colors.secondary.200"),
+        },
+        ".bg-def-5": {
+          backgroundColor: theme("colors.secondary.300"),
+        },
+        // Dark mode utilities (all elements within `.dark` class)
+        // ".dark .bg-def-1": {
+        //   backgroundColor: theme("colors.black"),
+        // },
+        // ".dark .bg-def-2": {
+        //   backgroundColor: theme("colors.primary.900"),
+        // },
+        // ".dark .bg-def-3": {
+        //   backgroundColor: theme("colors.primary.800"),
+        // },
+        // ".dark .bg-def-4": {
+        //   backgroundColor: theme("colors.primary.700"),
+        // },
+        // ".dark .bg-def-5": {
+        //   backgroundColor: theme("colors.primary.600"),
+        // },
+      });
       // add more base styles
     },
   // add configuration which is merged with the final config
@@ -70,6 +104,16 @@ export default plugin.withOptions(
             900: toRGB("#75264a"),
             950: toRGB("#461129"),
           },
+        },
+        boxShadow: {
+          "inner-primary":
+            "2px 2px 0px 0px var(--clr-bg-inv-acc-3, #415E63) inset",
+          "inner-primary-active":
+            "0px 0px 0px 1px #FFF, 0px 0px 0px 2px var(--clr-bg-inv-acc-4, #203637), -2px -2px 0px 0px var(--clr-bg-inv-acc-1, #7B9B9F) inset",
+          "inner-secondary":
+            "-2px -2px 0px 0px #CEDFE2 inset, 2px 2px 0px 0px white inset",
+          "inner-secondary-active":
+            "0px 0px 0px 1px white, 0px 0px 0px 2px var(--clr-bg-inv-acc-4, #203637), 2px 2px 0px 0px var(--clr-bg-inv-acc-2, #4F747A) inset",
         },
       },
       ...typography,

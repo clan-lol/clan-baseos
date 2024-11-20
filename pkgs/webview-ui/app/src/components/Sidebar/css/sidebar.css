@@ -10,8 +10,8 @@
 .sidebar {
   min-width: theme(width.72);
   height: 100%;
-  background-color: rgb(var(--clr-bg-inv-2));
-  border: 1px solid rgb(var(--clr-border-inv-2));
+  background-color: var(--clr-bg-inv-2);
+  border: 1px solid var(--clr-border-inv-2);
   border-radius: theme(borderRadius.xl);
 }
 
@@ -24,6 +24,7 @@
 
 .sidebar__section {
   padding: theme(padding.2);
-  background-color: rgba(var(--clr-bg-inv-3) / 0.9);
+  /* background-color: rgba(var(--clr-bg-inv-3) / 0.9); */
+  @apply bg-primary-800/90;
   border-radius: theme(borderRadius.md);
 }
