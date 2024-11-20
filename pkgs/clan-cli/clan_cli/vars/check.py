@@ -1,6 +1,7 @@
 import argparse
 import importlib
 import logging
+from dataclasses import dataclass
 
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.machines.machines import Machine
@@ -8,11 +9,21 @@ from clan_cli.machines.machines import Machine
 log = logging.getLogger(__name__)
 
 
-def vars_status(
-    machine: Machine, generator_name: None | str = None
-) -> tuple[
-    list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]], list[str]
-]:
+@dataclass
+class Var:
+    generator: str
+    name: str
+
+
+@dataclass
+class VarStatus:
+    missing_secret_vars: list[Var]
+    missing_public_vars: list[Var]
+    unfixed_secret_vars: list[Var]
+    invalid_generators: list[str]
+
+
+def vars_status(machine: Machine, generator_name: None | str = None) -> VarStatus:
     secret_vars_module = importlib.import_module(machine.secret_vars_module)
     secret_vars_store = secret_vars_module.SecretStore(machine=machine)
     public_vars_module = importlib.import_module(machine.public_vars_module)
@@ -35,7 +46,7 @@ def vars_status(
                     log.info(
                         f"Secret var '{name}' for service '{generator_name}' in machine {machine.name} is missing."
                     )
-                    missing_secret_vars.append((generator_name, name))
+                    missing_secret_vars.append(Var(generator_name, name))
                 else:
                     needs_fix, msg = secret_vars_store.needs_fix(
                         generator_name, name, shared=shared
@@ -44,13 +55,13 @@ def vars_status(
                         log.info(
                             f"Secret var '{name}' for service '{generator_name}' in machine {machine.name} needs update: {msg}"
                         )
-                        unfixed_secret_vars.append((generator_name, name))
+                        unfixed_secret_vars.append(Var(generator_name, name))
 
             elif not public_vars_store.exists(generator_name, name, shared=shared):
                 log.info(
                     f"Public var '{name}' for service '{generator_name}' in machine {machine.name} is missing."
                 )
-                missing_public_vars.append((generator_name, name))
+                missing_public_vars.append(Var(generator_name, name))
         # check if invalidation hash is up to date
         if not (
             secret_vars_store.hash_is_valid(generator_name)
@@ -64,7 +75,7 @@ def vars_status(
     log.debug(f"missing_public_vars: {missing_public_vars}")
     log.debug(f"unfixed_secret_vars: {unfixed_secret_vars}")
     log.debug(f"invalid_generators: {invalid_generators}")
-    return (
+    return VarStatus(
         missing_secret_vars,
         missing_public_vars,
         unfixed_secret_vars,
@@ -73,17 +84,12 @@ def vars_status(
 
 
 def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
-    (
-        missing_secret_vars,
-        missing_public_vars,
-        unfixed_secret_vars,
-        invalid_generators,
-    ) = vars_status(machine, generator_name=generator_name)
+    status = vars_status(machine, generator_name=generator_name)
     return not (
-        missing_secret_vars
-        or missing_public_vars
-        or unfixed_secret_vars
-        or invalid_generators
+        status.missing_secret_vars
+        or status.missing_public_vars
+        or status.unfixed_secret_vars
+        or status.invalid_generators
     )
 
 
