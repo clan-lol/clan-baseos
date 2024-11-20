@@ -283,18 +283,54 @@ def produce_clan_core_docs() -> None:
 def render_roles(roles: list[str] | None, module_name: str) -> str:
     if roles:
         roles_list = "\n".join([f"    - `{r}`" for r in roles])
-        return f"""
+        return (
+            f"""
 ### Roles
 
 This module can be used via predefined roles
 
 {roles_list}
-
+"""
+            """
 Every role has its own configuration options. Which are each listed below.
 
 For more information, see the [inventory guide](../../manual/inventory.md).
 
+??? Example
+    For example the `admin` module adds the following options globally to all machines where it is used.
+
+    `clan.admin.allowedkeys`
+
+    This means there are two equivalent ways to set the `allowedkeys` option. Either via a nixos module or via the inventory interface.
+    **But it is recommended to keep together `imports` and `config` to preserve locality of the module configuration.**
+
+    === "Inventory"
+
+        ```nix
+        clan-core.lib.buildClan {
+            inventory.services = {
+                admin.me = {
+                    roles.default.machines = [ "jon" ];
+                    config.allowedkeys = [ "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD..." ];
+                };
+            };
+        };
+        ```
+
+    === "NixOS"
+
+        ```nix
+        clan-core.lib.buildClan {
+            machines = {
+                jon = {
+                    clan.admin.allowedkeys = [ "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD..." ];
+                    imports = [ clanModules.admin ];
+                };
+            };
+        };
+        ```
 """
+        )
     return ""
 
 
@@ -395,7 +431,7 @@ def produce_clan_modules_docs() -> None:
                     )
                     exit(1)
 
-                no_options = f"**The `{module_name}` `{role}` doesnt offer / require any options to be set.**"
+                no_options = f"**The `{module_name}` `{role}` doesnt offer / require any options to be set.**\n\n"
 
                 heading = f"""### Options of `{role}` role
 
