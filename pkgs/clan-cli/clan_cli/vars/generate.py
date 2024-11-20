@@ -105,8 +105,9 @@ def execute_generator(
         msg = f"flake is not a Path: {machine.flake}"
         msg += "fact/secret generation is only supported for local flakes"
 
-    generator = machine.vars_generators[generator_name]["finalScript"]
-    is_shared = machine.vars_generators[generator_name]["share"]
+    generator = machine.vars_generators[generator_name]
+    script = generator["finalScript"]
+    is_shared = generator["share"]
 
     # build temporary file tree of dependencies
     decrypted_dependencies = decrypt_dependencies(
@@ -137,32 +138,34 @@ def execute_generator(
         dependencies_as_dir(decrypted_dependencies, tmpdir_in)
         # populate prompted values
         # TODO: make prompts rest API friendly
-        if machine.vars_generators[generator_name]["prompts"]:
+        if generator["prompts"]:
             tmpdir_prompts.mkdir()
             env["prompts"] = str(tmpdir_prompts)
-            for prompt_name in machine.vars_generators[generator_name]["prompts"]:
+            for prompt_name in generator["prompts"]:
                 prompt_file = tmpdir_prompts / prompt_name
                 value = get_prompt_value(prompt_name)
                 prompt_file.write_text(value)
 
         if sys.platform == "linux":
-            cmd = bubblewrap_cmd(generator, tmpdir)
+            cmd = bubblewrap_cmd(script, tmpdir)
         else:
-            cmd = ["bash", "-c", generator]
+            cmd = ["bash", "-c", script]
         run(
             cmd,
             env=env,
         )
         files_to_commit = []
         # store secrets
-        files = machine.vars_generators[generator_name]["files"]
+        files = generator["files"]
+        public_changed = False
+        secret_changed = False
         for file_name, file in files.items():
             is_deployed = file["deploy"]
 
             secret_file = tmpdir_out / file_name
             if not secret_file.is_file():
                 msg = f"did not generate a file for '{file_name}' when running the following command:\n"
-                msg += generator
+                msg += script
                 raise ClanError(msg)
             if file["secret"]:
                 file_path = secret_vars_store.set(
@@ -172,6 +175,7 @@ def execute_generator(
                     shared=is_shared,
                     deployed=is_deployed,
                 )
+                secret_changed = True
             else:
                 file_path = public_vars_store.set(
                     generator_name,
@@ -179,8 +183,18 @@ def execute_generator(
                     secret_file.read_bytes(),
                     shared=is_shared,
                 )
+                public_changed = True
             if file_path:
                 files_to_commit.append(file_path)
+            if generator["invalidationHash"] is not None:
+                if public_changed:
+                    public_vars_store.set_invalidation_hash(
+                        generator_name, generator["invalidationHash"]
+                    )
+                if secret_changed:
+                    secret_vars_store.set_invalidation_hash(
+                        generator_name, generator["invalidationHash"]
+                    )
     commit_files(
         files_to_commit,
         machine.flake_dir,

@@ -6,13 +6,19 @@
 }:
 let
   inherit (lib) mkOption;
+  inherit (builtins)
+    hashString
+    toJSON
+    ;
   inherit (lib.types)
     attrsOf
     bool
     either
     enum
+    int
     listOf
     nullOr
+    oneOf
     package
     path
     str
@@ -58,6 +64,40 @@ in
               type = nullOr str;
               example = "my_service";
               default = null;
+            };
+            invalidationData = lib.mkOption {
+              description = ''
+                A set of values that invalidate the generated values.
+                If any of these values change, the generated values will be re-generated.
+              '';
+              default = null;
+              type =
+                let
+                  data = nullOr (oneOf [
+                    bool
+                    int
+                    str
+                    (attrsOf data)
+                    # lists are not allowed as of now due to potential ordering issues
+                  ]);
+                in
+                data;
+            };
+            # the invalidationHash is the validation interface to the outside world
+            invalidationHash = lib.mkOption {
+              internal = true;
+              description = ''
+                A hash of the invalidation data.
+                If the hash changes, the generated values will be re-generated.
+              '';
+              type = nullOr str;
+              # TODO: recursively traverse the structure and sort all lists in order to support lists
+              default =
+                # For backwards compat, the hash is null by default in which case the check is omitted
+                if generator.config.invalidationData == null then
+                  null
+                else
+                  hashString "sha256" (toJSON generator.config.invalidationData);
             };
             files = lib.mkOption {
               description = ''
@@ -138,7 +178,6 @@ in
                       '';
                       type = str;
                     };
-
                     owner = lib.mkOption {
                       description = "The user name or id that will own the secret file.";
                       default = "root";
@@ -147,7 +186,6 @@ in
                       description = "The group name or id that will own the secret file.";
                       default = "root";
                     };
-
                     value =
                       lib.mkOption {
                         description = ''

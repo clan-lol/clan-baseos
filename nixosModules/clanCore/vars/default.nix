@@ -42,6 +42,7 @@ in
           inherit (generator)
             dependencies
             finalScript
+            invalidationHash
             migrateFact
             prompts
             share
