@@ -94,7 +94,7 @@ def collect_keys_for_path(path: Path) -> set[tuple[str, sops.KeyType]]:
 def encrypt_secret(
     flake_dir: Path,
     secret_path: Path,
-    value: IO[str] | str | bytes | None,
+    value: IO[bytes] | str | bytes | None,
     add_users: list[str] | None = None,
     add_machines: list[str] | None = None,
     add_groups: list[str] | None = None,
@@ -305,10 +305,10 @@ def list_command(args: argparse.Namespace) -> None:
 
 
 def decrypt_secret(flake_dir: Path, secret_path: Path) -> str:
-    # I can't think of a good way to ensure that we have the private key for
-    # the secret. I mean we could collect all private keys we could find and
-    # then make sure we have the one for the secret, but that seems
-    # complicated for little ux gain?
+    # lopter(2024-10): I can't think of a good way to ensure that we have the
+    # private key for the secret. I mean we could collect all private keys we
+    # could find and then make sure we have the one for the secret, but that
+    # seems complicated for little ux gain?
     path = secret_path / "secret"
     if not path.exists():
         msg = f"Secret '{secret_path!s}' does not exist"
@@ -332,7 +332,7 @@ def is_tty_interactive() -> bool:
 
 def set_command(args: argparse.Namespace) -> None:
     env_value = os.environ.get("SOPS_NIX_SECRET")
-    secret_value: str | IO[str] | None = sys.stdin
+    secret_value: str | IO[bytes] | None = sys.stdin.buffer
     if args.edit:
         secret_value = None
     elif env_value:
