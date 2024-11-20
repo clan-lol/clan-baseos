@@ -46,6 +46,16 @@ in
         submodule (generator: {
           imports = [ ./generator.nix ];
           options = {
+            name = lib.mkOption {
+              type = lib.types.str;
+              description = ''
+                The name of the generator.
+                This name will be used to refer to the generator in other generators.
+              '';
+              readOnly = true;
+              default = generator.config._module.args.name;
+            };
+
             dependencies = lib.mkOption {
               description = ''
                 A list of other generators that this generator depends on.
@@ -212,6 +222,14 @@ in
               type = attrsOf (
                 submodule (prompt: {
                   options = {
+                    name = lib.mkOption {
+                      description = ''
+                        The name of the prompt.
+                        This name will be used to refer to the prompt in the generator script.
+                      '';
+                      type = str;
+                      default = prompt.config._module.args.name;
+                    };
                     createFile = lib.mkOption {
                       description = ''
                         Whether the prompted value should be stored in a file with the same name as the prompt.
