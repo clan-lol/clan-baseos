@@ -86,7 +86,7 @@ def install_machine(opts: InstallOptions) -> None:
             cmd.extend(
                 [
                     "--generate-hardware-config",
-                    str(opts.update_hardware_config),
+                    str(opts.update_hardware_config.value),
                     str(
                         opts.update_hardware_config.config_path(
                             opts.flake.path, machine.name
