@@ -66,7 +66,9 @@ nav:
   - Reference:
       - Overview: reference/index.md
       - Clan Modules:
-          - reference/clanModules/index.md
+          - Overview:
+              - reference/clanModules/index.md
+              - reference/clanModules/frontmatter/index.md
           # This is the module overview and should stay at the top
           - reference/clanModules/admin.md
           - reference/clanModules/borgbackup-static.md
@@ -75,7 +77,6 @@ nav:
           - reference/clanModules/disk-id.md
           - reference/clanModules/dyndns.md
           - reference/clanModules/ergochat.md
-          - reference/clanModules/frontmatter/index.md
           - reference/clanModules/garage.md
           - reference/clanModules/golem-provider.md
           - reference/clanModules/heisenbridge.md
