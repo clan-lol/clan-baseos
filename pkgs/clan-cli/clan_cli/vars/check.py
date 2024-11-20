@@ -10,7 +10,9 @@ log = logging.getLogger(__name__)
 
 def vars_status(
     machine: Machine, generator_name: None | str = None
-) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]]]:
+) -> tuple[
+    list[tuple[str, str]], list[tuple[str, str]], list[tuple[str, str]], list[str]
+]:
     secret_vars_module = importlib.import_module(machine.secret_vars_module)
     secret_vars_store = secret_vars_module.SecretStore(machine=machine)
     public_vars_module = importlib.import_module(machine.public_vars_module)
@@ -19,7 +21,8 @@ def vars_status(
     missing_secret_vars = []
     missing_public_vars = []
     # signals if a var needs to be updated (eg. needs re-encryption due to new users added)
-    outdated_secret_vars = []
+    unfixed_secret_vars = []
+    invalid_generators = []
     if generator_name:
         generators = [generator_name]
     else:
@@ -34,32 +37,54 @@ def vars_status(
                     )
                     missing_secret_vars.append((generator_name, name))
                 else:
-                    needs_update, msg = secret_vars_store.needs_fix(
+                    needs_fix, msg = secret_vars_store.needs_fix(
                         generator_name, name, shared=shared
                     )
-                    if needs_update:
+                    if needs_fix:
                         log.info(
                             f"Secret var '{name}' for service '{generator_name}' in machine {machine.name} needs update: {msg}"
                         )
-                        outdated_secret_vars.append((generator_name, name))
+                        unfixed_secret_vars.append((generator_name, name))
 
             elif not public_vars_store.exists(generator_name, name, shared=shared):
                 log.info(
                     f"Public var '{name}' for service '{generator_name}' in machine {machine.name} is missing."
                 )
                 missing_public_vars.append((generator_name, name))
-
+        # check if invalidation hash is up to date
+        if not (
+            secret_vars_store.hash_is_valid(generator_name)
+            and public_vars_store.hash_is_valid(generator_name)
+        ):
+            invalid_generators.append(generator_name)
+            log.info(
+                f"Generator '{generator_name}' in machine {machine.name} has outdated invalidation hash."
+            )
     log.debug(f"missing_secret_vars: {missing_secret_vars}")
     log.debug(f"missing_public_vars: {missing_public_vars}")
-    log.debug(f"outdated_secret_vars: {outdated_secret_vars}")
-    return missing_secret_vars, missing_public_vars, outdated_secret_vars
+    log.debug(f"unfixed_secret_vars: {unfixed_secret_vars}")
+    log.debug(f"invalid_generators: {invalid_generators}")
+    return (
+        missing_secret_vars,
+        missing_public_vars,
+        unfixed_secret_vars,
+        invalid_generators,
+    )
 
 
 def check_vars(machine: Machine, generator_name: None | str = None) -> bool:
-    missing_secret_vars, missing_public_vars, outdated_secret_vars = vars_status(
-        machine, generator_name=generator_name
+    (
+        missing_secret_vars,
+        missing_public_vars,
+        unfixed_secret_vars,
+        invalid_generators,
+    ) = vars_status(machine, generator_name=generator_name)
+    return not (
+        missing_secret_vars
+        or missing_public_vars
+        or unfixed_secret_vars
+        or invalid_generators
     )
-    return not (missing_secret_vars or missing_public_vars or outdated_secret_vars)
 
 
 def check_command(args: argparse.Namespace) -> None:

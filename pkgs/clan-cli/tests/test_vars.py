@@ -886,3 +886,34 @@ def test_vars_get(
         get_var(machine, "my_shared_generator/my_shared_value").printable_value
         == "hello"
     )
+
+
+@pytest.mark.impure
+def test_invalidation(
+    monkeypatch: pytest.MonkeyPatch,
+    flake: ClanFlake,
+) -> None:
+    config = flake.machines["my_machine"]
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["script"] = "echo -n $RANDOM > $out/my_value"
+    flake.refresh()
+    monkeypatch.chdir(flake.path)
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    value1 = get_var(machine, "my_generator/my_value").printable_value
+    # generate again and make sure nothing changes without the invalidation data being set
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    value1_new = get_var(machine, "my_generator/my_value").printable_value
+    assert value1 == value1_new
+    # set the invalidation data of the generator
+    my_generator["invalidationData"] = 1
+    flake.refresh()
+    # generate again and make sure the value changes
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    value2 = get_var(machine, "my_generator/my_value").printable_value
+    assert value1 != value2
+    # generate again without changing invalidation data -> value should not change
+    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    value2_new = get_var(machine, "my_generator/my_value").printable_value
+    assert value2 == value2_new
