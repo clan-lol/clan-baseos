@@ -218,7 +218,7 @@ Every clan module has a `frontmatter` section within its readme. It provides mac
 
 """
 
-        output += """"## Overview
+        output += """## Overview
 
 This provides an overview of the available attributes of the `frontmatter` within the `README.md` of a clan module.
 
