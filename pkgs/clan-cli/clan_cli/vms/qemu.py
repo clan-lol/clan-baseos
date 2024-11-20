@@ -42,7 +42,7 @@ def graphics_options(vm: VmConfig) -> GraphicOptions:
           #"-chardev", "socket,id=vgpu,path=/tmp/vgpu.sock",
         ], cid)
         # fmt: on
-    if not Path("/run/opengl-driver").exists():
+    if Path("/run/opengl-driver").exists():
         display_options = [
             "-vga",
             "none",
