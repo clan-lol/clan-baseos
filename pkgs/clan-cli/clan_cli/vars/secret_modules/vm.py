@@ -3,6 +3,7 @@ from pathlib import Path
 
 from clan_cli.dirs import vm_state_dir
 from clan_cli.machines.machines import Machine
+from clan_cli.vars.generate import Generator, Var
 
 from . import SecretStoreBase
 
@@ -19,19 +20,17 @@ class SecretStore(SecretStoreBase):
 
     def _set(
         self,
-        service: str,
-        name: str,
+        generator: Generator,
+        var: Var,
         value: bytes,
-        shared: bool = False,
-        deployed: bool = True,
     ) -> Path | None:
-        secret_file = self.dir / service / name
+        secret_file = self.dir / generator.name / var.name
         secret_file.parent.mkdir(parents=True, exist_ok=True)
         secret_file.write_bytes(value)
         return None  # we manage the files outside of the git repo
 
-    def get(self, service: str, name: str, shared: bool = False) -> bytes:
-        secret_file = self.dir / service / name
+    def get(self, generator: Generator, name: str) -> bytes:
+        secret_file = self.dir / generator.name / name
         return secret_file.read_bytes()
 
     def upload(self, output_dir: Path) -> None:

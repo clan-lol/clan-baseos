@@ -1,31 +1,21 @@
+from __future__ import annotations
+
 from collections.abc import Iterable
-from dataclasses import dataclass
-from functools import cached_property
 from graphlib import TopologicalSorter
+from typing import TYPE_CHECKING
 
 from clan_cli.errors import ClanError
-from clan_cli.machines.machines import Machine
 
-from .check import check_vars
+if TYPE_CHECKING:
+    from .generate import Generator
 
 
 class GeneratorNotFoundError(ClanError):
     pass
 
 
-@dataclass
-class Generator:
-    name: str
-    dependencies: list[str]
-    _machine: Machine
-
-    @cached_property
-    def exists(self) -> bool:
-        return check_vars(self._machine, generator_name=self.name)
-
-
 def missing_dependency_closure(
-    requested_generators: Iterable[str], generators: dict
+    requested_generators: Iterable[str], generators: dict[str, Generator]
 ) -> set[str]:
     closure = set(requested_generators)
     # extend the graph to include all dependencies which are not on disk
@@ -52,7 +42,9 @@ def add_missing_dependencies(
     return missing_dependency_closure(closure, generators) | closure
 
 
-def add_dependents(requested_generators: Iterable[str], generators: dict) -> set[str]:
+def add_dependents(
+    requested_generators: Iterable[str], generators: dict[str, Generator]
+) -> set[str]:
     closure = set(requested_generators)
     # build reverse dependency graph (graph of dependents)
     dependents_graph: dict[str, set[str]] = {}
@@ -72,7 +64,9 @@ def add_dependents(requested_generators: Iterable[str], generators: dict) -> set
     return closure
 
 
-def toposort_closure(_closure: Iterable[str], generators: dict) -> list[str]:
+def toposort_closure(
+    _closure: Iterable[str], generators: dict[str, Generator]
+) -> list[Generator]:
     closure = set(_closure)
     # return the topological sorted list of generators to execute
     final_dep_graph = {}
@@ -81,16 +75,16 @@ def toposort_closure(_closure: Iterable[str], generators: dict) -> list[str]:
         final_dep_graph[gen_name] = deps
     sorter = TopologicalSorter(final_dep_graph)
     result = list(sorter.static_order())
-    return result
+    return [generators[gen_name] for gen_name in result]
 
 
 # all generators in topological order
-def full_closure(generators: dict) -> list[str]:
+def full_closure(generators: dict[str, Generator]) -> list[Generator]:
     return toposort_closure(generators.keys(), generators)
 
 
 # just the missing generators including their dependents
-def all_missing_closure(generators: dict) -> list[str]:
+def all_missing_closure(generators: dict[str, Generator]) -> list[Generator]:
     # collect all generators that are missing from disk
     closure = {gen_name for gen_name, gen in generators.items() if not gen.exists}
     closure = add_dependents(closure, generators)
@@ -98,7 +92,9 @@ def all_missing_closure(generators: dict) -> list[str]:
 
 
 # only a selected list of generators including their missing dependencies and their dependents
-def requested_closure(requested_generators: list[str], generators: dict) -> list[str]:
+def requested_closure(
+    requested_generators: list[str], generators: dict[str, Generator]
+) -> list[Generator]:
     closure = set(requested_generators)
     # extend the graph to include all dependencies which are not on disk
     closure = add_missing_dependencies(closure, generators)
@@ -108,7 +104,9 @@ def requested_closure(requested_generators: list[str], generators: dict) -> list
 
 # just enough to ensure that the list of selected generators are in a consistent state.
 # empty if nothing is missing.
-def minimal_closure(requested_generators: list[str], generators: dict) -> list[str]:
+def minimal_closure(
+    requested_generators: list[str], generators: dict[str, Generator]
+) -> list[Generator]:
     closure = set(requested_generators)
     final_closure = missing_dependency_closure(closure, generators)
     # add requested generators if not already exist

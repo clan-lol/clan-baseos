@@ -7,7 +7,7 @@ from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
 
-from ._types import Var
+from .generate import Var
 from .list import get_vars
 
 log = logging.getLogger(__name__)

@@ -4,6 +4,7 @@ from pathlib import Path
 from clan_cli.dirs import vm_state_dir
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
+from clan_cli.vars.generate import Generator, Var
 
 from . import FactStoreBase
 
@@ -21,27 +22,25 @@ class FactStore(FactStoreBase):
     def store_name(self) -> str:
         return "vm"
 
-    def exists(self, service: str, name: str, shared: bool = False) -> bool:
-        fact_path = self.dir / service / name
+    def exists(self, generator: Generator, name: str) -> bool:
+        fact_path = self.dir / generator.name / name
         return fact_path.exists()
 
     def _set(
         self,
-        service: str,
-        name: str,
+        generator: Generator,
+        var: Var,
         value: bytes,
-        shared: bool = False,
-        deployed: bool = True,
     ) -> Path | None:
-        fact_path = self.dir / service / name
+        fact_path = self.dir / generator.name / var.name
         fact_path.parent.mkdir(parents=True, exist_ok=True)
         fact_path.write_bytes(value)
         return None
 
     # get a single fact
-    def get(self, service: str, name: str, shared: bool = False) -> bytes:
-        fact_path = self.dir / service / name
+    def get(self, generator: Generator, name: str) -> bytes:
+        fact_path = self.dir / generator.name / name
         if fact_path.exists():
             return fact_path.read_bytes()
-        msg = f"Fact {name} for service {service} not found"
+        msg = f"Fact {name} for service {generator.name} not found"
         raise ClanError(msg)

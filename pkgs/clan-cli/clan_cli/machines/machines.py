@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run_no_stdout
@@ -20,6 +20,9 @@ from clan_cli.vars.public_modules import FactStoreBase
 from clan_cli.vars.secret_modules import SecretStoreBase
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from clan_cli.vars.generate import Generator
 
 
 @dataclass
@@ -156,10 +159,16 @@ class Machine:
         return {}
 
     @property
-    def vars_generators(self) -> dict[str, dict[str, Any]]:
-        if self.deployment["vars"]["generators"]:
-            return self.deployment["vars"]["generators"]
-        return {}
+    def vars_generators(self) -> list["Generator"]:
+        from clan_cli.vars.generate import Generator
+
+        clan_vars = self.deployment.get("vars")
+        if clan_vars is None:
+            return []
+        generators: dict[str, Any] = clan_vars.get("generators")
+        if generators is None:
+            return []
+        return [Generator.from_json(gen) for gen in generators.values()]
 
     @property
     def secrets_upload_directory(self) -> str:
