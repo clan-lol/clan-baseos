@@ -1,4 +1,5 @@
 {
+  modulesRolesOptions,
   nixosOptionsDoc,
   clanModules,
   evalClanModules,
@@ -6,13 +7,27 @@
 }:
 {
   # clanModules docs
-  clanModules = lib.mapAttrs (
+  clanModulesViaNix = lib.mapAttrs (
     name: module:
-    (nixosOptionsDoc {
-      options = ((evalClanModules [ module ]).options).clan.${name} or { };
-      warningsAreErrors = true;
-    }).optionsJSON
+    if builtins.pathExists (module + "/default.nix") then
+      (nixosOptionsDoc {
+        options = ((evalClanModules [ module ]).options).clan.${name} or { };
+        warningsAreErrors = true;
+      }).optionsJSON
+    else
+      { }
   ) clanModules;
+
+  clanModulesViaRoles = lib.mapAttrs (
+    _moduleName: rolesOptions:
+    lib.mapAttrs (
+      _roleName: options:
+      (nixosOptionsDoc {
+        inherit options;
+        warningsAreErrors = true;
+      }).optionsJSON
+    ) rolesOptions
+  ) modulesRolesOptions;
 
   clanCore =
     (nixosOptionsDoc {

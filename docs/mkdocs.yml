@@ -66,6 +66,8 @@ nav:
   - Reference:
       - Overview: reference/index.md
       - Clan Modules:
+          - reference/clanModules/index.md
+          # This is the module overview and should stay at the top
           - reference/clanModules/admin.md
           - reference/clanModules/borgbackup-static.md
           - reference/clanModules/borgbackup.md
@@ -78,7 +80,6 @@ nav:
           - reference/clanModules/golem-provider.md
           - reference/clanModules/heisenbridge.md
           - reference/clanModules/importer.md
-          - reference/clanModules/index.md
           - reference/clanModules/iwd.md
           - reference/clanModules/localbackup.md
           - reference/clanModules/localsend.md
