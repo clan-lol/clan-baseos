@@ -431,7 +431,10 @@ def produce_clan_modules_docs() -> None:
                     )
                     exit(1)
 
-                no_options = f"**The `{module_name}` `{role}` doesnt offer / require any options to be set.**\n\n"
+                no_options = f"""### Options of `{role}` role
+
+**The `{module_name}` `{role}` doesnt offer / require any options to be set.**
+"""
 
                 heading = f"""### Options of `{role}` role
 
