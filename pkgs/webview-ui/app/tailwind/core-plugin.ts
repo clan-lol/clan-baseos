@@ -11,6 +11,7 @@ export default plugin.withOptions(
   (_options = {}) =>
     ({ addUtilities, theme }) => {
       addUtilities({
+        // Background colors
         ".bg-def-1": {
           backgroundColor: theme("colors.white"),
         },
@@ -26,7 +27,94 @@ export default plugin.withOptions(
         ".bg-def-5": {
           backgroundColor: theme("colors.secondary.300"),
         },
-        // Dark mode utilities (all elements within `.dark` class)
+        // bg inverse
+        ".bg-inv-1": {
+          backgroundColor: theme("colors.primary.600"),
+        },
+        ".bg-inv-2": {
+          backgroundColor: theme("colors.primary.700"),
+        },
+        ".bg-inv-3": {
+          backgroundColor: theme("colors.primary.800"),
+        },
+        ".bg-inv-4": {
+          backgroundColor: theme("colors.primary.900"),
+        },
+        ".bg-inv-5": {
+          backgroundColor: theme("colors.primary.950"),
+        },
+        // bg inverse accent
+        ".bg-inv-acc-1": {
+          backgroundColor: theme("colors.secondary.500"),
+        },
+        ".bg-inv-acc-2": {
+          backgroundColor: theme("colors.secondary.600"),
+        },
+        ".bg-inv-acc-3": {
+          backgroundColor: theme("colors.secondary.700"),
+        },
+
+        // Text colors
+        ".fg-def-1": {
+          color: theme("colors.secondary.950"),
+        },
+        ".fg-def-2": {
+          color: theme("colors.secondary.900"),
+        },
+        ".fg-def-3": {
+          color: theme("colors.secondary.700"),
+        },
+        ".fg-def-4": {
+          color: theme("colors.secondary.500"),
+        },
+        // fg inverse
+        ".fg-inv-1": {
+          color: theme("colors.white"),
+        },
+        ".fg-inv-2": {
+          color: theme("colors.secondary.100"),
+        },
+        ".fg-inv-3": {
+          color: theme("colors.secondary.300"),
+        },
+        ".fg-inv-4": {
+          color: theme("colors.secondary.400"),
+        },
+
+        // Border colors
+        ".border-def-1": {
+          borderColor: theme("colors.secondary.50"),
+        },
+        ".border-def-2": {
+          borderColor: theme("colors.secondary.100"),
+        },
+        ".border-def-3": {
+          borderColor: theme("colors.secondary.200"),
+        },
+        ".border-def-4": {
+          borderColor: theme("colors.secondary.300"),
+        },
+        ".border-def-5": {
+          borderColor: theme("colors.secondary.400"),
+        },
+        // border inverse
+        ".border-inv-1": {
+          borderColor: theme("colors.secondary.800"),
+        },
+        ".border-inv-2": {
+          borderColor: theme("colors.secondary.900"),
+        },
+        ".border-inv-3": {
+          borderColor: theme("colors.secondary.900"),
+        },
+        ".border-inv-4": {
+          borderColor: theme("colors.secondary.950"),
+        },
+        ".border-inv-5": {
+          borderColor: theme("colors.black"),
+        },
+
+        // Example: dark mode utilities (all elements within <html class="dark"> )
         // ".dark .bg-def-1": {
         //   backgroundColor: theme("colors.black"),
         // },
