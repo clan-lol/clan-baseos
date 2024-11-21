@@ -6,21 +6,17 @@
   ...
 }:
 let
-  includeDefaults = true;
 
   # { mName :: { roleName :: Options } }
-  modulesRolesOptions = self.lib.evalClanModulesWithRoles self.clanModules;
-  modulesSchema = lib.mapAttrs (
-    _moduleName: rolesOptions:
-    lib.mapAttrs (_roleName: options: jsonWithoutHeader.parseOptions options { }) rolesOptions
-  ) modulesRolesOptions;
+  # getModulesSchema = modules: lib.mapAttrs (
+  #   _moduleName: rolesOptions:
+  #   lib.mapAttrs (_roleName: options: jsonWithoutHeader.parseOptions options { }) rolesOptions
+  # ) (self.lib.evalClanModulesWithRoles modules);
+
+  modulesSchema = self.lib.modules.getModulesSchema self.clanModules;
 
   jsonLib = self.lib.jsonschema { inherit includeDefaults; };
-
-  jsonWithoutHeader = self.lib.jsonschema {
-    inherit includeDefaults;
-    header = { };
-  };
+  includeDefaults = true;
 
   frontMatterSchema = jsonLib.parseOptions self.lib.modules.frontmatterOptions { };
 
@@ -53,6 +49,7 @@ in
     frontMatterSchema
     inventorySchema
     modulesSchema
+    getModulesSchema
     renderSchema
     inventory-schema-abstract
     ;

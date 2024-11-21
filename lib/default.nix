@@ -16,5 +16,8 @@ in
   facts = import ./facts.nix { inherit lib; };
   inventory = import ./inventory { inherit lib clan-core; };
   jsonschema = import ./jsonschema { inherit lib; };
-  modules = import ./frontmatter { inherit lib; };
+  modules = import ./frontmatter {
+    inherit lib;
+    self = clan-core;
+  };
 }
