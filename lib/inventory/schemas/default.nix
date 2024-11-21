@@ -2,16 +2,9 @@
   self,
   self',
   pkgs,
-  lib,
   ...
 }:
 let
-
-  # { mName :: { roleName :: Options } }
-  # getModulesSchema = modules: lib.mapAttrs (
-  #   _moduleName: rolesOptions:
-  #   lib.mapAttrs (_roleName: options: jsonWithoutHeader.parseOptions options { }) rolesOptions
-  # ) (self.lib.evalClanModulesWithRoles modules);
 
   modulesSchema = self.lib.modules.getModulesSchema self.clanModules;
 
@@ -49,7 +42,6 @@ in
     frontMatterSchema
     inventorySchema
     modulesSchema
-    getModulesSchema
     renderSchema
     inventory-schema-abstract
     ;
