@@ -24,8 +24,8 @@ in
             "${moduleName}.${instanceName}.roles.${roleName}.min" = {
               assertion = memberCount >= roleConstraints.min;
               message = ''
-                The ${moduleName} module requires at least ${builtins.toString roleConstraints.min} '${roleName}'s
-                but found '${builtins.toString memberCount}' within instance '${instanceName}':
+                The ${moduleName} module requires at least ${builtins.toString roleConstraints.min} members of the '${roleName}' role
+                but found '${builtins.toString memberCount}' members within instance '${instanceName}':
 
                 ${lib.concatLines members}
               '';
@@ -36,8 +36,8 @@ in
             "${moduleName}.${instanceName}.roles.${roleName}.max" = {
               assertion = memberCount <= roleConstraints.max;
               message = ''
-                The ${moduleName} module allows at most for ${builtins.toString roleConstraints.max} '${roleName}'s
-                but found '${builtins.toString memberCount}' within instance '${instanceName}':
+                The ${moduleName} module allows at most for ${builtins.toString roleConstraints.max} members of the '${roleName}' role
+                but found '${builtins.toString memberCount}' members within instance '${instanceName}':
 
                 ${lib.concatLines members}
               '';
