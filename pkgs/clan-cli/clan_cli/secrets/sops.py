@@ -220,7 +220,6 @@ def run(
                         "SOPS_GPG_EXEC",
                         "SOPS_AGE_KEY",
                         "SOPS_AGE_KEY_FILE",
-                        "SOPS_NIX_SECRET",
                     }:
                         del environ[var]
                 sops_cmd.extend(["encrypt", "--in-place"])
