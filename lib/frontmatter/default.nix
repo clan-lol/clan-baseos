@@ -1,4 +1,4 @@
-{ clan-core, lib }:
+{ lib }:
 let
   # Trim the .nix extension from a filename
   trimExtension = name: builtins.substring 0 (builtins.stringLength name - 4) name;
@@ -8,18 +8,20 @@ let
       moduleName,
       instanceName,
       resolvedRoles,
+      allModules,
     }:
     lib.evalModules {
       specialArgs = {
         inherit moduleName resolvedRoles instanceName;
-        allRoles = getRoles moduleName;
+        allRoles = getRoles allModules moduleName;
       };
       modules = [
-        (getFrontmatter moduleName)
+        (getFrontmatter allModules.${moduleName} moduleName)
         ./interface.nix
       ];
     };
 
+  # For Documentation purposes only
   frontmatterOptions =
     (lib.evalModules {
       specialArgs = {
@@ -32,26 +34,24 @@ let
     }).options;
 
   getRoles =
-    serviceName:
+    allModules: serviceName:
     lib.mapAttrsToList (name: _value: trimExtension name) (
       lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
         builtins.readDir (
-          if clan-core.clanModules ? ${serviceName} then
-            clan-core.clanModules.${serviceName} + "/roles"
+          if allModules ? ${serviceName} then
+            allModules.${serviceName} + "/roles"
           else
             throw "ClanModule not found: '${serviceName}'. Make sure the module is added in the 'clanModules' attribute of clan-core."
         )
       )
     );
 
-  getConstraints = modulename: (getFrontmatter modulename).constraints;
-
   checkConstraints = args: (evalFrontmatter args).config.constraints.assertions;
 
   getReadme =
-    modulename:
+    modulepath: modulename:
     let
-      readme = "${clan-core}/clanModules/${modulename}/README.md";
+      readme = modulepath + "/README.md";
       readmeContents =
         if (builtins.pathExists readme) then
           (builtins.readFile readme)
@@ -61,9 +61,9 @@ let
     readmeContents;
 
   getFrontmatter =
-    modulename:
+    modulepath: modulename:
     let
-      content = getReadme modulename;
+      content = getReadme modulepath modulename;
       parts = lib.splitString "---" content;
       # Partition the parts into the first part (the readme content) and the rest (the metadata)
       parsed = builtins.partition ({ index, ... }: if index >= 2 then false else true) (
@@ -89,12 +89,10 @@ let
 in
 {
   inherit
-    evalFrontmatter
     frontmatterOptions
 
     getFrontmatter
-    getReadme
-    getConstraints
+
     checkConstraints
     getRoles
     ;

@@ -159,7 +159,7 @@ in
       inventory.machines = lib.mapAttrs (_n: _: { }) config.machines;
     }
     # Merge the meta attributes from the buildClan function
-    #
+    { inventory.modules = clan-core.clanModules; }
     # config.inventory.meta <- config.meta
     { inventory.meta = config.meta; }
     # Set default for computed tags
@@ -169,6 +169,7 @@ in
   inherit nixosConfigurations;
 
   clanInternals = {
+    inherit serviceConfigs;
     inherit (clan-core) clanModules;
     inherit inventoryFile;
     inventory = config.inventory;

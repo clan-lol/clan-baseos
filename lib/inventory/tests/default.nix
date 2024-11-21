@@ -6,7 +6,6 @@ let
       inherit lib clan-core;
     }
   );
-
   inherit (inventory) buildInventory;
 in
 {
@@ -23,6 +22,7 @@ in
       configs = buildInventory {
         directory = ./.;
         inventory = {
+          modules = clan-core.clanModules;
           services = {
             borgbackup.instance_1 = {
               roles.server.machines = [ "backup_server" ];
@@ -64,6 +64,7 @@ in
       configs = buildInventory {
         directory = ./.;
         inventory = {
+          modules = clan-core.clanModules;
           services = {
             borgbackup.instance_1 = {
               roles.client.tags = [ "backup" ];
@@ -103,6 +104,7 @@ in
       configs = buildInventory {
         directory = ./.;
         inventory = {
+          modules = clan-core.clanModules;
           services = {
             borgbackup.instance_1 = {
               roles.client.machines = [ "machine_1" ];
@@ -132,6 +134,7 @@ in
       configs = buildInventory {
         directory = ./.;
         inventory = {
+          modules = clan-core.clanModules;
           services = {
             fanatasy.instance_1 = {
               roles.default.machines = [ "machine_1" ];
@@ -156,6 +159,7 @@ in
       configs = buildInventory {
         directory = ./.;
         inventory = {
+          modules = clan-core.clanModules;
           services = {
             borgbackup.instance_1 = {
               roles.roleXYZ.machines = [ "machine_1" ];
@@ -179,6 +183,7 @@ in
       configs = buildInventory {
         directory = ./.;
         inventory = {
+          modules = clan-core.clanModules;
           services = {
             borgbackup.instance_1 = {
               roles.client.machines = [ "machine_1" ];
@@ -205,6 +210,7 @@ in
       configs = buildInventory {
         directory = ./.;
         inventory = {
+          modules = clan-core.clanModules;
           services = {
             borgbackup.instance_1 = {
               enabled = false;

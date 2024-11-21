@@ -38,8 +38,9 @@ let
     };
 
   checkService =
-    serviceName:
-    builtins.elem "inventory" (clan-core.lib.modules.getFrontmatter serviceName).features or [ ];
+    modulepath: serviceName:
+    builtins.elem "inventory"
+      (clan-core.lib.modules.getFrontmatter modulepath serviceName).features or [ ];
 
   extendMachine =
     { machineConfig, inventory }:
@@ -53,20 +54,20 @@ let
           acc
           ++ [
             {
-              assertion = checkService serviceName;
+              assertion = checkService inventory.modules.${serviceName} serviceName;
               message = ''
                 Service ${serviceName} cannot be used in inventory. It does not declare the 'inventory' feature.
 
 
-                        To allow it add the following to the beginning of the README.md of the module:
+                To allow it add the following to the beginning of the README.md of the module:
 
-                          ---
-                          ...
+                  ---
+                  ...
 
-                          features = [ "inventory" ]
-                          ---
+                  features = [ "inventory" ]
+                  ---
 
-                        Also make sure to test the module with the 'inventory' feature enabled.
+                Also make sure to test the module with the 'inventory' feature enabled.
 
               '';
             }
@@ -94,7 +95,7 @@ let
         acc2: instanceName: serviceConfig:
 
         let
-          roles = clan-core.lib.modules.getRoles serviceName;
+          roles = clan-core.lib.modules.getRoles inventory.modules serviceName;
 
           resolvedRoles = lib.genAttrs roles (
             roleName:
@@ -129,11 +130,11 @@ let
           # TODO: maybe optimize this dont lookup the role in inverse roles. Imports are not lazy
           roleModules = builtins.map (
             role:
-            if builtins.elem role roles && clan-core.clanModules ? ${serviceName} then
-              clan-core.clanModules.${serviceName} + "/roles/${role}.nix"
+            if builtins.elem role roles && inventory.modules ? ${serviceName} then
+              inventory.modules.${serviceName} + "/roles/${role}.nix"
             else
               throw "Module ${serviceName} doesn't have role: '${role}'. Role: ${
-                clan-core.clanModules.${serviceName}
+                inventory.modules.${serviceName}
               }/roles/${role}.nix not found."
           ) machineRoles;
 
@@ -151,6 +152,7 @@ let
 
           constraintAssertions = clan-core.lib.modules.checkConstraints {
             moduleName = serviceName;
+            allModules = inventory.modules;
             inherit resolvedRoles instanceName;
           };
         in

@@ -35,5 +35,6 @@ Service = dict[str, Any]
 class Inventory:
     meta: Meta
     machines: dict[str, Machine] = field(default_factory = dict)
+    modules: dict[str, str] = field(default_factory = dict)
     services: dict[str, Service] = field(default_factory = dict)
     tags: dict[str, list[str]] = field(default_factory = dict)
