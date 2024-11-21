@@ -102,6 +102,7 @@ in
           # We don't specify the type here, for better performance.
           inventory = lib.mkOption { type = lib.types.raw; };
           inventoryFile = lib.mkOption { type = lib.types.raw; };
+          serviceConfigs = lib.mkOption { type = lib.types.raw; };
           clanModules = lib.mkOption { type = lib.types.raw; };
           source = lib.mkOption { type = lib.types.raw; };
           meta = lib.mkOption { type = lib.types.raw; };

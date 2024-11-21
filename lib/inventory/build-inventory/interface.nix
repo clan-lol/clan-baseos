@@ -92,6 +92,14 @@ in
     ./assertions.nix
   ];
   options = {
+    modules = lib.mkOption {
+      type = types.attrsOf types.path;
+      internal = true;
+      visible = false;
+      default = { };
+      defaultText = "clanModules of clan-core";
+    };
+
     assertions = lib.mkOption {
       type = types.listOf types.unspecified;
       internal = true;

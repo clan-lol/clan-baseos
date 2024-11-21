@@ -53,7 +53,7 @@ let
     }
   */
   evalClanModulesWithRoles =
-    clanModules:
+    allModules:
     let
       res = builtins.mapAttrs (
         moduleName: module:
@@ -62,7 +62,7 @@ let
           roles =
             if builtins.elem "inventory" frontmatter.features or [ ] then
               assert lib.isPath module;
-              clan-core.lib.modules.getRoles moduleName
+              clan-core.lib.modules.getRoles allModules moduleName
             else
               [ ];
         in
@@ -83,7 +83,7 @@ let
               }).options.clan.${moduleName} or { };
           }) roles
         )
-      ) clanModules;
+      ) allModules;
     in
     res;
 in
