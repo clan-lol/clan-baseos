@@ -59,15 +59,15 @@ let
                 Service ${serviceName} cannot be used in inventory. It does not declare the 'inventory' feature.
 
 
-                        To allow it add the following to the beginning of the README.md of the module:
+                To allow it add the following to the beginning of the README.md of the module:
 
-                          ---
-                          ...
+                  ---
+                  ...
 
-                          features = [ "inventory" ]
-                          ---
+                  features = [ "inventory" ]
+                  ---
 
-                        Also make sure to test the module with the 'inventory' feature enabled.
+                Also make sure to test the module with the 'inventory' feature enabled.
 
               '';
             }
