@@ -2,7 +2,10 @@ import subprocess
 
 import pytest
 from clan_cli.errors import ClanError
-from clan_cli.ssh import Host, HostGroup, HostKeyCheck, parse_deployment_address
+from clan_cli.ssh.host import Host
+from clan_cli.ssh.host_group import HostGroup
+from clan_cli.ssh.host_key import HostKeyCheck
+from clan_cli.ssh.parse import parse_deployment_address
 
 
 def test_parse_ipv6() -> None:

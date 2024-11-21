@@ -1,6 +1,7 @@
 import subprocess
 
-from clan_cli.ssh import Host, HostGroup
+from clan_cli.ssh.host import Host
+from clan_cli.ssh.host_group import HostGroup
 
 hosts = HostGroup([Host("some_host")])
 

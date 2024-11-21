@@ -18,7 +18,7 @@ from clan_cli.facts.upload import upload_secrets
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_command, nix_metadata
-from clan_cli.ssh import Host, HostKeyCheck
+from clan_cli.ssh.host import Host, HostKeyCheck
 from clan_cli.vars.generate import generate_vars
 from clan_cli.vars.upload import upload_secret_vars
 

@@ -1,7 +1,8 @@
 from collections.abc import Callable
 from typing import TypeVar
 
-from clan_cli.ssh import Host, HostGroup, HostResult
+from clan_cli.ssh.host import Host
+from clan_cli.ssh.host_group import HostGroup, HostResult
 
 from .machines import Machine
 

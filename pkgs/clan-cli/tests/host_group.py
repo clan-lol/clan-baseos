@@ -2,7 +2,9 @@ import os
 import pwd
 
 import pytest
-from clan_cli.ssh import Host, HostGroup, HostKeyCheck
+from clan_cli.ssh.host import Host
+from clan_cli.ssh.host_group import HostGroup
+from clan_cli.ssh.host_key import HostKeyCheck
 from sshd import Sshd
 
 

@@ -7,7 +7,7 @@ from clan_cli.facts.secret_modules.password_store import SecretStore
 from clan_cli.machines.facts import machine_get_fact
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
-from clan_cli.ssh import HostGroup
+from clan_cli.ssh.host_group import HostGroup
 from fixtures_flakes import ClanFlake
 from helpers import cli
 
