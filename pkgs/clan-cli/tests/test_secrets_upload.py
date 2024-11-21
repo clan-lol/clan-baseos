@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import pytest
-from clan_cli.ssh import HostGroup
+from clan_cli.ssh.host_group import HostGroup
 from fixtures_flakes import FlakeForTest
 from helpers import cli
 
