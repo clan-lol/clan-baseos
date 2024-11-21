@@ -72,7 +72,8 @@ rec {
       { }
     else if opt ? defaultText then
       {
-        default = "<thunk>";
+        # dont add default to jsonschema. It seems to alter the type
+        # default = "<thunk>";
       }
     else
       lib.optionalAttrs (opt ? default) {
@@ -93,11 +94,18 @@ rec {
     };
 
   makeModuleInfo =
-    { path }:
     {
-      "$exportedModuleInfo" = {
-        inherit path;
-      };
+      path,
+      defaultText ? null,
+    }:
+    {
+      "$exportedModuleInfo" =
+        {
+          inherit path;
+        }
+        // lib.optionalAttrs (defaultText != null) {
+          inherit defaultText;
+        };
     };
 
   # parses a set of evaluated nixos options to a jsonschema
@@ -172,6 +180,7 @@ rec {
       };
       exposedModuleInfo = makeModuleInfo {
         path = option.loc;
+        defaultText = option.defaultText or null;
       };
     in
     # either type
