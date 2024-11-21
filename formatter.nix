@@ -46,8 +46,12 @@
       };
       treefmt.programs.mypy.directories =
         {
-          "pkgs/clan-cli".extraPythonPackages = self'.packages.clan-cli.testDependencies;
-          "pkgs/clan-app" = {
+          "clan-cli" = {
+            extraPythonPackages = self'.packages.clan-cli.testDependencies;
+            directory = "pkgs/clan-cli";
+          };
+          "clan-app" = {
+            directory = "pkgs/clan-app";
             extraPythonPackages =
               (self'.packages.clan-app.externalTestDeps or [ ]) ++ self'.packages.clan-cli.testDependencies;
             extraPythonPaths = [ "../clan-cli" ];
@@ -56,7 +60,8 @@
         // (
           if pkgs.stdenv.isLinux then
             {
-              "pkgs/clan-vm-manager" = {
+              "clan-vm-manager" = {
+                directory = "pkgs/clan-vm-manager";
                 extraPythonPackages =
                   self'.packages.clan-vm-manager.externalTestDeps ++ self'.packages.clan-cli.testDependencies;
                 extraPythonPaths = [ "../clan-cli" ];
