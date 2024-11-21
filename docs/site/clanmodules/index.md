@@ -6,10 +6,8 @@ This site will guide you through authoring your first module. Explaining which c
 Under construction
 :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier:
 
-!!! Note
-    Currently ClanModules should be contributed to the [clan-core repository](https://git.clan.lol/clan/clan-core) via a PR.
-
-    Ad-hoc loading of custom modules is not recommended / supported yet.
+!!! Tip
+    External ClanModules can be ad-hoc loaded via [`clan.inventory.modules`](../reference/nix-api/inventory.md#modules)
 
 ## Bootstrapping the `clanModule`
 
@@ -43,13 +41,37 @@ clanModules/borgbackup
 
     The `roles` folder is strictly required for `features = [ "inventory" ]`.
 
-The clanModule must be registered via the `clanModules` attribute in `clan-core`
+=== "User module"
 
-```nix title="clanModules/flake-module.nix"
---8<-- "clanModules/flake-module.nix:0:6"
-    # Register your new module here
+    If the module should be ad-hoc loaded.
+    It can be made avilable in any project via the [`clan.inventory.modules`](../reference/nix-api/inventory.md#modules) attribute.
+
+    ```nix title="flake.nix"
     # ...
-```
+    buildClan {
+        # 1. Add the module to the avilable inventory modules
+        inventory.modules = {
+            custom-module = ./modules/my_module;
+        };
+        # 2. Use the module in the inventory
+        inventory.services = {
+            custom-module.instance_1 = {
+                roles.default.machines = [ "machineA" ];
+            };
+        };
+    };
+    ```
+
+=== "Upstream module"
+
+    If the module will be contributed to [`clan-core`](https://git.clan.lol/clan-core)
+    The clanModule must be registered within the `clanModules` attribute in `clan-core`
+
+    ```nix title="clanModules/flake-module.nix"
+    --8<-- "clanModules/flake-module.nix:0:5"
+        # Register our new module here
+        # ...
+    ```
 
 ## Readme
 

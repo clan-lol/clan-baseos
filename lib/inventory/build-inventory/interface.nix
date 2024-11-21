@@ -94,10 +94,38 @@ in
   options = {
     modules = lib.mkOption {
       type = types.attrsOf types.path;
-      internal = true;
-      visible = false;
       default = { };
       defaultText = "clanModules of clan-core";
+      description = ''
+        A mapping of module names to their path.
+
+        Each module can be referenced by its `attributeName` in the `inventory.services` attribute set.
+
+        !!! Important
+            Each module MUST fullfill the following requirements to be usable with the inventory:
+
+            - The module MUST have a `README.md` file with a `description`.
+            - The module MUST have at least `features = [ "inventory" ]` in the frontmatter section.
+            - The module MUST have a subfolder `roles` with at least one `{roleName}.nix` file.
+
+            For further information see: [Module Authoring Guide](../../clanmodules/index.md).
+
+        ???+ example
+            ```nix
+            buildClan {
+                # 1. Add the module to the avilable inventory modules
+                inventory.modules = {
+                  custom-module = ./modules/my_module;
+                };
+                # 2. Use the module in the inventory
+                inventory.services = {
+                  custom-module.instance_1 = {
+                      roles.default.machines = [ "machineA" ];
+                  };
+                };
+            };
+            ```
+      '';
     };
 
     assertions = lib.mkOption {
