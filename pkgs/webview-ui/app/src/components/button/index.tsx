@@ -42,6 +42,7 @@ interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   children: JSX.Element;
   startIcon?: JSX.Element;
   endIcon?: JSX.Element;
+  class?: string;
 }
 export const Button = (props: ButtonProps) => {
   const {
@@ -50,11 +51,13 @@ export const Button = (props: ButtonProps) => {
     size = "default",
     startIcon,
     endIcon,
+    class: extraClass = "",
     ...buttonProps
   } = props;
   return (
     <button
       class={cx(
+        extraClass,
         // Layout
         "inline-flex items-center flex-shrink gap-2 justify-center",
         // Styles
