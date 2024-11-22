@@ -24,7 +24,7 @@ let
         mount --bind --make-private /run/secrets.tmp /run/secrets.tmp
         mount --bind --make-private /run/secrets /run/secrets
         tar -xf "$src" -C /run/secrets.tmp
-        move-mount --beneath --move /run/secrets.tmp /run/secrets
+        move-mount --beneath --move /run/secrets.tmp /run/secrets >/dev/null
         umount -R /run/secrets.tmp
         rmdir /run/secrets.tmp
         umount --lazy /run/secrets
@@ -44,7 +44,7 @@ in
       lib.mkIf (config.clan.core.vars.settings.secretStore == "password-store")
         {
           fileModule = file: {
-            path = "/run/secrets/vars/${file.config.generatorName}/${file.config.name}";
+            path = "/run/secrets/${file.config.generatorName}/${file.config.name}";
           };
           secretUploadDirectory = lib.mkDefault "/etc/secrets";
           secretModule = "clan_cli.vars.secret_modules.password_store";
