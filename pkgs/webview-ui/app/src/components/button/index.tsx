@@ -1,4 +1,4 @@
-import { type JSX } from "solid-js";
+import { splitProps, type JSX } from "solid-js";
 import cx from "classnames";
 
 type Variants = "dark" | "light";
@@ -42,32 +42,34 @@ interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   children: JSX.Element;
   startIcon?: JSX.Element;
   endIcon?: JSX.Element;
+  class?: string;
 }
 export const Button = (props: ButtonProps) => {
-  const {
-    children,
-    variant = "dark",
-    size = "default",
-    startIcon,
-    endIcon,
-    ...buttonProps
-  } = props;
+  const [local, other] = splitProps(props, [
+    "children",
+    "variant",
+    "size",
+    "startIcon",
+    "endIcon",
+    "class",
+  ]);
   return (
     <button
       class={cx(
+        local.class,
         // Layout
         "inline-flex items-center flex-shrink gap-2 justify-center",
         // Styles
         "border border-solid",
-        sizePaddings[size],
+        sizePaddings[local.size || "default"],
         // Colors
-        variantColors[variant],
+        variantColors[local.variant || "dark"],
       )}
-      {...buttonProps}
+      {...other}
     >
-      <span class="h-4">{startIcon}</span>
-      <span>{children}</span>
-      <span class="h-4">{endIcon}</span>
+      <span class="h-4">{local.startIcon}</span>
+      <span>{local.children}</span>
+      <span class="h-4">{local.endIcon}</span>
     </button>
   );
 };

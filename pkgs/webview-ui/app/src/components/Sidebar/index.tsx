@@ -69,7 +69,12 @@ export const Sidebar = (props: RouteSectionProps) => {
       <div class="sidebar__body">
         <For each={routes.filter((r) => !r.hidden && r.path != "/clans")}>
           {(route: AppRoute) => (
-            <Show when={route.children}>
+            <Show
+              when={route.children}
+              fallback={
+                <SidebarListItem href={route.path} title={route.label} />
+              }
+            >
               {(children) => (
                 <SidebarSection title={route.label}>
                   <ul>

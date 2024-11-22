@@ -164,6 +164,28 @@ def get_modules(base_path: str) -> dict[str, str]:
 
 
 @API.register
+def get_module_interface(base_path: str, module_name: str) -> dict[str, Any]:
+    """
+    Check if a module exists and returns the interface schema
+    Returns an error if the module does not exist or has an incorrect interface
+    """
+    cmd = nix_eval([f"{base_path}#clanInternals.moduleSchemas.{module_name}", "--json"])
+    try:
+        proc = run_no_stdout(cmd)
+        res = proc.stdout.strip()
+    except ClanCmdError as e:
+        msg = "clanInternals might not have moduleSchemas attributes"
+        raise ClanError(
+            msg,
+            location=f"list_modules {base_path}",
+            description="Evaluation failed on clanInternals.moduleSchemas attribute",
+        ) from e
+    modules_schema: dict[str, Any] = json.loads(res)
+
+    return modules_schema
+
+
+@API.register
 def list_modules(base_path: str) -> dict[str, ModuleInfo]:
     """
     Show information about a module
