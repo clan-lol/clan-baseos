@@ -32,7 +32,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
           {props.children}
         </div>
         <div
-          class="drawer-side z-40 h-full min-w-72 rounded-xl border opacity-95 bg-inv-2 border-inv-2"
+          class="drawer-side z-40 h-full !overflow-hidden"
           classList={{
             "!hidden":
               props.location.pathname === "welcome" || clanList().length === 0,
@@ -41,7 +41,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
           <label
             for="toplevel-drawer"
             aria-label="close sidebar"
-            class="drawer-overlay"
+            class="drawer-overlay !h-full !overflow-hidden "
           ></label>
           <Sidebar {...props} />
         </div>
