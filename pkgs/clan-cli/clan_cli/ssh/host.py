@@ -1,45 +1,26 @@
 # Adapted from https://github.com/numtide/deploykit
 
-import fcntl
+import logging
 import math
 import os
-import select
 import shlex
 import subprocess
 import tarfile
-import time
-from collections.abc import Iterator
-from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from shlex import quote
 from tempfile import TemporaryDirectory
 from typing import IO, Any
 
-from clan_cli.cmd import Log, terminate_process_group
+from clan_cli.cmd import Log
 from clan_cli.cmd import run as local_run
 from clan_cli.errors import ClanError
 from clan_cli.ssh.host_key import HostKeyCheck
-from clan_cli.ssh.logger import cmdlog
 
-FILE = None | int
+cmdlog = logging.getLogger(__name__)
+
+
 # Seconds until a message is printed when _run produces no output.
 NO_OUTPUT_TIMEOUT = 20
-
-
-@contextmanager
-def _pipe() -> Iterator[tuple[IO[str], IO[str]]]:
-    (pipe_r, pipe_w) = os.pipe()
-    read_end = os.fdopen(pipe_r, "r")
-    write_end = os.fdopen(pipe_w, "w")
-
-    try:
-        fl = fcntl.fcntl(read_end, fcntl.F_GETFL)
-        fcntl.fcntl(read_end, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-
-        yield (read_end, write_end)
-    finally:
-        read_end.close()
-        write_end.close()
 
 
 class Host:
@@ -101,196 +82,56 @@ class Host:
             host = f"[{host}]"
         return f"{self.user or 'root'}@{host}"
 
-    def _prefix_output(
-        self,
-        displayed_cmd: str,
-        print_std_fd: IO[str] | None,
-        print_err_fd: IO[str] | None,
-        stdout: IO[str] | None,
-        stderr: IO[str] | None,
-        timeout: float = math.inf,
-    ) -> tuple[str, str]:
-        rlist = []
-        if print_std_fd is not None:
-            rlist.append(print_std_fd)
-        if print_err_fd is not None:
-            rlist.append(print_err_fd)
-        if stdout is not None:
-            rlist.append(stdout)
-
-        if stderr is not None:
-            rlist.append(stderr)
-
-        print_std_buf = ""
-        print_err_buf = ""
-        stdout_buf = ""
-        stderr_buf = ""
-
-        start = time.time()
-        last_output = time.time()
-        while len(rlist) != 0:
-            readlist, _, _ = select.select(
-                rlist, [], [], min(timeout, NO_OUTPUT_TIMEOUT)
-            )
-
-            def print_from(
-                print_fd: IO[str], print_buf: str, is_err: bool = False
-            ) -> tuple[float, str]:
-                read = os.read(print_fd.fileno(), 4096)
-                if len(read) == 0:
-                    rlist.remove(print_fd)
-                print_buf += read.decode("utf-8")
-                if (read == b"" and len(print_buf) != 0) or "\n" in print_buf:
-                    # print and empty the print_buf, if the stream is draining,
-                    # but there is still something in the buffer or on newline.
-                    lines = print_buf.rstrip("\n").split("\n")
-                    for line in lines:
-                        if not is_err:
-                            cmdlog.info(
-                                line, extra={"command_prefix": self.command_prefix}
-                            )
-                        else:
-                            cmdlog.error(
-                                line, extra={"command_prefix": self.command_prefix}
-                            )
-                    print_buf = ""
-                last_output = time.time()
-                return (last_output, print_buf)
-
-            if print_std_fd in readlist and print_std_fd is not None:
-                (last_output, print_std_buf) = print_from(
-                    print_std_fd, print_std_buf, is_err=False
-                )
-            if print_err_fd in readlist and print_err_fd is not None:
-                (last_output, print_err_buf) = print_from(
-                    print_err_fd, print_err_buf, is_err=True
-                )
-
-            now = time.time()
-            elapsed = now - start
-            if now - last_output > NO_OUTPUT_TIMEOUT:
-                elapsed_msg = time.strftime("%H:%M:%S", time.gmtime(elapsed))
-                cmdlog.warning(
-                    f"still waiting for '{displayed_cmd}' to finish... ({elapsed_msg} elapsed)",
-                    extra={"command_prefix": self.command_prefix},
-                )
-
-            def handle_fd(fd: IO[Any] | None, readlist: list[IO[Any]]) -> str:
-                if fd and fd in readlist:
-                    read = os.read(fd.fileno(), 4096)
-                    if len(read) == 0:
-                        rlist.remove(fd)
-                    else:
-                        return read.decode("utf-8")
-                return ""
-
-            stdout_buf += handle_fd(stdout, readlist)
-            stderr_buf += handle_fd(stderr, readlist)
-
-            if now - last_output >= timeout:
-                break
-        return stdout_buf, stderr_buf
-
     def _run(
         self,
         cmd: list[str],
-        displayed_cmd: str,
-        shell: bool,
-        stdout: FILE = None,
-        stderr: FILE = None,
-        extra_env: dict[str, str] | None = None,
-        cwd: None | str | Path = None,
+        *,
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
+        input: bytes | None = None,  # noqa: A002
+        env: dict[str, str] | None = None,
+        cwd: Path | None = None,
+        log: Log = Log.BOTH,
         check: bool = True,
-        timeout: float = math.inf,
+        error_msg: str | None = None,
         needs_user_terminal: bool = False,
+        shell: bool = False,
+        timeout: float = math.inf,
     ) -> subprocess.CompletedProcess[str]:
-        if extra_env is None:
-            extra_env = {}
-        with ExitStack() as stack:
-            read_std_fd, write_std_fd = (None, None)
-            read_err_fd, write_err_fd = (None, None)
-
-            if stdout is None or stderr is None:
-                read_std_fd, write_std_fd = stack.enter_context(_pipe())
-                read_err_fd, write_err_fd = stack.enter_context(_pipe())
-
-            if stdout is None:
-                stdout_read = None
-                stdout_write = write_std_fd
-            elif stdout == subprocess.PIPE:
-                stdout_read, stdout_write = stack.enter_context(_pipe())
-            else:
-                msg = f"unsupported value for stdout parameter: {stdout}"
-                raise ClanError(msg)
-
-            if stderr is None:
-                stderr_read = None
-                stderr_write = write_err_fd
-            elif stderr == subprocess.PIPE:
-                stderr_read, stderr_write = stack.enter_context(_pipe())
-            else:
-                msg = f"unsupported value for stderr parameter: {stderr}"
-                raise ClanError(msg)
-
-            env = os.environ.copy()
-            env.update(extra_env)
-
-            with subprocess.Popen(
-                cmd,
-                text=True,
-                shell=shell,
-                stdout=stdout_write,
-                stderr=stderr_write,
-                env=env,
-                cwd=cwd,
-                start_new_session=not needs_user_terminal,
-            ) as p:
-                if not needs_user_terminal:
-                    stack.enter_context(terminate_process_group(p))
-                if write_std_fd is not None:
-                    write_std_fd.close()
-                if write_err_fd is not None:
-                    write_err_fd.close()
-                if stdout == subprocess.PIPE:
-                    assert stdout_write is not None
-                    stdout_write.close()
-                if stderr == subprocess.PIPE:
-                    assert stderr_write is not None
-                    stderr_write.close()
-
-                start = time.time()
-                stdout_data, stderr_data = self._prefix_output(
-                    displayed_cmd,
-                    read_std_fd,
-                    read_err_fd,
-                    stdout_read,
-                    stderr_read,
-                    timeout,
-                )
-                ret = p.wait(timeout=max(0, timeout - (time.time() - start)))
-                if ret != 0:
-                    if check:
-                        msg = f"Command {shlex.join(cmd)} failed with return code {ret}"
-                        raise ClanError(msg)
-                    cmdlog.warning(
-                        f"[Command failed: {ret}] {displayed_cmd}",
-                        extra={"command_prefix": self.command_prefix},
-                    )
-                return subprocess.CompletedProcess(
-                    cmd, ret, stdout=stdout_data, stderr=stderr_data
-                )
-        msg = "unreachable"
-        raise RuntimeError(msg)
+        res = local_run(
+            cmd,
+            shell=shell,
+            stdout=stdout,
+            prefix=self.command_prefix,
+            timeout=timeout,
+            stderr=stderr,
+            input=input,
+            env=env,
+            cwd=cwd,
+            log=log,
+            logger=cmdlog,
+            check=check,
+            error_msg=error_msg,
+            needs_user_terminal=needs_user_terminal,
+        )
+        return subprocess.CompletedProcess(
+            args=res.command_list,
+            returncode=res.returncode,
+            stdout=res.stdout,
+            stderr=res.stderr,
+        )
 
     def run_local(
         self,
-        cmd: str | list[str],
-        stdout: FILE = None,
-        stderr: FILE = None,
+        cmd: list[str],
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
-        cwd: None | str | Path = None,
+        cwd: None | Path = None,
         check: bool = True,
         timeout: float = math.inf,
+        shell: bool = False,
+        log: Log = Log.BOTH,
     ) -> subprocess.CompletedProcess[str]:
         """
         Command to run locally for the host
@@ -304,38 +145,38 @@ class Host:
 
         @return subprocess.CompletedProcess result of the command
         """
-        if extra_env is None:
-            extra_env = {}
-        shell = False
-        if isinstance(cmd, str):
-            cmd = [cmd]
-            shell = True
+        env = os.environ.copy()
+        if extra_env:
+            env.update(extra_env)
+
         displayed_cmd = " ".join(cmd)
         cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
         return self._run(
             cmd,
-            displayed_cmd,
             shell=shell,
             stdout=stdout,
             stderr=stderr,
-            extra_env=extra_env,
+            env=env,
             cwd=cwd,
             check=check,
             timeout=timeout,
+            log=log,
         )
 
     def run(
         self,
-        cmd: str | list[str],
-        stdout: FILE = None,
-        stderr: FILE = None,
+        cmd: list[str],
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
         become_root: bool = False,
         extra_env: dict[str, str] | None = None,
-        cwd: None | str | Path = None,
+        cwd: None | Path = None,
         check: bool = True,
         timeout: float = math.inf,
         verbose_ssh: bool = False,
         tty: bool = False,
+        shell: bool = False,
+        log: Log = Log.BOTH,
     ) -> subprocess.CompletedProcess[str]:
         """
         Command to run on the host via ssh
@@ -353,48 +194,50 @@ class Host:
         """
         if extra_env is None:
             extra_env = {}
+
+        # If we are not root and we need to become root, prepend sudo
         sudo = ""
         if become_root and self.user != "root":
             sudo = "sudo -- "
+
+        # Quote all added environment variables
         env_vars = []
         for k, v in extra_env.items():
             env_vars.append(f"{shlex.quote(k)}={shlex.quote(v)}")
 
+        # Build a pretty command for logging
         displayed_cmd = ""
         export_cmd = ""
         if env_vars:
             export_cmd = f"export {' '.join(env_vars)}; "
             displayed_cmd += export_cmd
-        if isinstance(cmd, list):
-            displayed_cmd += " ".join(cmd)
-        else:
-            displayed_cmd += cmd
+        displayed_cmd += " ".join(cmd)
         cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
 
+        # Build the ssh command
         bash_cmd = export_cmd
-        bash_args = []
-        if isinstance(cmd, list):
-            bash_cmd += 'exec "$@"'
-            bash_args += cmd
+        if shell:
+            bash_cmd += " ".join(cmd)
         else:
-            bash_cmd += cmd
+            bash_cmd += 'exec "$@"'
         # FIXME we assume bash to be present here? Should be documented...
         ssh_cmd = [
             *self.ssh_cmd(verbose_ssh=verbose_ssh, tty=tty),
             "--",
-            f"{sudo}bash -c {quote(bash_cmd)} -- {' '.join(map(quote, bash_args))}",
+            f"{sudo}bash -c {quote(bash_cmd)} -- {' '.join(map(quote, cmd))}",
         ]
+
+        # Run the ssh command
         return self._run(
             ssh_cmd,
-            displayed_cmd,
             shell=False,
             stdout=stdout,
             stderr=stderr,
+            log=log,
             cwd=cwd,
             check=check,
             timeout=timeout,
-            # all ssh commands can potentially ask for a password
-            needs_user_terminal=True,
+            needs_user_terminal=True,  # ssh asks for a password
         )
 
     def nix_ssh_env(self, env: dict[str, str] | None) -> dict[str, str]:
@@ -464,13 +307,19 @@ class Host:
                 "tar",
                 "-C",
                 str(remote_dest),
-                "-xvzf",
+                "-xzf",
                 "-",
             ]
 
             # TODO accept `input` to be  an IO object instead of bytes so that we don't have to read the tarfile into memory.
             with tar_path.open("rb") as f:
-                local_run(cmd, input=f.read(), log=Log.BOTH, needs_user_terminal=True)
+                local_run(
+                    cmd,
+                    input=f.read(),
+                    log=Log.BOTH,
+                    needs_user_terminal=True,
+                    prefix=self.command_prefix,
+                )
 
     @property
     def ssh_cmd_opts(

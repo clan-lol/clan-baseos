@@ -48,6 +48,18 @@ class Machine:
     def __repr__(self) -> str:
         return str(self)
 
+    def debug(self, msg: str, *args: Any, **kwargs: Any) -> None:
+        kwargs.update({"extra": {"command_prefix": self.name}})
+        log.debug(msg, *args, **kwargs)
+
+    def info(self, msg: str, *args: Any, **kwargs: Any) -> None:
+        kwargs.update({"extra": {"command_prefix": self.name}})
+        log.info(msg, *args, **kwargs)
+
+    def error(self, msg: str, *args: Any, **kwargs: Any) -> None:
+        kwargs.update({"extra": {"command_prefix": self.name}})
+        log.error(msg, *args, **kwargs)
+
     @property
     def system(self) -> str:
         # We filter out function attributes because they are not serializable.

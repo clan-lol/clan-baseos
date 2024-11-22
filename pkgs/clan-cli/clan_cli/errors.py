@@ -74,7 +74,7 @@ def indent_command(command_list: list[str]) -> str:
                 # Indent after the next argument
                 formatted_command.append(" ")
                 i += 1
-                formatted_command.append(shlex.quote(command_list[i]))
+                formatted_command.append(command_list[i])
 
         if i < len(command_list) - 1:
             # Add line continuation only if it's not the last argument

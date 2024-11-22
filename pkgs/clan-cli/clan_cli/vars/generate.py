@@ -418,14 +418,15 @@ def generate_vars(
             )
             machine.flush_caches()
         except Exception as exc:
-            log.error(f"Failed to generate facts for {machine.name}: {exc}")  # noqa
+            machine.error(f"Failed to generate facts: {exc}")
             errors += [exc]
         if len(errors) > 0:
             msg = f"Failed to generate facts for {len(errors)} hosts. Check the logs above"
             raise ClanError(msg) from errors[0]
 
     if not was_regenerated:
-        print("All vars are already up to date")
+        machine.info("All vars are already up to date")
+
     return was_regenerated
 
 
