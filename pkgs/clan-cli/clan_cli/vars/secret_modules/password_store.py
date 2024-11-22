@@ -1,13 +1,12 @@
 import io
 import logging
 import os
-import subprocess
 import tarfile
 from itertools import chain
 from pathlib import Path
 from typing import override
 
-from clan_cli.cmd import run
+from clan_cli.cmd import Log, run
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 
@@ -135,8 +134,8 @@ class SecretStore(SecretStoreBase):
         remote_hash = self.machine.target_host.run(
             # TODO get the path to the secrets from the machine
             ["cat", f"{self.machine.secret_vars_upload_directory}/.pass_info"],
+            log=Log.STDERR,
             check=False,
-            stdout=subprocess.PIPE,
         ).stdout.strip()
 
         if not remote_hash:

@@ -58,6 +58,6 @@ def test_secrets_upload(
 
     # the flake defines this path as the location where the sops key should be installed
     sops_key = test_flake_with_core.path / "facts" / "key.txt"
-    # breakpoint()
+
     assert sops_key.exists()
     assert sops_key.read_text() == age_keys[0].privkey

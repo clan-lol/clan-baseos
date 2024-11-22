@@ -1,7 +1,7 @@
 import argparse
 import json
-import subprocess
 
+from clan_cli.cmd import Log
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_backup_providers_for_machine,
@@ -28,7 +28,7 @@ def restore_service(machine: Machine, name: str, provider: str, service: str) ->
     if pre_restore := backup_folders[service]["preRestoreCommand"]:
         proc = machine.target_host.run(
             [pre_restore],
-            stdout=subprocess.PIPE,
+            log=Log.STDERR,
             extra_env=env,
         )
         if proc.returncode != 0:
@@ -37,7 +37,7 @@ def restore_service(machine: Machine, name: str, provider: str, service: str) ->
 
     proc = machine.target_host.run(
         [backup_metadata["providers"][provider]["restore"]],
-        stdout=subprocess.PIPE,
+        log=Log.STDERR,
         extra_env=env,
     )
     if proc.returncode != 0:
@@ -47,7 +47,7 @@ def restore_service(machine: Machine, name: str, provider: str, service: str) ->
     if post_restore := backup_folders[service]["postRestoreCommand"]:
         proc = machine.target_host.run(
             [post_restore],
-            stdout=subprocess.PIPE,
+            log=Log.STDERR,
             extra_env=env,
         )
         if proc.returncode != 0:

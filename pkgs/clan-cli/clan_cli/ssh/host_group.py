@@ -1,14 +1,17 @@
+import logging
 import math
 from collections.abc import Callable
 from pathlib import Path
 from threading import Thread
-from typing import Any
+from typing import IO, Any
 
+from clan_cli.cmd import Log
 from clan_cli.errors import ClanError
 from clan_cli.ssh import T
-from clan_cli.ssh.host import FILE, Host
-from clan_cli.ssh.logger import cmdlog
+from clan_cli.ssh.host import Host
 from clan_cli.ssh.results import HostResult, Results
+
+cmdlog = logging.getLogger(__name__)
 
 
 def _worker(
@@ -35,17 +38,19 @@ class HostGroup:
 
     def _run_local(
         self,
-        cmd: str | list[str],
+        cmd: list[str],
         host: Host,
         results: Results,
-        stdout: FILE = None,
-        stderr: FILE = None,
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
-        cwd: None | str | Path = None,
+        cwd: None | Path = None,
         check: bool = True,
         verbose_ssh: bool = False,
         timeout: float = math.inf,
+        shell: bool = False,
         tty: bool = False,
+        log: Log = Log.BOTH,
     ) -> None:
         if extra_env is None:
             extra_env = {}
@@ -58,6 +63,8 @@ class HostGroup:
                 cwd=cwd,
                 check=check,
                 timeout=timeout,
+                shell=shell,
+                log=log,
             )
             results.append(HostResult(host, proc))
         except Exception as e:
@@ -65,17 +72,19 @@ class HostGroup:
 
     def _run_remote(
         self,
-        cmd: str | list[str],
+        cmd: list[str],
         host: Host,
         results: Results,
-        stdout: FILE = None,
-        stderr: FILE = None,
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
         cwd: None | str | Path = None,
         check: bool = True,
         verbose_ssh: bool = False,
         timeout: float = math.inf,
         tty: bool = False,
+        shell: bool = False,
+        log: Log = Log.BOTH,
     ) -> None:
         if cwd is not None:
             msg = "cwd is not supported for remote commands"
@@ -93,6 +102,8 @@ class HostGroup:
                 verbose_ssh=verbose_ssh,
                 timeout=timeout,
                 tty=tty,
+                shell=shell,
+                log=log,
             )
             results.append(HostResult(host, proc))
         except Exception as e:
@@ -114,16 +125,18 @@ class HostGroup:
 
     def _run(
         self,
-        cmd: str | list[str],
+        cmd: list[str],
         local: bool = False,
-        stdout: FILE = None,
-        stderr: FILE = None,
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
         cwd: None | str | Path = None,
         check: bool = True,
         timeout: float = math.inf,
         verbose_ssh: bool = False,
         tty: bool = False,
+        shell: bool = False,
+        log: Log = Log.BOTH,
     ) -> Results:
         if extra_env is None:
             extra_env = {}
@@ -145,6 +158,8 @@ class HostGroup:
                     "timeout": timeout,
                     "verbose_ssh": verbose_ssh,
                     "tty": tty,
+                    "shell": shell,
+                    "log": log,
                 },
             )
             thread.start()
@@ -160,15 +175,17 @@ class HostGroup:
 
     def run(
         self,
-        cmd: str | list[str],
-        stdout: FILE = None,
-        stderr: FILE = None,
+        cmd: list[str],
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
         cwd: None | str | Path = None,
         check: bool = True,
         verbose_ssh: bool = False,
         timeout: float = math.inf,
         tty: bool = False,
+        log: Log = Log.BOTH,
+        shell: bool = False,
     ) -> Results:
         """
         Command to run on the remote host via ssh
@@ -184,6 +201,7 @@ class HostGroup:
             extra_env = {}
         return self._run(
             cmd,
+            shell=shell,
             stdout=stdout,
             stderr=stderr,
             extra_env=extra_env,
@@ -192,17 +210,20 @@ class HostGroup:
             verbose_ssh=verbose_ssh,
             timeout=timeout,
             tty=tty,
+            log=log,
         )
 
     def run_local(
         self,
-        cmd: str | list[str],
-        stdout: FILE = None,
-        stderr: FILE = None,
+        cmd: list[str],
+        stdout: IO[bytes] | None = None,
+        stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
         cwd: None | str | Path = None,
         check: bool = True,
         timeout: float = math.inf,
+        shell: bool = False,
+        log: Log = Log.BOTH,
     ) -> Results:
         """
         Command to run locally for each host in the group in parallel
@@ -226,6 +247,8 @@ class HostGroup:
             cwd=cwd,
             check=check,
             timeout=timeout,
+            shell=shell,
+            log=log,
         )
 
     def run_function(

@@ -1,11 +1,12 @@
 import contextlib
 import logging
+import math
 import os
 import select
 import shlex
 import signal
 import subprocess
-import sys
+import time
 import timeit
 import weakref
 from collections.abc import Iterator
@@ -14,12 +15,25 @@ from enum import Enum
 from pathlib import Path
 from typing import IO, Any
 
-from clan_cli.errors import ClanError, indent_command
+from clan_cli.custom_logger import print_trace
+from clan_cli.errors import ClanCmdError, ClanError, CmdOut, indent_command
 
-from .custom_logger import get_callers
-from .errors import ClanCmdError, CmdOut
+cmdlog = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
+
+class ClanCmdTimeoutError(ClanError):
+    timeout: float
+
+    def __init__(
+        self,
+        msg: str | None = None,
+        *,
+        description: str | None = None,
+        location: str | None = None,
+        timeout: float,
+    ) -> None:
+        self.timeout = timeout
+        super().__init__(msg, description=description, location=location)
 
 
 class Log(Enum):
@@ -30,14 +44,31 @@ class Log(Enum):
 
 
 def handle_io(
-    process: subprocess.Popen, input_bytes: bytes | None, log: Log
+    process: subprocess.Popen,
+    log: Log,
+    cmdlog: logging.Logger,
+    prefix: str,
+    *,
+    input_bytes: bytes | None,
+    stdout: IO[bytes] | None,
+    stderr: IO[bytes] | None,
+    timeout: float = math.inf,
 ) -> tuple[str, str]:
     rlist = [process.stdout, process.stderr]
     wlist = [process.stdin] if input_bytes is not None else []
     stdout_buf = b""
     stderr_buf = b""
+    start = time.time()
 
+    # Loop until no more data is available
     while len(rlist) != 0 or len(wlist) != 0:
+        # Check if the command has timed out
+        if time.time() - start > timeout:
+            msg = f"Command timed out after {timeout} seconds"
+            description = prefix
+            raise ClanCmdTimeoutError(msg=msg, description=description, timeout=timeout)
+
+        # Wait for data to be available
         readlist, writelist, _ = select.select(rlist, wlist, [], 0.1)
         if len(readlist) == 0 and len(writelist) == 0:
             if process.poll() is None:
@@ -45,6 +76,7 @@ def handle_io(
             # Process has exited
             break
 
+        # Function to handle file descriptors
         def handle_fd(fd: IO[Any] | None, readlist: list[IO[Any]]) -> bytes:
             if fd and fd in readlist:
                 read = os.read(fd.fileno(), 4096)
@@ -53,19 +85,36 @@ def handle_io(
                 rlist.remove(fd)
             return b""
 
+        #
+        # Process stdout
+        #
         ret = handle_fd(process.stdout, readlist)
         if ret and log in [Log.STDOUT, Log.BOTH]:
-            sys.stdout.buffer.write(ret)
-            sys.stdout.flush()
+            lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
+            for line in lines:
+                cmdlog.info(line, extra={"command_prefix": prefix})
+        if ret and stdout:
+            stdout.write(ret)
+            stdout.flush()
 
+        #
+        # Process stderr
+        #
         stdout_buf += ret
         ret = handle_fd(process.stderr, readlist)
 
         if ret and log in [Log.STDERR, Log.BOTH]:
-            sys.stderr.buffer.write(ret)
-            sys.stderr.flush()
+            lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
+            for line in lines:
+                cmdlog.error(line, extra={"command_prefix": prefix})
+        if ret and stderr:
+            stderr.write(ret)
+            stderr.flush()
         stderr_buf += ret
 
+        #
+        # Process stdin
+        #
         if process.stdin in writelist:
             if input_bytes:
                 try:
@@ -168,42 +217,35 @@ def run(
     cmd: list[str],
     *,
     input: bytes | None = None,  # noqa: A002
+    stdout: IO[bytes] | None = None,
+    stderr: IO[bytes] | None = None,
     env: dict[str, str] | None = None,
     cwd: Path | None = None,
     log: Log = Log.STDERR,
+    logger: logging.Logger = cmdlog,
+    prefix: str | None = None,
     check: bool = True,
     error_msg: str | None = None,
     needs_user_terminal: bool = False,
+    timeout: float = math.inf,
+    shell: bool = False,
 ) -> CmdOut:
     if cwd is None:
         cwd = Path.cwd()
 
-    def print_trace(msg: str) -> None:
-        trace_depth = int(os.environ.get("TRACE_DEPTH", "0"))
-        callers = get_callers(3, 4 + trace_depth)
-
-        if "run_no_stdout" in callers[0]:
-            callers = callers[1:]
-        else:
-            callers.pop()
-
-        if len(callers) == 1:
-            callers_str = f"Caller: {callers[0]}\n"
-        else:
-            callers_str = "\n".join(
-                f"{i+1}: {caller}" for i, caller in enumerate(callers)
-            )
-            callers_str = f"Callers:\n{callers_str}"
-        logger.debug(f"{msg} \n{callers_str}")
+    if prefix is None:
+        prefix = "localhost"
 
     if input:
         if any(not ch.isprintable() for ch in input.decode("ascii", "replace")):
             filtered_input = "<<binary_blob>>"
         else:
             filtered_input = input.decode("ascii", "replace")
-        print_trace(f"$: echo '{filtered_input}' | {indent_command(cmd)}")
+        print_trace(
+            f"$: echo '{filtered_input}' | {indent_command(cmd)}", logger, prefix
+        )
     elif logger.isEnabledFor(logging.DEBUG):
-        print_trace(f"$: {indent_command(cmd)}")
+        print_trace(f"$: {indent_command(cmd)}", logger, prefix)
 
     start = timeit.default_timer()
     with ExitStack() as stack:
@@ -217,6 +259,7 @@ def run(
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 start_new_session=not needs_user_terminal,
+                shell=shell,
             )
         )
 
@@ -226,7 +269,16 @@ def run(
         else:
             stack.enter_context(terminate_process_group(process))
 
-        stdout_buf, stderr_buf = handle_io(process, input, log)
+        stdout_buf, stderr_buf = handle_io(
+            process,
+            log,
+            prefix=prefix,
+            cmdlog=logger,
+            timeout=timeout,
+            input_bytes=input,
+            stdout=stdout,
+            stderr=stderr,
+        )
         process.wait()
 
     global TIME_TABLE
@@ -256,9 +308,12 @@ def run_no_stdout(
     env: dict[str, str] | None = None,
     cwd: Path | None = None,
     log: Log = Log.STDERR,
+    logger: logging.Logger = cmdlog,
+    prefix: str | None = None,
     check: bool = True,
     error_msg: str | None = None,
     needs_user_terminal: bool = False,
+    shell: bool = False,
 ) -> CmdOut:
     """
     Like run, but automatically suppresses stdout, if not in DEBUG log level.
@@ -274,6 +329,8 @@ def run_no_stdout(
         env=env,
         log=log,
         check=check,
+        prefix=prefix,
         error_msg=error_msg,
         needs_user_terminal=needs_user_terminal,
+        shell=shell,
     )

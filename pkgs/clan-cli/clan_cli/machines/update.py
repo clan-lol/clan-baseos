@@ -64,7 +64,7 @@ def upload_sources(machine: Machine, always_upload_source: bool = False) -> str:
                     path,
                 ]
             )
-            run(cmd, env=env, error_msg="failed to upload sources")
+            run(cmd, env=env, error_msg="failed to upload sources", prefix=machine.name)
             return path
 
     # Slow path: we need to upload all sources to the remote machine
@@ -78,7 +78,6 @@ def upload_sources(machine: Machine, always_upload_source: bool = False) -> str:
             flake_url,
         ]
     )
-    log.info("run %s", shlex.join(cmd))
     proc = run(cmd, env=env, error_msg="failed to upload sources")
 
     try:

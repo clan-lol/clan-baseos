@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -339,7 +340,16 @@ def run_vm(
         ) as vm,
         ThreadPoolExecutor(max_workers=1) as executor,
     ):
-        future = executor.submit(handle_io, vm.process, input_bytes=None, log=Log.BOTH)
+        future = executor.submit(
+            handle_io,
+            vm.process,
+            cmdlog=log,
+            prefix=f"[{vm_config.machine_name}] ",
+            stdout=sys.stdout.buffer,
+            stderr=sys.stderr.buffer,
+            input_bytes=None,
+            log=Log.BOTH,
+        )
         args: list[str] = vm.process.args  # type: ignore[assignment]
 
         if runtime_config.command is not None:

@@ -1,61 +1,74 @@
 import inspect
 import logging
 import os
-from collections.abc import Callable
+import sys
 from pathlib import Path
 from typing import Any
 
-grey = "\x1b[38;20m"
-yellow = "\x1b[33;20m"
-red = "\x1b[31;20m"
-bold_red = "\x1b[31;1m"
-green = "\u001b[32m"
-blue = "\u001b[34m"
+from clan_cli.colors import color, css_colors
+
+# https://no-color.org
+DISABLE_COLOR = not sys.stderr.isatty() or os.environ.get("NO_COLOR", "") != ""
 
 
-def get_formatter(color: str) -> Callable[[logging.LogRecord, bool], logging.Formatter]:
-    def myformatter(
-        record: logging.LogRecord, with_location: bool
-    ) -> logging.Formatter:
-        reset = "\x1b[0m"
-
-        try:
-            filepath = Path(record.pathname).resolve()
-            filepath = Path("~", filepath.relative_to(Path.home()))
-        except Exception:
-            filepath = Path(record.pathname)
-
-        if not with_location:
-            return logging.Formatter(f"{color}%(levelname)s{reset}: %(message)s")
-
-        return logging.Formatter(
-            f"{color}%(levelname)s{reset}: %(message)s\nLocation: {filepath}:%(lineno)d::%(funcName)s\n"
-        )
-
-    return myformatter
+def _get_filepath(record: logging.LogRecord) -> Path:
+    try:
+        filepath = Path(record.pathname).resolve()
+        filepath = Path("~", filepath.relative_to(Path.home()))
+    except Exception:
+        filepath = Path(record.pathname)
+    return filepath
 
 
-FORMATTER = {
-    logging.DEBUG: get_formatter(blue),
-    logging.INFO: get_formatter(green),
-    logging.WARNING: get_formatter(yellow),
-    logging.ERROR: get_formatter(red),
-    logging.CRITICAL: get_formatter(bold_red),
-}
+class PrefixFormatter(logging.Formatter):
+    """
+    print errors in red and warnings in yellow
+    """
 
+    def __init__(self, trace_prints: bool = False, default_prefix: str = "") -> None:
+        self.default_prefix = default_prefix
+        self.trace_prints = trace_prints
 
-class CustomFormatter(logging.Formatter):
-    def __init__(self, log_locations: bool) -> None:
         super().__init__()
-        self.log_locations = log_locations
+        self.hostnames: list[str] = []
+        self.hostname_color_offset = 1  # first host shouldn't get aggressive red
 
     def format(self, record: logging.LogRecord) -> str:
-        return FORMATTER[record.levelno](record, self.log_locations).format(record)
+        filepath = _get_filepath(record)
 
+        if record.levelno == logging.DEBUG:
+            color_str = "blue"
+        elif record.levelno == logging.ERROR:
+            color_str = "red"
+        elif record.levelno == logging.WARNING:
+            color_str = "yellow"
+        else:
+            color_str = None
 
-class ThreadFormatter(logging.Formatter):
-    def format(self, record: logging.LogRecord) -> str:
-        return FORMATTER[record.levelno](record, False).format(record)
+        command_prefix = getattr(record, "command_prefix", self.default_prefix)
+
+        if not DISABLE_COLOR:
+            prefix_color = self.hostname_colorcode(command_prefix)
+            format_str = color(f"[{command_prefix}]", fg=prefix_color)
+            format_str += color(" %(message)s", fg=color_str)
+        else:
+            format_str = f"[{command_prefix}] %(message)s"
+
+        if self.trace_prints:
+            format_str += f"\nSource: {filepath}:%(lineno)d::%(funcName)s\n"
+
+        return logging.Formatter(format_str).format(record)
+
+    def hostname_colorcode(self, hostname: str) -> tuple[int, int, int]:
+        try:
+            index = self.hostnames.index(hostname)
+        except ValueError:
+            self.hostnames += [hostname]
+            index = self.hostnames.index(hostname)
+        coloroffset = (index + self.hostname_color_offset) % len(css_colors)
+        colorcode = list(css_colors.values())[coloroffset]
+
+        return colorcode
 
 
 def get_callers(start: int = 2, end: int = 2) -> list[str]:
@@ -103,7 +116,28 @@ def get_callers(start: int = 2, end: int = 2) -> list[str]:
     return callers
 
 
-def setup_logging(level: Any, root_log_name: str = __name__.split(".")[0]) -> None:
+def print_trace(msg: str, logger: logging.Logger, prefix: str) -> None:
+    trace_depth = int(os.environ.get("TRACE_DEPTH", "0"))
+    callers = get_callers(3, 4 + trace_depth)
+
+    if "run_no_stdout" in callers[0]:
+        callers = callers[1:]
+    else:
+        callers.pop()
+
+    if len(callers) == 1:
+        callers_str = f"Caller: {callers[0]}\n"
+    else:
+        callers_str = "\n".join(f"{i+1}: {caller}" for i, caller in enumerate(callers))
+        callers_str = f"Callers:\n{callers_str}"
+    logger.debug(f"{msg} \n{callers_str}", extra={"command_prefix": prefix})
+
+
+def setup_logging(
+    level: Any,
+    root_log_name: str = __name__.split(".")[0],
+    default_prefix: str = "clan",
+) -> None:
     # Get the root logger and set its level
     main_logger = logging.getLogger(root_log_name)
     main_logger.setLevel(level)
@@ -113,10 +147,6 @@ def setup_logging(level: Any, root_log_name: str = __name__.split(".")[0]) -> No
 
     # Create and add your custom handler
     default_handler.setLevel(level)
-    trace_depth = bool(int(os.environ.get("TRACE_DEPTH", "0")))
-    default_handler.setFormatter(CustomFormatter(trace_depth))
+    trace_prints = bool(int(os.environ.get("TRACE_PRINT", "0")))
+    default_handler.setFormatter(PrefixFormatter(trace_prints, default_prefix))
     main_logger.addHandler(default_handler)
-
-    # Set logging level for other modules used by this module
-    logging.getLogger("asyncio").setLevel(logging.INFO)
-    logging.getLogger("httpx").setLevel(level=logging.WARNING)
