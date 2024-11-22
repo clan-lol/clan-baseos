@@ -56,14 +56,14 @@ export const Sidebar = (props: RouteSectionProps) => {
   }));
 
   return (
-    <>
+    <div class="sidebar opacity-95">
       <Show
         when={query.data}
         fallback={<SidebarHeader clanName={"Untitled"} />}
       >
         {(meta) => <SidebarHeader clanName={meta().name} />}
       </Show>
-      <div class="sidebar__body overflow-y-scroll">
+      <div class="sidebar__body max-h-[calc(100vh-4rem)] overflow-scroll">
         <For each={routes.filter((r) => !r.hidden && r.path != "/clans")}>
           {(route: AppRoute) => (
             <Show
@@ -90,6 +90,6 @@ export const Sidebar = (props: RouteSectionProps) => {
           )}
         </For>
       </div>
-    </>
+    </div>
   );
 };
