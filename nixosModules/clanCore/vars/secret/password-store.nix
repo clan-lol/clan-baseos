@@ -24,7 +24,7 @@ let
         mount --bind --make-private /run/secrets.tmp /run/secrets.tmp
         mount --bind --make-private /run/secrets /run/secrets
         tar -xf "$src" -C /run/secrets.tmp
-        move-mount --beneath --move /run/secrets.tmp /run/secrets
+        move-mount --beneath --move /run/secrets.tmp /run/secrets >/dev/null
         umount -R /run/secrets.tmp
         rmdir /run/secrets.tmp
         umount --lazy /run/secrets
