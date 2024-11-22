@@ -18,6 +18,7 @@ import { Toaster } from "solid-toast";
 import { ModuleList } from "./routes/modules/list";
 import { ModuleDetails } from "./routes/modules/details";
 import { ModuleDetails as AddModule } from "./routes/modules/add";
+import { ApiTester } from "./api_test";
 
 export const client = new QueryClient();
 
@@ -137,6 +138,13 @@ export const routes: AppRoute[] = [
     label: "",
     hidden: true,
     component: () => <Welcome />,
+  },
+  {
+    path: "/api_testing",
+    label: "api_testing",
+    icon: "bolt",
+    hidden: false,
+    component: () => <ApiTester />,
   },
 ];
 
