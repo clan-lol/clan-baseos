@@ -2,25 +2,14 @@
   self,
   self',
   pkgs,
-  lib,
   ...
 }:
 let
-  includeDefaults = true;
 
-  # { mName :: { roleName :: Options } }
-  modulesRolesOptions = self.lib.evalClanModulesWithRoles self.clanModules;
-  modulesSchema = lib.mapAttrs (
-    _moduleName: rolesOptions:
-    lib.mapAttrs (_roleName: options: jsonWithoutHeader.parseOptions options { }) rolesOptions
-  ) modulesRolesOptions;
+  modulesSchema = self.lib.modules.getModulesSchema self.clanModules;
 
   jsonLib = self.lib.jsonschema { inherit includeDefaults; };
-
-  jsonWithoutHeader = self.lib.jsonschema {
-    inherit includeDefaults;
-    header = { };
-  };
+  includeDefaults = true;
 
   frontMatterSchema = jsonLib.parseOptions self.lib.modules.frontmatterOptions { };
 

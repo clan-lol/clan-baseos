@@ -145,7 +145,7 @@ class ModuleInfo:
 def get_modules(base_path: str) -> dict[str, str]:
     cmd = nix_eval(
         [
-            f"{base_path}#clanInternals.clanModules",
+            f"{base_path}#clanInternals.inventory.modules",
             "--json",
         ]
     )
@@ -153,11 +153,11 @@ def get_modules(base_path: str) -> dict[str, str]:
         proc = run_no_stdout(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
-        msg = "clanInternals might not have clanModules attributes"
+        msg = "clanInternals might not have inventory.modules attributes"
         raise ClanError(
             msg,
             location=f"list_modules {base_path}",
-            description="Evaluation failed on clanInternals.clanModules attribute",
+            description="Evaluation failed on clanInternals.inventory.modules attribute",
         ) from e
     modules: dict[str, str] = json.loads(res)
     return modules

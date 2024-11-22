@@ -169,6 +169,7 @@ in
   inherit nixosConfigurations;
 
   clanInternals = {
+    moduleSchemas = clan-core.lib.modules.getModulesSchema config.inventory.modules;
     inherit serviceConfigs;
     inherit (clan-core) clanModules;
     inherit inventoryFile;

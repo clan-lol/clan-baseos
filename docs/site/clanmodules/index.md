@@ -41,6 +41,8 @@ clanModules/borgbackup
 
     The `roles` folder is strictly required for `features = [ "inventory" ]`.
 
+## Registering the module
+
 === "User module"
 
     If the module should be ad-hoc loaded.
@@ -131,6 +133,56 @@ Adds the roles: `client` and `server`
     ```nix
     {...}:{
         imports  = [ clanModules.moduleA ];
+    }
+    ```
+
+## Adding configuration options
+
+While we recommend to keep the interface as minimal as possible and deriving all required information from the `roles` model it might sometimes be required or convinient to expose customization options beyond `roles`.
+
+The following shows how to add options to your module.
+
+**It is important to understand that every module has its own namespace where it should declare options**
+
+**`clan.{moduleName}`**
+
+???+ Example
+    The following example shows how to register options in the module interface
+
+    and how it can be set via the inventory
+
+
+    ```nix title="/default.nix"
+    custom-module = ./modules/custom-module;
+    ```
+
+    Since the module is called `custom-module` all of its exposed options should be added to `options.clan.custom-module.*...*`
+
+    ```nix title="custom-module/roles/default.nix"
+    {
+        options = {
+            clan.custom-module.foo = mkOption {
+                type = types.str;
+                default = "bar";
+            };
+        };
+    }
+    ```
+
+    If the module is [registered](#registering-the-module).
+    Configuration can be set as follows.
+
+    ```nix title="flake.nix"
+    buildClan {
+        inventory.services = {
+            custom-module.instance_1 = {
+                roles.default.machines = [ "machineA" ];
+                roles.default.config = {
+                    # All configuration here is scoped to `clan.custom-module`
+                    foo = "foobar";
+                };
+            };
+        };
     }
     ```
 
