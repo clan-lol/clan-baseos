@@ -126,7 +126,13 @@ class SecretStore(SecretStoreBase):
 
         # we sort the hashes to make sure that the order is always the same
         hashes.sort()
-        return b"\n".join(hashes)
+
+        manifest = []
+        for gen_name, generator in self.machine.vars_generators.items():
+            for f_name in generator["files"]:
+                manifest.append(f"{gen_name}/{f_name}".encode())
+        manifest += hashes
+        return b"\n".join(manifest)
 
     @override
     def needs_upload(self) -> bool:
