@@ -154,6 +154,8 @@ class SecretStore(SecretStoreBase):
                 for f_name, file in generator["files"].items():
                     if not file["deploy"]:
                         continue
+                    if not file["secret"]:
+                        continue
                     tar_file = tarfile.TarInfo(name=f"{gen_name}/{f_name}")
                     content = self.get(gen_name, f_name, generator["share"])
                     tar_file.size = len(content)
