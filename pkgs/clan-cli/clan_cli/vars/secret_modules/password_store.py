@@ -153,15 +153,18 @@ class SecretStore(SecretStoreBase):
     def upload(self, output_dir: Path) -> None:
         with tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar:
             for gen_name, generator in self.machine.vars_generators.items():
-                tar_dir = tarfile.TarInfo(name=gen_name)
-                tar_dir.type = tarfile.DIRTYPE
-                tar_dir.mode = 0o511
-                tar.addfile(tarinfo=tar_dir)
+                dir_exists = False
                 for f_name, file in generator["files"].items():
                     if not file["deploy"]:
                         continue
                     if not file["secret"]:
                         continue
+                    if not dir_exists:
+                        tar_dir = tarfile.TarInfo(name=gen_name)
+                        tar_dir.type = tarfile.DIRTYPE
+                        tar_dir.mode = 0o511
+                        tar.addfile(tarinfo=tar_dir)
+                        dir_exists = True
                     tar_file = tarfile.TarInfo(name=f"{gen_name}/{f_name}")
                     content = self.get(gen_name, f_name, generator["share"])
                     tar_file.size = len(content)
