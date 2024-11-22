@@ -4,13 +4,10 @@ import { activeURI } from "@/src/App";
 import { createQuery } from "@tanstack/solid-query";
 import { callApi } from "@/src/api";
 import { AppRoute, routes } from "@/src/index";
-
-import { List } from "../Helpers";
 import { SidebarHeader } from "./SidebarHeader";
-
 import { SidebarListItem } from "./SidebarListItem";
-import "./css/sidebar.css";
 import { Typography } from "../Typography";
+import "./css/sidebar.css";
 
 export const SidebarSection = (props: {
   title: string;
@@ -59,14 +56,14 @@ export const Sidebar = (props: RouteSectionProps) => {
   }));
 
   return (
-    <div class="sidebar bg-transparent/95">
+    <>
       <Show
         when={query.data}
         fallback={<SidebarHeader clanName={"Untitled"} />}
       >
         {(meta) => <SidebarHeader clanName={meta().name} />}
       </Show>
-      <div class="sidebar__body">
+      <div class="sidebar__body overflow-y-scroll">
         <For each={routes.filter((r) => !r.hidden && r.path != "/clans")}>
           {(route: AppRoute) => (
             <Show
@@ -93,6 +90,6 @@ export const Sidebar = (props: RouteSectionProps) => {
           )}
         </For>
       </div>
-    </div>
+    </>
   );
 };

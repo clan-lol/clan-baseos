@@ -18,21 +18,21 @@ export const Layout: Component<RouteSectionProps> = (props) => {
   });
 
   return (
-    <div class="h-screen p-4 bg-def-3">
+    <div class="h-screen w-full p-4 bg-def-3">
       <div class="drawer h-full lg:drawer-open ">
         <input
           id="toplevel-drawer"
           type="checkbox"
           class="drawer-toggle hidden"
         />
-        <div class="drawer-content">
+        <div class="drawer-content overflow-x-hidden overflow-y-scroll">
           <Show when={props.location.pathname !== "welcome"}>
             <Header clan_dir={activeURI} />
           </Show>
           {props.children}
         </div>
         <div
-          class="drawer-side z-40 h-full"
+          class="drawer-side z-40 h-full min-w-72 rounded-xl border opacity-95 bg-inv-2 border-inv-2"
           classList={{
             "!hidden":
               props.location.pathname === "welcome" || clanList().length === 0,

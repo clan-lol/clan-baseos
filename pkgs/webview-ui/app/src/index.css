@@ -65,7 +65,7 @@
 html {
   @apply font-sans;
   overflow-x: hidden;
-  overflow-y: scroll;
+  overflow-y: hidden;
 }
 
 .accordeon {
