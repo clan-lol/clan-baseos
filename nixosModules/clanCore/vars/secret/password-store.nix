@@ -46,7 +46,7 @@ in
           fileModule = file: {
             path = "/run/secrets/${file.config.generatorName}/${file.config.name}";
           };
-          secretUploadDirectory = lib.mkDefault "/etc/secrets";
+          secretUploadDirectory = lib.mkDefault "/etc/secret-vars";
           secretModule = "clan_cli.vars.secret_modules.password_store";
         };
     system.activationScripts.setupSecrets =
