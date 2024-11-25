@@ -1,4 +1,5 @@
 import dataclasses
+import inspect
 import logging
 import multiprocessing as mp
 import os
@@ -7,7 +8,7 @@ import sys
 import traceback
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, get_type_hints
 
 log = logging.getLogger(__name__)
 
@@ -108,6 +109,21 @@ def spawn(
     # Decouple the process from the parent
     if mp.get_start_method(allow_none=True) is None:
         mp.set_start_method(method="forkserver")
+
+    # Validate kwargs against the signature of func
+    func_signature = inspect.signature(func)
+    bound_args = func_signature.bind_partial(**kwargs)
+    bound_args.apply_defaults()  # Ensure defaults are applied to missing args
+
+    # Type-check kwargs against func's annotations
+    type_hints = get_type_hints(func)
+    for arg_name, arg_value in kwargs.items():
+        if arg_name in type_hints:
+            expected_type = type_hints[arg_name]
+            if not isinstance(arg_value, expected_type):
+                msg = f"Argument '{arg_name}' must be of type {expected_type}, but got type {type(arg_value)}"
+
+                raise TypeError(msg)
 
     # Set names
     proc_name = f"MPExec:{func.__name__}"
