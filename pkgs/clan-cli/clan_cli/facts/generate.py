@@ -189,8 +189,8 @@ def _generate_facts_for_machine(
 
 def generate_facts(
     machines: list[Machine],
-    service: str | None,
-    regenerate: bool,
+    service: str | None = None,
+    regenerate: bool = False,
     prompt: Callable[[str, str], str] = prompt_func,
 ) -> bool:
     was_regenerated = False
@@ -212,7 +212,7 @@ def generate_facts(
                 )
                 raise ClanError(msg)
 
-    if not was_regenerated:
+    if not was_regenerated and len(machines) > 0:
         machine.info("All secrets and facts are already up to date")
     return was_regenerated
 
