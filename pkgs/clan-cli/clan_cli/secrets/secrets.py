@@ -1,5 +1,6 @@
 import argparse
 import getpass
+import logging
 import os
 import shutil
 import sys
@@ -8,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
-from clan_cli import tty
 from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import (
     add_dynamic_completer,
@@ -30,6 +30,8 @@ from .folders import (
 )
 from .sops import decrypt_file, encrypt_file, ensure_admin_key, read_key, update_keys
 from .types import VALID_SECRET_NAME, secret_name_type
+
+log = logging.getLogger(__name__)
 
 
 def update_secrets(
@@ -59,11 +61,13 @@ def collect_keys_for_type(folder: Path) -> set[tuple[str, sops.KeyType]]:
         try:
             target = p.resolve()
         except FileNotFoundError:
-            tty.warn(f"Ignoring broken symlink {p}")
+            log.warning(f"Ignoring broken symlink {p}")
             continue
         kind = target.parent.name
         if folder.name != kind:
-            tty.warn(f"Expected {p} to point to {folder} but points to {target.parent}")
+            log.warning(
+                f"Expected {p} to point to {folder} but points to {target.parent}"
+            )
             continue
         keys.add(read_key(target))
     return keys
@@ -309,6 +313,11 @@ def get_command(args: argparse.Namespace) -> None:
     )
 
 
+def is_tty_interactive() -> bool:
+    """Returns true if the current process is interactive"""
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
 def set_command(args: argparse.Namespace) -> None:
     env_value = os.environ.get("SOPS_NIX_SECRET")
     secret_value: str | IO[str] | None = sys.stdin
@@ -316,7 +325,7 @@ def set_command(args: argparse.Namespace) -> None:
         secret_value = None
     elif env_value:
         secret_value = env_value
-    elif tty.is_interactive():
+    elif is_tty_interactive():
         secret_value = getpass.getpass(prompt="Paste your secret: ")
     encrypt_secret(
         args.flake.path,
