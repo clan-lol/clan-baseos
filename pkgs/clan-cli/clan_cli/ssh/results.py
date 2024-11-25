@@ -1,14 +1,15 @@
 import subprocess
+from dataclasses import dataclass
 from typing import Generic
 
 from clan_cli.ssh import T
 from clan_cli.ssh.host import Host
 
 
+@dataclass
 class HostResult(Generic[T]):
-    def __init__(self, host: Host, result: T | Exception) -> None:
-        self.host = host
-        self._result = result
+    host: Host
+    _result: T | Exception
 
     @property
     def error(self) -> Exception | None:

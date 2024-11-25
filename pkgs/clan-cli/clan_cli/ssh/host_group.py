@@ -1,6 +1,7 @@
 import logging
 import math
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Thread
 from typing import IO, Any
@@ -26,15 +27,9 @@ def _worker(
         results[idx] = HostResult(host, e)
 
 
+@dataclass
 class HostGroup:
-    def __init__(self, hosts: list[Host]) -> None:
-        self.hosts = hosts
-
-    def __repr__(self) -> str:
-        return str(self)
-
-    def __str__(self) -> str:
-        return f"HostGroup({self.hosts})"
+    hosts: list[Host]
 
     def _run_local(
         self,
@@ -189,11 +184,6 @@ class HostGroup:
     ) -> Results:
         """
         Command to run on the remote host via ssh
-        @stdout if not None stdout of the command will be redirected to this file i.e. stdout=subprocss.PIPE
-        @stderr if not None stderr of the command will be redirected to this file i.e. stderr=subprocess.PIPE
-        @cwd current working directory to run the process in
-        @verbose_ssh: Enables verbose logging on ssh connections
-        @timeout: Timeout in seconds for the command to complete
 
         @return a lists of tuples containing Host and the result of the command for this Host
         """
@@ -227,12 +217,6 @@ class HostGroup:
     ) -> Results:
         """
         Command to run locally for each host in the group in parallel
-        @cmd the command to run
-        @stdout if not None stdout of the command will be redirected to this file i.e. stdout=subprocss.PIPE
-        @stderr if not None stderr of the command will be redirected to this file i.e. stderr=subprocess.PIPE
-        @cwd current working directory to run the process in
-        @extra_env environment variables to override when running the command
-        @timeout: Timeout in seconds for the command to complete
 
         @return a lists of tuples containing Host and the result of the command for this Host
         """
@@ -256,8 +240,6 @@ class HostGroup:
     ) -> list[HostResult[T]]:
         """
         Function to run for each host in the group in parallel
-
-        @func the function to call
         """
         threads = []
         results: list[HostResult[T]] = [
