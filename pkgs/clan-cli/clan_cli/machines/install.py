@@ -55,8 +55,8 @@ def install_machine(opts: InstallOptions) -> None:
     target_host = f"{h.user or 'root'}@{h.host}"
     log.info(f"target host: {target_host}")
 
-    generate_facts([machine], None, False)
-    generate_vars([machine], None, False)
+    generate_facts([machine])
+    generate_vars([machine])
 
     with TemporaryDirectory(prefix="nixos-install-") as tmpdir_:
         tmpdir = Path(tmpdir_)

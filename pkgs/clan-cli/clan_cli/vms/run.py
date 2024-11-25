@@ -84,7 +84,7 @@ def get_secrets(
     secret_facts_module = importlib.import_module(machine.secret_facts_module)
     secret_facts_store = secret_facts_module.SecretStore(machine=machine)
 
-    generate_facts([machine], None, False)
+    generate_facts([machine])
 
     secret_facts_store.upload(secrets_dir)
     return secrets_dir

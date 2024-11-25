@@ -405,8 +405,8 @@ def generate_vars_for_machine(
 
 def generate_vars(
     machines: list[Machine],
-    generator_name: str | None,
-    regenerate: bool,
+    generator_name: str | None = None,
+    regenerate: bool = False,
     fix: bool = False,
 ) -> bool:
     was_regenerated = False
@@ -424,7 +424,7 @@ def generate_vars(
             msg = f"Failed to generate facts for {len(errors)} hosts. Check the logs above"
             raise ClanError(msg) from errors[0]
 
-    if not was_regenerated:
+    if not was_regenerated and len(machines) > 0:
         machine.info("All vars are already up to date")
 
     return was_regenerated

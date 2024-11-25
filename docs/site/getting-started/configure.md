@@ -199,21 +199,6 @@ If you only want to setup a single machine at this point, you can delete `sara` 
 git rm ./machines/sara
 ```
 
-### Step 5: Check Configuration
-
-Validate your configuration by running:
-
-```bash
-nix flake check
-```
-
-This command helps ensure that your system configuration is correct and free from errors.
-
-!!! Tip
-
-    You can integrate this step into your [Continuous Integration](https://en.wikipedia.org/wiki/Continuous_integration) workflow to ensure that only valid Nix configurations are merged into your codebase.
-
-
 ---
 
 ## Whats next?

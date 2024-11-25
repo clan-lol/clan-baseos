@@ -63,7 +63,7 @@ def flash_machine(
         generate_vars_for_machine(
             machine, generator_name=None, regenerate=False, fix=False
         )
-        generate_facts([machine], service=None, regenerate=False)
+        generate_facts([machine])
 
         if system_config.wifi_settings:
             wifi_settings: dict[str, dict[str, str]] = {}
