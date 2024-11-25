@@ -17,6 +17,7 @@ from clan_cli.clan_uri import ClanURI
 from clan_cli.dirs import vm_state_dir
 from clan_cli.history.add import HistoryEntry
 from clan_cli.machines.machines import Machine
+from clan_cli.vms.inspect import inspect_vm
 from clan_cli.vms.qemu import QMPWrapper
 
 from clan_vm_manager.components.executor import MPProcess, spawn
@@ -224,14 +225,15 @@ class VMObject(GObject.Object):
                 return
             log.info(f"Successfully built VM {self.get_id()}")
 
+            vm_config = inspect_vm(machine)
+
             # Start the VM
             self.vm_process = spawn(
                 on_except=None,
                 out_file=Path(str(self.log_dir.name)) / "vm.log",
                 func=vms.run.run_vm,
-                vm=self.data.flake.vm,
-                cachedir=log_dir,
-                socketdir=log_dir,
+                vm_config=vm_config,
+                runtime_config=vms.run.RuntimeConfig(),
             )
             log.debug(f"Started VM {self.get_id()}")
             GLib.idle_add(self._vm_status_changed_task)
