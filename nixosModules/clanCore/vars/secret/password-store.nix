@@ -43,9 +43,11 @@ in
     clan.core.vars.settings =
       lib.mkIf (config.clan.core.vars.settings.secretStore == "password-store")
         {
-          fileModule = file: {
-            path = "/run/secrets/${file.config.generatorName}/${file.config.name}";
-          };
+          fileModule =
+            file:
+            lib.mkIf file.config.secret {
+              path = "/run/secrets/${file.config.generatorName}/${file.config.name}";
+            };
           secretUploadDirectory = lib.mkDefault "/etc/secret-vars";
           secretModule = "clan_cli.vars.secret_modules.password_store";
         };
