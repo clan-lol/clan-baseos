@@ -18,7 +18,7 @@ class ConfigItem:
 @pytest.fixture(scope="session")
 def nix_config() -> dict[str, ConfigItem]:
     proc = subprocess.run(
-        ["nix", "show-config", "--json"], check=True, stdout=subprocess.PIPE
+        ["nix", "config", "show", "--json"], check=True, stdout=subprocess.PIPE
     )
     data = json.loads(proc.stdout)
     return {name: ConfigItem(**c) for name, c in data.items()}

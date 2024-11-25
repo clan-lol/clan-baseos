@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.machines.machines import Machine
+from clan_cli.ssh.upload import upload
 
 log = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ def upload_secret_vars(machine: Machine) -> None:
     with TemporaryDirectory(prefix="vars-upload-") as tempdir:
         secret_dir = Path(tempdir)
         secret_store.upload(secret_dir)
-        machine.target_host.upload(
-            secret_dir, Path(machine.secret_vars_upload_directory)
+        upload(
+            machine.target_host, secret_dir, Path(machine.secret_vars_upload_directory)
         )
 
 
