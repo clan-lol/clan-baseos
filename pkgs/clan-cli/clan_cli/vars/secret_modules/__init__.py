@@ -1,7 +1,11 @@
 from abc import abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from clan_cli.vars._types import StoreBase
+
+if TYPE_CHECKING:
+    from clan_cli.vars.generate import Generator
 
 
 class SecretStoreBase(StoreBase):
@@ -12,16 +16,13 @@ class SecretStoreBase(StoreBase):
     def needs_upload(self) -> bool:
         return True
 
-    def ensure_machine_has_access(
-        self, generator_name: str, name: str, shared: bool = False
-    ) -> None:
+    def ensure_machine_has_access(self, generator: "Generator", name: str) -> None:
         pass
 
     def needs_fix(
         self,
-        generator_name: str,
+        generator: "Generator",
         name: str,
-        shared: bool,
     ) -> tuple[bool, str | None]:
         """
         Check if local state needs updating, eg. secret needs to be re-encrypted with new keys
@@ -30,9 +31,8 @@ class SecretStoreBase(StoreBase):
 
     def fix(
         self,
-        generator_name: str,
+        generator: "Generator",
         name: str,
-        shared: bool,
     ) -> None:
         """
         Update local state, eg make sure secret is encrypted with correct keys

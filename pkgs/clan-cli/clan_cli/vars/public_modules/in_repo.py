@@ -3,6 +3,7 @@ from pathlib import Path
 
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
+from clan_cli.vars.generate import Generator, Var
 
 from . import FactStoreBase
 
@@ -18,16 +19,14 @@ class FactStore(FactStoreBase):
 
     def _set(
         self,
-        generator_name: str,
-        name: str,
+        generator: Generator,
+        var: Var,
         value: bytes,
-        shared: bool = False,
-        deployed: bool = True,
     ) -> Path | None:
         if not self.machine.flake.is_local():
             msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
             raise ClanError(msg)
-        folder = self.directory(generator_name, name, shared)
+        folder = self.directory(generator, var.name)
         if folder.exists():
             if not (folder / "value").exists():
                 # another backend has used that folder before -> error out
@@ -42,8 +41,8 @@ class FactStore(FactStoreBase):
         return file_path
 
     # get a single fact
-    def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
-        return (self.directory(generator_name, name, shared) / "value").read_bytes()
+    def get(self, generator: Generator, name: str) -> bytes:
+        return (self.directory(generator, name) / "value").read_bytes()
 
-    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
-        return (self.directory(generator_name, name, shared) / "value").exists()
+    def exists(self, generator: Generator, name: str) -> bool:
+        return (self.directory(generator, name) / "value").exists()

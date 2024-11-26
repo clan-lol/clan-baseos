@@ -40,6 +40,7 @@ in
       generators = lib.flip lib.mapAttrs config.clan.core.vars.generators (
         _name: generator: {
           inherit (generator)
+            name
             dependencies
             finalScript
             invalidationHash
@@ -49,7 +50,7 @@ in
             ;
           files = lib.flip lib.mapAttrs generator.files (
             _name: file: {
-              inherit (file) deploy secret;
+              inherit (file) name deploy secret;
             }
           );
         }

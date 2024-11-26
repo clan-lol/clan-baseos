@@ -2,9 +2,11 @@ import argparse
 import logging
 import os
 import sys
+from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from clan_cli.cmd import run
 from clan_cli.completions import (
@@ -15,18 +17,59 @@ from clan_cli.completions import (
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 from clan_cli.machines.inventory import get_all_machines, get_selected_machines
-from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 
+from .check import check_vars
 from .graph import (
     minimal_closure,
     requested_closure,
 )
-from .prompt import ask
+from .prompt import Prompt, ask
 from .public_modules import FactStoreBase
 from .secret_modules import SecretStoreBase
+from .var import Var
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from clan_cli.machines.machines import Machine
+
+
+@dataclass
+class Generator:
+    name: str
+    files: list[Var] = field(default_factory=list)
+    share: bool = False
+    invalidation_hash: str | None = None
+    final_script: str = ""
+    prompts: list[Prompt] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
+
+    migrate_fact: str | None = None
+
+    # TODO: remove this
+    _machine: "Machine | None" = None
+
+    def machine(self, machine: "Machine") -> None:
+        self._machine = machine
+
+    @cached_property
+    def exists(self) -> bool:
+        assert self._machine is not None
+        return check_vars(self._machine, generator_name=self.name)
+
+    @classmethod
+    def from_json(cls: type["Generator"], data: dict[str, Any]) -> "Generator":
+        return cls(
+            name=data["name"],
+            share=data["share"],
+            final_script=data["finalScript"],
+            files=[Var.from_json(data["name"], f) for f in data["files"].values()],
+            invalidation_hash=data["invalidationHash"],
+            dependencies=data["dependencies"],
+            migrate_fact=data["migrateFact"],
+            prompts=[Prompt.from_json(p) for p in data["prompts"].values()],
+        )
 
 
 def bubblewrap_cmd(generator: str, tmpdir: Path) -> list[str]:
@@ -54,26 +97,29 @@ def bubblewrap_cmd(generator: str, tmpdir: Path) -> list[str]:
 
 # TODO: implement caching to not decrypt the same secret multiple times
 def decrypt_dependencies(
-    machine: Machine,
-    generator_name: str,
+    machine: "Machine",
+    generator: Generator,
     secret_vars_store: SecretStoreBase,
     public_vars_store: FactStoreBase,
 ) -> dict[str, dict[str, bytes]]:
-    generator = machine.vars_generators[generator_name]
-    dependencies = set(generator["dependencies"])
     decrypted_dependencies: dict[str, Any] = {}
-    for dep_generator in dependencies:
-        decrypted_dependencies[dep_generator] = {}
-        dep_files = machine.vars_generators[dep_generator]["files"]
-        shared = machine.vars_generators[dep_generator]["share"]
-        for file_name, file in dep_files.items():
-            if file["secret"]:
-                decrypted_dependencies[dep_generator][file_name] = (
-                    secret_vars_store.get(dep_generator, file_name, shared=shared)
+    for generator_name in set(generator.dependencies):
+        decrypted_dependencies[generator_name] = {}
+        for dep_generator in machine.vars_generators:
+            if generator_name == dep_generator.name:
+                break
+        else:
+            msg = f"Could not find dependent generator {generator_name} in machine {machine.name}"
+            raise ClanError(msg)
+        dep_files = dep_generator.files
+        for file in dep_files:
+            if file.secret:
+                decrypted_dependencies[generator_name][file.name] = (
+                    secret_vars_store.get(dep_generator, file.name)
                 )
             else:
-                decrypted_dependencies[dep_generator][file_name] = (
-                    public_vars_store.get(dep_generator, file_name, shared=shared)
+                decrypted_dependencies[generator_name][file.name] = (
+                    public_vars_store.get(dep_generator, file.name)
                 )
     return decrypted_dependencies
 
@@ -95,8 +141,8 @@ def dependencies_as_dir(
 
 
 def execute_generator(
-    machine: Machine,
-    generator_name: str,
+    machine: "Machine",
+    generator: Generator,
     secret_vars_store: SecretStoreBase,
     public_vars_store: FactStoreBase,
     prompt_values: dict[str, str],
@@ -105,14 +151,10 @@ def execute_generator(
         msg = f"flake is not a Path: {machine.flake}"
         msg += "fact/secret generation is only supported for local flakes"
 
-    generator = machine.vars_generators[generator_name]
-    script = generator["finalScript"]
-    is_shared = generator["share"]
-
     # build temporary file tree of dependencies
     decrypted_dependencies = decrypt_dependencies(
         machine,
-        generator_name,
+        generator,
         secret_vars_store,
         public_vars_store,
     )
@@ -121,7 +163,7 @@ def execute_generator(
         try:
             return prompt_values[prompt_name]
         except KeyError as e:
-            msg = f"prompt value for '{prompt_name}' in generator {generator_name} not provided"
+            msg = f"prompt value for '{prompt_name}' in generator {generator.name} not provided"
             raise ClanError(msg) from e
 
     env = os.environ.copy()
@@ -138,97 +180,94 @@ def execute_generator(
         dependencies_as_dir(decrypted_dependencies, tmpdir_in)
         # populate prompted values
         # TODO: make prompts rest API friendly
-        if generator["prompts"]:
+        if generator.prompts:
             tmpdir_prompts.mkdir()
             env["prompts"] = str(tmpdir_prompts)
-            for prompt_name in generator["prompts"]:
-                prompt_file = tmpdir_prompts / prompt_name
-                value = get_prompt_value(prompt_name)
+            for prompt in generator.prompts:
+                prompt_file = tmpdir_prompts / prompt.name
+                value = get_prompt_value(prompt.name)
                 prompt_file.write_text(value)
 
         if sys.platform == "linux":
-            cmd = bubblewrap_cmd(script, tmpdir)
+            cmd = bubblewrap_cmd(generator.final_script, tmpdir)
         else:
-            cmd = ["bash", "-c", script]
+            cmd = ["bash", "-c", generator.final_script]
         run(
             cmd,
             env=env,
         )
         files_to_commit = []
         # store secrets
-        files = generator["files"]
+        files = generator.files
         public_changed = False
         secret_changed = False
-        for file_name, file in files.items():
-            is_deployed = file["deploy"]
-
-            secret_file = tmpdir_out / file_name
+        for file in files:
+            secret_file = tmpdir_out / file.name
             if not secret_file.is_file():
-                msg = f"did not generate a file for '{file_name}' when running the following command:\n"
-                msg += script
+                msg = f"did not generate a file for '{file.name}' when running the following command:\n"
+                msg += generator.final_script
                 raise ClanError(msg)
-            if file["secret"]:
+            if file.secret:
                 file_path = secret_vars_store.set(
-                    generator_name,
-                    file_name,
+                    generator,
+                    file,
                     secret_file.read_bytes(),
-                    shared=is_shared,
-                    deployed=is_deployed,
                 )
                 secret_changed = True
             else:
                 file_path = public_vars_store.set(
-                    generator_name,
-                    file_name,
+                    generator,
+                    file,
                     secret_file.read_bytes(),
-                    shared=is_shared,
                 )
                 public_changed = True
             if file_path:
                 files_to_commit.append(file_path)
-            if generator["invalidationHash"] is not None:
+            if generator.invalidation_hash is not None:
                 if public_changed:
                     public_vars_store.set_invalidation_hash(
-                        generator_name, generator["invalidationHash"]
+                        generator, generator.invalidation_hash
                     )
                 if secret_changed:
                     secret_vars_store.set_invalidation_hash(
-                        generator_name, generator["invalidationHash"]
+                        generator, generator.invalidation_hash
                     )
     commit_files(
         files_to_commit,
         machine.flake_dir,
-        f"Update vars via generator {generator_name} for machine {machine.name}",
+        f"Update vars via generator {generator.name} for machine {machine.name}",
     )
 
 
 def _ask_prompts(
-    machine: Machine,
-    generator_names: list[str],
+    generators: list[Generator],
 ) -> dict[str, dict[str, str]]:
     prompt_values: dict[str, dict[str, str]] = {}
-    for generator in generator_names:
-        prompts = machine.vars_generators[generator]["prompts"]
-        for prompt_name, _prompt in prompts.items():
-            if generator not in prompt_values:
-                prompt_values[generator] = {}
-            var_id = f"{generator}/{prompt_name}"
-            prompt_values[generator][prompt_name] = ask(var_id, _prompt["type"])
+    for generator in generators:
+        for prompt in generator.prompts:
+            if generator.name not in prompt_values:
+                prompt_values[generator.name] = {}
+            var_id = f"{generator.name}/{prompt.name}"
+            prompt_values[generator.name][prompt.name] = ask(var_id, prompt.prompt_type)
     return prompt_values
 
 
 def get_closure(
-    machine: Machine,
+    machine: "Machine",
     generator_name: str | None,
     regenerate: bool,
-) -> list[str]:
-    from .graph import Generator, all_missing_closure, full_closure
+) -> list[Generator]:
+    from .graph import all_missing_closure, full_closure
 
     vars_generators = machine.vars_generators
     generators: dict[str, Generator] = {
-        name: Generator(name, generator["dependencies"], _machine=machine)
-        for name, generator in vars_generators.items()
+        generator.name: generator for generator in vars_generators
     }
+
+    # TODO: we should remove this
+    for generator in vars_generators:
+        generator.machine(machine)
+
     if generator_name is None:  # all generators selected
         if regenerate:
             return full_closure(generators)
@@ -240,109 +279,109 @@ def get_closure(
 
 
 def _migration_file_exists(
-    machine: Machine,
-    service_name: str,
+    machine: "Machine",
+    generator: Generator,
     fact_name: str,
 ) -> bool:
-    is_secret = machine.vars_generators[service_name]["files"][fact_name]["secret"]
+    for file in generator.files:
+        if file.name == fact_name:
+            break
+    else:
+        msg = f"Could not find file {fact_name} in generator {generator.name}"
+        raise ClanError(msg)
+
+    is_secret = file.secret
     if is_secret:
-        if machine.secret_facts_store.exists(service_name, fact_name):
+        if machine.secret_facts_store.exists(generator.name, fact_name):
             return True
         log.debug(
-            f"Cannot migrate fact {fact_name} for service {service_name}, as it does not exist in the secret fact store"
+            f"Cannot migrate fact {fact_name} for service {generator.name}, as it does not exist in the secret fact store"
         )
     if not is_secret:
-        if machine.public_facts_store.exists(service_name, fact_name):
+        if machine.public_facts_store.exists(generator.name, fact_name):
             return True
         log.debug(
-            f"Cannot migrate fact {fact_name} for service {service_name}, as it does not exist in the public fact store"
+            f"Cannot migrate fact {fact_name} for service {generator.name}, as it does not exist in the public fact store"
         )
     return False
 
 
 def _migrate_file(
-    machine: Machine,
-    generator_name: str,
+    machine: "Machine",
+    generator: Generator,
     var_name: str,
     service_name: str,
     fact_name: str,
 ) -> None:
-    is_secret = machine.vars_generators[generator_name]["files"][var_name]["secret"]
-    if is_secret:
+    for file in generator.files:
+        if file.name == var_name:
+            break
+    else:
+        msg = f"Could not find file {fact_name} in generator {generator.name}"
+        raise ClanError(msg)
+
+    if file.secret:
         old_value = machine.secret_facts_store.get(service_name, fact_name)
+        machine.secret_vars_store.set(generator, file, old_value)
     else:
         old_value = machine.public_facts_store.get(service_name, fact_name)
-    is_shared = machine.vars_generators[generator_name]["share"]
-    is_deployed = machine.vars_generators[generator_name]["files"][var_name]["deploy"]
-    if is_secret:
-        machine.secret_vars_store.set(
-            generator_name, var_name, old_value, shared=is_shared, deployed=is_deployed
-        )
-    else:
-        machine.public_vars_store.set(
-            generator_name, var_name, old_value, shared=is_shared, deployed=is_deployed
-        )
+        machine.public_vars_store.set(generator, file, old_value)
 
 
 def _migrate_files(
-    machine: Machine,
-    generator_name: str,
+    machine: "Machine",
+    generator: Generator,
 ) -> None:
-    service_name = machine.vars_generators[generator_name]["migrateFact"]
     not_found = []
-    for var_name, _file in machine.vars_generators[generator_name]["files"].items():
-        if _migration_file_exists(machine, generator_name, var_name):
-            _migrate_file(machine, generator_name, var_name, service_name, var_name)
+    for file in generator.files:
+        if _migration_file_exists(machine, generator, file.name):
+            assert generator.migrate_fact is not None
+            _migrate_file(
+                machine, generator, file.name, generator.migrate_fact, file.name
+            )
         else:
-            not_found.append(var_name)
+            not_found.append(file.name)
     if len(not_found) > 0:
-        msg = f"Could not migrate the following files for generator {generator_name}, as no fact or secret exists with the same name: {not_found}"
+        msg = f"Could not migrate the following files for generator {generator.name}, as no fact or secret exists with the same name: {not_found}"
         raise ClanError(msg)
 
 
 def _check_can_migrate(
-    machine: Machine,
-    generator_name: str,
+    machine: "Machine",
+    generator: Generator,
 ) -> bool:
-    vars_generator = machine.vars_generators[generator_name]
-    if "migrateFact" not in vars_generator:
-        return False
-    service_name = vars_generator["migrateFact"]
+    service_name = generator.migrate_fact
     if not service_name:
         return False
     # ensure that none of the generated vars already exist in the store
-    for fname, file in vars_generator["files"].items():
-        if file["secret"]:
-            if machine.secret_vars_store.exists(
-                generator_name, fname, vars_generator["share"]
-            ):
-                if vars_generator["deploy"]:
+    for file in generator.files:
+        if file.secret:
+            if machine.secret_vars_store.exists(generator, file.name):
+                if file.deploy:
                     machine.secret_vars_store.ensure_machine_has_access(
-                        generator_name, fname, vars_generator["share"]
+                        generator, file.name
                     )
                 return False
         else:
-            if machine.public_vars_store.exists(
-                generator_name, fname, vars_generator["share"]
-            ):
+            if machine.public_vars_store.exists(generator, file.name):
                 return False
     # ensure that the service to migrate from actually exists
     if service_name not in machine.facts_data:
         log.debug(
-            f"Could not migrate facts for generator {generator_name}, as the service {service_name} does not exist"
+            f"Could not migrate facts for generator {generator.name}, as the service {service_name} does not exist"
         )
         return False
     # ensure that all files can be migrated (exists in the corresponding fact store)
     return bool(
         all(
-            _migration_file_exists(machine, generator_name, fname)
-            for fname in vars_generator["files"]
+            _migration_file_exists(machine, generator, file.name)
+            for file in generator.files
         )
     )
 
 
 def ensure_consistent_state(
-    machine: Machine,
+    machine: "Machine",
     generator_name: str | None,
     fix: bool,
 ) -> None:
@@ -352,25 +391,30 @@ def ensure_consistent_state(
     """
 
     if generator_name is None:
-        generators = list(machine.vars_generators.keys())
+        generators = machine.vars_generators
     else:
-        generators = [generator_name]
+        for generator in machine.vars_generators:
+            if generator_name == generator.name:
+                generators = [generator]
+                break
+        else:
+            err_msg = (
+                f"Could not find generator {generator_name} in machine {machine.name}"
+            )
+            raise ClanError(err_msg)
     outdated = []
-    for generator_name in generators:
-        for name, file in machine.vars_generators[generator_name]["files"].items():
-            shared = machine.vars_generators[generator_name]["share"]
-            if file["secret"] and machine.secret_vars_store.exists(
-                generator_name, name, shared=shared
-            ):
-                if file["deploy"]:
+    for generator in generators:
+        for file in generator.files:
+            if file.secret and machine.secret_vars_store.exists(generator, file.name):
+                if file.deploy:
                     machine.secret_vars_store.ensure_machine_has_access(
-                        generator_name, name, shared=shared
+                        generator, file.name
                     )
                 needs_update, msg = machine.secret_vars_store.needs_fix(
-                    generator_name, name, shared=shared
+                    generator, file.name
                 )
                 if needs_update:
-                    outdated.append((generator_name, name, msg))
+                    outdated.append((generator_name, file.name, msg))
     if not fix and outdated:
         msg = (
             "The local state of some secret vars is inconsistent and needs to be updated.\n"
@@ -382,7 +426,7 @@ def ensure_consistent_state(
 
 
 def generate_vars_for_machine(
-    machine: Machine,
+    machine: "Machine",
     generator_name: str | None,
     regenerate: bool,
     fix: bool,
@@ -391,17 +435,17 @@ def generate_vars_for_machine(
     closure = get_closure(machine, generator_name, regenerate)
     if len(closure) == 0:
         return False
-    prompt_values = _ask_prompts(machine, closure)
-    for gen_name in closure:
-        if _check_can_migrate(machine, gen_name):
-            _migrate_files(machine, gen_name)
+    prompt_values = _ask_prompts(closure)
+    for generator in closure:
+        if _check_can_migrate(machine, generator):
+            _migrate_files(machine, generator)
         else:
             execute_generator(
                 machine,
-                gen_name,
+                generator,
                 machine.secret_vars_store,
                 machine.public_vars_store,
-                prompt_values.get(gen_name, {}),
+                prompt_values.get(generator.name, {}),
             )
     # flush caches to make sure the new secrets are available in evaluation
     machine.flush_caches()
@@ -409,7 +453,7 @@ def generate_vars_for_machine(
 
 
 def generate_vars(
-    machines: list[Machine],
+    machines: list["Machine"],
     generator_name: str | None = None,
     regenerate: bool = False,
     fix: bool = False,
@@ -423,11 +467,14 @@ def generate_vars(
             )
             machine.flush_caches()
         except Exception as exc:
-            machine.error(f"Failed to generate facts: {exc}")
-            errors += [exc]
-        if len(errors) > 0:
-            msg = f"Failed to generate facts for {len(errors)} hosts. Check the logs above"
-            raise ClanError(msg) from errors[0]
+            errors += [(machine, exc)]
+        if len(errors) == 1:
+            raise errors[0][1]
+        if len(errors) > 1:
+            msg = f"Failed to generate facts for {len(errors)} hosts:"
+            for machine, error in errors:
+                msg += f"\n{machine}: {error}"
+            raise ClanError(msg) from errors[0][1]
 
     if not was_regenerated and len(machines) > 0:
         machine.info("All vars are already up to date")

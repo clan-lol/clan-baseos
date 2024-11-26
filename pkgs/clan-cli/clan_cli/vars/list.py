@@ -4,10 +4,11 @@ import logging
 
 from clan_cli.api import API
 from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
 
-from ._types import Generator, GeneratorUpdate, Prompt, Var
-from .generate import execute_generator
+from ._types import GeneratorUpdate
+from .generate import Generator, Prompt, Var, execute_generator
 from .public_modules import FactStoreBase
 from .secret_modules import SecretStoreBase
 
@@ -35,44 +36,25 @@ def _get_previous_value(
     generator: Generator,
     prompt: Prompt,
 ) -> str | None:
-    if not prompt.has_file:
+    if not prompt.create_file:
         return None
+
     pub_store = public_store(machine)
-    if pub_store.exists(generator.name, prompt.name, shared=generator.share):
-        return pub_store.get(
-            generator.name, prompt.name, shared=generator.share
-        ).decode()
+    if pub_store.exists(generator, prompt.name):
+        return pub_store.get(generator, prompt.name).decode()
     sec_store = secret_store(machine)
-    if sec_store.exists(generator.name, prompt.name, shared=generator.share):
-        return sec_store.get(
-            generator.name, prompt.name, shared=generator.share
-        ).decode()
+    if sec_store.exists(generator, prompt.name):
+        return sec_store.get(generator, prompt.name).decode()
     return None
 
 
 @API.register
 # TODO: use machine_name
 def get_prompts(machine: Machine) -> list[Generator]:
-    generators = []
-    for gen_name, generator in machine.vars_generators.items():
-        prompts: list[Prompt] = []
-        gen = Generator(
-            name=gen_name,
-            prompts=prompts,
-            share=generator["share"],
-        )
-        for prompt_name, prompt in generator["prompts"].items():
-            prompt = Prompt(
-                name=prompt_name,
-                description=prompt["description"],
-                type=prompt["type"],
-                has_file=prompt["createFile"],
-                generator=gen_name,
-            )
-            prompt.previous_value = _get_previous_value(machine, gen, prompt)
-            prompts.append(prompt)
-
-        generators.append(gen)
+    generators: list[Generator] = machine.vars_generators
+    for generator in generators:
+        for prompt in generator.prompts:
+            prompt.previous_value = _get_previous_value(machine, generator, prompt)
     return generators
 
 
@@ -82,9 +64,15 @@ def get_prompts(machine: Machine) -> list[Generator]:
 @API.register
 def set_prompts(machine: Machine, updates: list[GeneratorUpdate]) -> None:
     for update in updates:
+        for generator in machine.vars_generators:
+            if generator.name == update.generator:
+                break
+        else:
+            msg = f"Generator '{update.generator}' not found in machine {machine.name}"
+            raise ClanError(msg)
         execute_generator(
             machine,
-            update.generator,
+            generator,
             secret_vars_store=secret_store(machine),
             public_vars_store=public_store(machine),
             prompt_values=update.prompt_values,

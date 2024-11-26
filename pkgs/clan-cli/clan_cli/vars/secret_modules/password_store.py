@@ -9,6 +9,7 @@ from typing import override
 from clan_cli.cmd import Log, run
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
+from clan_cli.vars.generate import Generator, Var
 
 from . import SecretStoreBase
 
@@ -30,16 +31,14 @@ class SecretStore(SecretStoreBase):
             "PASSWORD_STORE_DIR", f"{os.environ['HOME']}/.password-store"
         )
 
-    def entry_dir(self, generator_name: str, name: str, shared: bool) -> Path:
-        return Path(self.entry_prefix) / self.rel_dir(generator_name, name, shared)
+    def entry_dir(self, generator: Generator, name: str) -> Path:
+        return Path(self.entry_prefix) / self.rel_dir(generator, name)
 
     def _set(
         self,
-        generator_name: str,
-        name: str,
+        generator: Generator,
+        var: Var,
         value: bytes,
-        shared: bool = False,
-        deployed: bool = True,
     ) -> Path | None:
         run(
             nix_shell(
@@ -48,7 +47,7 @@ class SecretStore(SecretStoreBase):
                     "pass",
                     "insert",
                     "-m",
-                    str(self.entry_dir(generator_name, name, shared)),
+                    str(self.entry_dir(generator, var.name)),
                 ],
             ),
             input=value,
@@ -56,22 +55,21 @@ class SecretStore(SecretStoreBase):
         )
         return None  # we manage the files outside of the git repo
 
-    def get(self, generator_name: str, name: str, shared: bool = False) -> bytes:
+    def get(self, generator: Generator, name: str) -> bytes:
         return run(
             nix_shell(
                 ["nixpkgs#pass"],
                 [
                     "pass",
                     "show",
-                    str(self.entry_dir(generator_name, name, shared)),
+                    str(self.entry_dir(generator, name)),
                 ],
             ),
         ).stdout.encode()
 
-    def exists(self, generator_name: str, name: str, shared: bool = False) -> bool:
+    def exists(self, generator: Generator, name: str) -> bool:
         return (
-            Path(self._password_store_dir)
-            / f"{self.entry_dir(generator_name, name, shared)}.gpg"
+            Path(self._password_store_dir) / f"{self.entry_dir(generator, name)}.gpg"
         ).exists()
 
     def generate_hash(self) -> bytes:
@@ -128,9 +126,9 @@ class SecretStore(SecretStoreBase):
         hashes.sort()
 
         manifest = []
-        for gen_name, generator in self.machine.vars_generators.items():
-            for f_name in generator["files"]:
-                manifest.append(f"{gen_name}/{f_name}".encode())
+        for generator in self.machine.vars_generators:
+            for file in generator.files:
+                manifest.append(f"{generator.name}/{file.name}".encode())
         manifest += hashes
         return b"\n".join(manifest)
 
@@ -152,24 +150,24 @@ class SecretStore(SecretStoreBase):
 
     def upload(self, output_dir: Path) -> None:
         with tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar:
-            for gen_name, generator in self.machine.vars_generators.items():
+            for generator in self.machine.vars_generators:
                 dir_exists = False
-                for f_name, file in generator["files"].items():
-                    if not file["deploy"]:
+                for file in generator.files:
+                    if not file.deploy:
                         continue
-                    if not file["secret"]:
+                    if not file.secret:
                         continue
                     if not dir_exists:
-                        tar_dir = tarfile.TarInfo(name=gen_name)
+                        tar_dir = tarfile.TarInfo(name=generator.name)
                         tar_dir.type = tarfile.DIRTYPE
                         tar_dir.mode = 0o511
                         tar.addfile(tarinfo=tar_dir)
                         dir_exists = True
-                    tar_file = tarfile.TarInfo(name=f"{gen_name}/{f_name}")
-                    content = self.get(gen_name, f_name, generator["share"])
+                    tar_file = tarfile.TarInfo(name=f"{generator.name}/{file.name}")
+                    content = self.get(generator, file.name)
                     tar_file.size = len(content)
                     tar_file.mode = 0o440
-                    tar_file.uname = file.get("owner", "root")
-                    tar_file.gname = file.get("group", "root")
+                    tar_file.uname = file.owner
+                    tar_file.gname = file.group
                     tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
         (output_dir / ".pass_info").write_bytes(self.generate_hash())
