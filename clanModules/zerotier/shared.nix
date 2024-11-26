@@ -25,23 +25,27 @@ let
   ) [ ] moons;
 in
 {
-  options.clan.zerotier = {
-    excludeHosts = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ config.clan.core.machineName ];
-      description = "Hosts that should be excluded";
+  options.clan.zerotier =
+    let
+      inherit (lib.types) listOf str;
+    in
+    {
+      excludeHosts = lib.mkOption {
+        type = listOf str;
+        default = [ config.clan.core.machineName ];
+        description = "Hosts that should be excluded";
+      };
+      networkIps = lib.mkOption {
+        type = listOf str;
+        default = [ ];
+        description = "Extra zerotier network Ips that should be accepted";
+      };
+      networkIds = lib.mkOption {
+        type = listOf str;
+        default = [ ];
+        description = "Extra zerotier network Ids that should be accepted";
+      };
     };
-    networkIps = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "Extra zerotier network Ips that should be accepted";
-    };
-    networkIds = lib.mkOption {
-      type = lib.types.listOf lib.types.str;
-      default = [ ];
-      description = "Extra zerotier network Ids that should be accepted";
-    };
-  };
 
   config = {
     assertions = [
