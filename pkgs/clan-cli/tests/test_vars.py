@@ -782,9 +782,13 @@ def test_migration(
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
     my_service["public"]["my_value"] = {}
-    my_service["generator"]["script"] = "echo -n hello > $facts/my_value"
+    my_service["secret"]["my_secret"] = {}
+    my_service["generator"]["script"] = (
+        "echo -n hello > $facts/my_value && echo -n hello > $secrets/my_secret"
+    )
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
+    my_generator["files"]["my_secret"]["secret"] = True
     my_generator["migrateFact"] = "my_service"
     my_generator["script"] = "echo -n world > $out/my_value"
     flake.refresh()
@@ -795,8 +799,13 @@ def test_migration(
     in_repo_store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
+    sops_store = sops.SecretStore(
+        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    )
     assert in_repo_store.exists("my_generator", "my_value")
     assert in_repo_store.get("my_generator", "my_value").decode() == "hello"
+    assert sops_store.exists("my_generator", "my_secret")
+    assert sops_store.get("my_generator", "my_secret").decode() == "hello"
 
 
 @pytest.mark.impure
