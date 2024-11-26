@@ -122,3 +122,18 @@ def test_filters_null_fields() -> None:
     assert instance.home == "home"
     assert instance.work is None
     assert dataclass_to_dict(instance) == {"home": "home"}
+
+
+def test_custom_enum() -> None:
+    from enum import Enum
+
+    class CustomEnum(Enum):
+        FOO = "foo"
+        BAR = "bar"
+
+    @dataclass
+    class Foo:
+        field: CustomEnum
+
+    instance = Foo(field=CustomEnum.FOO)
+    assert dataclass_to_dict(instance) == {"field": "foo"}
