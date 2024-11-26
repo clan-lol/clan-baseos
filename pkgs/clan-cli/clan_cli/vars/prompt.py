@@ -6,8 +6,13 @@ from clan_cli.errors import ClanError
 
 log = logging.getLogger(__name__)
 
+# This is for simulating user input in tests.
+MOCK_PROMPT_RESPONSE = None
+
 
 def ask(description: str, input_type: str) -> str:
+    if MOCK_PROMPT_RESPONSE:
+        return next(MOCK_PROMPT_RESPONSE)
     if input_type == "line":
         result = input(f"Enter the value for {description}: ")
     elif input_type == "multiline":
