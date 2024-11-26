@@ -91,6 +91,9 @@ def indent_command(command_list: list[str]) -> str:
     return final_command
 
 
+DEBUG_COMMANDS = os.environ.get("CLAN_DEBUG_COMMANDS", False)
+
+
 @dataclass
 class CmdOut:
     stdout: str
@@ -108,23 +111,34 @@ class CmdOut:
     def __str__(self) -> str:
         # Set a common indentation level, assuming a reasonable spacing
         label_width = max(len("Return Code"), len("Work Dir"), len("Error Msg"))
-        diffed_dict = (
-            diff_dicts(cast(dict[str, str], os.environ), self.env) if self.env else None
-        )
-        diffed_dict_str = (
-            json.dumps(diffed_dict.__dict__, indent=4) if diffed_dict else None
-        )
-        error_str = f"""
-{optional_text("Stdout", self.stdout)}
-{optional_text("Environment", diffed_dict_str)}
-{optional_text("Stderr", self.stderr)}
+        error_msg = [
+            f"""
 {optional_text("Command", self.command)}
-{text_heading(heading="Metadata")}
+{optional_text("Stdout", self.stdout)}
+{optional_text("Stderr", self.stderr)}
 {'Return Code:':<{label_width}} {self.returncode}
+"""
+        ]
+        if self.msg:
+            error_msg += [f"{'Error Msg:':<{label_width}} {self.msg.capitalize()}"]
+
+        if DEBUG_COMMANDS:
+            diffed_dict = (
+                diff_dicts(cast(dict[str, str], os.environ), self.env)
+                if self.env
+                else None
+            )
+            diffed_dict_str = (
+                json.dumps(diffed_dict.__dict__, indent=4) if diffed_dict else None
+            )
+            error_msg += [
+                f"""
+{optional_text("Environment", diffed_dict_str)}
+{text_heading(heading="Metadata")}
 {'Work Dir:':<{label_width}} '{self.cwd}'
-{'Error Msg:':<{label_width}} {self.msg.capitalize() if self.msg else ""}
-        """
-        return error_str
+"""
+            ]
+        return "\n".join(error_msg)
 
 
 class ClanError(Exception):
