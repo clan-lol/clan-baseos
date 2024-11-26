@@ -125,7 +125,11 @@ class WebExecutor(GObject.Object):
         result = dataclass_to_dict(data.result)
         # Important:
         # 2. ensure_ascii = False. non-ASCII characters are correctly handled, instead of being escaped.
-        serialized = json.dumps(result, indent=4, ensure_ascii=False)
+        try:
+            serialized = json.dumps(result, indent=4, ensure_ascii=False)
+        except TypeError:
+            log.exception(f"Error serializing result for {data.method_name}")
+            raise
         log.debug(f"Result for {data.method_name}: {serialized}")
 
         # Use idle_add to queue the response call to js on the main GTK thread
