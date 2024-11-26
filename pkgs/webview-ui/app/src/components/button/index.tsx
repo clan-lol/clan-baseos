@@ -39,7 +39,7 @@ const sizePaddings: Record<Size, string> = {
 interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variants;
   size?: Size;
-  children: JSX.Element;
+  children?: JSX.Element;
   startIcon?: JSX.Element;
   endIcon?: JSX.Element;
   class?: string;
@@ -67,9 +67,9 @@ export const Button = (props: ButtonProps) => {
       )}
       {...other}
     >
-      <span class="h-4">{local.startIcon}</span>
-      <span>{local.children}</span>
-      <span class="h-4">{local.endIcon}</span>
+      {local.startIcon && <span class="h-4">{local.startIcon}</span>}
+      {local.children && <span>{local.children}</span>}
+      {local.endIcon && <span class="h-4">{local.endIcon}</span>}
     </button>
   );
 };

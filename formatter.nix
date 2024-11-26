@@ -43,6 +43,9 @@
           "*.yaml"
           "*.yml"
         ];
+        excludes = [
+          "*/asciinema-player/*"
+        ];
       };
       treefmt.programs.mypy.directories =
         {
