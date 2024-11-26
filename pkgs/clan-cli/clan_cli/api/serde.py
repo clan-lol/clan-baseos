@@ -54,6 +54,35 @@ def sanitize_string(s: str) -> str:
     return s
 
 
+def is_enum(obj: Any) -> bool:
+    """
+    Safely checks if the object or one of its attributes is an Enum.
+    """
+    # Check if the object itself is an Enum
+    if isinstance(obj, Enum):
+        return True
+
+    # Check if the object has an 'enum' attribute and if it's an Enum
+    enum_attr = getattr(obj, "enum", None)
+    return isinstance(enum_attr, Enum)
+
+
+def get_enum_value(obj: Any) -> Any:
+    """
+    Safely checks if the object or one of its attributes is an Enum.
+    """
+    # Check if the object itself is an Enum
+    value = getattr(obj, "value", None)
+    if value is None and obj.enum:
+        value = getattr(obj.enum, "value", None)
+
+    if value is None:
+        error_msg = f"Cannot determine enum value for {obj}"
+        raise ValueError(error_msg)
+
+    return dataclass_to_dict(value)
+
+
 def dataclass_to_dict(obj: Any, *, use_alias: bool = True) -> Any:
     def _to_dict(obj: Any) -> Any:
         """
@@ -62,6 +91,8 @@ def dataclass_to_dict(obj: Any, *, use_alias: bool = True) -> Any:
 
         It does NOT convert member functions.
         """
+        if is_enum(obj):
+            return get_enum_value(obj)
         if is_dataclass(obj):
             return {
                 # Use either the original name or name
