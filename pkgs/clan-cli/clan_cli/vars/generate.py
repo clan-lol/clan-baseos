@@ -274,9 +274,14 @@ def _migrate_file(
         old_value = machine.public_facts_store.get(service_name, fact_name)
     is_shared = machine.vars_generators[generator_name]["share"]
     is_deployed = machine.vars_generators[generator_name]["files"][var_name]["deploy"]
-    machine.public_vars_store.set(
-        generator_name, var_name, old_value, shared=is_shared, deployed=is_deployed
-    )
+    if is_secret:
+        machine.secret_vars_store.set(
+            generator_name, var_name, old_value, shared=is_shared, deployed=is_deployed
+        )
+    else:
+        machine.public_vars_store.set(
+            generator_name, var_name, old_value, shared=is_shared, deployed=is_deployed
+        )
 
 
 def _migrate_files(
