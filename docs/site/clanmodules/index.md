@@ -138,7 +138,7 @@ Adds the roles: `client` and `server`
 
 ## Adding configuration options
 
-While we recommend to keep the interface as minimal as possible and deriving all required information from the `roles` model it might sometimes be required or convinient to expose customization options beyond `roles`.
+While we recommend to keep the interface as minimal as possible and deriving all required information from the `roles` model it might sometimes be required or convenient to expose customization options beyond `roles`.
 
 The following shows how to add options to your module.
 
