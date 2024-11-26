@@ -9,17 +9,17 @@
 @font-face {
   font-family: "Archivo";
   font-weight: 400;
-  src: url(../.fonts/Archiv0-Regular.otf) format("opentype");
+  src: url(../.fonts/ArchivoSemiCondensed-Regular.woff2) format("woff2");
 }
 @font-face {
   font-family: "Archivo";
   font-weight: 500;
-  src: url(../.fonts/Archiv0-Medium.otf) format("opentype");
+  src: url(../.fonts/ArchivoSemiCondensed-Medium.woff2) format("woff2");
 }
 @font-face {
   font-family: "Archivo";
   font-weight: 600;
-  src: url(../.fonts/Archiv0-Bold.otf) format("opentype");
+  src: url(../.fonts/ArchivoSemiCondensed-SemiBold.woff2) format("woff2");
 }
 
 :root {
