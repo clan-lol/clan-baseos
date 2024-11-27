@@ -22,14 +22,6 @@
     '';
   };
 
-  secretUploadDirectory = lib.mkOption {
-    type = lib.types.path;
-    description = ''
-      The directory where secrets are uploaded into, This is backend specific.
-      This is usally set by the secret store backend.
-    '';
-  };
-
   # TODO: see if this is the right approach. Maybe revert to secretPathFunction
   fileModule = lib.mkOption {
     type = lib.types.deferredModule;

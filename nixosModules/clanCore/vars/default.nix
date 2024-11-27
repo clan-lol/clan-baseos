@@ -55,7 +55,7 @@ in
           );
         }
       );
-      inherit (config.clan.core.vars.settings) secretUploadDirectory secretModule publicModule;
+      inherit (config.clan.core.vars.settings) secretModule publicModule;
     };
     inherit (config.clan.core.networking) targetHost buildHost;
     inherit (config.clan.core.deployment) requireExplicitUpdate;
