@@ -50,8 +50,9 @@ class WebExecutor(GObject.Object):
     ) -> None:
         if load_event == WebKit.LoadEvent.FINISHED:
             if log.isEnabledFor(logging.DEBUG):
-                inspector = webview.get_inspector()
-                inspector.show()
+                pass
+                # inspector = webview.get_inspector()
+                # inspector.show()
 
     def on_decide_policy(
         self,

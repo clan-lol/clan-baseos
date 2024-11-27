@@ -20,7 +20,7 @@ class MainWindow(Adw.ApplicationWindow):
     def __init__(self, config: ClanConfig) -> None:
         super().__init__()
         self.set_title("Clan App")
-        self.set_default_size(980, 850)
+        self.set_default_size(1280, 1024)
 
         # Overlay for GTK side exclusive toasts
         overlay = ToastOverlay.use().overlay
