@@ -1,6 +1,7 @@
 import importlib
 import json
 import logging
+import os
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
@@ -329,6 +330,10 @@ class Machine:
             return self._build_cache[attr]
 
         output = self.nix("build", attr, extra_config, nix_options)
+        assert isinstance(output, Path), "Nix build did not result in a single path"
+        tmp_store = os.environ.get("TMP_STORE", None)
+        if tmp_store is not None:
+            output = Path(f"{tmp_store}/{output!s}")
         if isinstance(output, Path):
             self._build_cache[attr] = output
             return output

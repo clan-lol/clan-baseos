@@ -150,14 +150,38 @@ python3.pkgs.buildPythonApplication {
           '';
       clan-pytest-with-core =
         runCommand "clan-pytest-with-core"
-          { nativeBuildInputs = [ pythonWithTestDeps ] ++ testDependencies; }
+          {
+            nativeBuildInputs = [ pythonWithTestDeps ] ++ testDependencies;
+            buildInputs = [
+              pkgs.bash
+              pkgs.coreutils
+              pkgs.nix
+            ];
+            closureInfo = pkgs.closureInfo {
+              rootPaths = [
+                pkgs.bash
+                pkgs.coreutils
+                pkgs.jq.dev
+                pkgs.stdenv
+                pkgs.stdenvNoCC
+              ];
+            };
+          }
           ''
             cp -r ${source} ./src
             chmod +w -R ./src
             cd ./src
 
             export CLAN_CORE=${clan-core-path}
-            export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1 PYTHONWARNINGS=error
+            export NIX_STATE_DIR=$TMPDIR/nix
+            export IN_NIX_SANDBOX=1
+            export PYTHONWARNINGS=error
+            export TMP_STORE=$TMPDIR/store
+            # required to prevent concurrent 'nix flake lock' operations
+            export LOCK_NIX=$TMPDIR/nix_lock
+            mkdir -p $TMP_STORE/nix/store
+            xargs cp --recursive --target "$TMP_STORE/nix/store"  < "$closureInfo/store-paths"
+            nix-store --load-db --store $TMP_STORE < "$closureInfo/registration"
             ${pythonWithTestDeps}/bin/python -m pytest -m "not impure and with_core" ./tests
             touch $out
           '';

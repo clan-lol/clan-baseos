@@ -14,30 +14,88 @@
     let
       flakeLock = lib.importJSON (self + /flake.lock);
       flakeInputs = builtins.removeAttrs inputs [ "self" ];
-      flakeLockVendoredDeps = flakeLock // {
-        nodes =
-          flakeLock.nodes
-          // (lib.flip lib.mapAttrs flakeInputs (
-            name: _:
-            flakeLock.nodes.${name}
-            // {
-              locked = {
-                inherit (flakeLock.nodes.${name}.locked) narHash;
-                lastModified =
-                  # lol, nixpkgs has a different timestamp on the fs???
-                  if name == "nixpkgs" then 0 else 1;
-                path = "${inputs.${name}}";
-                type = "path";
-              };
-            }
-          ));
+      flakeLockVendoredDeps =
+        flakeLock:
+        flakeLock
+        // {
+          nodes =
+            flakeLock.nodes
+            // (lib.flip lib.mapAttrs flakeInputs (
+              name: _:
+              # remove follows and let 'nix flake lock' re-compute it later
+              # (lib.removeAttrs flakeLock.nodes.${name} ["inputs"])
+              flakeLock.nodes.${name}
+              // {
+                locked = {
+                  inherit (flakeLock.nodes.${name}.locked) narHash;
+                  lastModified =
+                    # lol, nixpkgs has a different timestamp on the fs???
+                    if name == "nixpkgs" then 0 else 1;
+                  path = "${inputs.${name}}";
+                  type = "path";
+                };
+              }
+            ));
+        };
+      clanCoreLock = flakeLockVendoredDeps flakeLock;
+      clanCoreLockFile = builtins.toFile "clan-core-flake.lock" (builtins.toJSON clanCoreLock);
+      clanCoreNode = {
+        inputs = lib.mapAttrs (name: _input: name) flakeInputs;
+        locked = {
+          lastModified = 1;
+          path = "${self}";
+          type = "path";
+        };
+        original = {
+          type = "tarball";
+          url = "https://git.clan.lol/clan/clan-core/archive/main.tar.gz";
+        };
       };
-      flakeLockFile = builtins.toFile "clan-core-flake.lock" (builtins.toJSON flakeLockVendoredDeps);
-      clanCoreWithVendoredDeps = pkgs.runCommand "clan-core-with-vendored-deps" { } ''
-        cp -r ${self} $out
-        chmod +w -R $out
-        cp ${flakeLockFile} $out/flake.lock
-      '';
+      # generate a lock file that nix will accept for our flake templates,
+      # in order to not require internet access during tests.
+      templateLock = clanCoreLock // {
+        nodes = clanCoreLock.nodes // {
+          clan-core = clanCoreNode;
+          nixpkgs-lib = clanCoreLock.nodes.nixpkgs; # required by flake-parts
+          root = clanCoreLock.nodes.root // {
+            inputs = clanCoreLock.nodes.root.inputs // {
+              clan-core = "clan-core";
+              nixpkgs = "nixpkgs";
+              nixpkgs-lib = "nixpkgs-lib";
+            };
+          };
+        };
+      };
+      templateLockFile = builtins.toFile "template-flake.lock" (builtins.toJSON templateLock);
+      clanCoreWithVendoredDeps =
+        pkgs.runCommand "clan-core-with-vendored-deps"
+          {
+            buildInputs = [
+              pkgs.findutils
+              pkgs.git
+              pkgs.jq
+              pkgs.nix
+            ];
+          }
+          ''
+            set -e
+            export HOME=$(realpath .)
+            export NIX_STATE_DIR=$HOME
+            cp -r ${self} $out
+            chmod +w -R $out
+            cp ${clanCoreLockFile} $out/flake.lock
+            nix flake lock $out --extra-experimental-features 'nix-command flakes'
+            clanCoreHash=$(nix hash path ${self} --extra-experimental-features 'nix-command')
+            for templateDir in $(find $out/templates -mindepth 1 -maxdepth 1 -type d); do
+              if ! [ -e "$templateDir/flake.nix" ]; then
+                continue
+              fi
+              cp ${templateLockFile} $templateDir/flake.lock
+              cat $templateDir/flake.lock | jq ".nodes.\"clan-core\".locked.narHash = \"$clanCoreHash\"" > $templateDir/flake.lock.final
+              mv $templateDir/flake.lock.final $templateDir/flake.lock
+              nix flake lock $templateDir --extra-experimental-features 'nix-command flakes'
+            done
+          '';
     in
     {
       devShells.clan-cli = pkgs.callPackage ./shell.nix {

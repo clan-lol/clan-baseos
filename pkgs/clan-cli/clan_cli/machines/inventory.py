@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from clan_cli.clan_uri import FlakeId
@@ -15,6 +16,10 @@ def get_all_machines(flake: FlakeId, nix_options: list[str]) -> list[Machine]:
     json_path = run(
         nix_build([f'{flake}#clanInternals.all-machines-json."{system}"'])
     ).stdout
+
+    tmp_store = os.environ.get("TMP_STORE", None)
+    if tmp_store:
+        json_path = f"{tmp_store}/{json_path}"
 
     machines_json = json.loads(Path(json_path.rstrip()).read_text())
 

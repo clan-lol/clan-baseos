@@ -93,7 +93,7 @@ def test_required_generators() -> None:
     ]
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_generate_public_var(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -128,7 +128,7 @@ def test_generate_public_var(
     assert json.loads(vars_eval) == "hello\n"
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_generate_secret_var_sops(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -166,7 +166,7 @@ def test_generate_secret_var_sops(
 
 
 # TODO: it doesn't actually test if the group has access
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_generate_secret_var_sops_with_default_group(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -219,7 +219,7 @@ def test_generate_secret_var_sops_with_default_group(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_generated_shared_secret_sops(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -264,7 +264,7 @@ def test_generated_shared_secret_sops(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_generate_secret_var_password_store(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -316,7 +316,7 @@ def test_generate_secret_var_password_store(
     assert "my_generator/my_secret" in vars_text
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_generate_secret_for_multiple_machines(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -378,7 +378,7 @@ def test_generate_secret_for_multiple_machines(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_dependant_generators(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -409,7 +409,7 @@ def test_dependant_generators(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 @pytest.mark.parametrize(
     ("prompt_type", "input_value"),
     [
@@ -447,7 +447,7 @@ def test_prompt(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_share_flag(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -514,7 +514,7 @@ def test_share_flag(
     assert json.loads(vars_eval) == "hello\n"
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_depending_on_shared_secret_succeeds(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -540,7 +540,7 @@ def test_depending_on_shared_secret_succeeds(
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_prompt_create_file(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -572,7 +572,7 @@ def test_prompt_create_file(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_api_get_prompts(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -595,7 +595,7 @@ def test_api_get_prompts(
     assert api_prompts[0].prompts[0].previous_value == "input1"
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_api_set_prompts(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -634,7 +634,7 @@ def test_api_set_prompts(
     assert store.get(Generator("my_generator"), "prompt1").decode() == "input2"
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_commit_message(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -691,7 +691,7 @@ def test_commit_message(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_default_value(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -728,7 +728,7 @@ def test_default_value(
     assert json.loads(value_eval) == "hello"
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_stdout_of_generate(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -809,7 +809,7 @@ def test_stdout_of_generate(
     assert "hello" not in output.out
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_migration_skip(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -837,7 +837,7 @@ def test_migration_skip(
     assert in_repo_store.get(Generator("my_generator"), "my_value").decode() == "world"
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_migration(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -873,7 +873,7 @@ def test_migration(
     assert sops_store.get(Generator("my_generator"), "my_secret").decode() == "hello"
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_fails_when_files_are_left_from_other_backend(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -915,7 +915,7 @@ def test_fails_when_files_are_left_from_other_backend(
             )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_keygen(
     monkeypatch: pytest.MonkeyPatch,
     temporary_home: Path,
@@ -935,7 +935,7 @@ def test_keygen(
     assert (temporary_home / "sops" / "users" / "user").is_dir()
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_vars_get(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -962,7 +962,7 @@ def test_vars_get(
     )
 
 
-@pytest.mark.impure
+@pytest.mark.with_core
 def test_invalidation(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,

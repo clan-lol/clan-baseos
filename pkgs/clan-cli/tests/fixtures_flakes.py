@@ -11,10 +11,15 @@ from typing import Any, NamedTuple
 
 import pytest
 from clan_cli.dirs import nixpkgs_source
+from clan_cli.locked_open import locked_open
 from fixture_error import FixtureError
 from root import CLAN_CORE
 
 log = logging.getLogger(__name__)
+
+lock_nix = os.environ.get("LOCK_NIX", "")
+if not lock_nix:
+    lock_nix = tempfile.NamedTemporaryFile().name  # NOQA: SIM115
 
 
 # allows defining nested dictionary in a single line
@@ -151,13 +156,20 @@ class ClanFlake:
         sp.run(["chmod", "+w", "-R", str(self.path)], check=True)
         self.substitute()
         if not (self.path / ".git").exists():
-            sp.run(
-                ["nix", "flake", "lock"],
-                cwd=self.path,
-                check=True,
-            )
-            with pytest.MonkeyPatch.context() as mp:
-                init_git(mp, self.path)
+            with locked_open(Path(lock_nix), "w"):
+                sp.run(
+                    [
+                        "nix",
+                        "flake",
+                        "lock",
+                        "--extra-experimental-features",
+                        "flakes nix-command",
+                    ],
+                    cwd=self.path,
+                    check=True,
+                )
+                with pytest.MonkeyPatch.context() as mp:
+                    init_git(mp, self.path)
 
     def refresh(self) -> None:
         if not self.path.exists():
