@@ -28,7 +28,12 @@ from .folders import (
     sops_secrets_folder,
     sops_users_folder,
 )
-from .sops import decrypt_file, encrypt_file, ensure_admin_key, read_key, update_keys
+from .sops import (
+    decrypt_file,
+    encrypt_file,
+    read_key,
+    update_keys,
+)
 from .types import VALID_SECRET_NAME, secret_name_type
 
 log = logging.getLogger(__name__)
@@ -89,7 +94,7 @@ def collect_keys_for_path(path: Path) -> set[tuple[str, sops.KeyType]]:
 def encrypt_secret(
     flake_dir: Path,
     secret_path: Path,
-    value: IO[str] | str | bytes | None,
+    value: IO[bytes] | str | bytes | None,
     add_users: list[str] | None = None,
     add_machines: list[str] | None = None,
     add_groups: list[str] | None = None,
@@ -101,8 +106,12 @@ def encrypt_secret(
         add_machines = []
     if add_users is None:
         add_users = []
-    key = ensure_admin_key(flake_dir)
+    key = sops.ensure_admin_public_key(flake_dir)
     recipient_keys = set()
+
+    # encrypt_secret can be called before the secret has been created
+    # so don't try to call sops.update_keys on a non-existent file:
+    do_update_keys = False
 
     files_to_commit = []
     for user in add_users:
@@ -111,7 +120,7 @@ def encrypt_secret(
                 users_folder(secret_path),
                 sops_users_folder(flake_dir),
                 user,
-                False,
+                do_update_keys,
             )
         )
 
@@ -121,7 +130,7 @@ def encrypt_secret(
                 machines_folder(secret_path),
                 sops_machines_folder(flake_dir),
                 machine,
-                False,
+                do_update_keys,
             )
         )
 
@@ -131,7 +140,7 @@ def encrypt_secret(
                 groups_folder(secret_path),
                 sops_groups_folder(flake_dir),
                 group,
-                False,
+                do_update_keys,
             )
         )
 
@@ -144,7 +153,7 @@ def encrypt_secret(
                 users_folder(secret_path),
                 sops_users_folder(flake_dir),
                 key.username,
-                False,
+                do_update_keys,
             )
         )
 
@@ -296,7 +305,10 @@ def list_command(args: argparse.Namespace) -> None:
 
 
 def decrypt_secret(flake_dir: Path, secret_path: Path) -> str:
-    ensure_admin_key(flake_dir)
+    # lopter(2024-10): I can't think of a good way to ensure that we have the
+    # private key for the secret. I mean we could collect all private keys we
+    # could find and then make sure we have the one for the secret, but that
+    # seems complicated for little ux gain?
     path = secret_path / "secret"
     if not path.exists():
         msg = f"Secret '{secret_path!s}' does not exist"
@@ -320,7 +332,7 @@ def is_tty_interactive() -> bool:
 
 def set_command(args: argparse.Namespace) -> None:
     env_value = os.environ.get("SOPS_NIX_SECRET")
-    secret_value: str | IO[str] | None = sys.stdin
+    secret_value: str | IO[bytes] | None = sys.stdin.buffer
     if args.edit:
         secret_value = None
     elif env_value:

@@ -21,14 +21,15 @@ def secret_name_type(arg_value: str) -> str:
 def public_or_private_age_key_type(arg_value: str) -> str:
     if Path(arg_value).is_file():
         arg_value = Path(arg_value).read_text().strip()
-    if arg_value.startswith("age1"):
-        return arg_value.strip()
-    if arg_value.startswith("AGE-SECRET-KEY-"):
-        return get_public_age_key(arg_value)
-    if not arg_value.startswith("age1"):
-        msg = f"Please provide an age key starting with age1, got: '{arg_value}'"
-        raise ClanError(msg)
-    return arg_value
+    for line in arg_value.splitlines():
+        if line.startswith("#"):
+            continue
+        if line.startswith("age1"):
+            return line.strip()
+        if line.startswith("AGE-SECRET-KEY-"):
+            return get_public_age_key(line)
+    msg = f"Please provide an age key starting with age1 or AGE-SECRET-KEY-, got: '{arg_value}'"
+    raise ClanError(msg)
 
 
 def group_or_user_name_type(what: str) -> Callable[[str], str]:

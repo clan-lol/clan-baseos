@@ -81,6 +81,7 @@ def create_machine(opts: CreateOptions) -> None:
         msg = "Machine name must be a valid hostname"
         raise ClanError(msg, location="Create Machine")
 
+    # lopter@(2024-10-22): Could we just use warn and use the existing config?
     if dst.exists():
         msg = f"Machine {machine_name} already exists in {clan_dir}"
         description = (
