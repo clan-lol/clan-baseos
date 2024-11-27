@@ -102,8 +102,11 @@ class Machine:
             or self.deployment.get("deploymentAddress")
         )
         if val is None:
-            msg = f"the 'clan.core.networking.targetHost' nixos option is not set for machine '{self.name}'"
-            raise ClanError(msg)
+            msg = f"'TargetHost' is not set for machine '{self.name}'"
+            raise ClanError(
+                msg,
+                description="See https://docs.clan.lol/getting-started/deploy/#setting-the-target-host for more information.",
+            )
         return val
 
     @property
