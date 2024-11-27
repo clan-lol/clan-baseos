@@ -1,13 +1,9 @@
-import { type Component, For, Match, Switch } from "solid-js";
+import { type Component, createSignal, For, Match, Switch } from "solid-js";
 import { activeURI } from "@/src/App";
 import { callApi, OperationResponse } from "@/src/api";
 import toast from "solid-toast";
 import { MachineListItem } from "@/src/components/MachineListItem";
-import {
-  createQueries,
-  createQuery,
-  useQueryClient,
-} from "@tanstack/solid-query";
+import { createQuery, useQueryClient } from "@tanstack/solid-query";
 import { useNavigate } from "@solidjs/router";
 import { Button } from "@/src/components/button";
 import Icon from "@/src/components/icon";
@@ -17,12 +13,14 @@ type MachinesModel = Extract<
   { status: "success" }
 >["data"];
 
-type ExtendedMachine = MachinesModel & {
-  nixOnly: boolean;
-};
+export interface Filter {
+  tags: string[];
+}
 
 export const MachineListView: Component = () => {
   const queryClient = useQueryClient();
+
+  const [filter, setFilter] = createSignal<Filter>({ tags: [] });
 
   const inventoryQuery = createQuery<MachinesModel>(() => ({
     queryKey: [activeURI(), "list_machines", "inventory"],
@@ -44,26 +42,6 @@ export const MachineListView: Component = () => {
     },
   }));
 
-  const nixosQuery = createQuery<string[]>(() => ({
-    queryKey: [activeURI(), "list_machines", "nixos"],
-    enabled: !!activeURI(),
-    placeholderData: [],
-    queryFn: async () => {
-      const uri = activeURI();
-      if (uri) {
-        const response = await callApi("list_nixos_machines", {
-          flake_url: uri,
-        });
-        if (response.status === "error") {
-          toast.error("Failed to fetch data");
-        } else {
-          return response.data;
-        }
-      }
-      return [];
-    },
-  }));
-
   const refresh = async () => {
     queryClient.invalidateQueries({
       // Invalidates the cache for of all types of machine list at once
@@ -71,11 +49,12 @@ export const MachineListView: Component = () => {
     });
   };
 
-  const inventoryMachines = () => Object.entries(inventoryQuery.data || {});
-  const nixOnlyMachines = () =>
-    nixosQuery.data?.filter(
-      (name) => !inventoryMachines().some(([key, machine]) => key === name),
-    );
+  const inventoryMachines = () =>
+    Object.entries(inventoryQuery.data || {}).filter((e) => {
+      const hasAllTags = filter().tags.every((tag) => e[1].tags?.includes(tag));
+
+      return hasAllTags;
+    });
   const navigate = useNavigate();
 
   return (
@@ -88,12 +67,37 @@ export const MachineListView: Component = () => {
           startIcon={<Icon icon="Reload" />}
         ></Button>
       </div>
+
       <div class="tooltip tooltip-bottom" data-tip="Create machine">
         <Button
           variant="light"
           onClick={() => navigate("create")}
           startIcon={<Icon icon="Plus" />}
         ></Button>
+      </div>
+      <div class="my-1 flex w-full gap-2 p-2">
+        <div class="h-6 w-6 p-1">
+          <Icon icon="Info" />
+        </div>
+        <For each={filter().tags.sort()}>
+          {(tag) => (
+            <button
+              type="button"
+              onClick={() =>
+                setFilter((prev) => {
+                  return {
+                    ...prev,
+                    tags: prev.tags.filter((t) => t !== tag),
+                  };
+                })
+              }
+            >
+              <span class="rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
+                {tag}
+              </span>
+            </button>
+          )}
+        </For>
       </div>
       <Switch>
         <Match when={inventoryQuery.isLoading}>
@@ -113,11 +117,7 @@ export const MachineListView: Component = () => {
           </div>
         </Match>
         <Match
-          when={
-            !inventoryQuery.isLoading &&
-            inventoryMachines().length === 0 &&
-            nixOnlyMachines()?.length === 0
-          }
+          when={!inventoryQuery.isLoading && inventoryMachines().length === 0}
         >
           <div class="mt-8 flex w-full flex-col items-center justify-center gap-2">
             <span class="text-lg text-neutral">
@@ -135,10 +135,13 @@ export const MachineListView: Component = () => {
         <Match when={!inventoryQuery.isLoading}>
           <ul>
             <For each={inventoryMachines()}>
-              {([name, info]) => <MachineListItem name={name} info={info} />}
-            </For>
-            <For each={nixOnlyMachines()}>
-              {(name) => <MachineListItem name={name} nixOnly={true} />}
+              {([name, info]) => (
+                <MachineListItem
+                  name={name}
+                  info={info}
+                  setFilter={setFilter}
+                />
+              )}
             </For>
           </ul>
         </Match>

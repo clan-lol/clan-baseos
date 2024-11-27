@@ -1,4 +1,4 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal, For, Setter, Show } from "solid-js";
 import { callApi, SuccessQuery } from "../api";
 import { Menu } from "./Menu";
 import { activeURI } from "../App";
@@ -6,6 +6,7 @@ import toast from "solid-toast";
 import { A, useNavigate } from "@solidjs/router";
 import { RndThumbnail } from "./noiseThumbnail";
 import Icon from "./icon";
+import { Filter } from "../routes/machines";
 
 type MachineDetails = SuccessQuery<"list_inventory_machines">["data"][string];
 
@@ -13,6 +14,7 @@ interface MachineListItemProps {
   name: string;
   info?: MachineDetails;
   nixOnly?: boolean;
+  setFilter: Setter<Filter>;
 }
 
 export const MachineListItem = (props: MachineListItemProps) => {
@@ -128,7 +130,34 @@ export const MachineListItem = (props: MachineListItemProps) => {
               <Show when={info}>
                 {(d) => (
                   <>
-                    <span class="material-icons text-sm">cast_connected</span>
+                    <Show when={d().tags}>
+                      {(tags) => (
+                        <span class="flex gap-1">
+                          <For each={tags()}>
+                            {(tag) => (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  props.setFilter((prev) => {
+                                    if (prev.tags.includes(tag)) {
+                                      return prev;
+                                    }
+                                    return {
+                                      ...prev,
+                                      tags: [...prev.tags, tag],
+                                    };
+                                  })
+                                }
+                              >
+                                <span class="rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
+                                  {tag}
+                                </span>
+                              </button>
+                            )}
+                          </For>
+                        </span>
+                      )}
+                    </Show>
                     {d()?.deploy.targetHost}
                   </>
                 )}
