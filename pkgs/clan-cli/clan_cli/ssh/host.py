@@ -10,7 +10,7 @@ from pathlib import Path
 from shlex import quote
 from typing import IO, Any
 
-from clan_cli.cmd import Log
+from clan_cli.cmd import Log, MsgColor
 from clan_cli.cmd import run as local_run
 from clan_cli.ssh.host_key import HostKeyCheck
 
@@ -68,6 +68,7 @@ class Host:
         check: bool = True,
         error_msg: str | None = None,
         needs_user_terminal: bool = False,
+        msg_color: MsgColor | None = None,
         shell: bool = False,
         timeout: float = math.inf,
     ) -> subprocess.CompletedProcess[str]:
@@ -85,6 +86,7 @@ class Host:
             logger=cmdlog,
             check=check,
             error_msg=error_msg,
+            msg_color=msg_color,
             needs_user_terminal=needs_user_terminal,
         )
         return subprocess.CompletedProcess(
@@ -141,6 +143,7 @@ class Host:
         timeout: float = math.inf,
         verbose_ssh: bool = False,
         tty: bool = False,
+        msg_color: MsgColor | None = None,
         shell: bool = False,
         log: Log = Log.BOTH,
     ) -> subprocess.CompletedProcess[str]:
@@ -192,6 +195,7 @@ class Host:
             cwd=cwd,
             check=check,
             timeout=timeout,
+            msg_color=msg_color,
             needs_user_terminal=True,  # ssh asks for a password
         )
 

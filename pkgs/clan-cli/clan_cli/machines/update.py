@@ -7,7 +7,8 @@ import sys
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import run
+from clan_cli.cmd import MsgColor, run
+from clan_cli.colors import AnsiColor
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
@@ -147,17 +148,26 @@ def deploy_machine(machines: MachineGroup) -> None:
             test_cmd.extend(["--target-host", target_host.target])
 
         env = host.nix_ssh_env(None)
-        ret = host.run(switch_cmd, extra_env=env, check=False)
+        ret = host.run(
+            switch_cmd,
+            extra_env=env,
+            check=False,
+            msg_color=MsgColor(stderr=AnsiColor.DEFAULT),
+        )
 
         # if the machine is mobile, we retry to deploy with the quirk method
         is_mobile = machine.deployment.get("nixosMobileWorkaround", False)
         if is_mobile and ret.returncode != 0:
             log.info("Mobile machine detected, applying quirk deployment method")
-            ret = host.run(test_cmd, extra_env=env)
+            ret = host.run(
+                test_cmd, extra_env=env, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)
+            )
 
         # retry nixos-rebuild switch if the first attempt failed
         elif ret.returncode != 0:
-            ret = host.run(switch_cmd, extra_env=env)
+            ret = host.run(
+                switch_cmd, extra_env=env, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)
+            )
 
     if len(machines.group.hosts) > 1:
         machines.run_function(deploy)

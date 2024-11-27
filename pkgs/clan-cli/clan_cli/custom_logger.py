@@ -1,11 +1,12 @@
 import inspect
+import json
 import logging
 import os
 import sys
 from pathlib import Path
 from typing import Any
 
-from clan_cli.colors import color, css_colors
+from clan_cli.colors import AnsiColor, RgbColor, color_by_tuple
 
 # https://no-color.org
 DISABLE_COLOR = not sys.stderr.isatty() or os.environ.get("NO_COLOR", "") != ""
@@ -25,7 +26,9 @@ class PrefixFormatter(logging.Formatter):
     print errors in red and warnings in yellow
     """
 
-    def __init__(self, trace_prints: bool = False, default_prefix: str = "") -> None:
+    def __init__(
+        self, trace_prints: bool = False, default_prefix: str | None = None
+    ) -> None:
         self.default_prefix = default_prefix
         self.trace_prints = trace_prints
 
@@ -37,22 +40,35 @@ class PrefixFormatter(logging.Formatter):
         filepath = _get_filepath(record)
 
         if record.levelno == logging.DEBUG:
-            color_str = "blue"
+            ansi_color_str = getattr(record, "stdout_color", None)
+            if ansi_color_str is not None:
+                ansi_color = json.loads(ansi_color_str)
+            else:
+                ansi_color = AnsiColor.BLUE.value
         elif record.levelno == logging.ERROR:
-            color_str = "red"
+            ansi_color_str = getattr(record, "stderr_color", None)
+            if ansi_color_str is not None:
+                ansi_color = json.loads(ansi_color_str)
+            else:
+                ansi_color = AnsiColor.RED.value
         elif record.levelno == logging.WARNING:
-            color_str = "yellow"
+            ansi_color = AnsiColor.YELLOW.value
         else:
-            color_str = None
+            ansi_color = AnsiColor.DEFAULT.value
 
         command_prefix = getattr(record, "command_prefix", self.default_prefix)
 
-        if not DISABLE_COLOR:
+        if DISABLE_COLOR:
+            if command_prefix:
+                format_str = f"[{command_prefix}] %(message)s"
+            else:
+                format_str = "%(message)s"
+        elif command_prefix:
             prefix_color = self.hostname_colorcode(command_prefix)
-            format_str = color(f"[{command_prefix}]", fg=prefix_color)
-            format_str += color(" %(message)s", fg=color_str)
+            format_str = color_by_tuple(f"[{command_prefix}]", fg=prefix_color)
+            format_str += color_by_tuple(" %(message)s", fg=ansi_color)
         else:
-            format_str = f"[{command_prefix}] %(message)s"
+            format_str = color_by_tuple("%(message)s", fg=ansi_color)
 
         if self.trace_prints:
             format_str += f"\nSource: {filepath}:%(lineno)d::%(funcName)s\n"
@@ -60,13 +76,14 @@ class PrefixFormatter(logging.Formatter):
         return logging.Formatter(format_str).format(record)
 
     def hostname_colorcode(self, hostname: str) -> tuple[int, int, int]:
+        colorcodes = RgbColor.list_values()
         try:
             index = self.hostnames.index(hostname)
         except ValueError:
             self.hostnames += [hostname]
             index = self.hostnames.index(hostname)
-        coloroffset = (index + self.hostname_color_offset) % len(css_colors)
-        colorcode = list(css_colors.values())[coloroffset]
+        coloroffset = (index + self.hostname_color_offset) % len(colorcodes)
+        colorcode = colorcodes[coloroffset]
 
         return colorcode
 
@@ -116,7 +133,7 @@ def get_callers(start: int = 2, end: int = 2) -> list[str]:
     return callers
 
 
-def print_trace(msg: str, logger: logging.Logger, prefix: str) -> None:
+def print_trace(msg: str, logger: logging.Logger, prefix: str | None) -> None:
     trace_depth = int(os.environ.get("TRACE_DEPTH", "0"))
     callers = get_callers(3, 4 + trace_depth)
 

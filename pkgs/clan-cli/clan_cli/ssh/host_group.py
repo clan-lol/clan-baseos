@@ -116,7 +116,7 @@ class HostGroup:
                 errors += 1
         if errors > 0:
             msg = f"{errors} hosts failed with an error. Check the logs above"
-            raise ClanError(msg)
+            raise ClanError(msg) from e
 
     def _run(
         self,
