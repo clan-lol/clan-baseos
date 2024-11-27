@@ -35,37 +35,36 @@ def is_path_input(node: dict[str, dict[str, str]]) -> bool:
     return locked["type"] == "path" or locked.get("url", "").startswith("file://")
 
 
-def upload_sources(machine: Machine, always_upload_source: bool = False) -> str:
+def upload_sources(machine: Machine) -> str:
     host = machine.build_host
     env = host.nix_ssh_env(os.environ.copy())
 
-    if not always_upload_source:
-        flake_url = (
-            str(machine.flake.path) if machine.flake.is_local() else machine.flake.url
+    flake_url = (
+        str(machine.flake.path) if machine.flake.is_local() else machine.flake.url
+    )
+    flake_data = nix_metadata(flake_url)
+    url = flake_data["resolvedUrl"]
+    has_path_inputs = any(
+        is_path_input(node) for node in flake_data["locks"]["nodes"].values()
+    )
+    if not has_path_inputs and not is_path_input(flake_data):
+        # No need to upload sources, we can just build the flake url directly
+        # FIXME: this might fail for private repositories?
+        return url
+    if not has_path_inputs:
+        # Just copy the flake to the remote machine, we can substitute other inputs there.
+        path = flake_data["path"]
+        cmd = nix_command(
+            [
+                "copy",
+                "--to",
+                f"ssh://{host.target}",
+                "--no-check-sigs",
+                path,
+            ]
         )
-        flake_data = nix_metadata(flake_url)
-        url = flake_data["resolvedUrl"]
-        has_path_inputs = any(
-            is_path_input(node) for node in flake_data["locks"]["nodes"].values()
-        )
-        if not has_path_inputs and not is_path_input(flake_data):
-            # No need to upload sources, we can just build the flake url directly
-            # FIXME: this might fail for private repositories?
-            return url
-        if not has_path_inputs:
-            # Just copy the flake to the remote machine, we can substitute other inputs there.
-            path = flake_data["path"]
-            cmd = nix_command(
-                [
-                    "copy",
-                    "--to",
-                    f"ssh://{host.target}",
-                    "--no-check-sigs",
-                    path,
-                ]
-            )
-            run(cmd, env=env, error_msg="failed to upload sources", prefix=machine.name)
-            return path
+        run(cmd, env=env, error_msg="failed to upload sources", prefix=machine.name)
+        return path
 
     # Slow path: we need to upload all sources to the remote machine
     cmd = nix_command(
@@ -121,7 +120,7 @@ def deploy_machine(machines: MachineGroup) -> None:
         upload_secret_vars(machine)
 
         path = upload_sources(
-            machine,
+            machine=machine,
         )
 
         nix_options = [
