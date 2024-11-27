@@ -10,7 +10,11 @@ from clan_cli.errors import ClanError
 
 
 def nix_command(flags: list[str]) -> list[str]:
-    return ["nix", "--extra-experimental-features", "nix-command flakes", *flags]
+    args = ["nix", "--extra-experimental-features", "nix-command flakes", *flags]
+    store = os.environ.get("TMP_STORE", None)
+    if store:
+        args += ["--store", store]
+    return args
 
 
 def nix_flake_show(flake_url: str | Path) -> list[str]:
