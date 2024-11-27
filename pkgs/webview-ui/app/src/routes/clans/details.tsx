@@ -1,16 +1,7 @@
-import {
-  callApi,
-  ClanService,
-  ClanServiceInstance,
-  SuccessQuery,
-} from "@/src/api";
+import { callApi, ClanServiceInstance, SuccessQuery } from "@/src/api";
 import { BackButton } from "@/src/components/BackButton";
 import { useParams } from "@solidjs/router";
-import {
-  createQuery,
-  QueryClient,
-  useQueryClient,
-} from "@tanstack/solid-query";
+import { createQuery, useQueryClient } from "@tanstack/solid-query";
 import { createSignal, For, Match, Switch } from "solid-js";
 import { Show } from "solid-js";
 import {
@@ -25,6 +16,8 @@ import {
 import { TextInput } from "@/src/components/TextInput";
 import toast from "solid-toast";
 import { get_single_service, set_single_service } from "@/src/api/inventory";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 interface AdminModuleFormProps {
   admin: AdminData;
@@ -157,13 +150,12 @@ const EditClanForm = (props: EditClanFormProps) => {
         </Field>
         {
           <div class="card-actions justify-end">
-            <button
-              class="btn btn-primary"
+            <Button
               type="submit"
               disabled={formStore.submitting || !formStore.dirty}
             >
               Save
-            </button>
+            </Button>
           </div>
         }
       </div>
@@ -307,41 +299,39 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
                     </>
                   )}
                 </Field>
-                <button
-                  class="btn btn-ghost col-span-1 self-end"
+                <Button
+                  variant="light"
+                  class="col-span-1 self-end"
+                  startIcon={<Icon icon="Trash" />}
                   onClick={(e) => {
                     e.preventDefault();
                     setKeys((c) => c.filter((_, i) => i !== idx()));
                     setValue(formStore, `allowedKeys.${idx()}.name`, "");
                     setValue(formStore, `allowedKeys.${idx()}.value`, "");
                   }}
-                >
-                  <span class="material-icons">delete</span>
-                </button>
+                ></Button>
               </>
             )}
           </For>
           <div class="my-2 flex w-full gap-2">
-            <button
-              class="btn btn-square btn-ghost"
+            <Button
+              variant="light"
               onClick={(e) => {
                 e.preventDefault();
                 setKeys((c) => [...c, 1]);
               }}
-            >
-              <span class="material-icons">add</span>
-            </button>
+              startIcon={<Icon icon="Plus" />}
+            ></Button>
           </div>
         </div>
         {
           <div class="card-actions justify-end">
-            <button
-              class="btn btn-primary"
+            <Button
               type="submit"
               disabled={formStore.submitting || !formStore.dirty}
             >
               Save
-            </button>
+            </Button>
           </div>
         }
       </div>

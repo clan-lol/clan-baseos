@@ -35,6 +35,8 @@ import {
 import cx from "classnames";
 import { Label } from "../base/label";
 import { SelectInput } from "../fields/Select";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 function generateDefaults(schema: JSONSchema7): unknown {
   switch (schema.type) {
@@ -385,15 +387,25 @@ export function ListValueDisplay<T extends FieldValues, R extends ResponseData>(
       <div class="flex w-full items-end gap-2 px-4">
         {props.children}
         <div class="ml-4 min-w-fit pb-4">
-          <button class="btn" onClick={moveItemBy(1)} disabled={topMost()}>
-            ↓
-          </button>
-          <button class="btn" onClick={moveItemBy(-1)} disabled={bottomMost()}>
-            ↑
-          </button>
-          <button class="btn btn-error" onClick={removeItem}>
-            x
-          </button>
+          <Button
+            variant="light"
+            onClick={moveItemBy(1)}
+            disabled={topMost()}
+            startIcon={<Icon icon="ArrowBottom" />}
+            class="h-12"
+          ></Button>
+          <Button
+            variant="light"
+            onClick={moveItemBy(-1)}
+            disabled={bottomMost()}
+            class="h-12"
+            startIcon={<Icon icon="ArrowTop" />}
+          ></Button>
+          <Button
+            class="h-12"
+            startIcon={<Icon icon="Trash" />}
+            onClick={removeItem}
+          ></Button>
         </div>
       </div>
     </div>
@@ -641,7 +653,14 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                           }}
                           // Button for adding new items
                           components={{
-                            before: <button class="btn">Add ↑</button>,
+                            before: (
+                              <Button
+                                variant="light"
+                                endIcon={<Icon icon={"Plus"} />}
+                              >
+                                Add
+                              </Button>
+                            ),
                           }}
                           // Add the new item to the FieldArray
                           handleSubmit={(values, event) => {
@@ -827,8 +846,10 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
                                         <span class="text-xl font-semibold">
                                           {key}
                                         </span>
-                                        <button
-                                          class="btn btn-warning btn-sm ml-auto"
+                                        <Button
+                                          variant="light"
+                                          class="ml-auto"
+                                          size="s"
                                           type="button"
                                           onClick={(_e) => {
                                             const copy = {
@@ -845,8 +866,8 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
                                             );
                                           }}
                                         >
-                                          Remove
-                                        </button>
+                                          <Icon icon="Trash" />
+                                        </Button>
                                       </div>
                                     ),
                                   }}

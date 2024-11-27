@@ -6,6 +6,8 @@ import { useFloating } from "@/src/floating";
 import { autoUpdate, flip, hide, offset, shift } from "@floating-ui/dom";
 import { useNavigate, A } from "@solidjs/router";
 import { registerClan } from "@/src/hooks";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 interface ClanItemProps {
   clan_dir: string;
@@ -61,33 +63,32 @@ const ClanItem = (props: ClanItemProps) => {
     <div class="stat">
       <div class="stat-figure text-primary-800">
         <div class="join">
-          <button
-            class="join-item btn-sm"
+          <Button
+            size="s"
+            variant="light"
+            class="join-item"
             onClick={() => navigate(`/clans/${window.btoa(clan_dir)}`)}
-          >
-            <span class="material-icons">edit</span>
-          </button>
-          <button
-            class=" join-item btn-sm"
-            classList={{
-              "btn btn-ghost btn-outline": activeURI() !== clan_dir,
-              "badge badge-primary": activeURI() === clan_dir,
-            }}
-            disabled={activeURI() === clan_dir}
+            endIcon={<Icon icon="Settings" />}
+          ></Button>
+          <Button
+            size="s"
+            variant="light"
+            class="join-item "
             onClick={() => {
               setActiveURI(clan_dir);
             }}
           >
             {activeURI() === clan_dir ? "active" : "select"}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="s"
+            variant="light"
             popovertarget={`clan-delete-popover-${clan_dir}`}
             popovertargetaction="toggle"
             ref={setReference}
-            class="btn btn-ghost btn-outline join-item btn-sm"
-          >
-            Remove
-          </button>
+            class="btn btn-ghost btn-outline join-item"
+            endIcon={<Icon icon="Trash" />}
+          ></Button>
           <div
             popover="auto"
             role="tooltip"
@@ -100,9 +101,14 @@ const ClanItem = (props: ClanItemProps) => {
             }}
             class="m-0 bg-transparent"
           >
-            <button class="btn bg-[#ffdd2c]" onClick={handleRemove}>
+            <Button
+              size="s"
+              onClick={handleRemove}
+              variant="dark"
+              endIcon={<Icon icon="Trash" />}
+            >
               Remove from App
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -139,19 +145,19 @@ export const ClanList = () => {
           <div class="label-text text-2xl text-neutral">Registered Clans</div>
           <div class="flex gap-2">
             <span class="tooltip tooltip-top" data-tip="Register clan">
-              <button class="btn btn-square btn-ghost" onClick={registerClan}>
-                <span class="material-icons">post_add</span>
-              </button>
+              <Button
+                variant="light"
+                onClick={registerClan}
+                startIcon={<Icon icon="List" />}
+              ></Button>
             </span>
             <span class="tooltip tooltip-top" data-tip="Create new clan">
-              <button
-                class="btn btn-square btn-ghost"
+              <Button
                 onClick={() => {
                   navigate("create");
                 }}
-              >
-                <span class="material-icons">add</span>
-              </button>
+                startIcon={<Icon icon="Plus" />}
+              ></Button>
             </span>
           </div>
         </div>

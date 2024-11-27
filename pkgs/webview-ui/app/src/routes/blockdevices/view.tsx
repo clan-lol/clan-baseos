@@ -2,6 +2,8 @@ import { callApi } from "@/src/api";
 import { Component, For, Show } from "solid-js";
 
 import { createQuery } from "@tanstack/solid-query";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 export const BlockDevicesView: Component = () => {
   const {
@@ -22,9 +24,10 @@ export const BlockDevicesView: Component = () => {
   return (
     <div>
       <div class="tooltip tooltip-bottom" data-tip="Refresh">
-        <button class="btn btn-ghost" onClick={() => loadDevices()}>
-          <span class="material-icons ">refresh</span>
-        </button>
+        <Button
+          onClick={() => loadDevices()}
+          startIcon={<Icon icon="Reload" />}
+        ></Button>
       </div>
       <div class="flex max-w-screen-lg flex-col gap-4">
         {isFetching ? (

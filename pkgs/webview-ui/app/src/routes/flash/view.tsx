@@ -1,5 +1,7 @@
 import { callApi } from "@/src/api";
+import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
+import Icon from "@/src/components/icon";
 import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
 import {
@@ -209,15 +211,15 @@ export const Flash = () => {
           {(field, props) => (
             <SelectInput
               topRightLabel={
-                <button
-                  class="btn btn-ghost btn-sm"
+                <Button
+                  size="s"
+                  variant="light"
                   onClick={(e) => {
                     e.preventDefault();
                     deviceQuery.refetch();
                   }}
-                >
-                  <span class="material-icons text-sm">refresh</span>
-                </button>
+                  startIcon={<Icon icon="Reload" />}
+                ></Button>
               }
               formStore={formStore}
               selectProps={props}
@@ -285,17 +287,19 @@ export const Flash = () => {
                         adornment={{
                           position: "end",
                           content: (
-                            <button
+                            <Button
+                              variant="light"
                               type="button"
                               class="flex justify-center opacity-70"
                               onClick={() => togglePasswordVisibility(index())}
-                            >
-                              <span class="material-icons">
-                                {passwordVisibility()[index()]
-                                  ? "visibility_off"
-                                  : "visibility"}
-                              </span>
-                            </button>
+                              startIcon={
+                                passwordVisibility()[index()] ? (
+                                  <Icon icon="EyeClose" />
+                                ) : (
+                                  <Icon icon="EyeOpen" />
+                                )
+                              }
+                            ></Button>
                           ),
                         }}
                         required
@@ -304,25 +308,27 @@ export const Flash = () => {
                   )}
                 </Field>
                 <div class="col-span-1 self-end">
-                  <button
+                  <Button
                     type="button"
-                    class="btn btn-ghost "
+                    variant="light"
+                    class="h-12"
                     onClick={() => removeWifiNetwork(index())}
-                  >
-                    <span class="material-icons">delete</span>
-                  </button>
+                    startIcon={<Icon icon="Trash" />}
+                  ></Button>
                 </div>
               </div>
             )}
           </For>
           <div class="">
-            <button
+            <Button
               type="button"
-              class="btn btn-ghost btn-sm"
+              size="s"
+              variant="light"
               onClick={addWifiNetwork}
+              startIcon={<Icon icon="Plus" />}
             >
-              <span class="material-icons">add</span>Add WiFi Network
-            </button>
+              Add WiFi Network
+            </Button>
           </div>
         </div>
 
@@ -434,18 +440,20 @@ export const Flash = () => {
 
         <hr></hr>
         <div class="mt-2 flex justify-end pt-2">
-          <button
-            class="btn btn-error self-end"
+          <Button
+            class="self-end"
             type="submit"
             disabled={formStore.submitting}
+            startIcon={
+              formStore.submitting ? (
+                <Icon icon="Load" />
+              ) : (
+                <Icon icon="Flash" />
+              )
+            }
           >
-            {formStore.submitting ? (
-              <span class="loading loading-spinner"></span>
-            ) : (
-              <span class="material-icons">bolt</span>
-            )}
             {formStore.submitting ? "Flashing..." : "Flash Installer"}
-          </button>
+          </Button>
         </div>
       </Form>
     </div>

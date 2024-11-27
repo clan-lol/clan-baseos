@@ -6,7 +6,7 @@ export const SidebarFlyout = () => {
     <div class="sidebar__flyout">
       <div class="sidebar__flyout__inner">
         <List gapSize="small">
-          <SidebarListItem href="/settings" title="Settings" />
+          <SidebarListItem href="/clans" title="Settings" />
         </List>
       </div>
     </div>

@@ -8,11 +8,7 @@
 /* Sidebar Structure */
 
 .sidebar {
-  min-width: theme(width.72);
-  height: 100%;
-  background-color: var(--clr-bg-inv-2);
-  border: 1px solid var(--clr-border-inv-2);
-  border-radius: theme(borderRadius.xl);
+  @apply bg-inv-2 h-full border border-solid border-inv-2 min-w-72 rounded-xl;
 }
 
 .sidebar__body {

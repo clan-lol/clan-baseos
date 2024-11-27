@@ -9,6 +9,7 @@ import {
   shift,
 } from "@floating-ui/dom";
 import cx from "classnames";
+import { Button } from "./button";
 
 interface MenuProps {
   /**
@@ -53,7 +54,8 @@ export const Menu = (props: MenuProps) => {
 
   return (
     <div>
-      <button
+      <Button
+        variant="light"
         popovertarget={props.popoverid}
         popovertargetaction="toggle"
         ref={setReference}
@@ -64,7 +66,7 @@ export const Menu = (props: MenuProps) => {
         {...props.buttonProps}
       >
         {props.label}
-      </button>
+      </Button>
       <div
         popover="auto"
         id={props.popoverid}

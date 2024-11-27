@@ -10,6 +10,8 @@ import toast from "solid-toast";
 import { setActiveURI, setClanList } from "@/src/App";
 import { TextInput } from "@/src/components/TextInput";
 import { useNavigate } from "@solidjs/router";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 type CreateForm = Meta & {
   template: string;
@@ -176,13 +178,13 @@ export const CreateClan = () => {
           </Field>
           {
             <div class="card-actions justify-end">
-              <button
-                class="btn btn-primary"
+              <Button
                 type="submit"
                 disabled={formStore.submitting}
+                endIcon={<Icon icon="Plus" />}
               >
                 Create
-              </button>
+              </Button>
             </div>
           }
         </div>

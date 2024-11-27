@@ -136,9 +136,10 @@ export const routes: AppRoute[] = [
   {
     path: "/welcome",
     label: "",
-    hidden: true,
+    hidden: false,
     component: () => <Welcome />,
   },
+
   {
     path: "/api_testing",
     label: "api_testing",

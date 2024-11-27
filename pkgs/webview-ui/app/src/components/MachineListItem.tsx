@@ -5,6 +5,7 @@ import { activeURI } from "../App";
 import toast from "solid-toast";
 import { A, useNavigate } from "@solidjs/router";
 import { RndThumbnail } from "./noiseThumbnail";
+import Icon from "./icon";
 
 type MachineDetails = SuccessQuery<"list_inventory_machines">["data"][string];
 
@@ -138,7 +139,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
           <div>
             <Menu
               popoverid={`menu-${props.name}`}
-              label={<span class="material-icons">more_vert</span>}
+              label={<Icon icon={"Expand"} />}
             >
               <ul class="menu z-[1] w-52 rounded-box bg-base-100 p-2 shadow">
                 <li>

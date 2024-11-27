@@ -163,7 +163,7 @@ class ClanError(Exception):
         exception_msg += self.msg
 
         if self.description:
-            exception_msg = f" - {self.description}"
+            exception_msg += f" - {self.description}"
         super().__init__(exception_msg)
 
 

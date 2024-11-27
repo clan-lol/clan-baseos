@@ -25,6 +25,8 @@ import {
   SubmitHandler,
 } from "@modular-forms/solid";
 import { DynForm } from "@/src/Form/form";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 export const ModuleDetails = () => {
   const params = useParams();
@@ -116,10 +118,9 @@ const Details = (props: DetailsProps) => {
         <SolidMarkdown>{props.data.readme}</SolidMarkdown>
       </div>
       <div class="my-2 flex w-full gap-2">
-        <button class="btn btn-primary" onClick={add}>
-          <span class="material-icons ">add</span>
+        <Button variant="light" onClick={add} startIcon={<Icon icon="Plus" />}>
           Add to Clan
-        </button>
+        </Button>
         {/* Add -> Select (required) roles, assign Machine */}
       </div>
       <ModuleForm id={props.id} />
@@ -192,7 +193,7 @@ export const ModuleForm = (props: { id: string }) => {
                       handleSubmit={handleSubmit}
                       schema={schema}
                       components={{
-                        after: <button class="btn btn-primary">Submit</button>,
+                        after: <Button>Submit</Button>,
                       }}
                     />
                   </div>

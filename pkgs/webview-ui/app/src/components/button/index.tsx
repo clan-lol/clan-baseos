@@ -61,6 +61,7 @@ export const Button = (props: ButtonProps) => {
         "inline-flex items-center flex-shrink gap-2 justify-center",
         // Styles
         "border border-solid",
+        "p-4",
         sizePaddings[local.size || "default"],
         // Colors
         variantColors[local.variant || "dark"],

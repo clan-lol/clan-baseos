@@ -1,5 +1,7 @@
 import { type Component, createSignal, For, Show } from "solid-js";
 import { OperationResponse, pyApi } from "@/src/api";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 type ServiceModel = Extract<
   OperationResponse<"show_mdns">,
@@ -12,12 +14,11 @@ export const HostList: Component = () => {
   return (
     <div>
       <div class="tooltip tooltip-bottom" data-tip="Refresh install targets">
-        <button
-          class="btn btn-ghost"
+        <Button
+          variant="light"
           onClick={() => pyApi.show_mdns.dispatch({})}
-        >
-          <span class="material-icons ">refresh</span>
-        </button>
+          startIcon={<Icon icon="Update" />}
+        ></Button>
       </div>
       <div class="flex flex-wrap gap-2">
         <Show when={services()}>
