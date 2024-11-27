@@ -15,6 +15,7 @@ let
       rope
       setuptools
       wheel
+      webcolors
       pip
     ]);
 in

@@ -1,4 +1,5 @@
 import contextlib
+import json
 import logging
 import math
 import os
@@ -11,10 +12,12 @@ import timeit
 import weakref
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import IO, Any
 
+from clan_cli.colors import Color
 from clan_cli.custom_logger import print_trace
 from clan_cli.errors import ClanCmdError, ClanError, CmdOut, indent_command
 
@@ -43,16 +46,23 @@ class Log(Enum):
     NONE = 4
 
 
+@dataclass
+class MsgColor:
+    stderr: Color | None = None
+    stdout: Color | None = None
+
+
 def handle_io(
     process: subprocess.Popen,
     log: Log,
     cmdlog: logging.Logger,
-    prefix: str,
     *,
+    prefix: str | None,
     input_bytes: bytes | None,
     stdout: IO[bytes] | None,
     stderr: IO[bytes] | None,
     timeout: float = math.inf,
+    msg_color: MsgColor | None = None,
 ) -> tuple[str, str]:
     rlist = [process.stdout, process.stderr]
     wlist = [process.stdin] if input_bytes is not None else []
@@ -85,6 +95,12 @@ def handle_io(
                 rlist.remove(fd)
             return b""
 
+        extra = {"command_prefix": prefix}
+        if msg_color and msg_color.stderr:
+            extra["stderr_color"] = json.dumps(msg_color.stderr.value)
+        if msg_color and msg_color.stdout:
+            extra["stdout_color"] = json.dumps(msg_color.stdout.value)
+
         #
         # Process stdout
         #
@@ -92,7 +108,7 @@ def handle_io(
         if ret and log in [Log.STDOUT, Log.BOTH]:
             lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
             for line in lines:
-                cmdlog.info(line, extra={"command_prefix": prefix})
+                cmdlog.info(line, extra=extra)
         if ret and stdout:
             stdout.write(ret)
             stdout.flush()
@@ -106,7 +122,7 @@ def handle_io(
         if ret and log in [Log.STDERR, Log.BOTH]:
             lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
             for line in lines:
-                cmdlog.error(line, extra={"command_prefix": prefix})
+                cmdlog.error(line, extra=extra)
         if ret and stderr:
             stderr.write(ret)
             stderr.flush()
@@ -224,6 +240,7 @@ def run(
     log: Log = Log.STDERR,
     logger: logging.Logger = cmdlog,
     prefix: str | None = None,
+    msg_color: MsgColor | None = None,
     check: bool = True,
     error_msg: str | None = None,
     needs_user_terminal: bool = False,
@@ -234,7 +251,7 @@ def run(
         cwd = Path.cwd()
 
     if prefix is None:
-        prefix = "localhost"
+        prefix = "$"
 
     if input:
         if any(not ch.isprintable() for ch in input.decode("ascii", "replace")):
@@ -273,6 +290,7 @@ def run(
             process,
             log,
             prefix=prefix,
+            msg_color=msg_color,
             cmdlog=logger,
             timeout=timeout,
             input_bytes=input,
