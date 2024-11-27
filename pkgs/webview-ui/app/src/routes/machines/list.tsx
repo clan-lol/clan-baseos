@@ -9,6 +9,8 @@ import {
   useQueryClient,
 } from "@tanstack/solid-query";
 import { useNavigate } from "@solidjs/router";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 
 type MachinesModel = Extract<
   OperationResponse<"list_inventory_machines">,
@@ -80,14 +82,18 @@ export const MachineListView: Component = () => {
     <div>
       <div class="tooltip tooltip-bottom" data-tip="Open Clan"></div>
       <div class="tooltip tooltip-bottom" data-tip="Refresh">
-        <button class="btn btn-ghost" onClick={() => refresh()}>
-          <span class="material-icons ">refresh</span>
-        </button>
+        <Button
+          variant="light"
+          onClick={() => refresh()}
+          startIcon={<Icon icon="Reload" />}
+        ></Button>
       </div>
       <div class="tooltip tooltip-bottom" data-tip="Create machine">
-        <button class="btn btn-ghost" onClick={() => navigate("create")}>
-          <span class="material-icons ">add</span>
-        </button>
+        <Button
+          variant="light"
+          onClick={() => navigate("create")}
+          startIcon={<Icon icon="Plus" />}
+        ></Button>
       </div>
       <Switch>
         <Match when={inventoryQuery.isLoading}>
@@ -117,12 +123,13 @@ export const MachineListView: Component = () => {
             <span class="text-lg text-neutral">
               No machines defined yet. Click below to define one.
             </span>
-            <button
-              class="btn btn-square btn-ghost size-28 overflow-hidden p-2"
+            <Button
+              variant="light"
+              class="size-28 overflow-hidden p-2"
               onClick={() => navigate("/machines/create")}
             >
               <span class="material-icons text-6xl font-light">add</span>
-            </button>
+            </Button>
           </div>
         </Match>
         <Match when={!inventoryQuery.isLoading}>

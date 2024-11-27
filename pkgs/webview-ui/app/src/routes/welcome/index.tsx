@@ -1,4 +1,5 @@
 import { setActiveURI } from "@/src/App";
+import { Button } from "@/src/components/button";
 import { registerClan } from "@/src/hooks";
 import { useNavigate } from "@solidjs/router";
 
@@ -11,14 +12,12 @@ export const Welcome = () => {
           <h1 class="text-5xl font-bold">Welcome to Clan</h1>
           <p class="py-6">Own the services you use.</p>
           <div class="flex flex-col items-start gap-2">
-            <button
-              class="btn btn-primary w-full"
-              onClick={() => navigate("/clans/create")}
-            >
+            <Button class="w-full" onClick={() => navigate("/clans/create")}>
               Build your own
-            </button>
-            <button
-              class="link w-full text-right text-primary-800"
+            </Button>
+            <Button
+              variant="light"
+              class="!link w-full text-right !text-primary-800"
               onClick={async () => {
                 const uri = await registerClan();
                 if (uri) {
@@ -28,7 +27,7 @@ export const Welcome = () => {
               }}
             >
               Or select folder
-            </button>
+            </Button>
           </div>
         </div>
       </div>

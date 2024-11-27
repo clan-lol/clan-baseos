@@ -1,4 +1,4 @@
-import { Component, JSX } from "solid-js";
+import { Component, JSX, splitProps } from "solid-js";
 import ArrowBottom from "@/icons/arrow-bottom.svg";
 import ArrowLeft from "@/icons/arrow-left.svg";
 import ArrowRight from "@/icons/arrow-right.svg";
@@ -81,10 +81,18 @@ const Icon: Component<IconProps> = (props) => {
     Trash,
     Update,
   };
+  const [local, iconProps] = splitProps(props, ["icon"]);
 
-  const IconComponent = icons[props.icon];
+  const IconComponent = icons[local.icon];
   return IconComponent ? (
-    <IconComponent width={16} height={16} viewBox="0 0 48 48" />
+    <IconComponent
+      width={16}
+      height={16}
+      viewBox="0 0 48 48"
+      // @ts-expect-error: dont know, fix this type nit later
+      ref={iconProps.ref}
+      {...iconProps}
+    />
   ) : null;
 };
 

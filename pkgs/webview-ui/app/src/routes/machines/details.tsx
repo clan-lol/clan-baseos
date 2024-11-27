@@ -3,7 +3,9 @@ import { set_single_disk_id } from "@/src/api/disk";
 import { get_iwd_service } from "@/src/api/wifi";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
+import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
+import Icon from "@/src/components/icon";
 import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
 import { selectSshKeys } from "@/src/hooks";
@@ -192,13 +194,15 @@ const InstallMachine = (props: InstallMachineProps) => {
               </Match>
             </Switch>
             <div class="">
-              <button
-                class="btn btn-ghost btn-sm btn-wide"
+              <Button
+                variant="light"
+                size="s"
+                class="w-full"
                 onclick={generateReport}
               >
                 <span class="material-icons">manage_search</span>
                 Generate report
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -252,25 +256,32 @@ const InstallMachine = (props: InstallMachineProps) => {
           <Show
             when={confirmDisk()}
             fallback={
-              <button
+              <Button
                 class="btn btn-primary btn-wide"
                 onClick={handleDiskConfirm}
                 disabled={!hasDisk()}
+                startIcon={<Icon icon="Flash" />}
               >
-                <span class="material-icons">check</span>
                 Confirm Disk
-              </button>
+              </Button>
             }
           >
-            <button class="btn btn-primary btn-wide" type="submit">
-              <span class="material-icons">send_to_mobile</span>
+            <Button
+              class="w-full"
+              type="submit"
+              startIcon={<Icon icon="Flash" />}
+            >
               Install
-            </button>
+            </Button>
           </Show>
           <form method="dialog">
-            <button onClick={() => setConfirmDisk(false)} class="btn">
+            <Button
+              variant="light"
+              onClick={() => setConfirmDisk(false)}
+              class="btn"
+            >
               Close
-            </button>
+            </Button>
           </form>
         </div>
       </Form>
@@ -519,13 +530,12 @@ const MachineForm = (props: MachineDetailsProps) => {
 
           {
             <div class="card-actions justify-end">
-              <button
-                class="btn btn-primary"
+              <Button
                 type="submit"
                 disabled={formStore.submitting || !formStore.dirty}
               >
                 Save
-              </button>
+              </Button>
             </div>
           }
         </div>
@@ -550,15 +560,19 @@ const MachineForm = (props: MachineDetailsProps) => {
             device.
           </span>
           <div class="tooltip w-fit" data-tip="Machine must be online">
-            <button
-              class="btn btn-primary btn-sm btn-wide"
-              disabled={!online()}
-              // @ts-expect-error: This string method is not supported by ts
-              onClick="install_modal.showModal()"
+            <Button
+              class="w-full"
+              // disabled={!online()}
+              onClick={() => {
+                const modal = document.getElementById(
+                  "install_modal",
+                ) as HTMLDialogElement | null;
+                modal?.showModal();
+              }}
+              endIcon={<Icon icon="Flash" />}
             >
-              <span class="material-icons">send_to_mobile</span>
               Install
-            </button>
+            </Button>
           </div>
 
           <dialog id="install_modal" class="modal backdrop:bg-transparent">
@@ -577,14 +591,14 @@ const MachineForm = (props: MachineDetailsProps) => {
             process.
           </span>
           <div class="tooltip w-fit" data-tip="Machine must be online">
-            <button
-              class="btn btn-primary btn-sm btn-wide"
+            <Button
+              class="w-full"
               disabled={!online()}
               onClick={() => handleUpdate()}
+              endIcon={<Icon icon="Update" />}
             >
-              <span class="material-icons">update</span>
               Update
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -761,41 +775,38 @@ function WifiModule(props: MachineWifiProps) {
                 />
               )}
             </Field>
-            <button class="btn btn-ghost self-end">
-              <span
-                class="material-icons"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setNets((c) => c.filter((_, i) => i !== idx()));
-                  setValue(formStore, `networks.${idx()}.ssid`, undefined);
-                  setValue(formStore, `networks.${idx()}.password`, undefined);
-                }}
-              >
-                delete
-              </span>
-            </button>
+            <Button
+              variant="light"
+              class="self-end"
+              type="button"
+              onClick={() => {
+                setNets((c) => c.filter((_, i) => i !== idx()));
+                setValue(formStore, `networks.${idx()}.ssid`, undefined);
+                setValue(formStore, `networks.${idx()}.password`, undefined);
+              }}
+              startIcon={<Icon icon="Trash" />}
+            ></Button>
           </div>
         )}
       </For>
-      <button
+      <Button
         class="btn btn-ghost btn-sm my-1 flex items-center justify-center"
         onClick={(e) => {
-          e.preventDefault();
           setNets([...nets(), 1]);
         }}
+        type="button"
+        startIcon={<Icon icon="Plus" />}
       >
-        <span class="material-icons">add</span>
         Add Network
-      </button>
+      </Button>
       {
         <div class="card-actions mt-4 justify-end">
-          <button
-            class="btn btn-primary"
+          <Button
             type="submit"
             disabled={formStore.submitting || !formStore.dirty}
           >
             Save
-          </button>
+          </Button>
         </div>
       }
     </Form>

@@ -29,7 +29,7 @@ export const SidebarHeader = (props: SidebarHeader) => {
         color="primary"
         inverted={true}
       >
-        {clanName.slice(0, 1)}
+        {clanName.slice(0, 1).toUpperCase()}
       </Typography>
     </div>
   );

@@ -1,5 +1,7 @@
 import { callApi, OperationArgs } from "@/src/api";
 import { activeURI } from "@/src/App";
+import { Button } from "@/src/components/button";
+import Icon from "@/src/components/icon";
 import { TextInput } from "@/src/components/TextInput";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { useNavigate } from "@solidjs/router";
@@ -108,26 +110,21 @@ export function CreateMachine() {
             )}
           </Field>
           <div class="mt-12 flex justify-end">
-            <button
-              class="btn btn-primary"
+            <Button
               type="submit"
-              classList={{
-                "btn-disabled": formStore.submitting,
-              }}
+              disabled={formStore.submitting}
+              startIcon={
+                formStore.submitting ? (
+                  <Icon icon="Load" />
+                ) : (
+                  <Icon icon="Plus" />
+                )
+              }
             >
-              <Switch
-                fallback={
-                  <>
-                    <span class="loading loading-spinner loading-sm"></span>
-                    Creating
-                  </>
-                }
-              >
-                <Match when={!formStore.submitting}>
-                  <span class="material-icons">add</span>Create
-                </Match>
+              <Switch fallback={<>Creating</>}>
+                <Match when={!formStore.submitting}>Create</Match>
               </Switch>
-            </button>
+            </Button>
           </div>
         </Form>
       </div>

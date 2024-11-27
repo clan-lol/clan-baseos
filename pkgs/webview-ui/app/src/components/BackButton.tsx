@@ -9,7 +9,7 @@ export const BackButton = () => {
       variant="light"
       class="w-fit"
       onClick={() => navigate(-1)}
-      startIcon={<Icon icon="ArrowLeft" />}
+      startIcon={<Icon icon="CaretRight" />}
     ></Button>
   );
 };
