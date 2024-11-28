@@ -1,7 +1,7 @@
-import subprocess
 from dataclasses import dataclass
 from typing import Generic
 
+from clan_cli.errors import CmdOut
 from clan_cli.ssh import T
 from clan_cli.ssh.host import Host
 
@@ -30,4 +30,4 @@ class HostResult(Generic[T]):
         return self._result
 
 
-Results = list[HostResult[subprocess.CompletedProcess[str]]]
+Results = list[HostResult[CmdOut]]

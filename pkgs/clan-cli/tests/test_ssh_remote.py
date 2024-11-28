@@ -1,8 +1,6 @@
-import subprocess
-
 import pytest
 from clan_cli.cmd import Log
-from clan_cli.errors import ClanError
+from clan_cli.errors import ClanError, CmdOut
 from clan_cli.ssh.host import Host
 from clan_cli.ssh.host_group import HostGroup
 from clan_cli.ssh.host_key import HostKeyCheck
@@ -74,7 +72,7 @@ def test_run_exception(host_group: HostGroup) -> None:
 
 
 def test_run_function_exception(host_group: HostGroup) -> None:
-    def some_func(h: Host) -> subprocess.CompletedProcess[str]:
+    def some_func(h: Host) -> CmdOut:
         return h.run_local(["exit 1"], shell=True)
 
     try:
