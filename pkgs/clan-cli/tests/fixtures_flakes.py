@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import pytest
-from clan_cli.dirs import nixpkgs_source
+from clan_cli.dirs import TemplateType, clan_templates, nixpkgs_source
 from clan_cli.locked_open import locked_open
 from fixture_error import FixtureError
 from root import CLAN_CORE
@@ -213,7 +213,7 @@ def minimal_flake_template() -> Iterator[ClanFlake]:
         mp.setenv("HOME", home)
         flake = ClanFlake(
             temporary_home=Path(home),
-            flake_template=CLAN_CORE / "templates" / "minimal",
+            flake_template=clan_templates(TemplateType.CLAN) / "minimal",
         )
         flake.init_from_template()
         yield flake
