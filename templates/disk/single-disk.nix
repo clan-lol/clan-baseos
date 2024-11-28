@@ -25,12 +25,6 @@
                 mountpoint = "/";
               };
             };
-            swap = {
-              size = "{{swapSize}}";
-              content = {
-                type = "swap";
-              };
-            };
           };
         };
       };
