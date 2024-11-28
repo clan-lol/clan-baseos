@@ -32,7 +32,6 @@ in
       );
     };
     secretModule = "clan_cli.vars.secret_modules.sops";
-    secretUploadDirectory = lib.mkDefault "/var/lib/sops-nix";
   };
 
   config.sops = lib.mkIf (config.clan.core.vars.settings.secretStore == "sops") {

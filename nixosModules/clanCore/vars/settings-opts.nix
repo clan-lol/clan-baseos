@@ -10,7 +10,7 @@
     default = "sops";
     description = ''
       method to store secret facts
-      custom can be used to define a custom secret fact store.
+      custom can be used to define a custom secret var store.
     '';
   };
 
@@ -19,14 +19,6 @@
     internal = true;
     description = ''
       the python import path to the secret module
-    '';
-  };
-
-  secretUploadDirectory = lib.mkOption {
-    type = lib.types.path;
-    description = ''
-      The directory where secrets are uploaded into, This is backend specific.
-      This is usally set by the secret store backend.
     '';
   };
 
@@ -49,8 +41,8 @@
     ];
     default = "in_repo";
     description = ''
-      method to store public facts.
-      custom can be used to define a custom public fact store.
+      method to store public vars.
+      custom can be used to define a custom public vars store.
     '';
   };
 
@@ -59,14 +51,6 @@
     internal = true;
     description = ''
       the python import path to the public module
-    '';
-  };
-
-  publicDirectory = lib.mkOption {
-    type = lib.types.path;
-    description = ''
-      The directory where public facts are stored.
-      This is usally set by the public store backend.
     '';
   };
 }

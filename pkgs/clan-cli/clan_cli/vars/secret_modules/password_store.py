@@ -136,7 +136,10 @@ class SecretStore(SecretStoreBase):
         local_hash = self.generate_hash()
         remote_hash = self.machine.target_host.run(
             # TODO get the path to the secrets from the machine
-            ["cat", f"{self.machine.secret_vars_upload_directory}/.pass_info"],
+            [
+                "cat",
+                f"{self.machine.deployment["password-store"]["secretLocation"]}/.pass_info",
+            ],
             log=Log.STDERR,
             check=False,
         ).stdout.strip()

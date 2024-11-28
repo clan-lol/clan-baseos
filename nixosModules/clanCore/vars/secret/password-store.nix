@@ -39,7 +39,18 @@ let
     || (options.services ? userborn && config.services.userborn.enable);
 in
 {
+  options.clan.vars.password-store = {
+    secretLocation = lib.mkOption {
+      type = lib.types.path;
+      default = "/etc/secret-vars";
+      description = ''
+        location where the tarball with the password-store secrets will be uploaded to and the manifest
+      '';
+    };
+  };
   config = {
+    system.clan.deployment.data.password-store.secretLocation =
+      config.clan.vars.password-store.secretLocation;
     clan.core.vars.settings =
       lib.mkIf (config.clan.core.vars.settings.secretStore == "password-store")
         {
@@ -48,7 +59,6 @@ in
             lib.mkIf file.config.secret {
               path = "/run/secrets/${file.config.generatorName}/${file.config.name}";
             };
-          secretUploadDirectory = lib.mkDefault "/etc/secret-vars";
           secretModule = "clan_cli.vars.secret_modules.password_store";
         };
     system.activationScripts.setupSecrets =
@@ -66,13 +76,13 @@ in
             ]
             ''
               [ -e /run/current-system ] || echo setting up secrets...
-              ${installSecretTarball}/bin/install-secret-tarball ${config.clan.core.vars.settings.secretUploadDirectory}/secrets.tar.gz
+              ${installSecretTarball}/bin/install-secret-tarball ${config.clan.password-store.secretTarballLocation}/secrets.tar.gz
             ''
           // lib.optionalAttrs (config.system ? dryActivationScript) {
             supportsDryActivation = true;
           }
         );
-    systemd.services.sops-install-secrets =
+    systemd.services.pass-install-secrets =
       lib.mkIf
         (
           (config.clan.core.vars.settings.secretStore == "password-store")
@@ -86,7 +96,7 @@ in
           serviceConfig = {
             Type = "oneshot";
             ExecStart = [
-              "${installSecretTarball}/bin/install-secret-tarball ${config.clan.core.vars.settings.secretUploadDirectory}/secrets.tar.gz"
+              "${installSecretTarball}/bin/install-secret-tarball ${config.clan.password-store.secretTarballLocation}/secrets.tar.gz"
             ];
             RemainAfterExit = true;
           };

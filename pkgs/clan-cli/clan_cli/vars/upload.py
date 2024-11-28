@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
 from clan_cli.ssh.upload import upload
 
@@ -21,9 +22,14 @@ def upload_secret_vars(machine: Machine) -> None:
     with TemporaryDirectory(prefix="vars-upload-") as tempdir:
         secret_dir = Path(tempdir)
         secret_store.upload(secret_dir)
-        upload(
-            machine.target_host, secret_dir, Path(machine.secret_vars_upload_directory)
-        )
+        if secret_store.store_name == "password-store":
+            upload_dir = Path(machine.deployment["password-store"]["secretLocation"])
+            upload(machine.target_host, secret_dir, upload_dir)
+        elif secret_store.store_name == "sops":
+            pass
+        else:
+            msg = "upload function used on unsuitable secret_store"
+            raise ClanError(msg)
 
 
 def upload_command(args: argparse.Namespace) -> None:
