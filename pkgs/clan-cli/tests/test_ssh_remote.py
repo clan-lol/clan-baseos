@@ -1,5 +1,5 @@
 import pytest
-from clan_cli.cmd import Log
+from clan_cli.cmd import Log, RunOpts
 from clan_cli.errors import ClanError, CmdOut
 from clan_cli.ssh.host import Host
 from clan_cli.ssh.host_group import HostGroup
@@ -73,7 +73,7 @@ def test_run_exception(host_group: HostGroup) -> None:
 
 def test_run_function_exception(host_group: HostGroup) -> None:
     def some_func(h: Host) -> CmdOut:
-        return h.run_local(["exit 1"], shell=True)
+        return h.run_local(["exit 1"], RunOpts(shell=True))
 
     try:
         host_group.run_function(some_func)

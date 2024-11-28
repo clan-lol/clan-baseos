@@ -6,7 +6,7 @@ from pathlib import Path
 from threading import Thread
 from typing import IO, Any
 
-from clan_cli.cmd import Log
+from clan_cli.cmd import Log, RunOpts
 from clan_cli.errors import ClanError
 from clan_cli.ssh import T
 from clan_cli.ssh.host import Host
@@ -33,33 +33,22 @@ class HostGroup:
 
     def _run_local(
         self,
+        *,
         cmd: list[str],
+        opts: RunOpts,
+        extra_env: dict[str, str] | None,
         host: Host,
         results: Results,
-        stdout: IO[bytes] | None = None,
-        stderr: IO[bytes] | None = None,
-        extra_env: dict[str, str] | None = None,
-        cwd: None | Path = None,
-        check: bool = True,
         verbose_ssh: bool = False,
-        timeout: float = math.inf,
-        shell: bool = False,
         tty: bool = False,
-        log: Log = Log.BOTH,
     ) -> None:
         if extra_env is None:
             extra_env = {}
         try:
             proc = host.run_local(
                 cmd,
-                stdout=stdout,
-                stderr=stderr,
-                extra_env=extra_env,
-                cwd=cwd,
-                check=check,
-                timeout=timeout,
-                shell=shell,
-                log=log,
+                opts,
+                extra_env,
             )
             results.append(HostResult(host, proc))
         except Exception as e:
@@ -121,49 +110,59 @@ class HostGroup:
     def _run(
         self,
         cmd: list[str],
+        opts: RunOpts | None = None,
         local: bool = False,
-        stdout: IO[bytes] | None = None,
-        stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
-        cwd: None | str | Path = None,
-        check: bool = True,
-        timeout: float = math.inf,
         verbose_ssh: bool = False,
         tty: bool = False,
-        shell: bool = False,
-        log: Log = Log.BOTH,
     ) -> Results:
+        if opts is None:
+            opts = RunOpts()
         if extra_env is None:
             extra_env = {}
         results: Results = []
         threads = []
         for host in self.hosts:
-            fn = self._run_local if local else self._run_remote
-            thread = Thread(
-                target=fn,
-                kwargs={
-                    "results": results,
-                    "cmd": cmd,
-                    "host": host,
-                    "stdout": stdout,
-                    "stderr": stderr,
-                    "extra_env": extra_env,
-                    "cwd": cwd,
-                    "check": check,
-                    "timeout": timeout,
-                    "verbose_ssh": verbose_ssh,
-                    "tty": tty,
-                    "shell": shell,
-                    "log": log,
-                },
-            )
+            if local:
+                thread = Thread(
+                    target=self._run_local,
+                    kwargs={
+                        "cmd": cmd,
+                        "opts": opts,
+                        "host": host,
+                        "results": results,
+                        "extra_env": extra_env,
+                        "verbose_ssh": verbose_ssh,
+                        "tty": tty,
+                    },
+                )
+            else:
+                thread = Thread(
+                    target=self._run_remote,
+                    kwargs={
+                        "results": results,
+                        "cmd": cmd,
+                        "host": host,
+                        "stdout": opts.stdout,
+                        "stderr": opts.stderr,
+                        "extra_env": extra_env,
+                        "cwd": opts.cwd,
+                        "check": opts.check,
+                        "timeout": opts.timeout,
+                        "verbose_ssh": verbose_ssh,
+                        "tty": tty,
+                        "shell": opts.shell,
+                        "log": opts.log,
+                    },
+                )
+
             thread.start()
             threads.append(thread)
 
         for thread in threads:
             thread.join()
 
-        if check:
+        if opts.check:
             self._reraise_errors(results)
 
         return results
@@ -174,7 +173,7 @@ class HostGroup:
         stdout: IO[bytes] | None = None,
         stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
-        cwd: None | str | Path = None,
+        cwd: None | Path = None,
         check: bool = True,
         verbose_ssh: bool = False,
         timeout: float = math.inf,
@@ -189,18 +188,21 @@ class HostGroup:
         """
         if extra_env is None:
             extra_env = {}
-        return self._run(
-            cmd,
+        opts = RunOpts(
             shell=shell,
             stdout=stdout,
             stderr=stderr,
-            extra_env=extra_env,
+            log=log,
+            timeout=timeout,
             cwd=cwd,
             check=check,
+        )
+        return self._run(
+            cmd,
+            opts,
+            extra_env=extra_env,
             verbose_ssh=verbose_ssh,
-            timeout=timeout,
             tty=tty,
-            log=log,
         )
 
     def run_local(
@@ -209,7 +211,7 @@ class HostGroup:
         stdout: IO[bytes] | None = None,
         stderr: IO[bytes] | None = None,
         extra_env: dict[str, str] | None = None,
-        cwd: None | str | Path = None,
+        cwd: None | Path = None,
         check: bool = True,
         timeout: float = math.inf,
         shell: bool = False,
@@ -222,17 +224,20 @@ class HostGroup:
         """
         if extra_env is None:
             extra_env = {}
-        return self._run(
-            cmd,
-            local=True,
+        opts = RunOpts(
             stdout=stdout,
             stderr=stderr,
-            extra_env=extra_env,
             cwd=cwd,
             check=check,
             timeout=timeout,
             shell=shell,
             log=log,
+        )
+        return self._run(
+            cmd,
+            opts,
+            local=True,
+            extra_env=extra_env,
         )
 
     def run_function(

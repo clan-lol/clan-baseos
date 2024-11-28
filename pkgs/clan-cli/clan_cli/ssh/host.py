@@ -9,8 +9,7 @@ from pathlib import Path
 from shlex import quote
 from typing import IO, Any
 
-from clan_cli.cmd import CmdOut, Log, MsgColor, RunOpts
-from clan_cli.cmd import run as local_run
+from clan_cli.cmd import CmdOut, Log, MsgColor, RunOpts, run
 from clan_cli.colors import AnsiColor
 from clan_cli.ssh.host_key import HostKeyCheck
 
@@ -49,60 +48,18 @@ class Host:
             host = f"[{host}]"
         return f"{self.user or 'root'}@{host}"
 
-    def _run(
-        self,
-        cmd: list[str],
-        *,
-        stdout: IO[bytes] | None = None,
-        stderr: IO[bytes] | None = None,
-        input: bytes | None = None,  # noqa: A002
-        env: dict[str, str] | None = None,
-        cwd: Path | None = None,
-        log: Log = Log.BOTH,
-        check: bool = True,
-        error_msg: str | None = None,
-        needs_user_terminal: bool = False,
-        msg_color: MsgColor | None = None,
-        shell: bool = False,
-        timeout: float = math.inf,
-    ) -> CmdOut:
-        res = local_run(
-            cmd,
-            RunOpts(
-                shell=shell,
-                stdout=stdout,
-                prefix=self.command_prefix,
-                timeout=timeout,
-                stderr=stderr,
-                input=input,
-                env=env,
-                cwd=cwd,
-                log=log,
-                check=check,
-                error_msg=error_msg,
-                msg_color=msg_color,
-                needs_user_terminal=needs_user_terminal,
-            ),
-        )
-        return res
-
     def run_local(
         self,
         cmd: list[str],
-        stdout: IO[bytes] | None = None,
-        stderr: IO[bytes] | None = None,
+        opts: RunOpts | None = None,
         extra_env: dict[str, str] | None = None,
-        cwd: None | Path = None,
-        check: bool = True,
-        timeout: float = math.inf,
-        shell: bool = False,
-        needs_user_terminal: bool = False,
-        log: Log = Log.BOTH,
     ) -> CmdOut:
         """
         Command to run locally for the host
         """
-        env = os.environ.copy()
+        if opts is None:
+            opts = RunOpts()
+        env = opts.env or os.environ.copy()
         if extra_env:
             env.update(extra_env)
 
@@ -114,18 +71,9 @@ class Host:
                 "color": AnsiColor.GREEN.value,
             },
         )
-        return self._run(
-            cmd,
-            shell=shell,
-            stdout=stdout,
-            stderr=stderr,
-            env=env,
-            cwd=cwd,
-            check=check,
-            needs_user_terminal=needs_user_terminal,
-            timeout=timeout,
-            log=log,
-        )
+        opts.env = env
+        opts.prefix = self.command_prefix
+        return run(cmd, opts)
 
     def run(
         self,
@@ -187,19 +135,21 @@ class Host:
             f"{sudo}bash -c {quote(bash_cmd)} -- {' '.join(map(quote, cmd))}",
         ]
 
-        # Run the ssh command
-        return self._run(
-            ssh_cmd,
+        opts = RunOpts(
             shell=False,
             stdout=stdout,
             stderr=stderr,
             log=log,
             cwd=cwd,
             check=check,
+            prefix=self.command_prefix,
             timeout=timeout,
             msg_color=msg_color,
             needs_user_terminal=True,  # ssh asks for a password
         )
+
+        # Run the ssh command
+        return run(ssh_cmd, opts)
 
     def nix_ssh_env(self, env: dict[str, str] | None) -> dict[str, str]:
         if env is None:

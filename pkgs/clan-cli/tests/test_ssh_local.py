@@ -1,4 +1,4 @@
-from clan_cli.cmd import Log
+from clan_cli.cmd import Log, RunOpts
 from clan_cli.ssh.host import Host
 from clan_cli.ssh.host_group import HostGroup
 
@@ -31,7 +31,7 @@ def test_timeout() -> None:
 
 def test_run_function() -> None:
     def some_func(h: Host) -> bool:
-        par = h.run_local(["echo", "hello"], log=Log.STDERR)
+        par = h.run_local(["echo", "hello"], RunOpts(log=Log.STDERR))
         return par.stdout == "hello\n"
 
     res = hosts.run_function(some_func)
@@ -50,7 +50,7 @@ def test_run_exception() -> None:
 
 def test_run_function_exception() -> None:
     def some_func(h: Host) -> None:
-        h.run_local(["exit 1"], shell=True)
+        h.run_local(["exit 1"], RunOpts(shell=True))
 
     try:
         hosts.run_function(some_func)
