@@ -6,7 +6,7 @@ from pathlib import Path
 
 from clan_cli.api import API
 from clan_cli.cmd import CmdOut, run
-from clan_cli.dirs import clan_templates
+from clan_cli.dirs import TemplateType, clan_templates
 from clan_cli.errors import ClanError
 from clan_cli.inventory import Inventory, init_inventory
 from clan_cli.nix import nix_command, nix_shell
@@ -38,7 +38,7 @@ def git_command(directory: Path, *args: str) -> list[str]:
 @API.register
 def create_clan(options: CreateOptions) -> CreateClanResponse:
     directory = Path(options.directory).resolve()
-    template_url = f"{clan_templates()}#{options.template}"
+    template_url = f"{clan_templates(TemplateType.CLAN)}#{options.template}"
     if not directory.exists():
         directory.mkdir()
     else:

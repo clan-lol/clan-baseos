@@ -11,7 +11,7 @@ from clan_cli.clan.create import git_command
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import Log, run
 from clan_cli.completions import add_dynamic_completer, complete_tags
-from clan_cli.dirs import clan_templates, get_clan_flake_toplevel_or_env
+from clan_cli.dirs import TemplateType, clan_templates, get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
@@ -56,7 +56,7 @@ def create_machine(opts: CreateOptions) -> None:
         raise ClanError(msg, description=description)
 
     if not opts.template_src:
-        opts.template_src = FlakeId(str(clan_templates()))
+        opts.template_src = FlakeId(str(clan_templates(TemplateType.CLAN)))
 
     if not opts.template_name:
         opts.template_name = "new-machine"

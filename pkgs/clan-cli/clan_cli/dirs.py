@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import urllib
+from enum import Enum
 from pathlib import Path
 
 from clan_cli.clan_uri import FlakeId
@@ -45,11 +46,17 @@ def find_toplevel(top_level_files: list[str]) -> Path | None:
     return None
 
 
-def clan_templates() -> Path:
-    template_path = module_root().parent.parent.parent / "templates"
+class TemplateType(Enum):
+    CLAN = "clan"
+
+
+def clan_templates(template_type: TemplateType) -> Path:
+    template_path = (
+        module_root().parent.parent.parent / "templates" / template_type.value
+    )
     if template_path.exists():
         return template_path
-    template_path = module_root() / "templates"
+    template_path = module_root() / "templates" / template_type.value
     if not template_path.exists():
         msg = f"BUG! clan core not found at {template_path}. This is an issue with packaging the cli"
         raise ClanError(msg)
