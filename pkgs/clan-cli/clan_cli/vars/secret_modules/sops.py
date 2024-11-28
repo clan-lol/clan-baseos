@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import override
 
 from clan_cli.errors import ClanError
@@ -17,6 +18,7 @@ from clan_cli.secrets.secrets import (
     encrypt_secret,
     has_secret,
 )
+from clan_cli.ssh.upload import upload
 from clan_cli.vars.generate import Generator
 from clan_cli.vars.var import Var
 
@@ -114,7 +116,7 @@ class SecretStore(SecretStoreBase):
             self.machine.flake_dir, self.secret_path(generator, name)
         ).encode("utf-8")
 
-    def upload(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path) -> None:
         key_name = f"{self.machine.name}-age.key"
         if not has_secret(sops_secrets_folder(self.machine.flake_dir) / key_name):
             # skip uploading the secret, not managed by us
@@ -124,6 +126,12 @@ class SecretStore(SecretStoreBase):
             sops_secrets_folder(self.machine.flake_dir) / key_name,
         )
         (output_dir / "key.txt").write_text(key)
+
+    def upload(self) -> None:
+        with TemporaryDirectory(prefix="sops-upload-") as tempdir:
+            sops_upload_dir = Path(tempdir)
+            self.populate_dir(sops_upload_dir)
+            upload(self.machine.target_host, sops_upload_dir, Path("/var/lib/sops-nix"))
 
     def exists(self, generator: Generator, name: str) -> bool:
         secret_folder = self.secret_path(generator, name)

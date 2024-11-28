@@ -33,7 +33,7 @@ class SecretStore(SecretStoreBase):
         secret_file = self.dir / generator.name / name
         return secret_file.read_bytes()
 
-    def upload(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path) -> None:
         if output_dir.exists():
             shutil.rmtree(output_dir)
         shutil.copytree(self.dir, output_dir)
