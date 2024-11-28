@@ -9,7 +9,7 @@ from pathlib import Path
 from shlex import quote
 from typing import IO, Any
 
-from clan_cli.cmd import CmdOut, Log, MsgColor
+from clan_cli.cmd import CmdOut, Log, MsgColor, RunOpts
 from clan_cli.cmd import run as local_run
 from clan_cli.colors import AnsiColor
 from clan_cli.ssh.host_key import HostKeyCheck
@@ -68,19 +68,21 @@ class Host:
     ) -> CmdOut:
         res = local_run(
             cmd,
-            shell=shell,
-            stdout=stdout,
-            prefix=self.command_prefix,
-            timeout=timeout,
-            stderr=stderr,
-            input=input,
-            env=env,
-            cwd=cwd,
-            log=log,
-            check=check,
-            error_msg=error_msg,
-            msg_color=msg_color,
-            needs_user_terminal=needs_user_terminal,
+            RunOpts(
+                shell=shell,
+                stdout=stdout,
+                prefix=self.command_prefix,
+                timeout=timeout,
+                stderr=stderr,
+                input=input,
+                env=env,
+                cwd=cwd,
+                log=log,
+                check=check,
+                error_msg=error_msg,
+                msg_color=msg_color,
+                needs_user_terminal=needs_user_terminal,
+            ),
         )
         return res
 

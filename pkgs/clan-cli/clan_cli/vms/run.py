@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from clan_cli.cmd import CmdOut, Log, handle_io, run
+from clan_cli.cmd import CmdOut, Log, RunOpts, handle_io, run
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import module_root, user_cache_dir, vm_state_dir
 from clan_cli.errors import ClanCmdError, ClanError
@@ -109,8 +109,7 @@ def prepare_disk(
     )
     run(
         cmd,
-        log=Log.BOTH,
-        error_msg=f"Could not create disk image at {disk_img}",
+        RunOpts(log=Log.BOTH, error_msg=f"Could not create disk image at {disk_img}"),
     )
 
     return disk_img

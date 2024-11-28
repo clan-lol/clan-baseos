@@ -2,7 +2,7 @@ import tarfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from clan_cli.cmd import Log
+from clan_cli.cmd import Log, RunOpts
 from clan_cli.cmd import run as run_local
 from clan_cli.errors import ClanError
 from clan_cli.ssh.host import Host
@@ -77,8 +77,10 @@ def upload(
         with tar_path.open("rb") as f:
             run_local(
                 cmd,
-                input=f.read(),
-                log=Log.BOTH,
-                prefix=host.command_prefix,
-                needs_user_terminal=True,
+                RunOpts(
+                    input=f.read(),
+                    log=Log.BOTH,
+                    prefix=host.command_prefix,
+                    needs_user_terminal=True,
+                ),
             )

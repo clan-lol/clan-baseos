@@ -1,22 +1,22 @@
 import dataclasses
 import enum
-import functools
 import io
 import json
 import logging
 import os
 import shutil
 import subprocess
+import sys
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import IO, Protocol
+from typing import IO
 
-import clan_cli.cmd
 from clan_cli.api import API
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.dirs import user_config_dir
-from clan_cli.errors import ClanError, CmdOut
+from clan_cli.errors import ClanError
 from clan_cli.nix import nix_shell
 
 from .folders import sops_machines_folder, sops_users_folder
@@ -163,10 +163,10 @@ class ExitStatus(enum.IntEnum):  # see: cmd/sops/codes/codes.go
         return ExitStatus(code) if code in ExitStatus else None
 
 
-class Executer(Protocol):
-    def __call__(
-        self, cmd: list[str], *, env: dict[str, str] | None = None
-    ) -> CmdOut: ...
+# class Executer(Protocol):
+#     def __call__(
+#         self, cmd: list[str], *, env: dict[str, str] | None = None
+#     ) -> CmdOut: ...
 
 
 class Operation(enum.StrEnum):
@@ -176,11 +176,11 @@ class Operation(enum.StrEnum):
     UPDATE_KEYS = "updatekeys"
 
 
-def run(
+def sops_run(
     call: Operation,
     secret_path: Path,
     public_keys: Iterable[tuple[str, KeyType]],
-    executer: Executer,
+    run_opts: RunOpts | None = None,
 ) -> tuple[int, str]:
     """Call the sops binary for the given operation."""
     # louis(2024-11-19): I regrouped the call into the sops binary into this
@@ -235,7 +235,12 @@ def run(
         sops_cmd.append(str(secret_path))
 
         cmd = nix_shell(["nixpkgs#sops"], sops_cmd)
-        p = executer(cmd, env=environ)
+        opts = (
+            dataclasses.replace(run_opts, env=environ)
+            if run_opts
+            else RunOpts(env=environ)
+        )
+        p = run(cmd, opts)
         return p.returncode, p.stdout
 
 
@@ -254,7 +259,7 @@ def get_public_age_key(privkey: str) -> str:
 def generate_private_key(out_file: Path | None = None) -> tuple[str, str]:
     cmd = nix_shell(["nixpkgs#age"], ["age-keygen"])
     try:
-        proc = clan_cli.cmd.run(cmd)
+        proc = run(cmd)
         res = proc.stdout.strip()
         pubkey = None
         private_key = None
@@ -355,10 +360,13 @@ def ensure_admin_public_key(flake_dir: Path) -> SopsKey:
 def update_keys(secret_path: Path, keys: Iterable[tuple[str, KeyType]]) -> list[Path]:
     secret_path = secret_path / "secret"
     error_msg = f"Could not update keys for {secret_path}"
-    executer = functools.partial(
-        clan_cli.cmd.run, log=clan_cli.cmd.Log.BOTH, error_msg=error_msg
+
+    rc, _ = sops_run(
+        Operation.UPDATE_KEYS,
+        secret_path,
+        keys,
+        RunOpts(log=Log.BOTH, error_msg=error_msg),
     )
-    rc, _ = run(Operation.UPDATE_KEYS, secret_path, keys, executer)
     was_modified = ExitStatus.parse(rc) != ExitStatus.FILE_HAS_NOT_BEEN_MODIFIED
     return [secret_path] if was_modified else []
 
@@ -372,20 +380,19 @@ def encrypt_file(
     folder.mkdir(parents=True, exist_ok=True)
 
     if not content:
-        # Don't use our `run` here, because it breaks editor integration.
-        # We never need this in our UI.
-        def executer(cmd: list[str], *, env: dict[str, str] | None = None) -> CmdOut:
-            return CmdOut(
-                stdout="",
-                stderr="",
-                cwd=Path.cwd(),
-                env=env,
-                command_list=cmd,
-                returncode=subprocess.run(cmd, env=env, check=False).returncode,
-                msg=None,
-            )
-
-        rc, _ = run(Operation.EDIT, secret_path, pubkeys, executer)
+        # Use direct stdout / stderr, as else it breaks editor integration.
+        # We never need this in our UI. TUI only.
+        rc, _ = sops_run(
+            Operation.EDIT,
+            secret_path,
+            pubkeys,
+            RunOpts(
+                stdout=sys.stdout.buffer,
+                stderr=sys.stderr.buffer,
+                check=False,
+                log=Log.NONE,
+            ),
+        )
         status = ExitStatus.parse(rc)
         if rc == 0 or status == ExitStatus.FILE_HAS_NOT_BEEN_MODIFIED:
             return
@@ -418,8 +425,12 @@ def encrypt_file(
             else:
                 msg = f"Invalid content type: {type(content)}"
                 raise ClanError(msg)
-        executer = functools.partial(clan_cli.cmd.run, log=clan_cli.cmd.Log.BOTH)
-        run(Operation.ENCRYPT, Path(source.name), pubkeys, executer)
+        sops_run(
+            Operation.ENCRYPT,
+            Path(source.name),
+            pubkeys,
+            RunOpts(log=Log.BOTH),
+        )
         # atomic copy of the encrypted file
         with NamedTemporaryFile(dir=folder, delete=False) as dest:
             shutil.copyfile(source.name, dest.name)
@@ -432,10 +443,13 @@ def encrypt_file(
 def decrypt_file(secret_path: Path) -> str:
     # decryption uses private keys from the environment or default paths:
     no_public_keys_needed: list[tuple[str, KeyType]] = []
-    executer = functools.partial(
-        clan_cli.cmd.run, error_msg=f"Could not decrypt {secret_path}"
+
+    _, stdout = sops_run(
+        Operation.DECRYPT,
+        secret_path,
+        no_public_keys_needed,
+        RunOpts(error_msg=f"Could not decrypt {secret_path}"),
     )
-    _, stdout = run(Operation.DECRYPT, secret_path, no_public_keys_needed, executer)
     return stdout
 
 

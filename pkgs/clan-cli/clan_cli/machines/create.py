@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from clan_cli.api import API
 from clan_cli.clan.create import git_command
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.dirs import TemplateType, clan_templates, get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
@@ -103,7 +103,7 @@ def create_machine(opts: CreateOptions) -> None:
         # Check if debug logging is enabled
         is_debug_enabled = log.isEnabledFor(logging.DEBUG)
         log_flag = Log.BOTH if is_debug_enabled else Log.NONE
-        run(command, log=log_flag, cwd=tmpdirp)
+        run(command, RunOpts(log=log_flag, cwd=tmpdirp))
 
         validate_directory(tmpdirp)
 
@@ -126,7 +126,7 @@ def create_machine(opts: CreateOptions) -> None:
 
         shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
 
-    run(git_command(clan_dir, "add", f"machines/{machine_name}"), cwd=clan_dir)
+    run(git_command(clan_dir, "add", f"machines/{machine_name}"), RunOpts(cwd=clan_dir))
 
     inventory = load_inventory_json(clan_dir)
 

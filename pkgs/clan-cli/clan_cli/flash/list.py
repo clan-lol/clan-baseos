@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 from clan_cli.api import API
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.errors import ClanError
 from clan_cli.nix import nix_build
 
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 @API.register
 def list_possible_languages() -> list[str]:
     cmd = nix_build(["nixpkgs#glibcLocales"])
-    result = run(cmd, log=Log.STDERR, error_msg="Failed to find glibc locales")
+    result = run(cmd, RunOpts(log=Log.STDERR, error_msg="Failed to find glibc locales"))
     locale_file = Path(result.stdout.strip()) / "share" / "i18n" / "SUPPORTED"
 
     if not locale_file.exists():
@@ -40,7 +40,7 @@ def list_possible_languages() -> list[str]:
 @API.register
 def list_possible_keymaps() -> list[str]:
     cmd = nix_build(["nixpkgs#kbd"])
-    result = run(cmd, log=Log.STDERR, error_msg="Failed to find kbdinfo")
+    result = run(cmd, RunOpts(log=Log.STDERR, error_msg="Failed to find kbdinfo"))
     keymaps_dir = Path(result.stdout.strip()) / "share" / "keymaps"
 
     if not keymaps_dir.exists():

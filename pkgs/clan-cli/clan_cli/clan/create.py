@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from clan_cli.api import API
-from clan_cli.cmd import CmdOut, run
+from clan_cli.cmd import CmdOut, RunOpts, run
 from clan_cli.dirs import TemplateType, clan_templates
 from clan_cli.errors import ClanError
 from clan_cli.inventory import Inventory, init_inventory
@@ -61,10 +61,10 @@ def create_clan(options: CreateOptions) -> CreateClanResponse:
             template_url,
         ]
     )
-    flake_init = run(command, cwd=directory)
+    flake_init = run(command, RunOpts(cwd=directory))
 
     flake_update = run(
-        nix_shell(["nixpkgs#nix"], ["nix", "flake", "update"]), cwd=directory
+        nix_shell(["nixpkgs#nix"], ["nix", "flake", "update"]), RunOpts(cwd=directory)
     )
 
     if options.initial:
@@ -81,14 +81,18 @@ def create_clan(options: CreateOptions) -> CreateClanResponse:
     response.git_add = run(git_command(directory, "add", "."))
 
     # check if username is set
-    has_username = run(git_command(directory, "config", "user.name"), check=False)
+    has_username = run(
+        git_command(directory, "config", "user.name"), RunOpts(check=False)
+    )
     response.git_config_username = None
     if has_username.returncode != 0:
         response.git_config_username = run(
             git_command(directory, "config", "user.name", "clan-tool")
         )
 
-    has_username = run(git_command(directory, "config", "user.email"), check=False)
+    has_username = run(
+        git_command(directory, "config", "user.email"), RunOpts(check=False)
+    )
     if has_username.returncode != 0:
         response.git_config_email = run(
             git_command(directory, "config", "user.email", "clan@example.com")

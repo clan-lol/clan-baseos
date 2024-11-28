@@ -5,7 +5,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from clan_cli.api import API
-from clan_cli.cmd import run_no_stdout
+from clan_cli.cmd import run_no_output
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.inventory import Meta
 from clan_cli.nix import nix_eval
@@ -24,7 +24,7 @@ def show_clan_meta(uri: str | Path) -> Meta:
     res = "{}"
 
     try:
-        proc = run_no_stdout(cmd)
+        proc = run_no_output(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
         msg = "Evaluation failed on meta attribute"

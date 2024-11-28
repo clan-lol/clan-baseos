@@ -3,7 +3,7 @@ import json
 import sys
 from pathlib import Path
 
-from clan_cli.cmd import run
+from clan_cli.cmd import RunOpts, run
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_groups,
@@ -32,7 +32,7 @@ def import_sops(args: argparse.Namespace) -> None:
         cmd += ["--output-type", "json", "--decrypt", args.sops_file]
         cmd = nix_shell(["nixpkgs#sops"], cmd)
 
-        res = run(cmd, error_msg=f"Could not import sops file {file}")
+        res = run(cmd, RunOpts(error_msg=f"Could not import sops file {file}"))
         secrets = json.loads(res.stdout)
         for k, v in secrets.items():
             k = args.prefix + k

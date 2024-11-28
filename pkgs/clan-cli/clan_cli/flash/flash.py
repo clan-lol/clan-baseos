@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from clan_cli.api import API
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.errors import ClanError
 from clan_cli.facts.generate import generate_facts
 from clan_cli.facts.secret_modules import SecretStoreBase
@@ -156,7 +156,9 @@ def flash_machine(
             )
             run(
                 cmd,
-                log=Log.BOTH,
-                error_msg=f"Failed to flash {machine}",
-                needs_user_terminal=True,
+                RunOpts(
+                    log=Log.BOTH,
+                    error_msg=f"Failed to flash {machine}",
+                    needs_user_terminal=True,
+                ),
             )

@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
@@ -119,7 +119,7 @@ def install_machine(opts: InstallOptions) -> None:
                 ["nixpkgs#nixos-anywhere"],
                 cmd,
             ),
-            log=Log.BOTH,
+            RunOpts(log=Log.BOTH),
         )
 
 

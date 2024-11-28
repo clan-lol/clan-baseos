@@ -7,7 +7,7 @@ from pathlib import Path
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import run, run_no_stdout
+from clan_cli.cmd import RunOpts, run, run_no_output
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanCmdError, ClanError
@@ -71,7 +71,7 @@ def show_machine_deployment_target(clan_dir: Path, machine_name: str) -> str | N
             "--json",
         ]
     )
-    proc = run_no_stdout(cmd)
+    proc = run_no_output(cmd)
     res = proc.stdout.strip()
 
     target_host = json.loads(res)
@@ -93,7 +93,7 @@ def show_machine_hardware_platform(clan_dir: Path, machine_name: str) -> str | N
             "--json",
         ]
     )
-    proc = run_no_stdout(cmd)
+    proc = run_no_output(cmd)
     res = proc.stdout.strip()
 
     host_platform = json.loads(res)
@@ -160,7 +160,7 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareCon
             *config_command,
         ],
     )
-    out = run(cmd, needs_user_terminal=True)
+    out = run(cmd, RunOpts(needs_user_terminal=True))
     if out.returncode != 0:
         log.error(out)
         msg = f"Failed to inspect {opts.machine}. Address: {opts.target_host}"

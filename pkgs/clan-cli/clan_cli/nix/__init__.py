@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from clan_cli.cmd import run, run_no_stdout
+from clan_cli.cmd import run, run_no_output
 from clan_cli.dirs import nixpkgs_flake, nixpkgs_source
 from clan_cli.errors import ClanError
 
@@ -63,7 +63,7 @@ def nix_add_to_gcroots(nix_path: Path, dest: Path) -> None:
 
 def nix_config() -> dict[str, Any]:
     cmd = nix_command(["show-config", "--json"])
-    proc = run_no_stdout(cmd)
+    proc = run_no_output(cmd)
     data = json.loads(proc.stdout)
     config = {}
     for key, value in data.items():

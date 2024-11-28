@@ -241,57 +241,65 @@ if os.environ.get("CLAN_CLI_PERF"):
     TIME_TABLE = TimeTable()
 
 
+@dataclass
+class RunOpts:
+    input: bytes | None = None
+    stdout: IO[bytes] | None = None
+    stderr: IO[bytes] | None = None
+    env: dict[str, str] | None = None
+    cwd: Path | None = None
+    log: Log = Log.STDERR
+    prefix: str | None = None
+    msg_color: MsgColor | None = None
+    check: bool = True
+    error_msg: str | None = None
+    needs_user_terminal: bool = False
+    timeout: float = math.inf
+    shell: bool = False
+
+
 def run(
     cmd: list[str],
-    *,
-    input: bytes | None = None,  # noqa: A002
-    stdout: IO[bytes] | None = None,
-    stderr: IO[bytes] | None = None,
-    env: dict[str, str] | None = None,
-    cwd: Path | None = None,
-    log: Log = Log.STDERR,
-    prefix: str | None = None,
-    msg_color: MsgColor | None = None,
-    check: bool = True,
-    error_msg: str | None = None,
-    needs_user_terminal: bool = False,
-    timeout: float = math.inf,
-    shell: bool = False,
+    options: RunOpts | None = None,
 ) -> CmdOut:
-    if cwd is None:
-        cwd = Path.cwd()
+    if options is None:
+        options = RunOpts()
+    if options.cwd is None:
+        options.cwd = Path.cwd()
 
-    if prefix is None:
-        prefix = "$"
+    if options.prefix is None:
+        options.prefix = "$"
 
-    if input:
-        if any(not ch.isprintable() for ch in input.decode("ascii", "replace")):
+    if options.input:
+        if any(not ch.isprintable() for ch in options.input.decode("ascii", "replace")):
             filtered_input = "<<binary_blob>>"
         else:
-            filtered_input = input.decode("ascii", "replace")
+            filtered_input = options.input.decode("ascii", "replace")
         print_trace(
-            f"$: echo '{filtered_input}' | {indent_command(cmd)}", cmdlog, prefix
+            f"$: echo '{filtered_input}' | {indent_command(cmd)}",
+            cmdlog,
+            options.prefix,
         )
     elif cmdlog.isEnabledFor(logging.DEBUG):
-        print_trace(f"$: {indent_command(cmd)}", cmdlog, prefix)
+        print_trace(f"$: {indent_command(cmd)}", cmdlog, options.prefix)
 
     start = timeit.default_timer()
     with ExitStack() as stack:
-        stdin = subprocess.PIPE if input is not None else None
+        stdin = subprocess.PIPE if options.input is not None else None
         process = stack.enter_context(
             subprocess.Popen(
                 cmd,
-                cwd=str(cwd),
-                env=env,
+                cwd=str(options.cwd),
+                env=options.env,
                 stdin=stdin,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                start_new_session=not needs_user_terminal,
-                shell=shell,
+                start_new_session=not options.needs_user_terminal,
+                shell=options.shell,
             )
         )
 
-        if needs_user_terminal:
+        if options.needs_user_terminal:
             # we didn't allocate a new session, so we can't terminate the process group
             stack.enter_context(terminate_process(process))
         else:
@@ -299,13 +307,13 @@ def run(
 
         stdout_buf, stderr_buf = handle_io(
             process,
-            log,
-            prefix=prefix,
-            msg_color=msg_color,
-            timeout=timeout,
-            input_bytes=input,
-            stdout=stdout,
-            stderr=stderr,
+            options.log,
+            prefix=options.prefix,
+            msg_color=options.msg_color,
+            timeout=options.timeout,
+            input_bytes=options.input,
+            stdout=options.stdout,
+            stderr=options.stderr,
         )
         process.wait()
 
@@ -317,20 +325,20 @@ def run(
     cmd_out = CmdOut(
         stdout=stdout_buf,
         stderr=stderr_buf,
-        cwd=cwd,
-        env=env,
+        cwd=options.cwd,
+        env=options.env,
         command_list=cmd,
         returncode=process.returncode,
-        msg=error_msg,
+        msg=options.error_msg,
     )
 
-    if check and process.returncode != 0:
+    if options.check and process.returncode != 0:
         raise ClanCmdError(cmd_out)
 
     return cmd_out
 
 
-def run_no_stdout(
+def run_no_output(
     cmd: list[str],
     *,
     env: dict[str, str] | None = None,
@@ -344,21 +352,23 @@ def run_no_stdout(
     shell: bool = False,
 ) -> CmdOut:
     """
-    Like run, but automatically suppresses stdout, if not in DEBUG log level.
+    Like run, but automatically suppresses all output, if not in DEBUG log level.
     If in DEBUG log level the stdout of commands will be shown.
     """
     if cwd is None:
         cwd = Path.cwd()
     if logger.isEnabledFor(logging.DEBUG):
-        return run(cmd, env=env, log=log, check=check, error_msg=error_msg)
+        return run(cmd, RunOpts(env=env, log=log, check=check, error_msg=error_msg))
     log = Log.NONE
     return run(
         cmd,
-        env=env,
-        log=log,
-        check=check,
-        prefix=prefix,
-        error_msg=error_msg,
-        needs_user_terminal=needs_user_terminal,
-        shell=shell,
+        RunOpts(
+            env=env,
+            log=log,
+            check=check,
+            prefix=prefix,
+            error_msg=error_msg,
+            needs_user_terminal=needs_user_terminal,
+            shell=shell,
+        ),
     )
