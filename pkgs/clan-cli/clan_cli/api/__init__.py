@@ -228,12 +228,21 @@ API.register(open_file)
         from inspect import signature
 
         func = self._registry.get(method_name, None)
-        if func:
-            sig = signature(func)
-            param = sig.parameters.get(arg_name)
-            if param:
-                param_class = param.annotation
-                return param_class
+        if not func:
+            msg = f"API Method {method_name} not found in registry. Available methods: {list(self._registry.keys())}"
+            raise ClanError(msg)
+
+        sig = signature(func)
+
+        # seems direct 'key in dict' doesnt work here
+        if arg_name not in sig.parameters.keys():  # noqa: SIM118
+            msg = f"Argument {arg_name} not found in api method '{method_name}'. Avilable arguments: {list(sig.parameters.keys())}"
+            raise ClanError(msg)
+
+        param = sig.parameters.get(arg_name)
+        if param:
+            param_class = param.annotation
+            return param_class
 
         return None
 
