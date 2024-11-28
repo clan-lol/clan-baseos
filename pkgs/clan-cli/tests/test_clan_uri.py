@@ -18,6 +18,13 @@ def test_get_url() -> None:
     assert uri.get_url() == "/home/user/Downloads"
 
 
+def test_firefox_strip_uri() -> None:
+    uri = ClanURI.from_str("clan://https//git.clan.lol/clan/democlan")
+    assert uri.get_url() == "https://git.clan.lol/clan/democlan"
+    uri = ClanURI.from_str("clan://git+https//git.clan.lol/clan/democlan.git")
+    assert uri.get_url() == "git+https://git.clan.lol/clan/democlan.git"
+
+
 def test_local_uri() -> None:
     # Create a ClanURI object from a local URI
     uri = ClanURI.from_str("clan://file:///home/user/Downloads")
