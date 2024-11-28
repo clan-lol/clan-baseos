@@ -53,12 +53,4 @@
       the python import path to the public module
     '';
   };
-
-  publicDirectory = lib.mkOption {
-    type = lib.types.path;
-    description = ''
-      The directory where public facts are stored.
-      This is usally set by the public store backend.
-    '';
-  };
 }
