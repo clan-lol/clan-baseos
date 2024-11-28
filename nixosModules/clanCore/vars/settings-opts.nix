@@ -10,7 +10,7 @@
     default = "sops";
     description = ''
       method to store secret facts
-      custom can be used to define a custom secret fact store.
+      custom can be used to define a custom secret var store.
     '';
   };
 
@@ -41,8 +41,8 @@
     ];
     default = "in_repo";
     description = ''
-      method to store public facts.
-      custom can be used to define a custom public fact store.
+      method to store public vars.
+      custom can be used to define a custom public vars store.
     '';
   };
 
