@@ -1,5 +1,4 @@
 import contextlib
-import json
 import logging
 import math
 import os
@@ -55,7 +54,6 @@ class MsgColor:
 def handle_io(
     process: subprocess.Popen,
     log: Log,
-    cmdlog: logging.Logger,
     *,
     prefix: str | None,
     input_bytes: bytes | None,
@@ -64,11 +62,33 @@ def handle_io(
     timeout: float = math.inf,
     msg_color: MsgColor | None = None,
 ) -> tuple[str, str]:
-    rlist = [process.stdout, process.stderr]
-    wlist = [process.stdin] if input_bytes is not None else []
+    rlist = [
+        process.stdout,
+        process.stderr,
+    ]  # rlist is a list of file descriptors to be monitored for read events
+    wlist = (
+        [process.stdin] if input_bytes is not None else []
+    )  # wlist is a list of file descriptors to be monitored for write events
     stdout_buf = b""
     stderr_buf = b""
     start = time.time()
+
+    # Function to handle file descriptors
+    def handle_fd(fd: IO[Any] | None, readlist: list[IO[Any]]) -> bytes:
+        if fd and fd in readlist:
+            read = os.read(fd.fileno(), 4096)
+            if len(read) != 0:
+                return read
+            rlist.remove(fd)
+        return b""
+
+    # Extra information passed to the logger
+    stdout_extra = {"command_prefix": prefix}
+    stderr_extra = {"command_prefix": prefix}
+    if msg_color and msg_color.stderr:
+        stdout_extra["color"] = msg_color.stderr.value
+    if msg_color and msg_color.stdout:
+        stderr_extra["color"] = msg_color.stdout.value
 
     # Loop until no more data is available
     while len(rlist) != 0 or len(wlist) != 0:
@@ -86,43 +106,35 @@ def handle_io(
             # Process has exited
             break
 
-        # Function to handle file descriptors
-        def handle_fd(fd: IO[Any] | None, readlist: list[IO[Any]]) -> bytes:
-            if fd and fd in readlist:
-                read = os.read(fd.fileno(), 4096)
-                if len(read) != 0:
-                    return read
-                rlist.remove(fd)
-            return b""
-
-        extra = {"command_prefix": prefix}
-        if msg_color and msg_color.stderr:
-            extra["stderr_color"] = json.dumps(msg_color.stderr.value)
-        if msg_color and msg_color.stdout:
-            extra["stdout_color"] = json.dumps(msg_color.stdout.value)
-
         #
         # Process stdout
         #
         ret = handle_fd(process.stdout, readlist)
+
+        # If Log.STDOUT is set, log the stdout output
         if ret and log in [Log.STDOUT, Log.BOTH]:
             lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
             for line in lines:
-                cmdlog.info(line, extra=extra)
+                cmdlog.info(line, extra=stdout_extra)
+
+        # If stdout file is set, stream the stdout output
         if ret and stdout:
             stdout.write(ret)
             stdout.flush()
+        stdout_buf += ret
 
         #
         # Process stderr
         #
-        stdout_buf += ret
         ret = handle_fd(process.stderr, readlist)
 
+        # If Log.STDERR is set, log the stderr output
         if ret and log in [Log.STDERR, Log.BOTH]:
             lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
             for line in lines:
-                cmdlog.error(line, extra=extra)
+                cmdlog.info(line, extra=stderr_extra)
+
+        # If stderr file is set, stream the stderr output
         if ret and stderr:
             stderr.write(ret)
             stderr.flush()
@@ -238,7 +250,6 @@ def run(
     env: dict[str, str] | None = None,
     cwd: Path | None = None,
     log: Log = Log.STDERR,
-    logger: logging.Logger = cmdlog,
     prefix: str | None = None,
     msg_color: MsgColor | None = None,
     check: bool = True,
@@ -259,10 +270,10 @@ def run(
         else:
             filtered_input = input.decode("ascii", "replace")
         print_trace(
-            f"$: echo '{filtered_input}' | {indent_command(cmd)}", logger, prefix
+            f"$: echo '{filtered_input}' | {indent_command(cmd)}", cmdlog, prefix
         )
-    elif logger.isEnabledFor(logging.DEBUG):
-        print_trace(f"$: {indent_command(cmd)}", logger, prefix)
+    elif cmdlog.isEnabledFor(logging.DEBUG):
+        print_trace(f"$: {indent_command(cmd)}", cmdlog, prefix)
 
     start = timeit.default_timer()
     with ExitStack() as stack:
@@ -291,7 +302,6 @@ def run(
             log,
             prefix=prefix,
             msg_color=msg_color,
-            cmdlog=logger,
             timeout=timeout,
             input_bytes=input,
             stdout=stdout,
