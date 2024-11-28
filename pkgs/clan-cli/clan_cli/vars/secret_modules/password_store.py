@@ -6,7 +6,7 @@ from itertools import chain
 from pathlib import Path
 from typing import override
 
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.vars.generate import Generator, Var
@@ -50,8 +50,7 @@ class SecretStore(SecretStoreBase):
                     str(self.entry_dir(generator, var.name)),
                 ],
             ),
-            input=value,
-            check=True,
+            RunOpts(input=value, check=True),
         )
         return None  # we manage the files outside of the git repo
 
@@ -88,7 +87,7 @@ class SecretStore(SecretStoreBase):
                         self.entry_prefix,
                     ],
                 ),
-                check=False,
+                RunOpts(check=False),
             )
             .stdout.strip()
             .encode()
@@ -116,7 +115,7 @@ class SecretStore(SecretStoreBase):
                                 str(symlink),
                             ],
                         ),
-                        check=False,
+                        RunOpts(check=False),
                     )
                     .stdout.strip()
                     .encode()

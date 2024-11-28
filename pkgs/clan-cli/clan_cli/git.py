@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .cmd import Log, run
+from .cmd import Log, RunOpts, run
 from .errors import ClanError
 from .locked_open import locked_open
 from .nix import run_cmd
@@ -67,8 +67,10 @@ def _commit_file_to_git(
 
             run(
                 cmd,
-                log=Log.BOTH,
-                error_msg=f"Failed to add {file_path} file to git index",
+                RunOpts(
+                    log=Log.BOTH,
+                    error_msg=f"Failed to add {file_path} file to git index",
+                ),
             )
 
         # check if there is a diff
@@ -77,7 +79,7 @@ def _commit_file_to_git(
             ["git", "-C", str(repo_dir), "diff", "--cached", "--exit-code", "--"]
             + [str(file_path) for file_path in file_paths],
         )
-        result = run(cmd, check=False, cwd=repo_dir)
+        result = run(cmd, RunOpts(check=False, cwd=repo_dir))
         # if there is no diff, return
         if result.returncode == 0:
             return
@@ -98,5 +100,8 @@ def _commit_file_to_git(
         )
 
         run(
-            cmd, error_msg=f"Failed to commit {file_paths} to git repository {repo_dir}"
+            cmd,
+            RunOpts(
+                error_msg=f"Failed to commit {file_paths} to git repository {repo_dir}"
+            ),
         )

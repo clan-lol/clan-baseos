@@ -94,7 +94,7 @@ def test_vm_deployment(
         ).stdout.strip()
         assert "no-such-path" not in shared_secret_path
     # run nix flake lock
-    cmd.run(["nix", "flake", "lock"], cwd=flake.path)
+    cmd.run(["nix", "flake", "lock"], cmd.RunOpts(cwd=flake.path))
 
     vm1_config = inspect_vm(machine=Machine("m1_machine", FlakeId(str(flake.path))))
     vm2_config = inspect_vm(machine=Machine("m2_machine", FlakeId(str(flake.path))))

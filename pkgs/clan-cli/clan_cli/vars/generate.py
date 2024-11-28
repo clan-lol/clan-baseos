@@ -8,7 +8,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
-from clan_cli.cmd import run
+from clan_cli.cmd import RunOpts, run
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
@@ -192,10 +192,7 @@ def execute_generator(
             cmd = bubblewrap_cmd(generator.final_script, tmpdir)
         else:
             cmd = ["bash", "-c", generator.final_script]
-        run(
-            cmd,
-            env=env,
-        )
+        run(cmd, RunOpts(env=env))
         files_to_commit = []
         # store secrets
         files = generator.files

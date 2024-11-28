@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypedDict, get_args, get_type_hints
 
-from clan_cli.cmd import run_no_stdout
+from clan_cli.cmd import run_no_output
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.inventory import Inventory, load_inventory_json, set_inventory
 from clan_cli.inventory.classes import Service
@@ -150,7 +150,7 @@ def get_modules(base_path: str) -> dict[str, str]:
         ]
     )
     try:
-        proc = run_no_stdout(cmd)
+        proc = run_no_output(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
         msg = "clanInternals might not have inventory.modules attributes"
@@ -171,7 +171,7 @@ def get_module_interface(base_path: str, module_name: str) -> dict[str, Any]:
     """
     cmd = nix_eval([f"{base_path}#clanInternals.moduleSchemas.{module_name}", "--json"])
     try:
-        proc = run_no_stdout(cmd)
+        proc = run_no_output(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
         msg = "clanInternals might not have moduleSchemas attributes"

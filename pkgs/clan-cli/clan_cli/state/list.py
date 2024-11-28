@@ -3,7 +3,7 @@ import json
 import logging
 from pathlib import Path
 
-from clan_cli.cmd import run_no_stdout
+from clan_cli.cmd import run_no_output
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
@@ -31,7 +31,7 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
     res = "{}"
 
     try:
-        proc = run_no_stdout(cmd)
+        proc = run_no_output(cmd)
         res = proc.stdout.strip()
     except ClanCmdError as e:
         msg = "Clan might not have meta attributes"

@@ -4,7 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from clan_cli.cmd import Log, run
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.errors import ClanError
 
 log = logging.getLogger(__name__)
@@ -30,11 +30,11 @@ def pause_automounting(devices: list[Path]) -> Generator[None, None, None]:
 
     str_devs = [str(dev) for dev in devices]
     cmd = ["sudo", str(inhibit_path), "enable", *str_devs]
-    result = run(cmd, log=Log.BOTH, check=False, needs_user_terminal=True)
+    result = run(cmd, RunOpts(log=Log.BOTH, check=False, needs_user_terminal=True))
     if result.returncode != 0:
         log.error("Failed to inhibit automounting")
     yield None
     cmd = ["sudo", str(inhibit_path), "disable", *str_devs]
-    result = run(cmd, log=Log.BOTH, check=False)
+    result = run(cmd, RunOpts(log=Log.BOTH, check=False))
     if result.returncode != 0:
         log.error("Failed to re-enable automounting")

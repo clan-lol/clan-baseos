@@ -7,7 +7,7 @@ import sys
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import MsgColor, run
+from clan_cli.cmd import MsgColor, RunOpts, run
 from clan_cli.colors import AnsiColor
 from clan_cli.completions import (
     add_dynamic_completer,
@@ -64,7 +64,10 @@ def upload_sources(machine: Machine) -> str:
                 path,
             ]
         )
-        run(cmd, env=env, error_msg="failed to upload sources", prefix=machine.name)
+        run(
+            cmd,
+            RunOpts(env=env, error_msg="failed to upload sources", prefix=machine.name),
+        )
         return path
 
     # Slow path: we need to upload all sources to the remote machine
@@ -78,7 +81,7 @@ def upload_sources(machine: Machine) -> str:
             flake_url,
         ]
     )
-    proc = run(cmd, env=env, error_msg="failed to upload sources")
+    proc = run(cmd, RunOpts(env=env, error_msg="failed to upload sources"))
 
     try:
         return json.loads(proc.stdout)["path"]

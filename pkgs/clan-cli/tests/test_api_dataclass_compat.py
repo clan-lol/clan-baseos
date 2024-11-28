@@ -119,6 +119,7 @@ def test_all_dataclasses() -> None:
     # - API includes Type Generic wrappers, that are not known in the init file.
     excludes = [
         "api/__init__.py",
+        "cmd.py",  # We don't want the UI to have access to the cmd module anyway
     ]
 
     cli_path = Path("clan_cli").resolve()
