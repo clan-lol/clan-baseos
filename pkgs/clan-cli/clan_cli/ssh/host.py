@@ -4,14 +4,14 @@ import logging
 import math
 import os
 import shlex
-import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from shlex import quote
 from typing import IO, Any
 
-from clan_cli.cmd import Log, MsgColor
+from clan_cli.cmd import CmdOut, Log, MsgColor
 from clan_cli.cmd import run as local_run
+from clan_cli.colors import AnsiColor
 from clan_cli.ssh.host_key import HostKeyCheck
 
 cmdlog = logging.getLogger(__name__)
@@ -37,12 +37,6 @@ class Host:
     def __post_init__(self) -> None:
         if not self.command_prefix:
             self.command_prefix = self.host
-
-    def __repr__(self) -> str:
-        return str(self)
-
-    def __str__(self) -> str:
-        return f"{self.user}@{self.host}" + str(self.port if self.port else "")
 
     @property
     def target(self) -> str:
@@ -71,7 +65,7 @@ class Host:
         msg_color: MsgColor | None = None,
         shell: bool = False,
         timeout: float = math.inf,
-    ) -> subprocess.CompletedProcess[str]:
+    ) -> CmdOut:
         res = local_run(
             cmd,
             shell=shell,
@@ -83,18 +77,12 @@ class Host:
             env=env,
             cwd=cwd,
             log=log,
-            logger=cmdlog,
             check=check,
             error_msg=error_msg,
             msg_color=msg_color,
             needs_user_terminal=needs_user_terminal,
         )
-        return subprocess.CompletedProcess(
-            args=res.command_list,
-            returncode=res.returncode,
-            stdout=res.stdout,
-            stderr=res.stderr,
-        )
+        return res
 
     def run_local(
         self,
@@ -108,7 +96,7 @@ class Host:
         shell: bool = False,
         needs_user_terminal: bool = False,
         log: Log = Log.BOTH,
-    ) -> subprocess.CompletedProcess[str]:
+    ) -> CmdOut:
         """
         Command to run locally for the host
         """
@@ -117,7 +105,13 @@ class Host:
             env.update(extra_env)
 
         displayed_cmd = " ".join(cmd)
-        cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
+        cmdlog.info(
+            f"$ {displayed_cmd}",
+            extra={
+                "command_prefix": self.command_prefix,
+                "color": AnsiColor.GREEN.value,
+            },
+        )
         return self._run(
             cmd,
             shell=shell,
@@ -146,7 +140,7 @@ class Host:
         msg_color: MsgColor | None = None,
         shell: bool = False,
         log: Log = Log.BOTH,
-    ) -> subprocess.CompletedProcess[str]:
+    ) -> CmdOut:
         """
         Command to run on the host via ssh
         """
@@ -170,7 +164,13 @@ class Host:
             export_cmd = f"export {' '.join(env_vars)}; "
             displayed_cmd += export_cmd
         displayed_cmd += " ".join(cmd)
-        cmdlog.info(f"$ {displayed_cmd}", extra={"command_prefix": self.command_prefix})
+        cmdlog.info(
+            f"$ {displayed_cmd}",
+            extra={
+                "command_prefix": self.command_prefix,
+                "color": AnsiColor.GREEN.value,
+            },
+        )
 
         # Build the ssh command
         bash_cmd = export_cmd

@@ -133,6 +133,7 @@ def deploy_machine(machines: MachineGroup) -> None:
             "--option",
             "accept-flake-config",
             "true",
+            "-L",
             "--build-host",
             "",
             *machine.nix_options,
@@ -154,11 +155,17 @@ def deploy_machine(machines: MachineGroup) -> None:
             check=False,
             msg_color=MsgColor(stderr=AnsiColor.DEFAULT),
         )
+        ret = host.run(
+            switch_cmd,
+            extra_env=env,
+            check=False,
+            msg_color=MsgColor(stderr=AnsiColor.DEFAULT),
+        )
 
-        # if the machine is mobile, we retry to deploy with the quirk method
+        # if the machine is mobile, we retry to deploy with the mobile workaround method
         is_mobile = machine.deployment.get("nixosMobileWorkaround", False)
         if is_mobile and ret.returncode != 0:
-            log.info("Mobile machine detected, applying quirk deployment method")
+            log.info("Mobile machine detected, applying workaround deployment method")
             ret = host.run(
                 test_cmd, extra_env=env, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)
             )

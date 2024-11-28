@@ -343,7 +343,6 @@ def run_vm(
         future = executor.submit(
             handle_io,
             vm.process,
-            cmdlog=log,
             prefix=f"[{vm_config.machine_name}] ",
             stdout=sys.stdout.buffer,
             stderr=sys.stderr.buffer,

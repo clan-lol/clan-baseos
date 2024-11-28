@@ -1,5 +1,4 @@
 import inspect
-import json
 import logging
 import os
 import sys
@@ -29,47 +28,49 @@ class PrefixFormatter(logging.Formatter):
     def __init__(
         self, trace_prints: bool = False, default_prefix: str | None = None
     ) -> None:
+        super().__init__()
+
         self.default_prefix = default_prefix
         self.trace_prints = trace_prints
-
-        super().__init__()
         self.hostnames: list[str] = []
-        self.hostname_color_offset = 1  # first host shouldn't get aggressive red
+        self.hostname_color_offset = 0
 
     def format(self, record: logging.LogRecord) -> str:
         filepath = _get_filepath(record)
 
-        if record.levelno == logging.DEBUG:
-            ansi_color_str = getattr(record, "stdout_color", None)
-            if ansi_color_str is not None:
-                ansi_color = json.loads(ansi_color_str)
+        # If extra["color"] is set, use that color for the message.
+        msg_color = getattr(record, "color", None)
+        if not msg_color:
+            if record.levelno == logging.DEBUG:
+                msg_color = AnsiColor.BLUE.value
+            elif record.levelno == logging.ERROR:
+                msg_color = AnsiColor.RED.value
+            elif record.levelno == logging.WARNING:
+                msg_color = AnsiColor.YELLOW.value
             else:
-                ansi_color = AnsiColor.BLUE.value
-        elif record.levelno == logging.ERROR:
-            ansi_color_str = getattr(record, "stderr_color", None)
-            if ansi_color_str is not None:
-                ansi_color = json.loads(ansi_color_str)
-            else:
-                ansi_color = AnsiColor.RED.value
-        elif record.levelno == logging.WARNING:
-            ansi_color = AnsiColor.YELLOW.value
-        else:
-            ansi_color = AnsiColor.DEFAULT.value
+                msg_color = AnsiColor.DEFAULT.value
 
+        # If extra["command_prefix"] is set, use that as the logging prefix.
         command_prefix = getattr(record, "command_prefix", self.default_prefix)
 
+        # If color is disabled, don't use color.
         if DISABLE_COLOR:
             if command_prefix:
                 format_str = f"[{command_prefix}] %(message)s"
             else:
                 format_str = "%(message)s"
+
+        # If command_prefix is set, color the prefix with a unique color.
         elif command_prefix:
             prefix_color = self.hostname_colorcode(command_prefix)
             format_str = color_by_tuple(f"[{command_prefix}]", fg=prefix_color)
-            format_str += color_by_tuple(" %(message)s", fg=ansi_color)
-        else:
-            format_str = color_by_tuple("%(message)s", fg=ansi_color)
+            format_str += color_by_tuple(" %(message)s", fg=msg_color)
 
+        # If command_prefix is not set, color the message with the default level color.
+        else:
+            format_str = color_by_tuple("%(message)s", fg=msg_color)
+
+        # Add the source file and line number if trace_prints is enabled.
         if self.trace_prints:
             format_str += f"\nSource: {filepath}:%(lineno)d::%(funcName)s\n"
 
