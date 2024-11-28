@@ -26,7 +26,8 @@ def upload_secret_vars(machine: Machine) -> None:
             upload_dir = Path(machine.deployment["password-store"]["secretLocation"])
             upload(machine.target_host, secret_dir, upload_dir)
         elif secret_store.store_name == "sops":
-            pass
+            upload_dir = Path("/var/lib/sops-nix")
+            upload(machine.target_host, secret_dir, upload_dir)
         else:
             msg = "upload function used on unsuitable secret_store"
             raise ClanError(msg)
