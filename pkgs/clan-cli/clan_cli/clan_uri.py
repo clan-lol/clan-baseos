@@ -81,7 +81,7 @@ class ClanURI:
         if machine_name:
             uri += f"#{machine_name}"
 
-        # users might copy whitespace along with the uri
+        # Users might copy whitespace along with the URI
         uri = uri.strip()
 
         # Check if the URI starts with clan://
@@ -89,6 +89,12 @@ class ClanURI:
         prefix = "clan://"
         if uri.startswith(prefix):
             uri = uri[len(prefix) :]
+
+        # Fix missing colon (caused by browsers like Firefox)
+        if "//" in uri and ":" not in uri.split("//", 1)[0]:
+            # If there's a `//` but no colon before it, add one before the `//`
+            parts = uri.split("//", 1)
+            uri = f"{parts[0]}://{parts[1]}"
 
         # Parse the URI into components
         # url://netloc/path;parameters?query#fragment
