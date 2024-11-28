@@ -160,7 +160,7 @@ def construct_value(
     if loc is None:
         loc = []
     if t is None and field_value:
-        msg = f"Expected None but got: {field_value}"
+        msg = f"Trying to construct field of type None. But got: {field_value}. loc: {loc}"
         raise ClanError(msg, location=f"{loc}")
 
     if is_type_in_union(t, type(None)) and field_value is None:
@@ -319,4 +319,5 @@ def from_dict(
             msg = f"{data} is not a dict. Expected {t}"
             raise ClanError(msg)
         return construct_dataclass(t, data, path)  # type: ignore
+    # breakpoint()
     return construct_value(t, data, path)
