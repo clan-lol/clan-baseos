@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -107,20 +108,37 @@ class WebExecutor(GObject.Object):
             )
             return
 
-        # Initialize dataclasses from the payload
-        reconciled_arguments = {}
-        for k, v in data.items():
-            # Some functions expect to be called with dataclass instances
-            # But the js api returns dictionaries.
-            # Introspect the function and create the expected dataclass from dict dynamically
-            # Depending on the introspected argument_type
-            arg_class = self.jschema_api.get_method_argtype(method_name, k)
+        try:
+            # Initialize dataclasses from the payload
+            reconciled_arguments = {}
+            for k, v in data.items():
+                # Some functions expect to be called with dataclass instances
+                # But the js api returns dictionaries.
+                # Introspect the function and create the expected dataclass from dict dynamically
+                # Depending on the introspected argument_type
+                arg_class = self.jschema_api.get_method_argtype(method_name, k)
 
-            # TODO: rename from_dict into something like construct_checked_value
-            # from_dict really takes Anything and returns an instance of the type/class
-            reconciled_arguments[k] = from_dict(arg_class, v)
+                # TODO: rename from_dict into something like construct_checked_value
+                # from_dict really takes Anything and returns an instance of the type/class
+                reconciled_arguments[k] = from_dict(arg_class, v)
 
-        GLib.idle_add(fn_instance.internal_async_run, reconciled_arguments)
+            GLib.idle_add(fn_instance.internal_async_run, reconciled_arguments)
+        except Exception as e:
+            self.return_data_to_js(
+                method_name,
+                json.dumps(
+                    {
+                        "op_key": data["op_key"],
+                        "status": "error",
+                        "errors": [
+                            {
+                                "message": "Internal API Error",
+                                "description": traceback.format_exception(e),
+                            }
+                        ],
+                    }
+                ),
+            )
 
     def on_result(self, source: ImplFunc, data: GResult) -> None:
         result = dataclass_to_dict(data.result)
