@@ -4,11 +4,12 @@ import os
 import tarfile
 from itertools import chain
 from pathlib import Path
-from typing import override
+from tempfile import TemporaryDirectory
 
 from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
+from clan_cli.ssh.upload import upload
 from clan_cli.vars.generate import Generator, Var
 
 from . import SecretStoreBase
@@ -131,7 +132,6 @@ class SecretStore(SecretStoreBase):
         manifest += hashes
         return b"\n".join(manifest)
 
-    @override
     def needs_upload(self) -> bool:
         local_hash = self.generate_hash()
         remote_hash = self.machine.target_host.run(
@@ -150,7 +150,7 @@ class SecretStore(SecretStoreBase):
 
         return local_hash.decode() != remote_hash
 
-    def upload(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path) -> None:
         with tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar:
             for generator in self.machine.vars_generators:
                 dir_exists = False
@@ -173,3 +173,14 @@ class SecretStore(SecretStoreBase):
                     tar_file.gname = file.group
                     tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
         (output_dir / ".pass_info").write_bytes(self.generate_hash())
+
+    def upload(self) -> None:
+        if not self.needs_upload():
+            log.info("Secrets already uploaded")
+            return
+        with TemporaryDirectory(prefix="vars-upload-") as tempdir:
+            pass_dir = Path(tempdir)
+            upload_dir = Path(
+                self.machine.deployment["password-store"]["secretLocation"]
+            )
+            upload(self.machine.target_host, pass_dir, upload_dir)

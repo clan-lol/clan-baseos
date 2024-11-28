@@ -13,9 +13,6 @@ class SecretStoreBase(StoreBase):
     def is_secret_store(self) -> bool:
         return True
 
-    def needs_upload(self) -> bool:
-        return True
-
     def ensure_machine_has_access(self, generator: "Generator", name: str) -> None:
         pass
 
@@ -39,5 +36,9 @@ class SecretStoreBase(StoreBase):
         """
 
     @abstractmethod
-    def upload(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path) -> None:
+        pass
+
+    @abstractmethod
+    def upload(self) -> None:
         pass
