@@ -54,6 +54,7 @@ in
       '';
       type = types.listOf (
         types.enum [
+          "experimental"
           "inventory"
         ]
       );

@@ -393,6 +393,11 @@ def produce_clan_modules_docs() -> None:
             frontmatter: Frontmatter
             frontmatter, readme_content = extract_frontmatter(readme, str(readme_file))
 
+        # skip if experimental feature enabled
+        if "experimental" in frontmatter.features:
+            print(f"Skipping {module_name}: Experimental feature")
+            continue
+
         modules_index += build_option_card(module_name, frontmatter)
 
         ##### Print module documentation #####

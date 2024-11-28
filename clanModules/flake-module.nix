@@ -34,6 +34,7 @@
     trusted-nix-caches = ./trusted-nix-caches;
     user-password = ./user-password;
     vaultwarden = ./vaultwarden;
+    wifi = ./wifi;
     xfce = ./xfce;
     zerotier = ./zerotier;
     zerotier-static-peers = ./zerotier-static-peers;
