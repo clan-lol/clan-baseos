@@ -38,6 +38,7 @@ let
       modules =
         let
           hwConfig = "${directory}/machines/${name}/hardware-configuration.nix";
+          diskoConfig = "${directory}/machines/${name}/disko.nix";
         in
         [
           {
@@ -45,6 +46,7 @@ let
             imports = builtins.filter builtins.pathExists [
               "${directory}/machines/${name}/configuration.nix"
               hwConfig
+              diskoConfig
             ];
           }
           clan-core.nixosModules.clanCore

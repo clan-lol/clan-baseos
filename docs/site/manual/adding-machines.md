@@ -9,11 +9,14 @@ Clan has two general methods of adding machines
 
 Every machine of the form `machines/{machineName}` will be registered automatically.
 
-Automatically imported:
+!!! info "Automatically loaded files"
 
-- [x] ``machines/{machineName}/configuration.nix`
-- [x] ``machines/{machineName}/hardware-configuration.nix`
-- [x] ``machines/{machineName}/facter.json` Automatically configured, for further information see [nixos-facter](https://clan.lol/blog/nixos-facter/)
+    Some files are loaded by a clan machine automatically. This decision was made for convinience and allows easier automation.
+
+    - [x] ``machines/{machineName}/configuration.nix`
+    - [x] ``machines/{machineName}/hardware-configuration.nix`
+    - [x] ``machines/{machineName}/facter.json` Automatically configured, for further information see [nixos-facter](https://clan.lol/blog/nixos-facter/)
+    - [x] ``machines/{machineName}/disko.nix` Automatically loaded, for further information see the [disko docs](https://github.com/nix-community/disko/blob/master/docs/quickstart.md).
 
 ## Manual declaration
 
