@@ -157,7 +157,10 @@ def set_machine_disk_schema(
             msg = (
                 f"Placeholder {placeholder_name} not found in disk schema {schema_name}"
             )
-            raise ClanError(msg)
+            raise ClanError(
+                msg,
+                description=f"Available placeholders: {disk_schema.placeholders.keys()}",
+            )
 
         # Invalid value. Check if the value is one of the provided options
         if ph.options and placeholder_value not in ph.options:
@@ -180,7 +183,7 @@ def set_machine_disk_schema(
         disko_file_path = hw_config_path.parent.joinpath("disko.nix")
         if disko_file_path.exists() and not force:
             msg = f"Disk schema already exists at {disko_file_path}"
-            raise ClanError(msg)
+            raise ClanError(msg, description="Use 'force' to overwrite")
 
         with disko_file_path.open("w") as disk_config:
             disk_config.write(config_str)
