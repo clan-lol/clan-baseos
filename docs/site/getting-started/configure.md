@@ -16,15 +16,12 @@ Clan currently offers the following methods to configure machines:
 
     - machines/`machine_name`/configuration.nix (`autoincluded` if it exists)
 
+    See the complete [list](../manual/adding-machines.md#automatic-register) of auto-loaded files.
+
 ???+ Note "Used by CLI & UI"
 
     - inventory.json
-    - machines/`machine_name`/hardware-configuration.nix (`autoincluded` if it exists)
 
-
-!!! Warning "Deprecated"
-
-    machines/`machine_name`/settings.json
 
 ## Global configuration
 
