@@ -358,12 +358,6 @@ def _check_can_migrate(
         else:
             if machine.public_vars_store.exists(generator, file.name):
                 return False
-    # ensure that the service to migrate from actually exists
-    if service_name not in machine.facts_data:
-        log.debug(
-            f"Could not migrate facts for generator {generator.name}, as the service {service_name} does not exist"
-        )
-        return False
     # ensure that all files can be migrated (exists in the corresponding fact store)
     return bool(
         all(
