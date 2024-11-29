@@ -54,6 +54,7 @@ in
               '';
               readOnly = true;
               default = generator.config._module.args.name;
+              defaultText = "Name of the generator";
             };
 
             dependencies = lib.mkOption {
@@ -91,7 +92,10 @@ in
                     # lists are not allowed as of now due to potential ordering issues
                   ]);
                 in
-                data;
+                data
+                // {
+                  description = "JSON compatible data structure";
+                };
             };
             # the invalidationHash is the validation interface to the outside world
             invalidationHash = lib.mkOption {
@@ -108,6 +112,7 @@ in
                   null
                 else
                   hashString "sha256" (toJSON generator.config.invalidationData);
+              defaultText = "Hash of the invalidation data";
             };
             files = lib.mkOption {
               description = ''
@@ -145,6 +150,7 @@ in
                       '';
                       readOnly = true;
                       default = file.config._module.args.name;
+                      defaultText = "Name of the file";
                     };
                     generatorName = lib.mkOption {
                       type = lib.types.str;
@@ -153,6 +159,7 @@ in
                       '';
                       readOnly = true;
                       default = generator.config._module.args.name;
+                      defaultText = "Name of the generator that generates this file";
                     };
                     share = lib.mkOption {
                       type = lib.types.bool;
@@ -164,6 +171,7 @@ in
                       readOnly = true;
                       internal = true;
                       default = generator.config.share;
+                      defaultText = "Mirror of the share flag of the generator";
                     };
                     deploy = lib.mkOption {
                       description = ''
@@ -229,6 +237,7 @@ in
                       '';
                       type = str;
                       default = prompt.config._module.args.name;
+                      defaultText = "Name of the prompt";
                     };
                     createFile = lib.mkOption {
                       description = ''
@@ -252,6 +261,7 @@ in
                       type = str;
                       example = "SSH private key";
                       default = prompt.config._module.args.name;
+                      defaultText = "Name of the prompt";
                     };
                     type = lib.mkOption {
                       description = ''
@@ -301,7 +311,6 @@ in
               type = lib.types.str;
               readOnly = true;
               internal = true;
-              visible = false;
             };
             share = lib.mkOption {
               description = ''

@@ -137,7 +137,6 @@ class Machine:
         module = importlib.import_module(self.public_facts_module)
         return module.FactStore(machine=self)
 
-    # WIP: Vars module is not ready yet.
     @property
     def secret_vars_module(self) -> str:
         return self.deployment["vars"]["secretModule"]

@@ -120,6 +120,7 @@ nav:
           - reference/cli/show.md
           - reference/cli/ssh.md
           - reference/cli/state.md
+          - reference/cli/vars.md
           - reference/cli/vms.md
       - Clan Core:
           - reference/clan-core/index.md
@@ -130,6 +131,7 @@ nav:
           - reference/clan-core/state.md
           - reference/clan-core/deployment.md
           - reference/clan-core/networking.md
+          - reference/clan-core/vars.md
       - Nix API:
           - buildClan: reference/nix-api/buildclan.md
           - Inventory: reference/nix-api/inventory.md

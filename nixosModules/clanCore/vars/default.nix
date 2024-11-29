@@ -22,7 +22,6 @@ in
     # ./secret/vm.nix
   ];
   options.clan.core.vars = lib.mkOption {
-    visible = false;
     description = ''
       Generated Variables
 

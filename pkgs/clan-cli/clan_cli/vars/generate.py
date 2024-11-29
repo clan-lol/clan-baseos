@@ -487,7 +487,7 @@ def generate_command(args: argparse.Namespace) -> None:
         machines = get_all_machines(args.flake, args.option)
     else:
         machines = get_selected_machines(args.flake, args.option, args.machines)
-    generate_vars(machines, args.service, args.regenerate, args.fix)
+    generate_vars(machines, args.generator, args.regenerate, args.fix)
 
 
 def register_generate_parser(parser: argparse.ArgumentParser) -> None:
@@ -501,15 +501,17 @@ def register_generate_parser(parser: argparse.ArgumentParser) -> None:
     add_dynamic_completer(machines_parser, complete_machines)
 
     service_parser = parser.add_argument(
-        "--service",
+        "--generator",
+        "-g",
         type=str,
-        help="service to generate facts for, if empty, generate facts for every service",
+        help="execute only the specified generator. If unset, execute all generators",
         default=None,
     )
     add_dynamic_completer(service_parser, complete_services_for_machine)
 
     parser.add_argument(
         "--regenerate",
+        "-r",
         action=argparse.BooleanOptionalAction,
         help="whether to regenerate facts for the specified machine",
         default=None,
