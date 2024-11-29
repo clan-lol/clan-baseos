@@ -1,28 +1,4 @@
 {
   "version": 1,
-  "system": "x86_64-linux",
-  "virtualisation": "none",
-  "hardware": {
-    "disk": [
-      {
-        "bus_type": {
-          "name": "NVME",
-          "value": 150
-        },
-        "device": {
-          "name": "SAMSUNG MZVL21T0HCLR-00BL7",
-          "value": 43018
-        },
-        "model": "SAMSUNG MZVL21T0HCLR-00BL7",
-        "unix_device_names": [
-          "/dev/disk/by-diskseq/1",
-          "/dev/disk/by-id/nvme-SAMSUNG_MZVL21T0HCLR-00BL7",
-          "/dev/disk/by-id/nvme-SAMSUNG_MZVL21T0HCLR-00BL7",
-          "/dev/disk/by-id/nvme-eui.0087324",
-          "/dev/disk/by-path/pci-0000:02:00.0-nvme-1",
-          "/dev/nvme0n1"
-        ]
-      }
-    ]
-  }
+  "system": "x86_64-linux"
 }
