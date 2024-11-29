@@ -48,7 +48,6 @@ def find_toplevel(top_level_files: list[str]) -> Path | None:
 
 class TemplateType(Enum):
     CLAN = "clan"
-    DISK = "disk"
 
 
 def clan_templates(template_type: TemplateType) -> Path:
