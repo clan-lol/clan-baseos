@@ -2,6 +2,7 @@
   disko.devices = {
     disk = {
       main = {
+        name = "main-{{uuid}}";
         device = "{{mainDisk}}";
         type = "disk";
         content = {
@@ -23,12 +24,6 @@
                 type = "filesystem";
                 format = "ext4";
                 mountpoint = "/";
-              };
-            };
-            swap = {
-              size = "{{swapSize}}";
-              content = {
-                type = "swap";
               };
             };
           };
