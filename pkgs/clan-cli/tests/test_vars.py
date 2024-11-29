@@ -659,7 +659,7 @@ def test_commit_message(
             "--flake",
             str(flake.path),
             "my_machine",
-            "--service",
+            "--generator",
             "my_generator",
         ]
     )
@@ -678,7 +678,7 @@ def test_commit_message(
             "--flake",
             str(flake.path),
             "my_machine",
-            "--service",
+            "--generator",
             "my_secret_generator",
         ]
     )
@@ -981,7 +981,7 @@ def test_invalidation(
     value1_new = get_var(machine, "my_generator/my_value").printable_value
     assert value1 == value1_new
     # set the invalidation data of the generator
-    my_generator["invalidationData"] = 1
+    my_generator["validation"] = 1
     flake.refresh()
     # generate again and make sure the value changes
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])

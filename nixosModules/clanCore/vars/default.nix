@@ -42,7 +42,7 @@ in
             name
             dependencies
             finalScript
-            invalidationHash
+            validationHash
             migrateFact
             prompts
             share

@@ -40,7 +40,7 @@ class Generator:
     name: str
     files: list[Var] = field(default_factory=list)
     share: bool = False
-    invalidation_hash: str | None = None
+    validation: str | None = None
     final_script: str = ""
     prompts: list[Prompt] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
@@ -65,7 +65,7 @@ class Generator:
             share=data["share"],
             final_script=data["finalScript"],
             files=[Var.from_json(data["name"], f) for f in data["files"].values()],
-            invalidation_hash=data["invalidationHash"],
+            validation=data["validationHash"],
             dependencies=data["dependencies"],
             migrate_fact=data["migrateFact"],
             prompts=[Prompt.from_json(p) for p in data["prompts"].values()],
@@ -220,15 +220,11 @@ def execute_generator(
                 public_changed = True
             if file_path:
                 files_to_commit.append(file_path)
-            if generator.invalidation_hash is not None:
+            if generator.validation is not None:
                 if public_changed:
-                    public_vars_store.set_invalidation_hash(
-                        generator, generator.invalidation_hash
-                    )
+                    public_vars_store.set_validation(generator, generator.validation)
                 if secret_changed:
-                    secret_vars_store.set_invalidation_hash(
-                        generator, generator.invalidation_hash
-                    )
+                    secret_vars_store.set_validation(generator, generator.validation)
     commit_files(
         files_to_commit,
         machine.flake_dir,

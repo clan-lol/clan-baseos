@@ -76,7 +76,7 @@ in
               example = "my_service";
               default = null;
             };
-            invalidationData = lib.mkOption {
+            validation = lib.mkOption {
               description = ''
                 A set of values that invalidate the generated values.
                 If any of these values change, the generated values will be re-generated.
@@ -97,8 +97,8 @@ in
                   description = "JSON compatible data structure";
                 };
             };
-            # the invalidationHash is the validation interface to the outside world
-            invalidationHash = lib.mkOption {
+            # the validationHash is the validation interface to the outside world
+            validationHash = lib.mkOption {
               internal = true;
               description = ''
                 A hash of the invalidation data.
@@ -108,10 +108,10 @@ in
               # TODO: recursively traverse the structure and sort all lists in order to support lists
               default =
                 # For backwards compat, the hash is null by default in which case the check is omitted
-                if generator.config.invalidationData == null then
+                if generator.config.validation == null then
                   null
                 else
-                  hashString "sha256" (toJSON generator.config.invalidationData);
+                  hashString "sha256" (toJSON generator.config.validation);
               defaultText = "Hash of the invalidation data";
             };
             files = lib.mkOption {
