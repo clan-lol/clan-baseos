@@ -114,7 +114,7 @@ def check_command(args: argparse.Namespace) -> None:
         name=args.machine,
         flake=args.flake,
     )
-    ok = check_vars(machine, generator_name=args.service)
+    ok = check_vars(machine, generator_name=args.generator)
     if not ok:
         raise SystemExit(1)
 
@@ -127,7 +127,8 @@ def register_check_parser(parser: argparse.ArgumentParser) -> None:
     add_dynamic_completer(machines_parser, complete_machines)
 
     parser.add_argument(
-        "--service",
-        help="the service to check",
+        "--generator",
+        "-g",
+        help="the generator to check",
     )
     parser.set_defaults(func=check_command)

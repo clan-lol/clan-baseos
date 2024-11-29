@@ -119,25 +119,21 @@ class StoreBase(ABC):
                 all_vars.append(var)
         return all_vars
 
-    def get_invalidation_hash(self, generator: "Generator") -> str | None:
+    def get_validation(self, generator: "Generator") -> str | None:
         """
         Return the invalidation hash that indicates if a generator needs to be re-run
         due to a change in its definition
         """
-        hash_file = (
-            self.machine.flake_dir / "vars" / generator.name / "invalidation_hash"
-        )
+        hash_file = self.machine.flake_dir / "vars" / generator.name / "validation"
         if not hash_file.exists():
             return None
         return hash_file.read_text().strip()
 
-    def set_invalidation_hash(self, generator: "Generator", hash_str: str) -> None:
+    def set_validation(self, generator: "Generator", hash_str: str) -> None:
         """
         Store the invalidation hash that indicates if a generator needs to be re-run
         """
-        hash_file = (
-            self.machine.flake_dir / "vars" / generator.name / "invalidation_hash"
-        )
+        hash_file = self.machine.flake_dir / "vars" / generator.name / "validation"
         hash_file.parent.mkdir(parents=True, exist_ok=True)
         hash_file.write_text(hash_str)
 
@@ -147,8 +143,8 @@ class StoreBase(ABC):
         If the hash is not set in nix and hasn't been stored before, it is considered valid
             -> this provides backward and forward compatibility
         """
-        stored_hash = self.get_invalidation_hash(generator)
-        target_hash = generator.invalidation_hash
+        stored_hash = self.get_validation(generator)
+        target_hash = generator.validation
         # if the hash is neither set in nix nor on disk, it is considered valid (provides backwards compat)
         if target_hash is None and stored_hash is None:
             return True

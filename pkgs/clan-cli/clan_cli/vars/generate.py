@@ -40,7 +40,7 @@ class Generator:
     name: str
     files: list[Var] = field(default_factory=list)
     share: bool = False
-    invalidation_hash: str | None = None
+    validation: str | None = None
     final_script: str = ""
     prompts: list[Prompt] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
@@ -65,7 +65,7 @@ class Generator:
             share=data["share"],
             final_script=data["finalScript"],
             files=[Var.from_json(data["name"], f) for f in data["files"].values()],
-            invalidation_hash=data["invalidationHash"],
+            validation=data["validationHash"],
             dependencies=data["dependencies"],
             migrate_fact=data["migrateFact"],
             prompts=[Prompt.from_json(p) for p in data["prompts"].values()],
@@ -220,15 +220,11 @@ def execute_generator(
                 public_changed = True
             if file_path:
                 files_to_commit.append(file_path)
-            if generator.invalidation_hash is not None:
+            if generator.validation is not None:
                 if public_changed:
-                    public_vars_store.set_invalidation_hash(
-                        generator, generator.invalidation_hash
-                    )
+                    public_vars_store.set_validation(generator, generator.validation)
                 if secret_changed:
-                    secret_vars_store.set_invalidation_hash(
-                        generator, generator.invalidation_hash
-                    )
+                    secret_vars_store.set_validation(generator, generator.validation)
     commit_files(
         files_to_commit,
         machine.flake_dir,
@@ -362,12 +358,6 @@ def _check_can_migrate(
         else:
             if machine.public_vars_store.exists(generator, file.name):
                 return False
-    # ensure that the service to migrate from actually exists
-    if service_name not in machine.facts_data:
-        log.debug(
-            f"Could not migrate facts for generator {generator.name}, as the service {service_name} does not exist"
-        )
-        return False
     # ensure that all files can be migrated (exists in the corresponding fact store)
     return bool(
         all(
@@ -487,7 +477,7 @@ def generate_command(args: argparse.Namespace) -> None:
         machines = get_all_machines(args.flake, args.option)
     else:
         machines = get_selected_machines(args.flake, args.option, args.machines)
-    generate_vars(machines, args.service, args.regenerate, args.fix)
+    generate_vars(machines, args.generator, args.regenerate, args.fix)
 
 
 def register_generate_parser(parser: argparse.ArgumentParser) -> None:
@@ -501,15 +491,17 @@ def register_generate_parser(parser: argparse.ArgumentParser) -> None:
     add_dynamic_completer(machines_parser, complete_machines)
 
     service_parser = parser.add_argument(
-        "--service",
+        "--generator",
+        "-g",
         type=str,
-        help="service to generate facts for, if empty, generate facts for every service",
+        help="execute only the specified generator. If unset, execute all generators",
         default=None,
     )
     add_dynamic_completer(service_parser, complete_services_for_machine)
 
     parser.add_argument(
         "--regenerate",
+        "-r",
         action=argparse.BooleanOptionalAction,
         help="whether to regenerate facts for the specified machine",
         default=None,

@@ -145,10 +145,10 @@ Examples:
   $ clan vars generate [MACHINE]
   Will generate vars for the specified machine.
 
-  $ clan vars generate [MACHINE] --service [SERVICE]
+  $ clan vars generate [MACHINE] --generator [SERVICE]
   Will generate vars for the specified machine for the specified service.
 
-  $ clan vars generate --service [SERVICE] --regenerate
+  $ clan vars generate --generator [SERVICE] --regenerate
   Will regenerate vars, if they are already generated for a specific service.
   This is especially useful for resetting certain passwords while leaving the rest
   of the vars for a machine in place.

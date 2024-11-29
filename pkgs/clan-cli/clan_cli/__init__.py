@@ -293,11 +293,11 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
     # like facts but with vars instead of facts
     parser_vars = subparsers.add_parser(
         "vars",
-        help="WIP: Manage vars",
-        description="WIP: Manage vars",
+        help="Manage vars",
+        description="Manage vars",
         epilog=(
             f"""
-This subcommand provides an interface to vars of clan machines.
+This subcommand provides an interface to `vars` of clan machines.
 Vars are variables that a service can generate.
 There are public and secret vars.
 Public vars can be referenced by other machines directly.
