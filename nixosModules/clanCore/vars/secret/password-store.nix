@@ -76,7 +76,7 @@ in
             ]
             ''
               [ -e /run/current-system ] || echo setting up secrets...
-              ${installSecretTarball}/bin/install-secret-tarball ${config.clan.password-store.secretLocation}/secrets.tar.gz
+              ${installSecretTarball}/bin/install-secret-tarball ${config.clan.vars.password-store.secretLocation}/secrets.tar.gz
             ''
           // lib.optionalAttrs (config.system ? dryActivationScript) {
             supportsDryActivation = true;
@@ -96,7 +96,7 @@ in
           serviceConfig = {
             Type = "oneshot";
             ExecStart = [
-              "${installSecretTarball}/bin/install-secret-tarball ${config.clan.password-store.secretLocation}/secrets.tar.gz"
+              "${installSecretTarball}/bin/install-secret-tarball ${config.clan.vars.password-store.secretLocation}/secrets.tar.gz"
             ];
             RemainAfterExit = true;
           };
