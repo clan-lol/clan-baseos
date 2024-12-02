@@ -72,7 +72,7 @@ class ClanURI:
 
     @classmethod
     def from_str(
-        cls,  # noqa
+        cls,
         url: str,
         machine_name: str | None = None,
     ) -> "ClanURI":

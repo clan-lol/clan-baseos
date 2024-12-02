@@ -4,9 +4,12 @@
 }:
 {
   imports = [
-    (lib.mkRenamedOptionModule [ "clanCore" ] [
-      "clan"
-      "core"
-    ])
+    (lib.mkRenamedOptionModule
+      [ "clanCore" ]
+      [
+        "clan"
+        "core"
+      ]
+    )
   ];
 }

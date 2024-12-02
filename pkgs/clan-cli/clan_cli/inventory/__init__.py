@@ -36,13 +36,13 @@ from .classes import (
 # Re export classes here
 # This allows to renaming of classes in the generated code
 __all__ = [
-    "from_dict",
-    "dataclass_to_dict",
-    "Service",
-    "Machine",
-    "Meta",
     "Inventory",
+    "Machine",
     "MachineDeploy",
+    "Meta",
+    "Service",
+    "dataclass_to_dict",
+    "from_dict",
 ]
 
 

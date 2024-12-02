@@ -11,7 +11,7 @@ from .arg_actions import AppendOptionAction
 from .clan import show, update
 
 # API endpoints that are not used in the cli.
-__all__ = ["directory", "mdns_discovery", "modules", "update", "disk", "admin", "iwd"]
+__all__ = ["admin", "directory", "disk", "iwd", "mdns_discovery", "modules", "update"]
 
 from . import (
     backups,
