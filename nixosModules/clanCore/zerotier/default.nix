@@ -110,8 +110,16 @@ in
 
       systemd.services.zerotierone.serviceConfig.ExecStartPre = [
         "+${pkgs.writeShellScript "init-zerotier" ''
-          cp ${config.clan.core.facts.services.zerotier.secret.zerotier-identity-secret.path} /var/lib/zerotier-one/identity.secret
-          zerotier-idtool getpublic /var/lib/zerotier-one/identity.secret > /var/lib/zerotier-one/identity.public
+          # compare hashes of the current identity secret and the one in the config
+          hash1=$(sha256sum /var/lib/zerotier-one/identity.secret | cut -d ' ' -f 1)
+          hash2=$(sha256sum ${config.clan.core.facts.services.zerotier.secret.zerotier-identity-secret.path} | cut -d ' ' -f 1)
+          if [[ "$hash1" != "$hash2" ]]; then
+            echo "Identity secret has changed, backing up old identity to /var/lib/zerotier-one/identity.secret.bac"
+            cp /var/lib/zerotier-one/identity.secret /var/lib/zerotier-one/identity.secret.bac
+            cp /var/lib/zerotier-one/identity.public /var/lib/zerotier-one/identity.public.bac
+            cp ${config.clan.core.facts.services.zerotier.secret.zerotier-identity-secret.path} /var/lib/zerotier-one/identity.secret
+            zerotier-idtool getpublic /var/lib/zerotier-one/identity.secret > /var/lib/zerotier-one/identity.public
+          fi
 
           ${lib.optionalString (cfg.controller.enable) ''
             mkdir -p /var/lib/zerotier-one/controller.d/network
