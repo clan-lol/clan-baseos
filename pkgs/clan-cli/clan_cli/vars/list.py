@@ -28,7 +28,16 @@ def secret_store(machine: Machine) -> SecretStoreBase:
 def get_vars(machine: Machine) -> list[Var]:
     pub_store = public_store(machine)
     sec_store = secret_store(machine)
-    return pub_store.get_all() + sec_store.get_all()
+    all_vars = []
+    for generator in machine.vars_generators:
+        for var in generator.files:
+            if var.secret:
+                var.store(sec_store)
+            else:
+                var.store(pub_store)
+            var.generator(generator)
+            all_vars.append(var)
+    return all_vars
 
 
 def _get_previous_value(

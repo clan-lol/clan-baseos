@@ -107,18 +107,6 @@ class StoreBase(ABC):
                 )
         return new_file
 
-    def get_all(self) -> list["Var"]:
-        all_vars = []
-        for generator in self.machine.vars_generators:
-            for var in generator.files:
-                # only handle vars compatible to this store
-                if self.is_secret_store != var.secret:
-                    continue
-                var.store(self)
-                var.generator(generator)
-                all_vars.append(var)
-        return all_vars
-
     def get_validation(self, generator: "Generator") -> str | None:
         """
         Return the invalidation hash that indicates if a generator needs to be re-run
