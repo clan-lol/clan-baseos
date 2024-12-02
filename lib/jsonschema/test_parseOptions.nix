@@ -57,17 +57,20 @@
       };
     in
     {
-      expr = slib.parseOptions (lib.evalModules {
-        modules = [
-          {
-            freeformType = with lib.types; attrsOf int;
-            options = {
-              enable = lib.mkEnableOption "enable this";
-            };
-          }
-          default
-        ];
-      }).options { };
+      expr =
+        slib.parseOptions
+          (lib.evalModules {
+            modules = [
+              {
+                freeformType = with lib.types; attrsOf int;
+                options = {
+                  enable = lib.mkEnableOption "enable this";
+                };
+              }
+              default
+            ];
+          }).options
+          { };
       expected = {
         "$schema" = "http://json-schema.org/draft-07/schema#";
         "$exportedModuleInfo" = {

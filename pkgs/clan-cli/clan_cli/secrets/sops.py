@@ -29,7 +29,7 @@ class KeyType(enum.Enum):
     PGP = enum.auto()
 
     @classmethod
-    def validate(cls, value: str | None) -> "KeyType | None":  # noqa: ANN102
+    def validate(cls, value: str | None) -> "KeyType | None":
         if value:
             return cls.__members__.get(value.upper())
         return None
@@ -114,14 +114,14 @@ class SopsKey:
         }
 
     @classmethod
-    def load_dir(cls, folder: Path) -> "SopsKey":  # noqa: ANN102
+    def load_dir(cls, folder: Path) -> "SopsKey":
         """Load from the file named `keys.json` in the given directory."""
         pubkey, key_type = read_key(folder)
         username = ""
         return cls(pubkey, username, key_type)
 
     @classmethod
-    def collect_public_keys(cls) -> Sequence["SopsKey"]:  # noqa: ANN102
+    def collect_public_keys(cls) -> Sequence["SopsKey"]:
         return [
             cls(pubkey=key, username="", key_type=key_type)
             for key_type in KeyType
@@ -159,7 +159,7 @@ class ExitStatus(enum.IntEnum):  # see: cmd/sops/codes/codes.go
     FILE_ALREADY_ENCRYPTED = 203
 
     @classmethod
-    def parse(cls, code: int) -> "ExitStatus | None":  # noqa: ANN102
+    def parse(cls, code: int) -> "ExitStatus | None":
         return ExitStatus(code) if code in ExitStatus else None
 
 
