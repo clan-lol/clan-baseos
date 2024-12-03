@@ -83,8 +83,10 @@ def handle_io(
         return b""
 
     # Extra information passed to the logger
-    stdout_extra = {"command_prefix": prefix}
-    stderr_extra = {"command_prefix": prefix}
+    stdout_extra = {}
+    stderr_extra = {}
+    if prefix:
+        stdout_extra["command_prefix"] = stderr_extra["command_prefix"] = prefix
     if msg_color and msg_color.stderr:
         stdout_extra["color"] = msg_color.stderr.value
     if msg_color and msg_color.stdout:
@@ -266,9 +268,6 @@ def run(
         options = RunOpts()
     if options.cwd is None:
         options.cwd = Path.cwd()
-
-    if options.prefix is None:
-        options.prefix = "$"
 
     if options.input:
         if any(not ch.isprintable() for ch in options.input.decode("ascii", "replace")):

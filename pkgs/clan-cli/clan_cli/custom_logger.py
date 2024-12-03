@@ -25,12 +25,9 @@ class PrefixFormatter(logging.Formatter):
     print errors in red and warnings in yellow
     """
 
-    def __init__(
-        self, trace_prints: bool = False, default_prefix: str | None = None
-    ) -> None:
+    def __init__(self, trace_prints: bool = False) -> None:
         super().__init__()
 
-        self.default_prefix = default_prefix
         self.trace_prints = trace_prints
         self.hostnames: list[str] = []
         self.hostname_color_offset = 0
@@ -51,7 +48,7 @@ class PrefixFormatter(logging.Formatter):
                 msg_color = AnsiColor.DEFAULT.value
 
         # If extra["command_prefix"] is set, use that as the logging prefix.
-        command_prefix = getattr(record, "command_prefix", self.default_prefix)
+        command_prefix = getattr(record, "command_prefix", None)
 
         # If color is disabled, don't use color.
         if DISABLE_COLOR:
@@ -154,7 +151,6 @@ def print_trace(msg: str, logger: logging.Logger, prefix: str | None) -> None:
 def setup_logging(
     level: Any,
     root_log_name: str = __name__.split(".")[0],
-    default_prefix: str = "clan",
 ) -> None:
     # Get the root logger and set its level
     main_logger = logging.getLogger(root_log_name)
@@ -166,5 +162,5 @@ def setup_logging(
     # Create and add your custom handler
     default_handler.setLevel(level)
     trace_prints = bool(int(os.environ.get("TRACE_PRINT", "0")))
-    default_handler.setFormatter(PrefixFormatter(trace_prints, default_prefix))
+    default_handler.setFormatter(PrefixFormatter(trace_prints))
     main_logger.addHandler(default_handler)
