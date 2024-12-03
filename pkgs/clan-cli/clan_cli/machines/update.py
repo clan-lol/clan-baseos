@@ -105,6 +105,8 @@ def update_machines(base_path: str, machines: list[InventoryMachine]) -> None:
             raise ClanError(msg)
         # Copy targetHost to machine
         m.override_target_host = machine.deploy.targetHost
+        # Would be nice to have?
+        # m.override_build_host = machine.deploy.buildHost
         group_machines.append(m)
 
     deploy_machine(MachineGroup(group_machines))
@@ -197,6 +199,7 @@ def update(args: argparse.Namespace) -> None:
             name=args.machines[0], flake=args.flake, nix_options=args.option
         )
         machine.override_target_host = args.target_host
+        machine.override_build_host = args.build_host
         machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
         machines.append(machine)
 
@@ -215,6 +218,7 @@ def update(args: argparse.Namespace) -> None:
                     ignored_machines.append(machine)
                     continue
                 machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
+                machine.override_build_host = args.build_host
                 machines.append(machine)
 
             if not machines and ignored_machines != []:
@@ -230,6 +234,7 @@ def update(args: argparse.Namespace) -> None:
         else:
             machines = get_selected_machines(args.flake, args.option, args.machines)
             for machine in machines:
+                machine.override_build_host = args.build_host
                 machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
 
     host_group = MachineGroup(machines)
@@ -257,5 +262,10 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
         "--target-host",
         type=str,
         help="Address of the machine to update, in the format of user@host:1234.",
+    )
+    parser.add_argument(
+        "--build-host",
+        type=str,
+        help="Address of the machine to build the flake, in the format of user@host:1234.",
     )
     parser.set_defaults(func=update)
