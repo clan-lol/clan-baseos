@@ -338,12 +338,12 @@ def run(
     return cmd_out
 
 
-def run_no_output(
+def run_no_stdout(
     cmd: list[str],
     *,
     env: dict[str, str] | None = None,
     cwd: Path | None = None,
-    log: Log = Log.NONE,
+    log: Log = Log.STDERR,
     prefix: str | None = None,
     check: bool = True,
     error_msg: str | None = None,

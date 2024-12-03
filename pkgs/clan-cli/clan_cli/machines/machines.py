@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Literal
 
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import run_no_output
+from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanError
 from clan_cli.facts import public_modules as facts_public_modules
 from clan_cli.facts import secret_modules as facts_secret_modules
@@ -70,7 +70,7 @@ class Machine:
         attr = f'(builtins.getFlake "{self.flake}").nixosConfigurations.{self.name}.pkgs.hostPlatform.system'
         output = self._eval_cache.get(attr)
         if output is None:
-            output = run_no_output(
+            output = run_no_stdout(
                 nix_eval(["--impure", "--expr", attr])
             ).stdout.strip()
             self._eval_cache[attr] = output
@@ -238,7 +238,7 @@ class Machine:
             config_json.flush()
 
             file_info = json.loads(
-                run_no_output(
+                run_no_stdout(
                     nix_eval(
                         [
                             "--impure",
@@ -283,9 +283,9 @@ class Machine:
         args += nix_options + self.nix_options
 
         if method == "eval":
-            output = run_no_output(nix_eval(args)).stdout.strip()
+            output = run_no_stdout(nix_eval(args)).stdout.strip()
             return output
-        return Path(run_no_output(nix_build(args)).stdout.strip())
+        return Path(run_no_stdout(nix_build(args)).stdout.strip())
 
     def eval_nix(
         self,
