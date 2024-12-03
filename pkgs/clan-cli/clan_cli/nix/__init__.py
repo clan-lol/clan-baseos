@@ -39,6 +39,7 @@ def nix_build(flags: list[str], gcroot: Path | None = None) -> list[str]:
                     str(gcroot),
                     "--print-out-paths",
                     "--show-trace",
+                    "--print-build-logs",
                 ]
             )
             + flags
@@ -50,6 +51,7 @@ def nix_build(flags: list[str], gcroot: Path | None = None) -> list[str]:
                 "--no-link",
                 "--print-out-paths",
                 "--show-trace",
+                "--print-build-logs",
             ]
         )
         + flags
@@ -77,6 +79,7 @@ def nix_eval(flags: list[str]) -> list[str]:
             "eval",
             "--show-trace",
             "--json",
+            "--print-build-logs",
         ]
     )
     if os.environ.get("IN_NIX_SANDBOX"):
