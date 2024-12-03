@@ -150,7 +150,10 @@ class SecretStore(SecretStoreBase):
         return local_hash.decode() != remote_hash
 
     def populate_dir(self, output_dir: Path) -> None:
-        with tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar:
+        with (
+            tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar,
+            tarfile.open(output_dir / "secrets_for_users.tar.gz", "w:gz") as user_tar,
+        ):
             for generator in self.machine.vars_generators:
                 dir_exists = False
                 for file in generator.files:
@@ -170,7 +173,10 @@ class SecretStore(SecretStoreBase):
                     tar_file.mode = 0o440
                     tar_file.uname = file.owner
                     tar_file.gname = file.group
-                    tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
+                    if file.needed_for_users:
+                        user_tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
+                    else:
+                        tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
         (output_dir / ".pass_info").write_bytes(self.generate_hash())
 
     def upload(self) -> None:
@@ -179,6 +185,7 @@ class SecretStore(SecretStoreBase):
             return
         with TemporaryDirectory(prefix="vars-upload-") as tempdir:
             pass_dir = Path(tempdir)
+            self.populate_dir(pass_dir)
             upload_dir = Path(
                 self.machine.deployment["password-store"]["secretLocation"]
             )

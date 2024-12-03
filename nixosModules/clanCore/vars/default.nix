@@ -49,7 +49,12 @@ in
             ;
           files = lib.flip lib.mapAttrs generator.files (
             _name: file: {
-              inherit (file) name deploy secret;
+              inherit (file)
+                name
+                deploy
+                secret
+                neededForUsers
+                ;
             }
           );
         }
