@@ -109,10 +109,8 @@ def create_machine(opts: CreateOptions) -> None:
 
         src = tmpdirp / "machines" / opts.template_name
 
-        if (
-            not (src / "configuration.nix").exists()
-            and not (src / "inventory.json").exists()
-        ):
+        has_inventory = (dst / "inventory.json").exists()
+        if not (src / "configuration.nix").exists() and not has_inventory:
             msg = f"Template machine '{opts.template_name}' does not contain a configuration.nix or inventory.json"
             description = (
                 "Template machine must contain a configuration.nix or inventory.json"
@@ -131,7 +129,7 @@ def create_machine(opts: CreateOptions) -> None:
     inventory = load_inventory_json(clan_dir)
 
     # Merge the inventory from the template
-    if (dst / "inventory.json").exists():
+    if has_inventory:
         template_inventory = load_inventory_json(dst)
         merge_template_inventory(inventory, template_inventory, machine_name)
 
@@ -141,6 +139,13 @@ def create_machine(opts: CreateOptions) -> None:
     new_machine = InventoryMachine(
         name=machine_name, deploy=deploy, tags=opts.machine.tags
     )
+    if (
+        not has_inventory
+        and len(opts.machine.tags) == 0
+        and new_machine.deploy.targetHost is None
+    ):
+        # no need to update inventory if there are no tags or target host
+        return
     inventory.machines.update({new_machine.name: dataclass_to_dict(new_machine)})
     set_inventory(inventory, clan_dir, "Imported machine from template")
 
