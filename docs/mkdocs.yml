@@ -58,8 +58,9 @@ nav:
       - Secrets: manual/secrets.md
       - Secure Boot: manual/secure-boot.md
       - Flake-parts: manual/flake-parts.md
-      - Authoring ClanModules:
-          - clanmodules/index.md
+      - Authoring:
+          - Modules: clanmodules/index.md
+          - Disk Templates: manual/disk-templates.md
       - Contribute: manual/contribute.md
   # - Concepts:
   #     - Overview: concepts/index.md

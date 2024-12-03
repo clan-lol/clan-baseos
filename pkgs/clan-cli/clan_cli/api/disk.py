@@ -7,6 +7,7 @@ from typing import Any
 from uuid import uuid4
 
 from clan_cli.api import API
+from clan_cli.api.modules import Frontmatter, extract_frontmatter
 from clan_cli.dirs import TemplateType, clan_templates
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_file
@@ -29,14 +30,13 @@ def get_best_unix_device_name(unix_device_names: list[str]) -> str:
         return unix_device_names[0]
 
 
-def hw_main_disk_options(hw_report: dict) -> list[str]:
+def hw_main_disk_options(hw_report: dict) -> list[str] | None:
+    options: list[str] = []
     if not disk_in_facter_report(hw_report):
-        msg = "hw_report doesnt include 'disk' information"
-        raise ClanError(msg, description=f"{hw_report.keys()}")
+        return None
 
     disks = hw_report["hardware"]["disk"]
 
-    options: list[str] = []
     for disk in disks:
         unix_device_names = disk["unix_device_names"]
         device_name = get_best_unix_device_name(unix_device_names)
@@ -56,6 +56,8 @@ class Placeholder:
 @dataclass
 class DiskSchema:
     name: str
+    readme: str
+    frontmatter: Frontmatter
     placeholders: dict[str, Placeholder]
 
 
@@ -71,27 +73,31 @@ templates: dict[str, dict[str, Callable[[dict[str, Any]], Placeholder]]] = {
 
 
 @API.register
-def get_disk_schemas(base_path: Path, machine_name: str) -> dict[str, DiskSchema]:
+def get_disk_schemas(
+    base_path: Path, machine_name: str | None = None
+) -> dict[str, DiskSchema]:
     """
     Get the available disk schemas
     """
     disk_templates = clan_templates(TemplateType.DISK)
     disk_schemas = {}
-
-    hw_report_path = HardwareConfig.NIXOS_FACTER.config_path(base_path, machine_name)
-    if not hw_report_path.exists():
-        msg = "Hardware configuration missing"
-        raise ClanError(msg)
-
     hw_report = {}
-    with hw_report_path.open("r") as hw_report_file:
-        hw_report = json.load(hw_report_file)
+
+    if machine_name is not None:
+        hw_report_path = HardwareConfig.NIXOS_FACTER.config_path(
+            base_path, machine_name
+        )
+        if not hw_report_path.exists():
+            msg = "Hardware configuration missing"
+            raise ClanError(msg)
+        with hw_report_path.open("r") as hw_report_file:
+            hw_report = json.load(hw_report_file)
 
     for disk_template in disk_templates.iterdir():
-        if disk_template.is_file():
+        if disk_template.is_dir():
             schema_name = disk_template.stem
             if schema_name not in templates:
-                msg = f"Disk schema {schema_name} not found in templates"
+                msg = f"Disk schema {schema_name} not found in templates {templates.keys()}"
                 raise ClanError(
                     msg,
                     description="This is an internal architecture problem. Because disk schemas dont define their own interface",
@@ -103,8 +109,16 @@ def get_disk_schemas(base_path: Path, machine_name: str) -> dict[str, DiskSchema
             if placeholder_getters:
                 placeholders = {k: v(hw_report) for k, v in placeholder_getters.items()}
 
+            raw_readme = (disk_template / "README.md").read_text()
+            frontmatter, readme = extract_frontmatter(
+                raw_readme, f"{disk_template}/README.md"
+            )
+
             disk_schemas[schema_name] = DiskSchema(
-                name=schema_name, placeholders=placeholders
+                name=schema_name,
+                placeholders=placeholders,
+                readme=readme,
+                frontmatter=frontmatter,
             )
 
     return disk_schemas
@@ -120,7 +134,7 @@ def set_machine_disk_schema(
     placeholders: dict[str, str],
     force: bool = False,
 ) -> None:
-    """
+    """ "
     Set the disk placeholders of the template
     """
     # Assert the hw-config must exist before setting the disk
@@ -135,7 +149,7 @@ def set_machine_disk_schema(
         msg = "Hardware configuration must use type FACTER for applying disk schema automatically"
         raise ClanError(msg)
 
-    disk_schema_path = clan_templates(TemplateType.DISK) / f"{schema_name}.nix"
+    disk_schema_path = clan_templates(TemplateType.DISK) / f"{schema_name}/default.nix"
 
     if not disk_schema_path.exists():
         msg = f"Disk schema not found at {disk_schema_path}"
@@ -169,6 +183,12 @@ def set_machine_disk_schema(
             )
             raise ClanError(msg, description=f"Valid options: {ph.options}")
 
+    header = f"""# ---
+# schema = "{schema_name}";
+# ---
+# This file was automatically generated!
+# CHANGING this configuration requires wiping and reinstalling the machine
+"""
     with disk_schema_path.open("r") as disk_template:
         config_str = disk_template.read()
         for placeholder_name, placeholder_value in placeholders.items():
@@ -186,6 +206,7 @@ def set_machine_disk_schema(
             raise ClanError(msg, description="Use 'force' to overwrite")
 
         with disko_file_path.open("w") as disk_config:
+            disk_config.write(header)
             disk_config.write(config_str)
 
         commit_file(
