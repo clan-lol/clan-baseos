@@ -95,14 +95,9 @@ class Machine:
 
     @property
     def target_host_address(self) -> str:
-        # deploymentAddress is deprecated.
-        val = (
-            self.override_target_host
-            or self.deployment.get("targetHost")
-            or self.deployment.get("deploymentAddress")
-        )
+        val = self.override_target_host or self.deployment.get("targetHost")
         if val is None:
-            msg = f"'TargetHost' is not set for machine '{self.name}'"
+            msg = f"'targetHost' is not set for machine '{self.name}'"
             raise ClanError(
                 msg,
                 description="See https://docs.clan.lol/getting-started/deploy/#setting-the-target-host for more information.",
