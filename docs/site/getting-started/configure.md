@@ -115,6 +115,32 @@ Adding or configuring a new machine requires two simple steps:
    }
    ```
 
+   You can also create additional machines using the `clan machines create` command:
+
+   ```
+   $ clan machines create --help
+   usage: clan [-h] [SUBCOMMAND] machines create [-h] [--tags TAGS [TAGS ...]] [--template-name TEMPLATE_NAME]
+                                                 [--target-host TARGET_HOST] [--debug] [--option name value] [--flake PATH]
+                                                 machine_name
+
+   positional arguments:
+     machine_name          The name of the machine to create
+
+   options:
+     -h, --help            show this help message and exit
+     --tags TAGS [TAGS ...]
+                           Tags to associate with the machine. Can be used to assign multiple machines to services.
+     --template-name TEMPLATE_NAME
+                           The name of the template machine to import
+     --target-host TARGET_HOST
+                           Address of the machine to install and update, in the format of user@host:1234
+     --debug               Enable debug logging
+     --option name value   Nix option to set
+     --flake PATH          path to the flake where the clan resides in, can be a remote flake or local, can be set through
+                           the [CLAN_DIR] environment variable
+   ```
+
+
 !!! Info "Replace `__YOUR_USERNAME__` with the ip of your machine, if you use avahi you can also use your hostname"
 !!! Info "Replace `__IP__` with the ip of your machine, if you use avahi you can also use your hostname"
 !!! Info "Replace `__CHANGE_ME__` with the appropriate identifier, such as `nvme-eui.e8238fa6bf530001001b448b4aec2929`"
