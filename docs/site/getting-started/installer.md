@@ -104,20 +104,34 @@ sudo umount /dev/sdb1
     wget https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-installer-aarch64-linux.iso
     ```
 
+    !!! Note
+        If you don't have `wget` installed, you can use `curl --progress-bar -OL <url>` instead.
+
     ### Step 2.5 Flash the Installer to the USB Drive
 
     !!! Danger "Specifying the wrong device can lead to unrecoverable data loss."
 
         The `dd` utility will erase the disk. Make sure to specify the correct device (`of=...`)
 
-        For example if the USB device is `sdb` use `of=/dev/sdb`.
+        For example if the USB device is `sdb` use `of=/dev/sdb` (on macOS it will look more like /dev/disk1)
 
+    On Linux, you can use the `lsblk` utility to identify the correct disko
 
+    ```
+    lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
+    ```
 
-    Use the `dd` utility to write the NixOS installer image to your USB drive:
+    On macos use `diskutil`:
+
+    ```
+    diskutil list
+    ```
+
+    Use the `dd` utility to write the NixOS installer image to your USB drive.
+    Replace `/dev/sd<X>` with your external drive from above.
 
     ```shellSession
-    sudo dd bs=4M conv=fsync oflag=direct status=progress if=./nixos-installer-x86_64-linux.iso of=/dev/sd<X>
+    sudo dd bs=4M conv=fsync status=progress if=./nixos-installer-x86_64-linux.iso of=/dev/sd<X>
     ```
 
 
