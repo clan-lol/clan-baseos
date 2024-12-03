@@ -157,7 +157,6 @@ export const Flash = () => {
           language: values.language,
           keymap: values.keymap,
           ssh_keys_path: values.sshKeys.map((file) => file.name),
-          wifi_settings: values.wifi,
         },
         dry_run: false,
         write_efi_boot_entries: false,

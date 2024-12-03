@@ -68,12 +68,6 @@ sudo umount /dev/sdb1
         ```
         If you do not have an ssh key yet, you can generate one with `ssh-keygen -t ed25519` command.
 
-    - **Wifi Option**:
-        To add wifi credentials into the installer image append the option:
-        ```
-        --wifi <ssid> <password>  
-        ```
-
     - **List Keymaps**:
         You can get a list of all keymaps with the following command:
         ```

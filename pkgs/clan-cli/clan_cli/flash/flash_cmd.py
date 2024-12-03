@@ -10,7 +10,7 @@ from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.machines.machines import Machine
 
-from .flash import Disk, SystemConfig, WifiConfig, flash_machine
+from .flash import Disk, SystemConfig, flash_machine
 
 log = logging.getLogger(__name__)
 
@@ -69,14 +69,10 @@ def flash_command(args: argparse.Namespace) -> None:
             language=args.language,
             keymap=args.keymap,
             ssh_keys_path=args.ssh_pubkey,
-            wifi_settings=None,
         ),
         write_efi_boot_entries=args.write_efi_boot_entries,
         nix_options=args.option,
     )
-
-    if args.wifi:
-        opts.system_config.wifi_settings = [WifiConfig(ssid=ssid) for ssid in args.wifi]
 
     machine = Machine(opts.machine, flake=opts.flake)
     if opts.confirm and not opts.dry_run:
@@ -125,13 +121,6 @@ def register_flash_write_parser(parser: argparse.ArgumentParser) -> None:
         Mount will mount the disk before installing.
         Mount is useful for updating an existing system without losing data.
         """
-    )
-    parser.add_argument(
-        "--wifi",
-        type=str,
-        action="append",
-        help="wifi ssid to connect to",
-        default=[],
     )
     parser.add_argument(
         "--mode",
