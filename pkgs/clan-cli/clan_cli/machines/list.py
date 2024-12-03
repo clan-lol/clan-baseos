@@ -6,10 +6,13 @@ from pathlib import Path
 from typing import Literal
 
 from clan_cli.api import API
+from clan_cli.api.modules import parse_frontmatter
 from clan_cli.cmd import run_no_output
 from clan_cli.completions import add_dynamic_completer, complete_tags
+from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.inventory import Machine, load_inventory_eval, set_inventory
+from clan_cli.machines.hardware import HardwareConfig
 from clan_cli.nix import nix_eval, nix_shell
 from clan_cli.tags import list_nixos_machines_by_tags
 
@@ -34,32 +37,48 @@ def list_inventory_machines(flake_url: str | Path) -> dict[str, Machine]:
 @dataclass
 class MachineDetails:
     machine: Machine
-    has_hw_specs: bool = False
-    # TODO:
-    # has_disk_specs: bool = False
+    hw_config: HardwareConfig | None = None
+    disk_schema: str | None = None
+
+
+import re
+
+
+def extract_header(c: str) -> str:
+    header_lines = []
+    for line in c.splitlines():
+        match = re.match(r"^\s*#(.*)", line)
+        if match:
+            header_lines.append(match.group(1).strip())
+        else:
+            break  # Stop once the header ends
+    return "\n".join(header_lines)
 
 
 @API.register
-def get_inventory_machine_details(
-    flake_url: str | Path, machine_name: str
-) -> MachineDetails:
+def get_inventory_machine_details(flake_url: Path, machine_name: str) -> MachineDetails:
     inventory = load_inventory_eval(flake_url)
     machine = inventory.machines.get(machine_name)
     if machine is None:
         msg = f"Machine {machine_name} not found in inventory"
         raise ClanError(msg)
 
-    hw_config_path = (
-        Path(flake_url) / "machines" / Path(machine_name) / "hardware-configuration.nix"
-    )
+    hw_config = HardwareConfig.detect_type(flake_url, machine_name)
 
-    return MachineDetails(
-        machine=machine,
-        has_hw_specs=hw_config_path.exists(),
-    )
+    machine_dir = specific_machine_dir(flake_url, machine_name)
+    disk_schema: str | None = None
+    disk_path = machine_dir / "disko.nix"
+    if disk_path.exists():
+        with disk_path.open() as f:
+            content = f.read()
+            header = extract_header(content)
+            data, _rest = parse_frontmatter(header)
+            if data:
+                disk_schema = data.get("schema")
+
+    return MachineDetails(machine=machine, hw_config=hw_config, disk_schema=disk_schema)
 
 
-@API.register
 def list_nixos_machines(flake_url: str | Path) -> list[str]:
     cmd = nix_eval(
         [

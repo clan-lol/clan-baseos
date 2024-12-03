@@ -184,7 +184,7 @@ def set_machine_disk_schema(
             raise ClanError(msg, description=f"Valid options: {ph.options}")
 
     header = f"""# ---
-# schema = "{schema_name}";
+# schema = "{schema_name}"
 # ---
 # This file was automatically generated!
 # CHANGING this configuration requires wiping and reinstalling the machine
