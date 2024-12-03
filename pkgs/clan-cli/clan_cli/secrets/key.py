@@ -35,7 +35,7 @@ def generate_command(args: argparse.Namespace) -> None:
     key = generate_key()
     print("Also add your age public key to the repository with:")
     key_type = key.key_type.name.lower()
-    print(f"clan secrets users add --{key_type}-key <username>")
+    print(f"clan secrets users add <username> --{key_type}-key <key>")
 
 
 def show_command(args: argparse.Namespace) -> None:
