@@ -25,7 +25,7 @@ in
               name = fname;
               generator = gen_name;
               inherit (generator) share;
-              inherit (file) owner group;
+              inherit (file) owner group neededForUsers;
             }
           )
         )

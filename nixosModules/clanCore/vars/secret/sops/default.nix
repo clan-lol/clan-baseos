@@ -39,7 +39,7 @@ in
       flip map vars (secret: {
         name = "vars/${secret.generator}/${secret.name}";
         value = {
-          inherit (secret) owner group;
+          inherit (secret) owner group neededForUsers;
           sopsFile = secretPath secret;
           format = "binary";
         };
