@@ -92,8 +92,16 @@ sudo umount /dev/sdb1
 === "**Other OS**"
     ### Step 2. Download Generic Installer
 
+    For x86_64:
+
     ```shellSession
-    wget https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-installer-x86_64-linux.iso
+    https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-installer-x86_64-linux.iso
+    ```
+
+    For generic arm64 / aarch64 (probably does not work on raspberry pi...)
+
+    ```shellSession
+    wget https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-installer-aarch64-linux.iso
     ```
 
     ### Step 2.5 Flash the Installer to the USB Drive
