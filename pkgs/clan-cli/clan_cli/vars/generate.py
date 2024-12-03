@@ -460,7 +460,7 @@ def generate_vars(
             raise ClanError(msg) from errors[0][1]
 
     if not was_regenerated and len(machines) > 0:
-        machine.info("All vars are already up to date")
+        log.info("All vars are already up to date")
 
     return was_regenerated
 
