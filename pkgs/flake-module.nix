@@ -28,6 +28,7 @@
         zt-tcp-relay = pkgs.callPackage ./zt-tcp-relay { };
         moonlight-sunshine-accept = pkgs.callPackage ./moonlight-sunshine-accept { };
         merge-after-ci = pkgs.callPackage ./merge-after-ci { inherit (config.packages) tea-create-pr; };
+        minifakeroot = pkgs.callPackage ./minifakeroot { };
         pending-reviews = pkgs.callPackage ./pending-reviews { };
         editor = pkgs.callPackage ./editor/clan-edit-codium.nix { };
         classgen = pkgs.callPackage ./classgen { };

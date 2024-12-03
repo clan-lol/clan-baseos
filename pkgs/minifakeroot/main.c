@@ -1,4 +1,8 @@
 #include <stdint.h>
+#ifdef __APPLE__
+#include <unistd.h>
+#endif
+
 typedef uint32_t uid_t;
 
 #ifdef __APPLE__
