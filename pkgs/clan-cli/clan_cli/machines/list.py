@@ -7,7 +7,7 @@ from typing import Literal
 
 from clan_cli.api import API
 from clan_cli.api.modules import parse_frontmatter
-from clan_cli.cmd import run_no_output
+from clan_cli.cmd import run_no_stdout
 from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanCmdError, ClanError
@@ -88,7 +88,7 @@ def list_nixos_machines(flake_url: str | Path) -> list[str]:
             "--json",
         ]
     )
-    proc = run_no_output(cmd)
+    proc = run_no_stdout(cmd)
 
     try:
         res = proc.stdout.strip()
@@ -142,7 +142,7 @@ def check_machine_online(
         ],
     )
     try:
-        proc = run_no_output(cmd, needs_user_terminal=True)
+        proc = run_no_stdout(cmd, needs_user_terminal=True)
         if proc.returncode != 0:
             return "Offline"
     except ClanCmdError:

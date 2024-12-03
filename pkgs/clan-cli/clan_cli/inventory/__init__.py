@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from clan_cli.api import API, dataclass_to_dict, from_dict
-from clan_cli.cmd import run_no_output
+from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanCmdError, ClanError
 from clan_cli.git import commit_file
 from clan_cli.nix import nix_eval
@@ -78,7 +78,7 @@ def load_inventory_eval(flake_dir: str | Path) -> Inventory:
         ]
     )
 
-    proc = run_no_output(cmd)
+    proc = run_no_stdout(cmd)
 
     try:
         res = proc.stdout.strip()

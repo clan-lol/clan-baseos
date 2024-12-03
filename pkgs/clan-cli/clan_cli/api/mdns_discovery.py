@@ -2,7 +2,7 @@ import argparse
 import re
 from dataclasses import dataclass
 
-from clan_cli.cmd import run_no_output
+from clan_cli.cmd import run_no_stdout
 from clan_cli.nix import nix_shell
 
 from . import API
@@ -100,7 +100,7 @@ def show_mdns() -> DNSInfo:
             "--terminate",
         ],
     )
-    proc = run_no_output(cmd)
+    proc = run_no_stdout(cmd)
     data = parse_avahi_output(proc.stdout)
 
     return data

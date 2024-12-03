@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from clan_cli.cmd import run_no_output
+from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanError
 from clan_cli.nix import nix_eval
 
@@ -18,7 +18,7 @@ def list_tagged_machines(flake_url: str | Path) -> dict[str, Any]:
             "--json",
         ]
     )
-    proc = run_no_output(cmd)
+    proc = run_no_stdout(cmd)
 
     try:
         res = proc.stdout.strip()
