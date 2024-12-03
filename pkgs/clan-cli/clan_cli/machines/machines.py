@@ -33,6 +33,7 @@ class Machine:
     nix_options: list[str] = field(default_factory=list)
     cached_deployment: None | dict[str, Any] = None
     override_target_host: None | str = None
+    override_build_host: None | str = None
     host_key_check: HostKeyCheck = HostKeyCheck.STRICT
 
     _eval_cache: dict[str, str] = field(default_factory=dict)
@@ -196,7 +197,7 @@ class Machine:
         The host where the machine is built and deployed from.
         Can be the same as the target host.
         """
-        build_host = self.deployment.get("buildHost")
+        build_host = self.override_build_host or self.deployment.get("buildHost")
         if build_host is None:
             return self.target_host
         # enable ssh agent forwarding to allow the build host to access the target host
