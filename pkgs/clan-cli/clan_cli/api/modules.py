@@ -59,19 +59,12 @@ class Frontmatter:
                 raise ValueError(msg)
 
 
-def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatter, str]:
+def parse_frontmatter(readme_content: str) -> tuple[dict[str, Any] | None, str]:
     """
-    Extracts TOML frontmatter from a README file content.
-
-    Parameters:
-    - readme_content (str): The content of the README file as a string.
-
-    Returns:
-    - str: The extracted frontmatter as a string.
-    - str: The content of the README file without the frontmatter.
+    Extracts TOML frontmatter from a string
 
     Raises:
-    - ValueError: If the README does not contain valid frontmatter.
+    - ClanError: If the toml frontmatter is invalid
     """
     # Pattern to match YAML frontmatter enclosed by triple-dashed lines
     frontmatter_pattern = r"^---\s+(.*?)\s+---\s?+(.*)$"
@@ -92,11 +85,32 @@ def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatte
             msg = f"Error parsing TOML frontmatter: {e}"
             raise ClanError(
                 msg,
-                description=f"Invalid TOML frontmatter. {err_scope}",
+                description="Invalid TOML frontmatter",
                 location="extract_frontmatter",
             ) from e
 
-        return Frontmatter(**frontmatter_parsed), remaining_content
+        return frontmatter_parsed, remaining_content
+    return None, readme_content
+
+
+def extract_frontmatter(readme_content: str, err_scope: str) -> tuple[Frontmatter, str]:
+    """
+    Extracts TOML frontmatter from a README file content.
+
+    Parameters:
+    - readme_content (str): The content of the README file as a string.
+
+    Returns:
+    - str: The extracted frontmatter as a string.
+    - str: The content of the README file without the frontmatter.
+
+    Raises:
+    - ValueError: If the README does not contain valid frontmatter.
+    """
+    frontmatter_raw, remaining_content = parse_frontmatter(readme_content)
+
+    if frontmatter_raw:
+        return Frontmatter(**frontmatter_raw), remaining_content
 
     # If no frontmatter is found, raise an error
     msg = "Invalid README: Frontmatter not found."
