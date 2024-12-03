@@ -417,7 +417,8 @@ def register_run_parser(parser: argparse.ArgumentParser) -> None:
         default=False,
     )
     parser.add_argument(
-        "command",
+        "--command",
+        "-c",
         nargs=argparse.REMAINDER,
         help="command to run in the vm",
     )

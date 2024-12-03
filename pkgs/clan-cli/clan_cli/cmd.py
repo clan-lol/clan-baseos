@@ -39,10 +39,10 @@ class ClanCmdTimeoutError(ClanError):
 
 
 class Log(Enum):
+    NONE = 0
     STDERR = 1
     STDOUT = 2
     BOTH = 3
-    NONE = 4
 
 
 @dataclass
@@ -276,12 +276,12 @@ def run(
         else:
             filtered_input = options.input.decode("ascii", "replace")
         print_trace(
-            f"$: echo '{filtered_input}' | {indent_command(cmd)}",
+            f"echo '{filtered_input}' | {indent_command(cmd)}",
             cmdlog,
             options.prefix,
         )
     elif cmdlog.isEnabledFor(logging.DEBUG):
-        print_trace(f"$: {indent_command(cmd)}", cmdlog, options.prefix)
+        print_trace(f"{indent_command(cmd)}", cmdlog, options.prefix)
 
     start = timeit.default_timer()
     with ExitStack() as stack:
@@ -343,8 +343,7 @@ def run_no_output(
     *,
     env: dict[str, str] | None = None,
     cwd: Path | None = None,
-    log: Log = Log.STDERR,
-    logger: logging.Logger = cmdlog,
+    log: Log = Log.NONE,
     prefix: str | None = None,
     check: bool = True,
     error_msg: str | None = None,
@@ -355,20 +354,22 @@ def run_no_output(
     Like run, but automatically suppresses all output, if not in DEBUG log level.
     If in DEBUG log level the stdout of commands will be shown.
     """
-    if cwd is None:
-        cwd = Path.cwd()
-    if logger.isEnabledFor(logging.DEBUG):
-        return run(cmd, RunOpts(env=env, log=log, check=check, error_msg=error_msg))
-    log = Log.NONE
+    opts = RunOpts(
+        env=env,
+        cwd=cwd,
+        log=log,
+        check=check,
+        error_msg=error_msg,
+        needs_user_terminal=needs_user_terminal,
+        shell=shell,
+        prefix=prefix,
+    )
+    if cmdlog.isEnabledFor(logging.DEBUG):
+        opts.log = log if log.value > Log.STDERR.value else Log.STDERR
+    else:
+        opts.log = log
+
     return run(
         cmd,
-        RunOpts(
-            env=env,
-            log=log,
-            check=check,
-            prefix=prefix,
-            error_msg=error_msg,
-            needs_user_terminal=needs_user_terminal,
-            shell=shell,
-        ),
+        opts,
     )

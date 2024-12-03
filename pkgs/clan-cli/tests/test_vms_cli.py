@@ -51,7 +51,7 @@ def test_run(
             "user1",
         ]
     )
-    cli.run(["vms", "run", "--no-block", "vm1", "shutdown", "-h", "now"])
+    cli.run(["vms", "run", "--no-block", "vm1", "-c", "shutdown", "-h", "now"])
 
 
 @pytest.mark.skipif(no_kvm, reason="Requires KVM")

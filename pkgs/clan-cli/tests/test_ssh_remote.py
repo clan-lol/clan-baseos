@@ -21,21 +21,23 @@ def test_parse_ipv6() -> None:
 
 
 def test_run(host_group: HostGroup) -> None:
-    proc = host_group.run_local(["echo", "hello"], log=Log.STDERR)
+    proc = host_group.run_local(["echo", "hello"], RunOpts(log=Log.STDERR))
     assert proc[0].result.stdout == "hello\n"
 
 
 def test_run_environment(host_group: HostGroup) -> None:
     p1 = host_group.run(
-        ["echo $env_var"], extra_env={"env_var": "true"}, shell=True, log=Log.STDERR
+        ["echo $env_var"],
+        RunOpts(shell=True, log=Log.STDERR),
+        extra_env={"env_var": "true"},
     )
     assert p1[0].result.stdout == "true\n"
-    p2 = host_group.run(["env"], log=Log.STDERR, extra_env={"env_var": "true"})
+    p2 = host_group.run(["env"], RunOpts(log=Log.STDERR), extra_env={"env_var": "true"})
     assert "env_var=true" in p2[0].result.stdout
 
 
 def test_run_no_shell(host_group: HostGroup) -> None:
-    proc = host_group.run(["echo", "$hello"], log=Log.STDERR)
+    proc = host_group.run(["echo", "$hello"], RunOpts(log=Log.STDERR))
     assert proc[0].result.stdout == "$hello\n"
 
 
@@ -50,7 +52,7 @@ def test_run_function(host_group: HostGroup) -> None:
 
 def test_timeout(host_group: HostGroup) -> None:
     try:
-        host_group.run_local(["sleep", "10"], timeout=0.01)
+        host_group.run_local(["sleep", "10"], RunOpts(timeout=0.01))
     except Exception:
         pass
     else:
@@ -59,11 +61,11 @@ def test_timeout(host_group: HostGroup) -> None:
 
 
 def test_run_exception(host_group: HostGroup) -> None:
-    r = host_group.run(["exit 1"], check=False, shell=True)
+    r = host_group.run(["exit 1"], RunOpts(check=False, shell=True))
     assert r[0].result.returncode == 1
 
     try:
-        host_group.run(["exit 1"], shell=True)
+        host_group.run(["exit 1"], RunOpts(shell=True))
     except Exception:
         pass
     else:

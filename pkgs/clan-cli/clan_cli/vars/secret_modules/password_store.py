@@ -140,8 +140,7 @@ class SecretStore(SecretStoreBase):
                 "cat",
                 f"{self.machine.deployment["password-store"]["secretLocation"]}/.pass_info",
             ],
-            log=Log.STDERR,
-            check=False,
+            RunOpts(log=Log.STDERR, check=False),
         ).stdout.strip()
 
         if not remote_hash:

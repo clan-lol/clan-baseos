@@ -102,6 +102,7 @@ def register_common_flags(parser: argparse.ArgumentParser) -> None:
             for _choice, child_parser in action.choices.items():
                 has_subparsers = True
                 register_common_flags(child_parser)
+
     if not has_subparsers:
         add_common_flags(parser)
 

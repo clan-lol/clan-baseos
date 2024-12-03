@@ -2,7 +2,7 @@ import argparse
 import json
 from dataclasses import dataclass
 
-from clan_cli.cmd import Log
+from clan_cli.cmd import Log, RunOpts
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_backup_providers_for_machine,
@@ -23,8 +23,7 @@ def list_provider(machine: Machine, provider: str) -> list[Backup]:
     backup_metadata = json.loads(machine.eval_nix("config.clan.core.backups"))
     proc = machine.target_host.run(
         [backup_metadata["providers"][provider]["list"]],
-        log=Log.STDERR,
-        check=False,
+        RunOpts(log=Log.STDERR, check=False),
     )
     if proc.returncode != 0:
         # TODO this should be a warning, only raise exception if no providers succeed
