@@ -154,15 +154,13 @@ def deploy_machine(machines: MachineGroup) -> None:
         env = host.nix_ssh_env(None)
         ret = host.run(
             switch_cmd,
+            RunOpts(check=False, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)),
             extra_env=env,
-            check=False,
-            msg_color=MsgColor(stderr=AnsiColor.DEFAULT),
         )
         ret = host.run(
             switch_cmd,
+            RunOpts(check=False, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)),
             extra_env=env,
-            check=False,
-            msg_color=MsgColor(stderr=AnsiColor.DEFAULT),
         )
 
         # if the machine is mobile, we retry to deploy with the mobile workaround method
@@ -170,13 +168,17 @@ def deploy_machine(machines: MachineGroup) -> None:
         if is_mobile and ret.returncode != 0:
             log.info("Mobile machine detected, applying workaround deployment method")
             ret = host.run(
-                test_cmd, extra_env=env, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)
+                test_cmd,
+                RunOpts(msg_color=MsgColor(stderr=AnsiColor.DEFAULT)),
+                extra_env=env,
             )
 
         # retry nixos-rebuild switch if the first attempt failed
         elif ret.returncode != 0:
             ret = host.run(
-                switch_cmd, extra_env=env, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)
+                switch_cmd,
+                RunOpts(msg_color=MsgColor(stderr=AnsiColor.DEFAULT)),
+                extra_env=env,
             )
 
     if len(machines.group.hosts) > 1:

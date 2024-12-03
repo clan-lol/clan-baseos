@@ -1,16 +1,15 @@
 # Adapted from https://github.com/numtide/deploykit
 
 import logging
-import math
 import os
 import shlex
 from dataclasses import dataclass, field
-from pathlib import Path
 from shlex import quote
-from typing import IO, Any
+from typing import Any
 
-from clan_cli.cmd import CmdOut, Log, MsgColor, RunOpts, run
+from clan_cli.cmd import CmdOut, RunOpts, run
 from clan_cli.colors import AnsiColor
+from clan_cli.errors import ClanError
 from clan_cli.ssh.host_key import HostKeyCheck
 
 cmdlog = logging.getLogger(__name__)
@@ -78,18 +77,11 @@ class Host:
     def run(
         self,
         cmd: list[str],
-        stdout: IO[bytes] | None = None,
-        stderr: IO[bytes] | None = None,
+        opts: RunOpts | None = None,
         become_root: bool = False,
         extra_env: dict[str, str] | None = None,
-        cwd: None | Path = None,
-        check: bool = True,
-        timeout: float = math.inf,
-        verbose_ssh: bool = False,
         tty: bool = False,
-        msg_color: MsgColor | None = None,
-        shell: bool = False,
-        log: Log = Log.BOTH,
+        verbose_ssh: bool = False,
     ) -> CmdOut:
         """
         Command to run on the host via ssh
@@ -106,6 +98,16 @@ class Host:
         env_vars = []
         for k, v in extra_env.items():
             env_vars.append(f"{shlex.quote(k)}={shlex.quote(v)}")
+
+        if opts is None:
+            opts = RunOpts()
+        else:
+            opts.needs_user_terminal = True
+            opts.prefix = self.command_prefix
+
+        if opts.cwd is not None:
+            msg = "cwd is not supported for remote commands"
+            raise ClanError(msg)
 
         # Build a pretty command for logging
         displayed_cmd = ""
@@ -124,8 +126,9 @@ class Host:
 
         # Build the ssh command
         bash_cmd = export_cmd
-        if shell:
+        if opts.shell:
             bash_cmd += " ".join(cmd)
+            opts.shell = False
         else:
             bash_cmd += 'exec "$@"'
         # FIXME we assume bash to be present here? Should be documented...
@@ -134,19 +137,6 @@ class Host:
             "--",
             f"{sudo}bash -c {quote(bash_cmd)} -- {' '.join(map(quote, cmd))}",
         ]
-
-        opts = RunOpts(
-            shell=False,
-            stdout=stdout,
-            stderr=stderr,
-            log=log,
-            cwd=cwd,
-            check=check,
-            prefix=self.command_prefix,
-            timeout=timeout,
-            msg_color=msg_color,
-            needs_user_terminal=True,  # ssh asks for a password
-        )
 
         # Run the ssh command
         return run(ssh_cmd, opts)

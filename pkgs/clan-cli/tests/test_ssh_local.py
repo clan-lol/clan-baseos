@@ -7,11 +7,15 @@ hosts = HostGroup([Host("some_host")])
 
 def test_run_environment() -> None:
     p2 = hosts.run_local(
-        ["echo $env_var"], extra_env={"env_var": "true"}, shell=True, log=Log.STDERR
+        ["echo $env_var"],
+        RunOpts(shell=True, log=Log.STDERR),
+        extra_env={"env_var": "true"},
     )
     assert p2[0].result.stdout == "true\n"
 
-    p3 = hosts.run_local(["env"], extra_env={"env_var": "true"}, log=Log.STDERR)
+    p3 = hosts.run_local(
+        ["env"], RunOpts(shell=True, log=Log.STDERR), extra_env={"env_var": "true"}
+    )
     assert "env_var=true" in p3[0].result.stdout
 
 
@@ -21,7 +25,7 @@ def test_run_local() -> None:
 
 def test_timeout() -> None:
     try:
-        hosts.run_local(["sleep", "10"], timeout=0.01)
+        hosts.run_local(["sleep", "10"], RunOpts(timeout=0.01))
     except Exception:
         pass
     else:
@@ -40,7 +44,7 @@ def test_run_function() -> None:
 
 def test_run_exception() -> None:
     try:
-        hosts.run_local(["exit 1"], shell=True)
+        hosts.run_local(["exit 1"], RunOpts(shell=True))
     except Exception:
         pass
     else:
@@ -62,5 +66,5 @@ def test_run_function_exception() -> None:
 
 
 def test_run_local_non_shell() -> None:
-    p2 = hosts.run_local(["echo", "1"], log=Log.STDERR)
+    p2 = hosts.run_local(["echo", "1"], RunOpts(log=Log.STDERR))
     assert p2[0].result.stdout == "1\n"
