@@ -191,31 +191,13 @@ in
           config.services.zerotierone.package
           pkgs.python3
         ];
-        generator.script =
-          let
-            library = "libfakeroot${pkgs.stdenv.hostPlatform.extensions.sharedLibrary}";
-            minifakeroot = pkgs.stdenv.mkDerivation {
-              name = "minifakeroot";
-              dontUnpack = true;
-              installPhase = ''
-                mkdir -p $out/lib
-                ${
-                  if pkgs.stdenv.isDarwin then
-                    "$CC -dynamiclib -o $out/lib/libfakeroot.dylib ${./fake_root.c}"
-                  else
-                    "$CC -shared -o $out/lib/libfakeroot.so ${./fake_root.c}"
-                }
-              '';
-            };
-            varName = if pkgs.stdenv.isDarwin then "DYLD_INSERT_LIBRARIES" else "LD_PRELOAD";
-          in
-          ''
-            export ${varName}=${minifakeroot}/lib/${library}
-            python3 ${./generate.py} --mode network \
-              --ip "$facts/zerotier-ip" \
-              --identity-secret "$secrets/zerotier-identity-secret" \
-              --network-id "$facts/zerotier-network-id"
-          '';
+        generator.script = ''
+          source ${(pkgs.callPackage ../../../pkgs/minifakeroot { })}/share/minifakeroot/rc
+          python3 ${./generate.py} --mode network \
+            --ip "$facts/zerotier-ip" \
+            --identity-secret "$secrets/zerotier-identity-secret" \
+            --network-id "$facts/zerotier-network-id"
+        '';
       };
       clan.core.state.zerotier.folders = [ "/var/lib/zerotier-one" ];
 
