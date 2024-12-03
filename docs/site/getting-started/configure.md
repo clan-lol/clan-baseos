@@ -37,13 +37,6 @@ In the `flake.nix` file:
         meta.name = "Lobsters";
         # Should usually point to the directory of flake.nix
         directory = ./.;
-
-        machines = {
-            jon = {
-                # ...
-            };
-            # ...
-        }
     }
     ```
 
@@ -55,13 +48,6 @@ In the `flake.nix` file:
     clan = {
         # Set a unique name
         meta.name = "Lobsters";
-
-        machines = {
-            jon = {
-                # ...
-            };
-            # ...
-        }
     };
     ```
 

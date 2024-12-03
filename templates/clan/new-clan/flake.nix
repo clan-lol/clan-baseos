@@ -13,14 +13,17 @@
         # Ensure this is unique among all clans you want to use.
         meta.name = "__CHANGE_ME__";
 
+        # All machines in the ./machines will be imported.
+
         # Prerequisite: boot into the installer.
         # See: https://docs.clan.lol/getting-started/installer
         # local> mkdir -p ./machines/machine1
         # local> Edit ./machines/<machine>/configuration.nix to your liking.
         machines = {
-          # The name will be used as hostname by default.
-          jon = { };
-          sara = { };
+          # You can also specify additional machines here.
+          # somemachine = {
+          #  imports = [ ./some-machine/configuration.nix ];
+          # }
         };
       };
     in
