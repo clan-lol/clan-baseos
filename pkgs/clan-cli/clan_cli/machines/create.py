@@ -7,12 +7,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from clan_cli.api import API
-from clan_cli.clan.create import git_command
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.dirs import TemplateType, clan_templates, get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
+from clan_cli.git import commit_file
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
     MachineDeploy,
@@ -124,7 +124,11 @@ def create_machine(opts: CreateOptions) -> None:
 
         shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
 
-    run(git_command(clan_dir, "add", f"machines/{machine_name}"), RunOpts(cwd=clan_dir))
+    commit_file(
+        clan_dir / "machines" / machine_name,
+        repo_dir=clan_dir,
+        commit_message=f"Add machine {machine_name}",
+    )
 
     inventory = load_inventory_json(clan_dir)
 
