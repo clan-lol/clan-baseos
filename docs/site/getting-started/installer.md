@@ -95,7 +95,7 @@ sudo umount /dev/sdb1
     For x86_64:
 
     ```shellSession
-    https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-installer-x86_64-linux.iso
+    wget https://github.com/nix-community/nixos-images/releases/download/nixos-unstable/nixos-installer-x86_64-linux.iso
     ```
 
     For generic arm64 / aarch64 (probably does not work on raspberry pi...)
