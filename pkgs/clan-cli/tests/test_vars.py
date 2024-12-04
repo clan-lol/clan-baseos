@@ -323,6 +323,7 @@ def test_generate_secret_for_multiple_machines(
     sops_setup: SopsSetup,
 ) -> None:
     machine1_config = flake.machines["machine1"]
+    machine1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     machine1_generator = machine1_config["clan"]["core"]["vars"]["generators"][
         "my_generator"
     ]
@@ -332,6 +333,7 @@ def test_generate_secret_for_multiple_machines(
         "echo machine1 > $out/my_secret && echo machine1 > $out/my_value"
     )
     machine2_config = flake.machines["machine2"]
+    machine2_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     machine2_generator = machine2_config["clan"]["core"]["vars"]["generators"][
         "my_generator"
     ]
@@ -384,6 +386,7 @@ def test_dependant_generators(
     flake: ClanFlake,
 ) -> None:
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     parent_gen = config["clan"]["core"]["vars"]["generators"]["parent_generator"]
     parent_gen["files"]["my_value"]["secret"] = False
     parent_gen["script"] = "echo hello > $out/my_value"
@@ -426,6 +429,7 @@ def test_prompt(
     input_value: str,
 ) -> None:
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["prompts"]["prompt1"]["description"] = "dream2nix"
@@ -521,6 +525,7 @@ def test_depending_on_shared_secret_succeeds(
     sops_setup: SopsSetup,
 ) -> None:
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
     shared_generator["share"] = True
     shared_generator["files"]["my_secret"]["secret"] = True
@@ -550,6 +555,7 @@ def test_prompt_create_file(
     Test that the createFile flag in the prompt configuration works as expected
     """
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["prompts"]["prompt1"]["createFile"] = True
     my_generator["prompts"]["prompt2"]["createFile"] = False
@@ -580,6 +586,7 @@ def test_api_get_prompts(
     from clan_cli.vars.list import get_prompts
 
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["prompts"]["prompt1"]["type"] = "line"
     my_generator["files"]["prompt1"]["secret"] = False
@@ -604,6 +611,7 @@ def test_api_set_prompts(
     from clan_cli.vars.list import set_prompts
 
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["prompts"]["prompt1"]["type"] = "line"
     my_generator["files"]["prompt1"]["secret"] = False
@@ -641,6 +649,7 @@ def test_commit_message(
     sops_setup: SopsSetup,
 ) -> None:
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo hello > $out/my_value"
@@ -952,6 +961,7 @@ def test_vars_get(
     flake: ClanFlake,
 ) -> None:
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo -n hello > $out/my_value"
@@ -979,6 +989,7 @@ def test_invalidation(
     flake: ClanFlake,
 ) -> None:
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["script"] = "echo -n $RANDOM > $out/my_value"
