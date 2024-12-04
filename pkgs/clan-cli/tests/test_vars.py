@@ -1,4 +1,5 @@
 import json
+import logging
 import shutil
 from pathlib import Path
 
@@ -18,7 +19,6 @@ from clan_cli.vars.secret_modules import password_store, sops
 from clan_cli.vars.set import set_var
 from fixtures_flakes import ClanFlake
 from helpers import cli
-from stdout import CaptureOutput
 
 
 def test_dependencies_as_files(temp_dir: Path) -> None:
@@ -732,8 +732,8 @@ def test_default_value(
 def test_stdout_of_generate(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
-    capture_output: CaptureOutput,
     sops_setup: SopsSetup,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
@@ -750,7 +750,8 @@ def test_stdout_of_generate(
     sops_setup.init()
     from clan_cli.vars.generate import generate_vars_for_machine
 
-    with capture_output as output:
+    # with capture_output as output:
+    with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
@@ -758,55 +759,61 @@ def test_stdout_of_generate(
             fix=False,
         )
 
-    assert "Updated var my_generator/my_value" in output.out
-    assert "old: <not set>" in output.out
-    assert "new: hello" in output.out
+    assert "Updated var my_generator/my_value" in caplog.text
+    assert "old: <not set>" in caplog.text
+    assert "new: hello" in caplog.text
+    caplog.clear()
+
     set_var("my_machine", "my_generator/my_value", b"world", FlakeId(str(flake.path)))
-    with capture_output as output:
+    with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=True,
             fix=False,
         )
-    assert "Updated var my_generator/my_value" in output.out
-    assert "old: world" in output.out
-    assert "new: hello" in output.out
+    assert "Updated var my_generator/my_value" in caplog.text
+    assert "old: world" in caplog.text
+    assert "new: hello" in caplog.text
+    caplog.clear()
     # check the output when nothing gets regenerated
-    with capture_output as output:
+    with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=True,
             fix=False,
         )
-    assert "Updated" not in output.out
-    assert "hello" in output.out
-    with capture_output as output:
+    assert "Updated" not in caplog.text
+    assert "hello" in caplog.text
+    caplog.clear()
+    with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_secret_generator",
             regenerate=False,
             fix=False,
         )
-    assert "Updated secret var my_secret_generator/my_secret" in output.out
-    assert "hello" not in output.out
+    assert "Updated secret var my_secret_generator/my_secret" in caplog.text
+    assert "hello" not in caplog.text
+    caplog.clear()
     set_var(
         "my_machine",
         "my_secret_generator/my_secret",
         b"world",
         FlakeId(str(flake.path)),
     )
-    with capture_output as output:
+    with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_secret_generator",
             regenerate=True,
             fix=False,
         )
-    assert "Updated secret var my_secret_generator/my_secret" in output.out
-    assert "world" not in output.out
-    assert "hello" not in output.out
+    assert "Updated secret var my_secret_generator/my_secret" in caplog.text
+    assert "world" not in caplog.text
+    assert "hello" not in caplog.text
+    caplog.clear()
 
 
 @pytest.mark.with_core
@@ -842,7 +849,7 @@ def test_migration(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
     sops_setup: SopsSetup,
-    capture_output: CaptureOutput,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
@@ -861,10 +868,10 @@ def test_migration(
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
-    with capture_output as output:
+    with caplog.at_level(logging.INFO):
         cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    assert "Migrated var my_generator/my_value" in output.out
-    assert "Migrated secret var my_generator/my_secret" in output.out
+    assert "Migrated var my_generator/my_value" in caplog.text
+    assert "Migrated secret var my_generator/my_secret" in caplog.text
     in_repo_store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )

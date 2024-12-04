@@ -95,15 +95,15 @@ class StoreBase(ABC):
         new_file = self._set(generator, var, value)
         action_str = "Migrated" if is_migration else "Updated"
         if self.is_secret_store:
-            print(f"{action_str} secret var {generator.name}/{var.name}\n")
+            log.info(f"{action_str} secret var {generator.name}/{var.name}\n")
         else:
             if value != old_val:
                 msg = f"{action_str} var {generator.name}/{var.name}"
                 if not is_migration:
                     msg += f"\n  old: {old_val_str}\n  new: {string_repr(value)}"
-                print(msg)
+                log.info(msg)
             else:
-                print(
+                log.info(
                     f"Var {generator.name}/{var.name} remains unchanged: {old_val_str}"
                 )
         return new_file
