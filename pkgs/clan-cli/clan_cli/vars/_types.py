@@ -80,6 +80,7 @@ class StoreBase(ABC):
         generator: "Generator",
         var: "Var",
         value: bytes,
+        is_migration: bool = False,
     ) -> Path | None:
         if self.exists(generator, var.name):
             if self.is_secret_store:
@@ -92,15 +93,15 @@ class StoreBase(ABC):
             old_val = None
             old_val_str = "<not set>"
         new_file = self._set(generator, var, value)
+        action_str = "Migrated" if is_migration else "Updated"
         if self.is_secret_store:
-            print(f"Updated secret var {generator.name}/{var.name}\n")
+            print(f"{action_str} secret var {generator.name}/{var.name}\n")
         else:
             if value != old_val:
-                print(
-                    f"Updated var {generator.name}/{var.name}\n"
-                    f"  old: {old_val_str}\n"
-                    f"  new: {string_repr(value)}"
-                )
+                msg = f"{action_str} var {generator.name}/{var.name}"
+                if not is_migration:
+                    msg += f"\n  old: {old_val_str}\n  new: {string_repr(value)}"
+                print(msg)
             else:
                 print(
                     f"Var {generator.name}/{var.name} remains unchanged: {old_val_str}"
