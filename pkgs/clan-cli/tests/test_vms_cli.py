@@ -61,6 +61,7 @@ def test_vm_persistence(
 ) -> None:
     # set up a clan flake with some systemd services to test persistence
     config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     # logrotate-checkconf doesn't work in VM because /nix/store is owned by nobody
     config["systemd"]["services"]["logrotate-checkconf"]["enable"] = False
     config["services"]["getty"]["autologinUser"] = "root"
