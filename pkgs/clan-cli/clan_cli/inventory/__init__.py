@@ -129,6 +129,19 @@ def set_inventory(
     """
     inventory_file = get_path(flake_dir)
 
+    # Filter out modules not set via UI.
+    # It is not possible to set modules from "/nix/store" via the UI
+    modules = {}
+    filtered_modules = lambda m: {
+        key: value for key, value in m.items() if "/nix/store" not in value
+    }
+    if isinstance(inventory, dict):
+        modules = filtered_modules(inventory.get("modules", {}))  # type: ignore
+        inventory["modules"] = modules
+    else:
+        modules = filtered_modules(inventory.modules)  # type: ignore
+        inventory.modules = modules
+
     with inventory_file.open("w") as f:
         if isinstance(inventory, Inventory):
             json.dump(dataclass_to_dict(inventory), f, indent=2)
