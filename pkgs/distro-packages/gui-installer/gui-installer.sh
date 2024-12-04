@@ -55,7 +55,7 @@ start_clan_gui() {
     exec nix run \
       https://git.clan.lol/clan/clan-core/archive/main.tar.gz#clan-app \
       --no-accept-flake-config \
-      --extra-experimental-features flakes nix-command -- "$@"
+      --extra-experimental-features "flakes nix-command" -- "$@"
 }
 
 main() {
