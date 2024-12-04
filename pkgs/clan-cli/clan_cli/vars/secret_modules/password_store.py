@@ -161,7 +161,7 @@ class SecretStore(SecretStoreBase):
                         continue
                     if not file.secret:
                         continue
-                    if not dir_exists:
+                    if not dir_exists and not file.needed_for_users:
                         tar_dir = tarfile.TarInfo(name=generator.name)
                         tar_dir.type = tarfile.DIRTYPE
                         tar_dir.mode = 0o511
