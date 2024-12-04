@@ -127,6 +127,7 @@ def start_vm(
     env = os.environ.copy()
     env.update(extra_env)
     cmd = nix_shell(packages, args)
+    log.debug(f"Starting VM with command: {cmd}")
     with subprocess.Popen(
         cmd, env=env, stdout=stdout, stderr=stderr, stdin=stdin
     ) as process:
