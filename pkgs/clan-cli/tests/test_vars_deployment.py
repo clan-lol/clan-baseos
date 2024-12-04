@@ -1,4 +1,5 @@
 import json
+import subprocess
 from contextlib import ExitStack
 
 import pytest
@@ -99,8 +100,8 @@ def test_vm_deployment(
     vm1_config = inspect_vm(machine=Machine("m1_machine", FlakeId(str(flake.path))))
     vm2_config = inspect_vm(machine=Machine("m2_machine", FlakeId(str(flake.path))))
     with ExitStack() as stack:
-        vm1 = stack.enter_context(spawn_vm(vm1_config))
-        vm2 = stack.enter_context(spawn_vm(vm2_config))
+        vm1 = stack.enter_context(spawn_vm(vm1_config, stdin=subprocess.DEVNULL))
+        vm2 = stack.enter_context(spawn_vm(vm2_config, stdin=subprocess.DEVNULL))
         qga_m1 = stack.enter_context(vm1.qga_connect())
         qga_m2 = stack.enter_context(vm2.qga_connect())
         # check my_secret is deployed
