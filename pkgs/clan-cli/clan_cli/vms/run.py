@@ -127,6 +127,7 @@ def start_vm(
     env = os.environ.copy()
     env.update(extra_env)
     cmd = nix_shell(packages, args)
+    log.debug(f"Starting VM with command: {cmd}")
     with subprocess.Popen(
         cmd, env=env, stdout=stdout, stderr=stderr, stdin=stdin
     ) as process:
@@ -291,7 +292,12 @@ def spawn_vm(
             start_waypipe(qemu_cmd.vsock_cid, f"[{vm.machine_name}] "),
             start_virtiofsd(virtiofsd_socket),
             start_vm(
-                qemu_cmd.args, packages, extra_env, stdout=stdout, stderr=stderr
+                qemu_cmd.args,
+                packages,
+                extra_env,
+                stdout=stdout,
+                stderr=stderr,
+                stdin=stdin,
             ) as process,
         ):
             qemu_vm = QemuVm(machine, process, socketdir)
