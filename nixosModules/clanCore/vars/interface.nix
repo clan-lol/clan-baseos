@@ -206,15 +206,16 @@ in
                       default = false;
                     };
                     owner = lib.mkOption {
-                      description = "The user name or id that will own the secret file.";
+                      description = "The user name or id that will own the file.";
                       default = "root";
                     };
                     group = lib.mkOption {
-                      description = "The group name or id that will own the secret file.";
+                      description = "The group name or id that will own the file.";
                       default = "root";
                     };
                     mode = lib.mkOption {
                       type = lib.types.strMatching "^[0-7]{3}$";
+                      description = "The unix file mode of the file. Must be a 3-digit octal number.";
                       default = "400";
                     };
                     value =
