@@ -119,6 +119,37 @@ def load_inventory_json(
     return inventory
 
 
+def patch(d: dict[str, Any], path: str, content: Any) -> None:
+    """
+    Update the value at a specific dot-separated path in a nested dictionary.
+
+    :param d: The dictionary to update.
+    :param path: The dot-separated path to the key (e.g., 'foo.bar').
+    :param content: The new value to set.
+    """
+    keys = path.split(".")
+    current = d
+    for key in keys[:-1]:
+        current = current.setdefault(key, {})
+    current[keys[-1]] = content
+
+
+@API.register
+def patch_inventory_with(base_dir: Path, section: str, content: dict[str, Any]) -> None:
+    inventory_file = get_path(base_dir)
+
+    curr_inventory = {}
+    with inventory_file.open("r") as f:
+        curr_inventory = json.load(f)
+
+    patch(curr_inventory, section, content)
+
+    with inventory_file.open("w") as f:
+        json.dump(curr_inventory, f, indent=2)
+
+    commit_file(inventory_file, base_dir, commit_message=f"inventory.{section}: Update")
+
+
 @API.register
 def set_inventory(
     inventory: Inventory | dict[str, Any], flake_dir: str | Path, message: str
