@@ -213,6 +213,10 @@ in
                       description = "The group name or id that will own the secret file.";
                       default = "root";
                     };
+                    mode = lib.mkOption {
+                      type = lib.types.strMatching "^[0-7]{3}$";
+                      default = "400";
+                    };
                     value =
                       lib.mkOption {
                         description = ''

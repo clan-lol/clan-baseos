@@ -51,6 +51,7 @@ in
             _name: file: {
               inherit (file)
                 name
+                mode
                 deploy
                 secret
                 neededForUsers

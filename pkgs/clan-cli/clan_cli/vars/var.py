@@ -15,6 +15,7 @@ class Var:
     deploy: bool = False
     owner: str = "root"
     group: str = "root"
+    mode: int = 0o400
     needed_for_users: bool = False
 
     # TODO: those shouldn't be set here
@@ -75,5 +76,6 @@ class Var:
             deploy=data["deploy"],
             owner=data.get("owner", "root"),
             group=data.get("group", "root"),
+            mode=int(data.get("mode", "400"), 8),
             needed_for_users=data.get("neededForUsers", False),
         )
