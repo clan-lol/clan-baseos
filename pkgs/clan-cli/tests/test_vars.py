@@ -842,6 +842,7 @@ def test_migration(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
     sops_setup: SopsSetup,
+    capture_output: CaptureOutput,
 ) -> None:
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
@@ -860,7 +861,10 @@ def test_migration(
     monkeypatch.chdir(flake.path)
     sops_setup.init()
     cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    with capture_output as output:
+        cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
+    assert "Migrated var my_generator/my_value" in output.out
+    assert "Migrated secret var my_generator/my_secret" in output.out
     in_repo_store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
