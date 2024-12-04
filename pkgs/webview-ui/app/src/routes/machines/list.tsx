@@ -1,4 +1,11 @@
-import { type Component, createSignal, For, Match, Switch } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  For,
+  Match,
+  Show,
+  Switch,
+} from "solid-js";
 import { activeURI } from "@/src/App";
 import { callApi, OperationResponse } from "@/src/api";
 import toast from "solid-toast";
@@ -75,9 +82,10 @@ export const MachineListView: Component = () => {
           startIcon={<Icon icon="Plus" />}
         ></Button>
       </div>
+      {/* <Show when={filter()}> */}
       <div class="my-1 flex w-full gap-2 p-2">
         <div class="h-6 w-6 p-1">
-          <Icon icon="Info" />
+          <Icon icon="Filter" />
         </div>
         <For each={filter().tags.sort()}>
           {(tag) => (
@@ -99,6 +107,7 @@ export const MachineListView: Component = () => {
           )}
         </For>
       </div>
+      {/* </Show> */}
       <Switch>
         <Match when={inventoryQuery.isLoading}>
           {/* Loading skeleton */}

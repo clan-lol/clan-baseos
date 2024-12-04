@@ -183,6 +183,7 @@ in
     inherit serviceConfigs;
     inherit (clan-core) clanModules;
     inherit inventoryFile;
+    inventoryValuesPrios = (clan-core.lib.values.getPrios { options = inventory.options; });
     inventory = config.inventory;
     meta = config.inventory.meta;
 

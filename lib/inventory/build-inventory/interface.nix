@@ -1,4 +1,9 @@
-{ lib, config, ... }:
+{
+  lib,
+  config,
+  options,
+  ...
+}:
 let
   types = lib.types;
 
@@ -92,6 +97,12 @@ in
     ./assertions.nix
   ];
   options = {
+    options = lib.mkOption {
+      internal = true;
+      visible = false;
+      type = types.raw;
+      default = options;
+    };
     modules = lib.mkOption {
       type = types.attrsOf types.path;
       default = { };

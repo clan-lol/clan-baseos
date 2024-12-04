@@ -1,11 +1,11 @@
 import { callApi, ClanService, SuccessData, SuccessQuery } from "@/src/api";
-import { set_single_disk_id } from "@/src/api/disk";
 import { get_iwd_service } from "@/src/api/wifi";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
 import Icon from "@/src/components/icon";
+import { RndThumbnail } from "@/src/components/noiseThumbnail";
 import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
 import { selectSshKeys } from "@/src/hooks";
@@ -54,18 +54,6 @@ const InstallMachine = (props: InstallMachineProps) => {
 
   const [confirmDisk, setConfirmDisk] = createSignal(!hasDisk());
 
-  const hwInfoQuery = createQuery(() => ({
-    queryKey: [curr, "machine", name, "show_machine_hardware_config"],
-    queryFn: async () => {
-      const result = await callApi("show_machine_hardware_config", {
-        clan_dir: curr,
-        machine_name: name,
-      });
-      if (result.status === "error") throw new Error("Failed to fetch data");
-      return result.data === "NIXOS_FACTER";
-    },
-  }));
-
   const handleInstall = async (values: InstallForm) => {
     console.log("Installing", values);
     const curr_uri = activeURI();
@@ -98,7 +86,6 @@ const InstallMachine = (props: InstallMachineProps) => {
       toast.success("Machine installed successfully");
     }
   };
-  const queryClient = useQueryClient();
 
   const handleDiskConfirm = async (e: Event) => {
     e.preventDefault();
@@ -107,19 +94,6 @@ const InstallMachine = (props: InstallMachineProps) => {
     const disk_id = props.disks.find((d) => d.name === disk)?.id_link;
     if (!curr_uri || !disk_id || !props.name) {
       return;
-    }
-
-    const r = await set_single_disk_id(
-      queryClient,
-      curr_uri,
-      props.name,
-      disk_id,
-    );
-    if (!r) {
-      toast.success("Disk set successfully");
-      setConfirmDisk(true);
-    } else {
-      toast.error("Failed to set disk");
     }
   };
 
@@ -141,7 +115,7 @@ const InstallMachine = (props: InstallMachineProps) => {
       },
     });
     toast.dismiss(loading_toast);
-    hwInfoQuery.refetch();
+    // TODO: refresh the machine details
 
     if (r.status === "error") {
       toast.error(`Failed to generate report. ${r.errors[0].message}`);
@@ -164,81 +138,36 @@ const InstallMachine = (props: InstallMachineProps) => {
 
         <div class="flex flex-col">
           <div class="text-lg font-semibold">Hardware detection</div>
-
           <div class="flex justify-between py-4">
-            <Switch>
-              <Match when={hwInfoQuery.isLoading}>
-                <span class="loading loading-lg"></span>
-              </Match>
-              <Match when={hwInfoQuery.isFetched}>
-                <Show
-                  when={hwInfoQuery.data}
-                  fallback={
-                    <>
-                      <span class="flex align-middle">
-                        <span class="material-icons text-inherit">close</span>
-                        Not Detected
-                      </span>
-                      <div class="text-neutral">
-                        This might still work, but it is recommended to generate
-                        a hardware report.
-                      </div>
-                    </>
-                  }
-                >
-                  <span class="flex align-middle">
-                    <span class="material-icons text-inherit">check</span>
-                    Detected
-                  </span>
-                </Show>
-              </Match>
-            </Switch>
             <div class="">
               <Button
                 variant="light"
                 size="s"
                 class="w-full"
                 onclick={generateReport}
+                endIcon={<Icon icon="Report" />}
               >
-                <span class="material-icons">manage_search</span>
-                Generate report
+                Run hardware Report
+              </Button>
+            </div>
+          </div>
+          <div class="text-lg font-semibold">Disk schema</div>
+          <div class="flex justify-between py-4">
+            <div class="">
+              <Button
+                variant="light"
+                size="s"
+                class="w-full"
+                onclick={generateReport}
+                endIcon={<Icon icon="Flash" />}
+              >
+                Select disk Schema
               </Button>
             </div>
           </div>
         </div>
 
-        <Field name="disk">
-          {(field, fieldProps) => (
-            <SelectInput
-              formStore={formStore}
-              selectProps={{
-                ...fieldProps,
-                // @ts-expect-error: disabled is supported by htmlSelect
-                disabled: confirmDisk(),
-              }}
-              label="Remote Disk to use"
-              value={String(field.value)}
-              error={field.error}
-              required
-              options={
-                <>
-                  <option disabled>{diskPlaceholder}</option>
-                  <For each={props.disks}>
-                    {(dev) => (
-                      <option value={dev.name}>
-                        {dev.name}
-                        {" -- "}
-                        {dev.size}
-                        {"bytes @"}
-                        {props.targetHost?.split("@")?.[1]}
-                      </option>
-                    )}
-                  </For>
-                </>
-              }
-            />
-          )}
-        </Field>
+        <Field name="disk">{(field, fieldProps) => "disk"}</Field>
         <div role="alert" class="alert my-4">
           <span class="material-icons">info</span>
           <div>
@@ -260,16 +189,16 @@ const InstallMachine = (props: InstallMachineProps) => {
                 class="btn btn-primary btn-wide"
                 onClick={handleDiskConfirm}
                 disabled={!hasDisk()}
-                startIcon={<Icon icon="Flash" />}
+                endIcon={<Icon icon="Flash" />}
               >
-                Confirm Disk
+                Install
               </Button>
             }
           >
             <Button
               class="w-full"
               type="submit"
-              startIcon={<Icon icon="Flash" />}
+              endIcon={<Icon icon="Flash" />}
             >
               Install
             </Button>
@@ -291,10 +220,6 @@ const InstallMachine = (props: InstallMachineProps) => {
 
 interface MachineDetailsProps {
   initialData: MachineData;
-  modules: {
-    name: string;
-    component: JSXElement;
-  }[];
 }
 const MachineForm = (props: MachineDetailsProps) => {
   const [formStore, { Form, Field }] =
@@ -308,52 +233,9 @@ const MachineForm = (props: MachineDetailsProps) => {
   const machineName = () =>
     getValue(formStore, "machine.name") || props.initialData.machine.name;
 
-  const onlineStatusQuery = createQuery(() => ({
-    queryKey: [activeURI(), "machine", targetHost(), "check_machine_online"],
-    queryFn: async () => {
-      const curr = activeURI();
-      if (curr) {
-        const result = await callApi("check_machine_online", {
-          flake_url: curr,
-          machine_name: machineName(),
-          opts: {
-            keyfile: sshKey()?.name,
-          },
-        });
-        if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data;
-      }
-    },
-    // refetchInterval: 10_000, // 10 seconds
-  }));
-
-  const online = () => onlineStatusQuery.data === "Online";
-
-  const remoteDiskQuery = createQuery(() => ({
-    queryKey: [
-      activeURI(),
-      "machine",
-      machineName(),
-      targetHost(),
-      "show_block_devices",
-    ],
-    enabled: online(),
-    queryFn: async () => {
-      const curr = activeURI();
-      if (curr) {
-        const result = await callApi("show_block_devices", {
-          options: {
-            hostname: targetHost(),
-            keyfile: sshKey()?.name,
-          },
-        });
-        if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data;
-      }
-    },
-  }));
-
   const handleSubmit = async (values: MachineFormInterface) => {
+    console.log("submitting", values);
+
     const curr_uri = activeURI();
     if (!curr_uri) {
       return;
@@ -426,27 +308,20 @@ const MachineForm = (props: MachineDetailsProps) => {
         <figure>
           <div
             class="avatar placeholder"
-            classList={{
-              online: onlineStatusQuery.data === "Online",
-              offline: onlineStatusQuery.data === "Offline",
-            }}
+            classList={
+              {
+                // online: onlineStatusQuery.data === "Online",
+                // offline: onlineStatusQuery.data === "Offline",
+              }
+            }
           >
-            <div class="w-24 rounded-full bg-neutral text-neutral-content">
-              <Show
-                when={onlineStatusQuery.isFetching}
-                fallback={<span class="material-icons text-4xl">devices</span>}
-              >
-                <span class="loading loading-bars loading-sm justify-self-end"></span>
-              </Show>
+            <div class="w-32 rounded-lg border p-2 bg-def-4 border-inv-3">
+              <RndThumbnail name={machineName()} />
             </div>
           </div>
         </figure>
         <div class="card-body">
           <span class="text-xl text-primary-800">General</span>
-          {/*
-          <Field name="machine.tags" type="string[]">
-            {(field, props) => field.value}
-          </Field> */}
 
           <Field name="machine.name">
             {(field, props) => (
@@ -461,6 +336,20 @@ const MachineForm = (props: MachineDetailsProps) => {
               />
             )}
           </Field>
+          <Field name="machine.tags" type="string[]">
+            {(field, props) => (
+              <For each={field.value}>
+                {(tag) => (
+                  <label class="p-1">
+                    Tags
+                    <span class="mx-2 rounded-full px-3 py-1 bg-inv-4 fg-inv-1 w-fit">
+                      {tag}
+                    </span>
+                  </label>
+                )}
+              </For>
+            )}
+          </Field>
           <Field name="machine.description">
             {(field, props) => (
               <TextInput
@@ -472,6 +361,16 @@ const MachineForm = (props: MachineDetailsProps) => {
                 class="col-span-2"
                 required
               />
+            )}
+          </Field>
+          <Field name="hw_config">
+            {(field, props) => (
+              <label>Hardware report: {field.value || "None"}</label>
+            )}
+          </Field>
+          <Field name="disk_schema">
+            {(field, props) => (
+              <span>Disk schema: {field.value || "None"}</span>
             )}
           </Field>
 
@@ -542,15 +441,6 @@ const MachineForm = (props: MachineDetailsProps) => {
       </Form>
 
       <div class="card-body">
-        <For each={props.modules}>
-          {(module) => (
-            <>
-              <div class="divider"></div>
-              <span class="text-xl text-primary-800">{module.name}</span>
-              {module.component}
-            </>
-          )}
-        </For>
         <div class="divider"></div>
 
         <span class="text-xl text-primary-800">Actions</span>
@@ -581,7 +471,7 @@ const MachineForm = (props: MachineDetailsProps) => {
                 name={machineName()}
                 sshKey={sshKey()}
                 targetHost={getValue(formStore, "machine.deploy.targetHost")}
-                disks={remoteDiskQuery.data?.blockdevices || []}
+                disks={[]}
               />
             </div>
           </dialog>
@@ -593,7 +483,7 @@ const MachineForm = (props: MachineDetailsProps) => {
           <div class="tooltip w-fit" data-tip="Machine must be online">
             <Button
               class="w-full"
-              disabled={!online()}
+              // disabled={!online()}
               onClick={() => handleUpdate()}
               endIcon={<Icon icon="Update" />}
             >
@@ -605,8 +495,6 @@ const MachineForm = (props: MachineDetailsProps) => {
     </>
   );
 };
-
-type WifiData = ClanService<"iwd">;
 
 export const MachineDetails = () => {
   const params = useParams();
@@ -630,20 +518,6 @@ export const MachineDetails = () => {
     },
   }));
 
-  const wifiQuery = createQuery(() => ({
-    queryKey: [activeURI(), "machine", params.id, "get_iwd_service"],
-    queryFn: async () => {
-      const curr = activeURI();
-      if (curr) {
-        const result = await get_iwd_service(curr, params.id);
-        if (!result) throw new Error("Failed to fetch data");
-        return Object.entries(result?.config?.networks || {}).map(
-          ([name, value]) => ({ name, ssid: value.ssid }),
-        );
-      }
-    },
-  }));
-
   return (
     <div class="card">
       <BackButton />
@@ -653,36 +527,7 @@ export const MachineDetails = () => {
       >
         {(data) => (
           <>
-            <MachineForm
-              initialData={data()}
-              modules={[
-                {
-                  component: (
-                    <Show
-                      when={!wifiQuery.isLoading}
-                      fallback={
-                        <div>
-                          <span class="loading loading-lg"></span>
-                        </div>
-                      }
-                    >
-                      <Switch>
-                        <Match when={wifiQuery.data}>
-                          {(d) => (
-                            <WifiModule
-                              initialData={d()}
-                              base_url={activeURI() || ""}
-                              machine_name={data().machine.name}
-                            />
-                          )}
-                        </Match>
-                      </Switch>
-                    </Show>
-                  ),
-                  name: "Wifi",
-                },
-              ]}
-            />
+            <MachineForm initialData={data()} />
           </>
         )}
       </Show>

@@ -7,11 +7,16 @@ from typing import Literal
 
 from clan_cli.api import API
 from clan_cli.api.modules import parse_frontmatter
+from clan_cli.api.serde import dataclass_to_dict
 from clan_cli.cmd import run_no_stdout
 from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanCmdError, ClanError
-from clan_cli.inventory import Machine, load_inventory_eval, set_inventory
+from clan_cli.inventory import (
+    Machine,
+    load_inventory_eval,
+    patch_inventory_with,
+)
 from clan_cli.machines.hardware import HardwareConfig
 from clan_cli.nix import nix_eval, nix_shell
 from clan_cli.tags import list_nixos_machines_by_tags
@@ -20,12 +25,10 @@ log = logging.getLogger(__name__)
 
 
 @API.register
-def set_machine(flake_url: str | Path, machine_name: str, machine: Machine) -> None:
-    inventory = load_inventory_eval(flake_url)
-
-    inventory.machines[machine_name] = machine
-
-    set_inventory(inventory, flake_url, "machines: edit '{machine_name}'")
+def set_machine(flake_url: Path, machine_name: str, machine: Machine) -> None:
+    patch_inventory_with(
+        flake_url, f"machines.{machine_name}", dataclass_to_dict(machine)
+    )
 
 
 @API.register

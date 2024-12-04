@@ -15,6 +15,7 @@ in
   buildClan = import ./build-clan { inherit lib nixpkgs clan-core; };
   facts = import ./facts.nix { inherit lib; };
   inventory = import ./inventory { inherit lib clan-core; };
+  values = import ./values { inherit lib; };
   jsonschema = import ./jsonschema { inherit lib; };
   modules = import ./frontmatter {
     inherit lib;
