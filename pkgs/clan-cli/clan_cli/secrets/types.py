@@ -28,7 +28,7 @@ def public_or_private_age_key_type(arg_value: str) -> str:
             return line.strip()
         if line.startswith("AGE-SECRET-KEY-"):
             return get_public_age_key(line)
-    msg = f"Please provide an age key starting with age1 or AGE-SECRET-KEY-, got: '{arg_value}'"
+    msg = f"Please provide an age public key starting with age1 or an age private key AGE-SECRET-KEY-, got: '{arg_value}'"
     raise ClanError(msg)
 
 
