@@ -20,7 +20,6 @@ struct passwd *getpwnam(const char *name) {
       fprintf(stderr, "no LOGIN_SHELL set\n");
       exit(1);
     }
-    fprintf(stderr, "SHELL:%s\n", shell);
     pw->pw_shell = strdup(shell);
   }
   return pw;
