@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -7,6 +8,8 @@ from typing import Any
 from clan_cli.cmd import run, run_no_stdout
 from clan_cli.dirs import nixpkgs_flake, nixpkgs_source
 from clan_cli.errors import ClanError
+
+log = logging.getLogger(__name__)
 
 
 def nix_command(flags: list[str]) -> list[str]:
@@ -23,38 +26,22 @@ def nix_flake_show(flake_url: str | Path) -> list[str]:
             "flake",
             "show",
             "--json",
-            "--show-trace",
-            f"{flake_url}",
+            *(["--show-trace"] if log.isEnabledFor(logging.DEBUG) else []),
+            str(flake_url),
         ]
     )
 
 
 def nix_build(flags: list[str], gcroot: Path | None = None) -> list[str]:
-    if gcroot is not None:
-        return (
-            nix_command(
-                [
-                    "build",
-                    "--out-link",
-                    str(gcroot),
-                    "--print-out-paths",
-                    "--show-trace",
-                    "--print-build-logs",
-                ]
-            )
-            + flags
-        )
-    return (
-        nix_command(
-            [
-                "build",
-                "--no-link",
-                "--print-out-paths",
-                "--show-trace",
-                "--print-build-logs",
-            ]
-        )
-        + flags
+    return nix_command(
+        [
+            "build",
+            "--print-out-paths",
+            "--print-build-logs",
+            *(["--show-trace"] if log.isEnabledFor(logging.DEBUG) else []),
+            *(["--out-root", str(gcroot)] if gcroot is not None else []),
+            *flags,
+        ]
     )
 
 
@@ -77,7 +64,7 @@ def nix_eval(flags: list[str]) -> list[str]:
     default_flags = nix_command(
         [
             "eval",
-            "--show-trace",
+            *(["--show-trace"] if log.isEnabledFor(logging.DEBUG) else []),
             "--json",
             "--print-build-logs",
         ]
