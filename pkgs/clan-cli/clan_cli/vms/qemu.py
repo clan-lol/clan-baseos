@@ -151,6 +151,7 @@ def qemu_command(
             "-serial", "null",
             "-chardev", "file,id=char0,path=/dev/stdout",
             "-device", "virtconsole,chardev=char0,nr=0",
+            "-monitor", "none",
         ])
 
     vsock_cid = None
