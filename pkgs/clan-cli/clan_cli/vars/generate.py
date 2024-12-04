@@ -233,15 +233,12 @@ def execute_generator(
 
 
 def _ask_prompts(
-    generators: list[Generator],
-) -> dict[str, dict[str, str]]:
-    prompt_values: dict[str, dict[str, str]] = {}
-    for generator in generators:
-        for prompt in generator.prompts:
-            if generator.name not in prompt_values:
-                prompt_values[generator.name] = {}
-            var_id = f"{generator.name}/{prompt.name}"
-            prompt_values[generator.name][prompt.name] = ask(var_id, prompt.prompt_type)
+    generator: Generator,
+) -> dict[str, str]:
+    prompt_values: dict[str, str] = {}
+    for prompt in generator.prompts:
+        var_id = f"{generator.name}/{prompt.name}"
+        prompt_values[prompt.name] = ask(var_id, prompt.prompt_type)
     return prompt_values
 
 
@@ -422,17 +419,16 @@ def generate_vars_for_machine(
     closure = get_closure(machine, generator_name, regenerate)
     if len(closure) == 0:
         return False
-    prompt_values = _ask_prompts(closure)
     for generator in closure:
         if _check_can_migrate(machine, generator):
             _migrate_files(machine, generator)
         else:
             execute_generator(
-                machine,
-                generator,
-                machine.secret_vars_store,
-                machine.public_vars_store,
-                prompt_values.get(generator.name, {}),
+                machine=machine,
+                generator=generator,
+                secret_vars_store=machine.secret_vars_store,
+                public_vars_store=machine.public_vars_store,
+                prompt_values=_ask_prompts(generator),
             )
     # flush caches to make sure the new secrets are available in evaluation
     machine.flush_caches()
@@ -464,7 +460,7 @@ def generate_vars(
             raise ClanError(msg) from errors[0][1]
 
     if not was_regenerated and len(machines) > 0:
-        machine.info("All vars are already up to date")
+        log.info("All vars are already up to date")
 
     return was_regenerated
 
