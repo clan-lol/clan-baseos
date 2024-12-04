@@ -24,16 +24,10 @@ log = logging.getLogger(__name__)
 
 
 @dataclass
-class WifiConfig:
-    ssid: str
-
-
-@dataclass
 class SystemConfig:
     language: str | None = field(default=None)
     keymap: str | None = field(default=None)
     ssh_keys_path: list[str] | None = field(default=None)
-    wifi_settings: list[WifiConfig] | None = field(default=None)
 
 
 @dataclass
@@ -64,12 +58,6 @@ def flash_machine(
             machine, generator_name=None, regenerate=False, fix=False
         )
         generate_facts([machine])
-
-        if system_config.wifi_settings:
-            wifi_settings: dict[str, dict[str, str]] = {}
-            for wifi in system_config.wifi_settings:
-                wifi_settings[wifi.ssid] = {}
-            system_config_nix["clan"] = {"iwd": {"networks": wifi_settings}}
 
         if system_config.language:
             if system_config.language not in list_possible_languages():

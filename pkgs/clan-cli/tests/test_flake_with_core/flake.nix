@@ -15,6 +15,7 @@
           vm1 =
             { lib, ... }:
             {
+              nixpkgs.hostPlatform = "x86_64-linux";
               clan.core.networking.targetHost = "__CLAN_TARGET_ADDRESS__";
               system.stateVersion = lib.version;
               sops.age.keyFile = "__CLAN_SOPS_KEY_PATH__";
@@ -28,6 +29,7 @@
           vm2 =
             { lib, ... }:
             {
+              nixpkgs.hostPlatform = "x86_64-linux";
               imports = [
                 clan-core.clanModules.sshd
                 clan-core.clanModules.root-password

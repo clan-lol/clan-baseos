@@ -7,12 +7,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from clan_cli.api import API
-from clan_cli.clan.create import git_command
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.dirs import TemplateType, clan_templates, get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
+from clan_cli.git import commit_file
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
     MachineDeploy,
@@ -109,10 +109,8 @@ def create_machine(opts: CreateOptions) -> None:
 
         src = tmpdirp / "machines" / opts.template_name
 
-        if (
-            not (src / "configuration.nix").exists()
-            and not (src / "inventory.json").exists()
-        ):
+        has_inventory = (dst / "inventory.json").exists()
+        if not (src / "configuration.nix").exists() and not has_inventory:
             msg = f"Template machine '{opts.template_name}' does not contain a configuration.nix or inventory.json"
             description = (
                 "Template machine must contain a configuration.nix or inventory.json"
@@ -126,12 +124,16 @@ def create_machine(opts: CreateOptions) -> None:
 
         shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
 
-    run(git_command(clan_dir, "add", f"machines/{machine_name}"), RunOpts(cwd=clan_dir))
+    commit_file(
+        clan_dir / "machines" / machine_name,
+        repo_dir=clan_dir,
+        commit_message=f"Add machine {machine_name}",
+    )
 
     inventory = load_inventory_json(clan_dir)
 
     # Merge the inventory from the template
-    if (dst / "inventory.json").exists():
+    if has_inventory:
         template_inventory = load_inventory_json(dst)
         merge_template_inventory(inventory, template_inventory, machine_name)
 
@@ -141,6 +143,13 @@ def create_machine(opts: CreateOptions) -> None:
     new_machine = InventoryMachine(
         name=machine_name, deploy=deploy, tags=opts.machine.tags
     )
+    if (
+        not has_inventory
+        and len(opts.machine.tags) == 0
+        and new_machine.deploy.targetHost is None
+    ):
+        # no need to update inventory if there are no tags or target host
+        return
     inventory.machines.update({new_machine.name: dataclass_to_dict(new_machine)})
     set_inventory(inventory, clan_dir, "Imported machine from template")
 

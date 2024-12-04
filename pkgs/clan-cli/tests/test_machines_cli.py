@@ -10,7 +10,15 @@ def test_machine_subcommands(
     capture_output: CaptureOutput,
 ) -> None:
     cli.run(
-        ["machines", "create", "--flake", str(test_flake_with_core.path), "machine1"]
+        [
+            "machines",
+            "create",
+            "--flake",
+            str(test_flake_with_core.path),
+            "machine1",
+            "--tags",
+            "vm",
+        ]
     )
 
     with capture_output as output:

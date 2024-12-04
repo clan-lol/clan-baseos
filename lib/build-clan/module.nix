@@ -67,13 +67,21 @@ let
               # Machine specific settings
               clan.core.machineName = name;
               networking.hostName = lib.mkDefault name;
-              nixpkgs.hostPlatform = lib.mkIf (system != null) (lib.mkDefault system);
 
               # speeds up nix commands by using the nixpkgs from the host system (especially useful in VMs)
               nix.registry.nixpkgs.to = lib.mkDefault {
                 type = "path";
                 path = lib.mkDefault nixpkgs;
               };
+
+              # For vars we need to override the system so we run vars
+              # generators on the machine that runs `clan vars generate`. If a
+              # users is using the `pkgsForSystem`, we don't set
+              # nixpkgs.hostPlatform it would conflict with the `nixpkgs.pkgs`
+              # option.
+              nixpkgs.hostPlatform = lib.mkIf (system != null && (pkgsForSystem system) != null) (
+                lib.mkForce system
+              );
             }
             // lib.optionalAttrs (pkgs != null) { nixpkgs.pkgs = lib.mkForce pkgs; }
           )
