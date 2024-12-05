@@ -1,10 +1,9 @@
 import json
-import os
 from pathlib import Path
 
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run
-from clan_cli.nix import nix_build, nix_config
+from clan_cli.nix import nix_build, nix_config, nix_test_store
 
 from .machines import Machine
 
@@ -13,15 +12,16 @@ from .machines import Machine
 def get_all_machines(flake: FlakeId, nix_options: list[str]) -> list[Machine]:
     config = nix_config()
     system = config["system"]
-    json_path = run(
-        nix_build([f'{flake}#clanInternals.all-machines-json."{system}"'])
-    ).stdout
+    json_path = Path(
+        run(
+            nix_build([f'{flake}#clanInternals.all-machines-json."{system}"'])
+        ).stdout.rstrip()
+    )
 
-    tmp_store = os.environ.get("TMP_STORE", None)
-    if tmp_store:
-        json_path = f"{tmp_store}/{json_path}"
+    if test_store := nix_test_store():
+        json_path = test_store.joinpath(*json_path.parts[1:])
 
-    machines_json = json.loads(Path(json_path.rstrip()).read_text())
+    machines_json = json.loads(json_path.read_text())
 
     machines = []
     for name, machine_data in machines_json.items():

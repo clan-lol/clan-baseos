@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +13,8 @@ log = logging.getLogger(__name__)
 
 def nix_command(flags: list[str]) -> list[str]:
     args = ["nix", "--extra-experimental-features", "nix-command flakes", *flags]
-    store = os.environ.get("TMP_STORE", None)
-    if store:
-        args += ["--store", store]
+    if store := nix_test_store():
+        args += ["--store", str(store)]
     return args
 
 
@@ -60,6 +58,15 @@ def nix_config() -> dict[str, Any]:
     return config
 
 
+def nix_test_store() -> Path | None:
+    if not os.environ.get("IN_NIX_SANDBOX"):
+        return None
+    store = os.environ.get("CLAN_TEST_STORE", None)
+    if store:
+        return Path(store)
+    return None
+
+
 def nix_eval(flags: list[str]) -> list[str]:
     default_flags = nix_command(
         [
@@ -70,18 +77,13 @@ def nix_eval(flags: list[str]) -> list[str]:
         ]
     )
     if os.environ.get("IN_NIX_SANDBOX"):
-        with tempfile.TemporaryDirectory(prefix="nix-store-") as nix_store:
-            return [
-                *default_flags,
-                "--override-input",
-                "nixpkgs",
-                str(nixpkgs_source()),
-                # --store is required to prevent this error:
-                # error: cannot unlink '/nix/store/6xg259477c90a229xwmb53pdfkn6ig3g-default-builder.sh': Operation not permitted
-                "--store",
-                nix_store,
-                *flags,
-            ]
+        return [
+            *default_flags,
+            "--override-input",
+            "nixpkgs",
+            str(nixpkgs_source()),
+            *flags,
+        ]
     return default_flags + flags
 
 
