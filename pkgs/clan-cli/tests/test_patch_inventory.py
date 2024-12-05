@@ -1,5 +1,5 @@
 # Functions to test
-from clan_cli.inventory import determine_writeability, patch
+from clan_cli.inventory import determine_writeability, patch, unmerge_lists
 
 
 # --------- Patching tests ---------
@@ -49,8 +49,9 @@ def test_write_simple() -> None:
         },
     }
 
+    default: dict = {"foo": {}}
     data: dict = {}
-    res = determine_writeability(prios, data)
+    res = determine_writeability(prios, default, data)
 
     assert res == {"writeable": {"foo", "foo.bar"}, "non_writeable": set({})}
 
@@ -67,7 +68,7 @@ def test_write_inherited() -> None:
     }
 
     data: dict = {}
-    res = determine_writeability(prios, data)
+    res = determine_writeability(prios, {"foo": {"bar": {}}}, data)
     assert res == {
         "writeable": {"foo", "foo.bar", "foo.bar.baz"},
         "non_writeable": set(),
@@ -86,10 +87,31 @@ def test_non_write_inherited() -> None:
     }
 
     data: dict = {}
-    res = determine_writeability(prios, data)
+    res = determine_writeability(prios, {}, data)
     assert res == {
         "writeable": set(),
         "non_writeable": {"foo", "foo.bar", "foo.bar.baz"},
+    }
+
+
+def test_write_list() -> None:
+    prios = {
+        "foo": {
+            "__prio": 100,
+        },
+    }
+
+    data: dict = {}
+    default: dict = {
+        "foo": [
+            "a",
+            "b",
+        ]  # <- writeable: because lists are merged. Filtering out nix-values comes later
+    }
+    res = determine_writeability(prios, default, data)
+    assert res == {
+        "writeable": {"foo"},
+        "non_writeable": set(),
     }
 
 
@@ -107,7 +129,7 @@ def test_write_because_written() -> None:
 
     # Given the following data. {}
     # Check that the non-writeable paths are correct.
-    res = determine_writeability(prios, {})
+    res = determine_writeability(prios, {"foo": {"bar": {}}}, {})
     assert res == {
         "writeable": {"foo", "foo.bar"},
         "non_writeable": {"foo.bar.baz", "foo.bar.foobar"},
@@ -120,8 +142,19 @@ def test_write_because_written() -> None:
             }
         }
     }
-    res = determine_writeability(prios, data)
+    res = determine_writeability(prios, {}, data)
     assert res == {
         "writeable": {"foo", "foo.bar", "foo.bar.baz"},
         "non_writeable": {"foo.bar.foobar"},
     }
+
+
+# --------- List unmerge tests ---------
+
+
+def test_list_unmerge() -> None:
+    all_machines = ["machineA", "machineB"]
+    inventory = ["machineB"]
+
+    nix_machines = unmerge_lists(inventory, all_machines)
+    assert nix_machines == ["machineA"]

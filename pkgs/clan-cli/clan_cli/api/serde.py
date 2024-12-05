@@ -319,5 +319,4 @@ def from_dict(
             msg = f"{data} is not a dict. Expected {t}"
             raise ClanError(msg)
         return construct_dataclass(t, data, path)  # type: ignore
-    # breakpoint()
     return construct_value(t, data, path)

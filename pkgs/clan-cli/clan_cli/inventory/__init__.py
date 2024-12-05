@@ -119,9 +119,26 @@ def flatten_data(data: dict, parent_key: str = "", separator: str = ".") -> dict
     return flattened
 
 
+def unmerge_lists(curr: list, prev: list) -> list:
+    """
+    Unmerge the current list. Given a previous list.
+
+    Returns:
+        The other list.
+    """
+    # Unmerge the lists
+    unmerged = []
+    for value in curr:
+        if value not in prev:
+            unmerged.append(value)
+
+    return unmerged
+
+
 def determine_writeability(
-    data: dict,
-    correlated: dict,
+    priorities: dict,
+    defaults: dict,
+    persisted: dict,
     parent_key: str = "",
     parent_prio: int | None = None,
     results: dict | None = None,
@@ -130,7 +147,7 @@ def determine_writeability(
     if results is None:
         results = {"writeable": set({}), "non_writeable": set({})}
 
-    for key, value in data.items():
+    for key, value in priorities.items():
         if key == "__prio":
             continue
 
@@ -149,6 +166,7 @@ def determine_writeability(
             if isinstance(value, dict):
                 determine_writeability(
                     value,
+                    defaults,
                     {},  # Children won't be writeable, so correlation doesn't matter here
                     full_key,
                     prio,  # Pass the same priority down
@@ -159,13 +177,22 @@ def determine_writeability(
             continue
 
         # Check if the key is writeable otherwise
-        key_in_correlated = key in correlated
+        key_in_correlated = key in persisted
         if prio is None:
             msg = f"Priority for key '{full_key}' is not defined. Cannot determine if it is writeable."
             raise ClanError(msg)
 
-        has_children = any(k != "__prio" for k in value)
-        is_writeable = prio > 100 or key_in_correlated or has_children
+        is_mergeable = False
+        if prio == 100:
+            default = defaults.get(key)
+            if isinstance(default, dict):
+                is_mergeable = True
+            if isinstance(default, list):
+                is_mergeable = True
+            if key_in_correlated:
+                is_mergeable = True
+
+        is_writeable = prio > 100 or is_mergeable
 
         # Append the result
         if is_writeable:
@@ -177,7 +204,8 @@ def determine_writeability(
         if isinstance(value, dict):
             determine_writeability(
                 value,
-                correlated.get(key, {}),
+                defaults.get(key, {}),
+                persisted.get(key, {}),
                 full_key,
                 prio,  # Pass down current priority
                 results,
