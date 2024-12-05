@@ -77,18 +77,13 @@ def nix_eval(flags: list[str]) -> list[str]:
         ]
     )
     if os.environ.get("IN_NIX_SANDBOX"):
-        with tempfile.TemporaryDirectory(prefix="nix-store-") as nix_store:
-            return [
-                *default_flags,
-                "--override-input",
-                "nixpkgs",
-                str(nixpkgs_source()),
-                # --store is required to prevent this error:
-                # error: cannot unlink '/nix/store/6xg259477c90a229xwmb53pdfkn6ig3g-default-builder.sh': Operation not permitted
-                "--store",
-                nix_store,
-                *flags,
-            ]
+        return [
+            *default_flags,
+            "--override-input",
+            "nixpkgs",
+            str(nixpkgs_source()),
+            *flags,
+        ]
     return default_flags + flags
 
 
