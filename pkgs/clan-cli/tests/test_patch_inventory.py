@@ -1,7 +1,8 @@
 # Functions to test
-from clan_cli.inventory import patch
+from clan_cli.inventory import determine_writeability, patch
 
 
+# --------- Patching tests ---------
 def test_patch_nested() -> None:
     orig = {"a": 1, "b": {"a": 2.1, "b": 2.2}, "c": 3}
 
@@ -34,3 +35,93 @@ def test_create_missing_paths() -> None:
     patch(orig, "a.b.c", "foo")
 
     assert orig == {"a": {"b": {"c": "foo"}}}
+
+
+# --------- Write tests ---------
+#
+
+
+def test_write_simple() -> None:
+    prios = {
+        "foo": {
+            "__prio": 100,  # <- writeable: "foo"
+            "bar": {"__prio": 1000},  # <- writeable: mkDefault "foo.bar"
+        },
+    }
+
+    data: dict = {}
+    res = determine_writeability(prios, data)
+
+    assert res == {"writeable": {"foo", "foo.bar"}, "non_writeable": set({})}
+
+
+def test_write_inherited() -> None:
+    prios = {
+        "foo": {
+            "__prio": 100,  # <- writeable: "foo"
+            "bar": {
+                # Inherits prio from parent <- writeable: "foo.bar"
+                "baz": {"__prio": 1000},  # <- writeable: "foo.bar.baz"
+            },
+        },
+    }
+
+    data: dict = {}
+    res = determine_writeability(prios, data)
+    assert res == {
+        "writeable": {"foo", "foo.bar", "foo.bar.baz"},
+        "non_writeable": set(),
+    }
+
+
+def test_non_write_inherited() -> None:
+    prios = {
+        "foo": {
+            "__prio": 50,  # <- non writeable: mkForce "foo" = {...}
+            "bar": {
+                # Inherits prio from parent <- non writeable
+                "baz": {"__prio": 1000},  # <- non writeable: mkDefault "foo.bar.baz"
+            },
+        },
+    }
+
+    data: dict = {}
+    res = determine_writeability(prios, data)
+    assert res == {
+        "writeable": set(),
+        "non_writeable": {"foo", "foo.bar", "foo.bar.baz"},
+    }
+
+
+def test_write_because_written() -> None:
+    prios = {
+        "foo": {
+            "__prio": 100,  # <- writeable: "foo"
+            "bar": {
+                # Inherits prio from parent <- writeable
+                "baz": {"__prio": 100},  # <- non writeable usually
+                "foobar": {"__prio": 100},  # <- non writeable
+            },
+        },
+    }
+
+    # Given the following data. {}
+    # Check that the non-writeable paths are correct.
+    res = determine_writeability(prios, {})
+    assert res == {
+        "writeable": {"foo", "foo.bar"},
+        "non_writeable": {"foo.bar.baz", "foo.bar.foobar"},
+    }
+
+    data: dict = {
+        "foo": {
+            "bar": {
+                "baz": "foo"  # <- written. Since we created the data, we know we can write to it
+            }
+        }
+    }
+    res = determine_writeability(prios, data)
+    assert res == {
+        "writeable": {"foo", "foo.bar", "foo.bar.baz"},
+        "non_writeable": {"foo.bar.foobar"},
+    }
