@@ -1,7 +1,6 @@
 import importlib
 import json
 import logging
-import os
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
@@ -13,7 +12,7 @@ from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanError
 from clan_cli.facts import public_modules as facts_public_modules
 from clan_cli.facts import secret_modules as facts_secret_modules
-from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata
+from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata, nix_test_store
 from clan_cli.ssh.host import Host
 from clan_cli.ssh.host_key import HostKeyCheck
 from clan_cli.ssh.parse import parse_deployment_address
@@ -325,9 +324,8 @@ class Machine:
 
         output = self.nix("build", attr, extra_config, nix_options)
         assert isinstance(output, Path), "Nix build did not result in a single path"
-        tmp_store = os.environ.get("TMP_STORE", None)
-        if tmp_store is not None:
-            output = Path(f"{tmp_store}/{output!s}")
+        if tmp_store := nix_test_store():
+            output = tmp_store.joinpath(*output.parts[1:])
         if isinstance(output, Path):
             self._build_cache[attr] = output
             return output

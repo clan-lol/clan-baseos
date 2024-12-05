@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +13,8 @@ log = logging.getLogger(__name__)
 
 def nix_command(flags: list[str]) -> list[str]:
     args = ["nix", "--extra-experimental-features", "nix-command flakes", *flags]
-    store = os.environ.get("TMP_STORE", None)
-    if store:
-        args += ["--store", store]
+    if store := nix_test_store():
+        args += ["--store", str(store)]
     return args
 
 
@@ -58,6 +56,15 @@ def nix_config() -> dict[str, Any]:
     for key, value in data.items():
         config[key] = value["value"]
     return config
+
+
+def nix_test_store() -> Path | None:
+    if not os.environ.get("IN_NIX_SANDBOX"):
+        return None
+    store = os.environ.get("CLAN_TEST_STORE", None)
+    if store:
+        return Path(store)
+    return None
 
 
 def nix_eval(flags: list[str]) -> list[str]:

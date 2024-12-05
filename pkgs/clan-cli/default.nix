@@ -176,12 +176,12 @@ python3.pkgs.buildPythonApplication {
             export NIX_STATE_DIR=$TMPDIR/nix
             export IN_NIX_SANDBOX=1
             export PYTHONWARNINGS=error
-            export TMP_STORE=$TMPDIR/store
+            export CLAN_TEST_STORE=$TMPDIR/store
             # required to prevent concurrent 'nix flake lock' operations
             export LOCK_NIX=$TMPDIR/nix_lock
-            mkdir -p $TMP_STORE/nix/store
-            xargs cp --recursive --target "$TMP_STORE/nix/store"  < "$closureInfo/store-paths"
-            nix-store --load-db --store $TMP_STORE < "$closureInfo/registration"
+            mkdir -p "$CLAN_TEST_STORE/nix/store"
+            xargs cp --recursive --target "$CLAN_TEST_STORE/nix/store"  < "$closureInfo/store-paths"
+            nix-store --load-db --store "$CLAN_TEST_STORE" < "$closureInfo/registration"
             ${pythonWithTestDeps}/bin/python -m pytest -m "not impure and with_core" ./tests
             touch $out
           '';
