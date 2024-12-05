@@ -161,7 +161,7 @@ class SecretStore(SecretStoreBase):
                         continue
                     if not file.secret:
                         continue
-                    if not dir_exists:
+                    if not dir_exists and not file.needed_for_users:
                         tar_dir = tarfile.TarInfo(name=generator.name)
                         tar_dir.type = tarfile.DIRTYPE
                         tar_dir.mode = 0o511
@@ -170,7 +170,7 @@ class SecretStore(SecretStoreBase):
                     tar_file = tarfile.TarInfo(name=f"{generator.name}/{file.name}")
                     content = self.get(generator, file.name)
                     tar_file.size = len(content)
-                    tar_file.mode = 0o440
+                    tar_file.mode = file.mode
                     tar_file.uname = file.owner
                     tar_file.gname = file.group
                     if file.needed_for_users:

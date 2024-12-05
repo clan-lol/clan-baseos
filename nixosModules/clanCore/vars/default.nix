@@ -51,6 +51,9 @@ in
             _name: file: {
               inherit (file)
                 name
+                owner
+                group
+                mode
                 deploy
                 secret
                 neededForUsers
