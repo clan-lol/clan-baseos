@@ -78,7 +78,7 @@ exec {bash} -l "${{@}}"
         lib_path = None
         assert (
             platform == "linux"
-        ), "we do not support the ld_preload trick on non-linux just now"
+        ), f"we do not support the ld_preload trick on non-linux just now. Got {platform}"
 
         # This enforces a login shell by overriding the login shell of `getpwnam(3)`
         lib_path = tmpdir / "libgetpwnam-preload.so"
