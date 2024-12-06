@@ -384,7 +384,7 @@ def patch_inventory_with(base_dir: Path, section: str, content: dict[str, Any]) 
 def set_inventory(
     inventory: Inventory | dict[str, Any], flake_dir: str | Path, message: str
 ) -> None:
-    """ "
+    """
     Write the inventory to the flake directory
     and commit it to git with the given message
     """
