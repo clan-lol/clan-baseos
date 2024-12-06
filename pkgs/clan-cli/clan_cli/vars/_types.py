@@ -60,6 +60,20 @@ class StoreBase(ABC):
     def is_secret_store(self) -> bool:
         pass
 
+    def health_check(
+        self,
+        generator: "Generator | None" = None,
+        file_name: str | None = None,
+    ) -> str | None:
+        return None
+
+    def fix(
+        self,
+        generator: "Generator | None" = None,
+        file_name: str | None = None,
+    ) -> None:
+        return None
+
     def backend_collision_error(self, folder: Path) -> None:
         msg = (
             f"Var folder {folder} exists but doesn't look like a {self.store_name} secret."

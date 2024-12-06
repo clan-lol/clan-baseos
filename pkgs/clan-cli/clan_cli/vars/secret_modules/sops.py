@@ -87,6 +87,48 @@ class SecretStore(SecretStoreBase):
     def secret_path(self, generator: Generator, secret_name: str) -> Path:
         return self.directory(generator, secret_name)
 
+    @override
+    def health_check(
+        self, generator: Generator | None = None, file_name: str | None = None
+    ) -> str | None:
+        """
+        Apply local updates to secrets like re-encrypting with missing keys
+            when new users were added.
+        """
+
+        if generator is None:
+            generators = self.machine.vars_generators
+        else:
+            generators = [generator]
+        file_found = False
+        outdated = []
+        for generator in generators:
+            for file in generator.files:
+                # if we check only a single file, continue on all the other ones
+                if file_name:
+                    if file.name == file_name:
+                        file_found = True
+                    else:
+                        continue
+                if file.secret and self.exists(generator, file.name):
+                    if file.deploy:
+                        self.ensure_machine_has_access(generator, file.name)
+                    needs_update, msg = self.needs_fix(generator, file.name)
+                    if needs_update:
+                        outdated.append((generator.name, file.name, msg))
+        if file_name and not file_found:
+            msg = f"file {file_name} was not found"
+            raise ClanError(msg)
+        if outdated:
+            msg = (
+                "The local state of some secret vars is inconsistent and needs to be updated.\n"
+                "Run 'clan vars fix' to apply the necessary changes."
+                "Problems to fix:\n"
+                "\n".join(o[2] for o in outdated if o[2])
+            )
+            return msg
+        return None
+
     def _set(
         self,
         generator: Generator,
@@ -183,11 +225,30 @@ class SecretStore(SecretStoreBase):
         return needs_update, msg
 
     @override
-    def fix(self, generator: Generator, name: str) -> None:
+    def fix(
+        self, generator: Generator | None = None, file_name: str | None = None
+    ) -> None:
         from clan_cli.secrets.secrets import update_keys
 
-        secret_path = self.secret_path(generator, name)
-        update_keys(
-            secret_path,
-            collect_keys_for_path(secret_path),
-        )
+        if generator is None:
+            generators = self.machine.vars_generators
+        else:
+            generators = [generator]
+        file_found = False
+        for generator in generators:
+            for file in generator.files:
+                # if we check only a single file, continue on all the other ones
+                if file_name:
+                    if file.name == file_name:
+                        file_found = True
+                    else:
+                        continue
+
+                secret_path = self.secret_path(generator, file.name)
+                update_keys(
+                    secret_path,
+                    collect_keys_for_path(secret_path),
+                )
+        if file_name and not file_found:
+            msg = f"file {file_name} was not found"
+            raise ClanError(msg)

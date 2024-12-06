@@ -66,8 +66,11 @@ def vars_status(machine: Machine, generator_name: None | str = None) -> VarStatu
                     )
                     missing_secret_vars.append(file)
                 else:
-                    needs_fix, msg = secret_vars_store.needs_fix(generator, file.name)
-                    if needs_fix:
+                    msg = secret_vars_store.health_check(
+                        generator=generator,
+                        file_name=file.name,
+                    )
+                    if msg:
                         log.info(
                             f"Secret var '{file.name}' for service '{generator.name}' in machine {machine.name} needs update: {msg}"
                         )

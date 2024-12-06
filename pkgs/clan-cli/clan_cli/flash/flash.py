@@ -54,9 +54,7 @@ def flash_machine(
             extra_args = []
         system_config_nix: dict[str, Any] = {}
 
-        generate_vars_for_machine(
-            machine, generator_name=None, regenerate=False, fix=False
-        )
+        generate_vars_for_machine(machine, generator_name=None, regenerate=False)
         generate_facts([machine])
 
         if system_config.language:
