@@ -362,7 +362,7 @@ in
                       services.borgbackup."instance_1" = {
                         roles.client.machines = ["machineA"];
 
-                        machineA.config = {
+                        machines.machineA.config = {
                           # Additional specific config for the machine
                           # This is merged with all other config places
                         };
