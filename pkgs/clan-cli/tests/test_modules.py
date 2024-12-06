@@ -72,7 +72,7 @@ def test_add_module_to_inventory(
 
     inventory = load_inventory_json(base_path)
 
-    inventory.services = {
+    inventory["services"] = {
         "borgbackup": {
             "borg1": {
                 "meta": {"name": "borg1"},

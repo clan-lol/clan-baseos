@@ -13,7 +13,7 @@ from clan_cli.inventory import load_inventory_json, set_inventory
 def delete_machine(flake: FlakeId, name: str) -> None:
     inventory = load_inventory_json(flake.path)
 
-    machine = inventory.machines.pop(name, None)
+    machine = inventory.get("machines", {}).pop(name, None)
     if machine is None:
         msg = f"Machine {name} does not exist"
         raise ClanError(msg)
