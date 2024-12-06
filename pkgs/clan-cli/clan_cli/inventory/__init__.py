@@ -47,11 +47,17 @@ __all__ = [
 ]
 
 
-def get_path(flake_dir: str | Path) -> Path:
+def get_inventory_path(flake_dir: str | Path, create: bool = True) -> Path:
     """
     Get the path to the inventory file in the flake directory
     """
-    return (Path(flake_dir) / "inventory.json").resolve()
+    inventory_file = (Path(flake_dir) / "inventory.json").resolve()
+
+    if not inventory_file.exists() and create:
+        # Copy over the meta from the flake if the inventory is not initialized
+        init_inventory(str(flake_dir))
+
+    return inventory_file
 
 
 # Default inventory
@@ -328,20 +334,16 @@ def load_inventory_json(
     """
     inventory = default
 
-    inventory_file = get_path(flake_dir)
-    if inventory_file.exists():
-        with inventory_file.open() as f:
-            try:
-                res = json.load(f)
-                inventory = from_dict(Inventory, res)
-            except json.JSONDecodeError as e:
-                # Error decoding the inventory file
-                msg = f"Error decoding inventory file: {e}"
-                raise ClanError(msg) from e
+    inventory_file = get_inventory_path(flake_dir)
 
-    if not inventory_file.exists():
-        # Copy over the meta from the flake if the inventory is not initialized
-        inventory.meta = load_inventory_eval(flake_dir).meta
+    with inventory_file.open() as f:
+        try:
+            res = json.load(f)
+            inventory = from_dict(Inventory, res)
+        except json.JSONDecodeError as e:
+            # Error decoding the inventory file
+            msg = f"Error decoding inventory file: {e}"
+            raise ClanError(msg) from e
 
     return inventory
 
@@ -365,8 +367,7 @@ def patch(d: dict[str, Any], path: str, content: Any) -> None:
 
 @API.register
 def patch_inventory_with(base_dir: Path, section: str, content: dict[str, Any]) -> None:
-    inventory_file = get_path(base_dir)
-
+    inventory_file = get_inventory_path(base_dir)
     curr_inventory = {}
     with inventory_file.open("r") as f:
         curr_inventory = json.load(f)
@@ -387,7 +388,7 @@ def set_inventory(
     Write the inventory to the flake directory
     and commit it to git with the given message
     """
-    inventory_file = get_path(flake_dir)
+    inventory_file = get_inventory_path(flake_dir, create=False)
 
     # Filter out modules not set via UI.
     # It is not possible to set modules from "/nix/store" via the UI
@@ -411,7 +412,6 @@ def set_inventory(
     commit_file(inventory_file, Path(flake_dir), commit_message=message)
 
 
-@API.register
 def init_inventory(directory: str, init: Inventory | None = None) -> None:
     inventory = None
     # Try reading the current flake
