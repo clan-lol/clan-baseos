@@ -183,7 +183,11 @@ in
     inherit serviceConfigs;
     inherit (clan-core) clanModules;
     inherit inventoryFile;
-    inventoryValuesPrios = (clan-core.lib.values.getPrios { options = inventory.options; });
+    inventoryValuesPrios =
+      # Temporary workaround
+      builtins.removeAttrs (clan-core.lib.values.getPrios { options = inventory.options; })
+        # tags are freeformType which is not supported yet.
+        [ "tags" ];
     inventory = config.inventory;
     meta = config.inventory.meta;
 
