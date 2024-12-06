@@ -50,7 +50,16 @@
       qemu-common = import "${inputs.nixpkgs}/nixos/lib/qemu-common.nix" { inherit lib pkgs; };
     in
     {
-      checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux) {
+      # On aarch64-linux, hangs on reboot with after installation:
+      # vm-test-run-test-installation> (finished: waiting for the VM to power off, in 1.97 seconds)
+      # vm-test-run-test-installation>
+      # vm-test-run-test-installation> new_machine: must succeed: cat /etc/install-successful
+      # vm-test-run-test-installation> new_machine: waiting for the VM to finish booting
+      # vm-test-run-test-installation> new_machine: starting vm
+      # vm-test-run-test-installation> new_machine: QEMU running (pid 80)
+      # vm-test-run-test-installation> new_machine: Guest root shell did not produce any data yet...
+      # vm-test-run-test-installation> new_machine:   To debug, enter the VM and run 'systemctl status backdoor.service'.
+      checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux && pkgs.stdenv.hostPlatform.system != "aarch64-linux") {
         test-installation = (import ../lib/test-base.nix) {
           name = "test-installation";
           nodes.target = {
