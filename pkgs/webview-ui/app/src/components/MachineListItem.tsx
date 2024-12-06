@@ -29,7 +29,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
   const navigate = useNavigate();
 
   const handleInstall = async () => {
-    if (!info?.deploy.targetHost || installing()) {
+    if (!info?.deploy?.targetHost || installing()) {
       return;
     }
 
@@ -38,9 +38,9 @@ export const MachineListItem = (props: MachineListItemProps) => {
       toast.error("No active clan selected");
       return;
     }
-    if (!info?.deploy.targetHost) {
+    if (!info?.deploy?.targetHost) {
       toast.error(
-        "Machine does not have a target host. Specify where the machine should be deployed.",
+        "Machine does not have a target host. Specify where the machine should be deployed."
       );
       return;
     }
@@ -63,13 +63,13 @@ export const MachineListItem = (props: MachineListItemProps) => {
         loading: "Installing...",
         success: "Installed",
         error: "Failed to install",
-      },
+      }
     );
     setInstalling(false);
   };
 
   const handleUpdate = async () => {
-    if (!info?.deploy.targetHost || installing()) {
+    if (!info?.deploy?.targetHost || installing()) {
       return;
     }
 
@@ -80,7 +80,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
     }
     if (!info?.deploy.targetHost) {
       toast.error(
-        "Machine does not have a target host. Specify where the machine should be deployed.",
+        "Machine does not have a target host. Specify where the machine should be deployed."
       );
       return;
     }
@@ -101,7 +101,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
         loading: "Updating...",
         success: "Updated",
         error: "Failed to update",
-      },
+      }
     );
     setUpdating(false);
   };
@@ -158,7 +158,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
                         </span>
                       )}
                     </Show>
-                    {d()?.deploy.targetHost}
+                    {d()?.deploy?.targetHost}
                   </>
                 )}
               </Show>
@@ -182,24 +182,24 @@ export const MachineListItem = (props: MachineListItemProps) => {
                 </li>
                 <li
                   classList={{
-                    disabled: !info?.deploy.targetHost || installing(),
+                    disabled: !info?.deploy?.targetHost || installing(),
                   }}
                   onClick={handleInstall}
                 >
                   <a>
-                    <Show when={info?.deploy.targetHost} fallback={"Deploy"}>
+                    <Show when={info?.deploy?.targetHost} fallback={"Deploy"}>
                       {(d) => `Install to ${d()}`}
                     </Show>
                   </a>
                 </li>
                 <li
                   classList={{
-                    disabled: !info?.deploy.targetHost || updating(),
+                    disabled: !info?.deploy?.targetHost || updating(),
                   }}
                   onClick={handleUpdate}
                 >
                   <a>
-                    <Show when={info?.deploy.targetHost} fallback={"Deploy"}>
+                    <Show when={info?.deploy?.targetHost} fallback={"Deploy"}>
                       {(d) => `Update (${d()})`}
                     </Show>
                   </a>
