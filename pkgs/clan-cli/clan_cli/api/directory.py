@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
+from clan_cli.cmd import RunOpts
 from clan_cli.errors import ClanError
 from clan_cli.nix import nix_shell, run_no_stdout
 
@@ -154,7 +155,7 @@ def show_block_devices(options: BlockDeviceOptions) -> Blockdevices:
             "PATH,NAME,RM,SIZE,RO,MOUNTPOINTS,TYPE,ID-LINK",
         ],
     )
-    proc = run_no_stdout(cmd, needs_user_terminal=True)
+    proc = run_no_stdout(cmd, RunOpts(needs_user_terminal=True))
     res = proc.stdout.strip()
 
     blk_info: dict[str, Any] = json.loads(res)
