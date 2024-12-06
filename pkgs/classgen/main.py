@@ -350,10 +350,11 @@ def run_gen(args: argparse.Namespace) -> None:
 # ruff: noqa: N806
 # ruff: noqa: F401
 # fmt: off
-from typing import Any, Literal, TypedDict, NotRequired\n
+from typing import Any, Literal, NotRequired, TypedDict\n
 """
         )
         f.write(dataclass_code)
+        f.write("\n")
 
 
 def main() -> None:
