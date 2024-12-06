@@ -6,6 +6,7 @@ import select
 import shlex
 import signal
 import subprocess
+import threading
 import time
 import timeit
 import weakref
@@ -212,30 +213,33 @@ class TimeTable:
 
     def __init__(self) -> None:
         self.table: dict[str, float] = {}
+        self.lock = threading.Lock()
         weakref.finalize(self, self.table_print)
 
     def table_print(self) -> None:
-        print("======== CMD TIMETABLE ========")
+        with self.lock:
+            print("======== CMD TIMETABLE ========")
 
-        # Sort the table by time in descending order
-        sorted_table = sorted(
-            self.table.items(), key=lambda item: item[1], reverse=True
-        )
+            # Sort the table by time in descending order
+            sorted_table = sorted(
+                self.table.items(), key=lambda item: item[1], reverse=True
+            )
 
-        for k, v in sorted_table:
-            # Check if timedelta is greater than 1 second
-            if v > 1:
-                # Print in red
-                print(f"\033[91mTook {v}s\033[0m for command: '{k}'")
-            else:
-                # Print in default color
-                print(f"Took {v} for command: '{k}'")
+            for k, v in sorted_table:
+                # Check if timedelta is greater than 1 second
+                if v > 1:
+                    # Print in red
+                    print(f"\033[91mTook {v}s\033[0m for command: '{k}'")
+                else:
+                    # Print in default color
+                    print(f"Took {v} for command: '{k}'")
 
     def add(self, cmd: str, time: float) -> None:
-        if cmd in self.table:
-            self.table[cmd] += time
-        else:
-            self.table[cmd] = time
+        with self.lock:
+            if cmd in self.table:
+                self.table[cmd] += time
+            else:
+                self.table[cmd] = time
 
 
 TIME_TABLE = None
@@ -339,34 +343,17 @@ def run(
 
 def run_no_stdout(
     cmd: list[str],
-    *,
-    env: dict[str, str] | None = None,
-    cwd: Path | None = None,
-    log: Log = Log.STDERR,
-    prefix: str | None = None,
-    check: bool = True,
-    error_msg: str | None = None,
-    needs_user_terminal: bool = False,
-    shell: bool = False,
+    opts: RunOpts | None = None,
 ) -> CmdOut:
     """
     Like run, but automatically suppresses all output, if not in DEBUG log level.
     If in DEBUG log level the stdout of commands will be shown.
     """
-    opts = RunOpts(
-        env=env,
-        cwd=cwd,
-        log=log,
-        check=check,
-        error_msg=error_msg,
-        needs_user_terminal=needs_user_terminal,
-        shell=shell,
-        prefix=prefix,
-    )
+    if opts is None:
+        opts = RunOpts()
+
     if cmdlog.isEnabledFor(logging.DEBUG):
-        opts.log = log if log.value > Log.STDERR.value else Log.STDERR
-    else:
-        opts.log = log
+        opts.log = opts.log if opts.log.value > Log.STDERR.value else Log.STDERR
 
     return run(
         cmd,
