@@ -36,7 +36,10 @@ let
               options = filteredSubOptions;
               modules = (
                 [
-                  { inherit options; }
+                  {
+                    inherit options;
+                    _file = "<artifical submodule>";
+                  }
                 ]
                 ++ map (config: { inherit config; }) defs.${attrName}
               );
@@ -63,13 +66,7 @@ let
 
         submodulePrios =
           let
-            options = filteredSubOptions;
-            modules = (
-              [
-                { inherit options; }
-              ]
-              ++ opt.definitions
-            );
+            modules = (opt.definitions ++ opt.type.getSubModules);
             submoduleEval = lib.evalModules {
               inherit modules;
             };
@@ -80,8 +77,8 @@ let
       if opt ? type && opt.type.name == "submodule" then
         (prio) // submodulePrios
       else if opt ? type && opt.type.name == "attrsOf" then
-        prio // (
-                  prioPerValue {
+        prio
+        // (prioPerValue {
           type = opt.type;
           defs = zipDefs opt.definitions;
         } (lib.modules.mergeAttrDefinitionsWithPrio opt))

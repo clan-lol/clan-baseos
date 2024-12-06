@@ -130,6 +130,42 @@ in
       };
     };
 
+  test_submoduleWith =
+    let
+      evaluated = (
+        eval [
+          {
+            options.foo = lib.mkOption {
+              type = lib.types.submoduleWith {
+                modules = [
+                  {
+                    options.bar = lib.mkOption {
+                      type = lib.types.bool;
+                    };
+                  }
+                ];
+              };
+            };
+          }
+          {
+            foo.bar = false;
+          }
+        ]
+      );
+    in
+    {
+      inherit evaluated;
+      expr = slib.getPrios {
+        options = evaluated.options;
+      };
+      expected = {
+        foo = {
+          __prio = 100;
+          bar.__prio = 100; # Set via other module
+        };
+      };
+    };
+
   # TODO(@hsjobeki): Cover this edge case
   # test_freeform =
   #   let
