@@ -5,7 +5,7 @@
 # ruff: noqa: N806
 # ruff: noqa: F401
 # fmt: off
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, TypedDict, NotRequired
 
 
 class MachineDeploy(TypedDict):
