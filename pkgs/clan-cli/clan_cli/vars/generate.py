@@ -302,7 +302,7 @@ def _migrate_file(
     var_name: str,
     service_name: str,
     fact_name: str,
-) -> None:
+) -> list[Path]:
     for file in generator.files:
         if file.name == var_name:
             break
@@ -310,12 +310,24 @@ def _migrate_file(
         msg = f"Could not find file {fact_name} in generator {generator.name}"
         raise ClanError(msg)
 
+    paths = []
+
     if file.secret:
         old_value = machine.secret_facts_store.get(service_name, fact_name)
-        machine.secret_vars_store.set(generator, file, old_value, is_migration=True)
+        maybe_path = machine.secret_vars_store.set(
+            generator, file, old_value, is_migration=True
+        )
+        if maybe_path:
+            paths.append(maybe_path)
     else:
         old_value = machine.public_facts_store.get(service_name, fact_name)
-        machine.public_vars_store.set(generator, file, old_value, is_migration=True)
+        maybe_path = machine.public_vars_store.set(
+            generator, file, old_value, is_migration=True
+        )
+        if maybe_path:
+            paths.append(maybe_path)
+
+    return paths
 
 
 def _migrate_files(
@@ -323,10 +335,11 @@ def _migrate_files(
     generator: Generator,
 ) -> None:
     not_found = []
+    files_to_commit = []
     for file in generator.files:
         if _migration_file_exists(machine, generator, file.name):
             assert generator.migrate_fact is not None
-            _migrate_file(
+            files_to_commit += _migrate_file(
                 machine, generator, file.name, generator.migrate_fact, file.name
             )
         else:
@@ -334,6 +347,11 @@ def _migrate_files(
     if len(not_found) > 0:
         msg = f"Could not migrate the following files for generator {generator.name}, as no fact or secret exists with the same name: {not_found}"
         raise ClanError(msg)
+    commit_files(
+        files_to_commit,
+        machine.flake_dir,
+        f"migrated facts to vars for generator {generator.name} for machine {machine.name}",
+    )
 
 
 def _check_can_migrate(
@@ -344,17 +362,27 @@ def _check_can_migrate(
     if not service_name:
         return False
     # ensure that none of the generated vars already exist in the store
+    all_files_missing = True
+    all_files_present = True
     for file in generator.files:
         if file.secret:
             if machine.secret_vars_store.exists(generator, file.name):
-                if file.deploy:
-                    machine.secret_vars_store.ensure_machine_has_access(
-                        generator, file.name
-                    )
-                return False
+                all_files_missing = False
+            else:
+                all_files_present = False
         else:
             if machine.public_vars_store.exists(generator, file.name):
-                return False
+                all_files_missing = False
+            else:
+                all_files_present = False
+
+    if not all_files_present and not all_files_missing:
+        msg = f"Cannot migrate facts for generator {generator.name} as some files already exist in the store"
+        raise ClanError(msg)
+    if all_files_present:
+        # all filles already migrated, no need to run migration again
+        return False
+
     # ensure that all files can be migrated (exists in the corresponding fact store)
     return bool(
         all(
