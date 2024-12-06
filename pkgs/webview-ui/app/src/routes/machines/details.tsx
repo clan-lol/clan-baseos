@@ -243,7 +243,7 @@ const MachineForm = (props: MachineDetailsProps) => {
 
     const machine_response = await callApi("set_machine", {
       flake_url: curr_uri,
-      machine_name: props.initialData.machine.name,
+      machine_name: props.initialData.machine.name || "My machine",
       machine: {
         ...values.machine,
         // TODO: Remove this workaround
@@ -316,7 +316,7 @@ const MachineForm = (props: MachineDetailsProps) => {
             }
           >
             <div class="w-32 rounded-lg border p-2 bg-def-4 border-inv-3">
-              <RndThumbnail name={machineName()} />
+              <RndThumbnail name={machineName() || "M"} />
             </div>
           </div>
         </figure>
@@ -342,7 +342,7 @@ const MachineForm = (props: MachineDetailsProps) => {
                 {(tag) => (
                   <label class="p-1">
                     Tags
-                    <span class="mx-2 rounded-full px-3 py-1 bg-inv-4 fg-inv-1 w-fit">
+                    <span class="mx-2 w-fit rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
                       {tag}
                     </span>
                   </label>

@@ -42,6 +42,7 @@ from typing import (
     Union,
     get_args,
     get_origin,
+    is_typeddict,
 )
 
 from clan_cli.errors import ClanError
@@ -251,7 +252,13 @@ def construct_value(
     if t is Any:
         return field_value
 
-    # Unhandled
+    if is_typeddict(t):
+        if not isinstance(field_value, dict):
+            msg = f"Expected TypedDict {t}, got {field_value}"
+            raise ClanError(msg, location=f"{loc}")
+
+        return t(field_value)  # type: ignore
+
     msg = f"Unhandled field type {t} with value {field_value}"
     raise ClanError(msg)
 

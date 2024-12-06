@@ -63,9 +63,11 @@ def show_clan_meta(uri: str | Path) -> Meta:
             )
 
     return Meta(
-        name=clan_meta.get("name"),
-        description=clan_meta.get("description", None),
-        icon=icon_path,
+        {
+            "name": clan_meta.get("name"),
+            "description": clan_meta.get("description"),
+            "icon": icon_path if icon_path else "",
+        }
     )
 
 
@@ -73,9 +75,9 @@ def show_command(args: argparse.Namespace) -> None:
     flake_path = args.flake.path
     meta = show_clan_meta(flake_path)
 
-    print(f"Name: {meta.name}")
-    print(f"Description: {meta.description or '-'}")
-    print(f"Icon: {meta.icon or '-'}")
+    print(f"Name: {meta.get("name")}")
+    print(f"Description: {meta.get("description", '-')}")
+    print(f"Icon: {meta.get("icon", '-')}")
 
 
 def register_parser(parser: argparse.ArgumentParser) -> None:

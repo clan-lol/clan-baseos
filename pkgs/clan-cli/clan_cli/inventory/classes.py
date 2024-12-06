@@ -5,37 +5,32 @@
 # ruff: noqa: N806
 # ruff: noqa: F401
 # fmt: off
-from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, NotRequired, TypedDict
 
 
-@dataclass
-class MachineDeploy:
-    targetHost: None | str = field(default = None)
+class MachineDeploy(TypedDict):
+    targetHost: NotRequired[str]
 
 
-@dataclass
-class Machine:
-    deploy: MachineDeploy
+class Machine(TypedDict):
+    deploy: NotRequired[MachineDeploy]
+    description: NotRequired[str]
+    icon: NotRequired[str]
+    name: NotRequired[str]
+    tags: NotRequired[list[str]]
+
+
+class Meta(TypedDict):
     name: str
-    description: None | str = field(default = None)
-    icon: None | str = field(default = None)
-    tags: list[str] = field(default_factory = list)
-
-
-@dataclass
-class Meta:
-    name: str
-    description: None | str = field(default = None)
-    icon: None | str = field(default = None)
-
+    description: NotRequired[str]
+    icon: NotRequired[str]
 
 Service = dict[str, Any]
 
-@dataclass
-class Inventory:
-    meta: Meta
-    machines: dict[str, Machine] = field(default_factory = dict)
-    modules: dict[str, str] = field(default_factory = dict)
-    services: dict[str, Service] = field(default_factory = dict)
-    tags: dict[str, list[str]] = field(default_factory = dict)
+
+class Inventory(TypedDict):
+    machines: NotRequired[dict[str, Machine]]
+    meta: NotRequired[Meta]
+    modules: NotRequired[dict[str, str]]
+    services: NotRequired[dict[str, Service]]
+    tags: NotRequired[dict[str, list[str]]]

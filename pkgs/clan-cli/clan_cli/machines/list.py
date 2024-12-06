@@ -34,7 +34,7 @@ def set_machine(flake_url: Path, machine_name: str, machine: Machine) -> None:
 @API.register
 def list_inventory_machines(flake_url: str | Path) -> dict[str, Machine]:
     inventory = load_inventory_eval(flake_url)
-    return inventory.machines
+    return inventory.get("machines", {})
 
 
 @dataclass
@@ -61,7 +61,7 @@ def extract_header(c: str) -> str:
 @API.register
 def get_inventory_machine_details(flake_url: Path, machine_name: str) -> MachineDetails:
     inventory = load_inventory_eval(flake_url)
-    machine = inventory.machines.get(machine_name)
+    machine = inventory.get("machines", {}).get(machine_name)
     if machine is None:
         msg = f"Machine {machine_name} not found in inventory"
         raise ClanError(msg)
@@ -113,12 +113,12 @@ class ConnectionOptions:
 def check_machine_online(
     flake_url: str | Path, machine_name: str, opts: ConnectionOptions | None
 ) -> Literal["Online", "Offline"]:
-    machine = load_inventory_eval(flake_url).machines.get(machine_name)
+    machine = load_inventory_eval(flake_url).get("machines", {}).get(machine_name)
     if not machine:
         msg = f"Machine {machine_name} not found in inventory"
         raise ClanError(msg)
 
-    hostname = machine.deploy.targetHost
+    hostname = machine.get("deploy", {}).get("targetHost")
 
     if not hostname:
         msg = f"Machine {machine_name} does not specify a targetHost"

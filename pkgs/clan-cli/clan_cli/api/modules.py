@@ -272,11 +272,14 @@ def set_service_instance(
     inventory = load_inventory_json(base_path)
     target_type = get_args(get_type_hints(Service)[module_name])[1]
 
-    module_instance_map: dict[str, Any] = getattr(inventory.services, module_name, {})
+    module_instance_map: dict[str, Any] = inventory.get("services", {}).get(
+        module_name, {}
+    )
 
     module_instance_map[instance_name] = from_dict(target_type, config)
 
-    setattr(inventory.services, module_name, module_instance_map)
+    inventory["services"] = inventory.get("services", {})
+    inventory["services"][module_name] = module_instance_map
 
     set_inventory(
         inventory, base_path, f"Update {module_name} instance {instance_name}"

@@ -16,7 +16,6 @@ from clan_cli.git import commit_file
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
     MachineDeploy,
-    dataclass_to_dict,
     load_inventory_json,
     merge_template_inventory,
     set_inventory,
@@ -64,15 +63,17 @@ def create_machine(opts: CreateOptions) -> None:
     clan_dir = opts.clan_dir.path
 
     log.debug(f"Importing machine '{opts.template_name}' from {opts.template_src}")
-
-    if opts.template_name in list_nixos_machines(clan_dir) and not opts.machine.name:
+    machine_name = opts.machine.get("name")
+    if opts.template_name in list_nixos_machines(clan_dir) and not opts.machine.get(
+        "name"
+    ):
         msg = f"{opts.template_name} is already defined in {clan_dir}"
         description = (
             "Please add the --rename option to import the machine with a different name"
         )
         raise ClanError(msg, description=description)
 
-    machine_name = opts.template_name if not opts.machine.name else opts.machine.name
+    machine_name = machine_name if machine_name else opts.template_name
     dst = clan_dir / "machines" / machine_name
 
     # TODO: Move this into nix code
@@ -138,19 +139,24 @@ def create_machine(opts: CreateOptions) -> None:
         merge_template_inventory(inventory, template_inventory, machine_name)
 
     deploy = MachineDeploy()
-    deploy.targetHost = opts.target_host
+    target_host = opts.target_host
+    if target_host:
+        deploy["targetHost"] = target_host
     # TODO: We should allow the template to specify machine metadata if not defined by user
     new_machine = InventoryMachine(
-        name=machine_name, deploy=deploy, tags=opts.machine.tags
+        name=machine_name, deploy=deploy, tags=opts.machine.get("tags", [])
     )
     if (
         not has_inventory
-        and len(opts.machine.tags) == 0
-        and new_machine.deploy.targetHost is None
+        and len(opts.machine.get("tags", [])) == 0
+        and new_machine.get("deploy", {}).get("targetHost") is None
     ):
         # no need to update inventory if there are no tags or target host
         return
-    inventory.machines.update({new_machine.name: dataclass_to_dict(new_machine)})
+
+    inventory["machines"] = inventory.get("machines", {})
+    inventory["machines"][machine_name] = new_machine
+
     set_inventory(inventory, clan_dir, "Imported machine from template")
 
 

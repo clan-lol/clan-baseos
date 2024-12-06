@@ -61,9 +61,7 @@ def get_inventory_path(flake_dir: str | Path, create: bool = True) -> Path:
 
 
 # Default inventory
-default_inventory = Inventory(
-    meta=Meta(name="New Clan"), machines={}, services=Service()
-)
+default_inventory: Inventory = {"meta": {"name": "New Clan"}}
 
 
 @API.register
@@ -381,9 +379,7 @@ def patch_inventory_with(base_dir: Path, section: str, content: dict[str, Any]) 
 
 
 @API.register
-def set_inventory(
-    inventory: Inventory | dict[str, Any], flake_dir: str | Path, message: str
-) -> None:
+def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> None:
     """
     Write the inventory to the flake directory
     and commit it to git with the given message
@@ -396,18 +392,11 @@ def set_inventory(
     filtered_modules = lambda m: {
         key: value for key, value in m.items() if "/nix/store" not in value
     }
-    if isinstance(inventory, dict):
-        modules = filtered_modules(inventory.get("modules", {}))  # type: ignore
-        inventory["modules"] = modules
-    else:
-        modules = filtered_modules(inventory.modules)  # type: ignore
-        inventory.modules = modules
+    modules = filtered_modules(inventory.get("modules", {}))  # type: ignore
+    inventory["modules"] = modules
 
     with inventory_file.open("w") as f:
-        if isinstance(inventory, Inventory):
-            json.dump(dataclass_to_dict(inventory), f, indent=2)
-        else:
-            json.dump(inventory, f, indent=2)
+        json.dump(inventory, f, indent=2)
 
     commit_file(inventory_file, Path(flake_dir), commit_message=message)
 
@@ -436,7 +425,7 @@ def merge_template_inventory(
     Merge the template inventory into the current inventory
     The template inventory is expected to be a subset of the current inventory
     """
-    for service_name, instance in template_inventory.services.items():
+    for service_name, instance in template_inventory.get("services", {}).items():
         if len(instance.keys()) > 0:
             msg = f"Service {service_name} in template inventory has multiple instances"
             description = (

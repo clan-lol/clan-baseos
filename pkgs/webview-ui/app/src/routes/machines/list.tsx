@@ -84,7 +84,7 @@ export const MachineListView: Component = () => {
       </div>
       {/* <Show when={filter()}> */}
       <div class="my-1 flex w-full gap-2 p-2">
-        <div class="h-6 w-6 p-1">
+        <div class="size-6 p-1">
           <Icon icon="Filter" />
         </div>
         <For each={filter().tags.sort()}>

@@ -80,6 +80,92 @@ in
     };
   };
 
+  test_submodule_with_merging =
+    let
+      evaluated = (
+        eval [
+          {
+            options.foo = lib.mkOption {
+              type = lib.types.submodule {
+                options = {
+                  normal = lib.mkOption {
+                    type = lib.types.bool;
+                  };
+                  default = lib.mkOption {
+                    type = lib.types.bool;
+                  };
+                  optionDefault = lib.mkOption {
+                    type = lib.types.bool;
+                    default = true;
+                  };
+                  unset = lib.mkOption {
+                    type = lib.types.bool;
+                  };
+                };
+              };
+            };
+          }
+          {
+            foo.default = lib.mkDefault true;
+          }
+          {
+            foo.normal = false;
+          }
+        ]
+      );
+    in
+    {
+      inherit evaluated;
+      expr = slib.getPrios {
+        options = evaluated.options;
+      };
+      expected = {
+        foo = {
+          __prio = 100;
+          normal.__prio = 100; # Set via other module
+          default.__prio = 1000;
+          optionDefault.__prio = 1500;
+          unset.__prio = 9999;
+        };
+      };
+    };
+
+  test_submoduleWith =
+    let
+      evaluated = (
+        eval [
+          {
+            options.foo = lib.mkOption {
+              type = lib.types.submoduleWith {
+                modules = [
+                  {
+                    options.bar = lib.mkOption {
+                      type = lib.types.bool;
+                    };
+                  }
+                ];
+              };
+            };
+          }
+          {
+            foo.bar = false;
+          }
+        ]
+      );
+    in
+    {
+      inherit evaluated;
+      expr = slib.getPrios {
+        options = evaluated.options;
+      };
+      expected = {
+        foo = {
+          __prio = 100;
+          bar.__prio = 100; # Set via other module
+        };
+      };
+    };
+
   # TODO(@hsjobeki): Cover this edge case
   # test_freeform =
   #   let
