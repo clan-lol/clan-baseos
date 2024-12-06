@@ -40,7 +40,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
     }
     if (!info?.deploy?.targetHost) {
       toast.error(
-        "Machine does not have a target host. Specify where the machine should be deployed."
+        "Machine does not have a target host. Specify where the machine should be deployed.",
       );
       return;
     }
@@ -63,7 +63,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
         loading: "Installing...",
         success: "Installed",
         error: "Failed to install",
-      }
+      },
     );
     setInstalling(false);
   };
@@ -80,7 +80,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
     }
     if (!info?.deploy.targetHost) {
       toast.error(
-        "Machine does not have a target host. Specify where the machine should be deployed."
+        "Machine does not have a target host. Specify where the machine should be deployed.",
       );
       return;
     }
@@ -101,7 +101,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
         loading: "Updating...",
         success: "Updated",
         error: "Failed to update",
-      }
+      },
     );
     setUpdating(false);
   };

@@ -23,11 +23,9 @@ let
         prio = {
           __prio = opt.highestPrio;
         };
-        subOptions = opt.type.getSubOptions opt.loc;
+        filteredSubOptions = filterOptions (opt.type.getSubOptions opt.loc);
 
-        attrDefinitions = (lib.modules.mergeAttrDefinitionsWithPrio opt);
-        zipDefs = builtins.zipAttrsWith (_ns: vs: vs);
-        defs = zipDefs opt.definitions;
+        zipDefs = builtins.zipAttrsWith (_: vs: vs);
 
         prioPerValue =
           { type, defs }:
@@ -35,7 +33,7 @@ let
             attrName: prioSet:
             let
               # Evaluate the submodule
-              options = filterOptions subOptions;
+              options = filteredSubOptions;
               modules = (
                 [
                   { inherit options; }
@@ -48,7 +46,6 @@ let
             in
             (lib.optionalAttrs (prioSet ? highestPrio) {
               __prio = prioSet.highestPrio;
-              # inherit defs options;
             })
             // (
               if type.nestedTypes.elemType.name == "submodule" then
@@ -64,21 +61,30 @@ let
             )
           );
 
-        attributePrios = prioPerValue {
-          type = opt.type;
-          inherit defs;
-        } attrDefinitions;
+        submodulePrios =
+          let
+            options = filteredSubOptions;
+            modules = (
+              [
+                { inherit options; }
+              ]
+              ++ opt.definitions
+            );
+            submoduleEval = lib.evalModules {
+              inherit modules;
+            };
+          in
+          getPrios { options = filterOptions submoduleEval.options; };
+
       in
       if opt ? type && opt.type.name == "submodule" then
-        prio // (getPrios { options = subOptions; })
+        (prio) // submodulePrios
       else if opt ? type && opt.type.name == "attrsOf" then
-        #   prio // attributePrios
-        # else if
-        #   opt ? type && opt.type.name == "attrsOf" && opt.type.nestedTypes.elemType.name == "attrsOf"
-        # then
-        #   prio // attributePrios
-        # else if opt ? type && opt.type.name == "attrsOf" then
-        prio // attributePrios
+        prio // (
+                  prioPerValue {
+          type = opt.type;
+          defs = zipDefs opt.definitions;
+        } (lib.modules.mergeAttrDefinitionsWithPrio opt))
       else if opt ? type && opt._type == "option" then
         prio
       else
