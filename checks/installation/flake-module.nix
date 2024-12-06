@@ -1,4 +1,9 @@
-{ self, lib, ... }:
+{
+  self,
+  inputs,
+  lib,
+  ...
+}:
 {
   clan.machines.test-install-machine = {
     clan.core.networking.targetHost = "test-install-machine";
@@ -42,6 +47,7 @@
         pkgs.nixos-anywhere
       ] ++ builtins.map (i: i.outPath) (builtins.attrValues self.inputs);
       closureInfo = pkgs.closureInfo { rootPaths = dependencies; };
+      qemu-common = import "${inputs.nixpkgs}/nixos/lib/qemu-common.nix" { inherit lib pkgs; };
     in
     {
       checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux) {
@@ -86,7 +92,7 @@
 
           testScript = ''
             def create_test_machine(oldmachine=None, args={}): # taken from <nixpkgs/nixos/tests/installer.nix>
-                startCommand = "${pkgs.qemu_test}/bin/qemu-kvm"
+                startCommand = "${qemu-common.qemuBinary pkgs.qemu_test}"
                 startCommand += " -cpu max -m 1024 -virtfs local,path=/nix/store,security_model=none,mount_tag=nix-store"
                 startCommand += f' -drive file={oldmachine.state_dir}/empty0.qcow2,id=drive1,if=none,index=1,werror=report'
                 startCommand += ' -device virtio-blk-pci,drive=drive1'
