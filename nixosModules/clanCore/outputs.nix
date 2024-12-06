@@ -61,12 +61,6 @@
             json metadata about the vm
           '';
         };
-        iso = lib.mkOption {
-          type = lib.types.path;
-          description = ''
-            A generated iso of the machine for the flash command
-          '';
-        };
       };
     };
     description = ''

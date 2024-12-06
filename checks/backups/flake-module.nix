@@ -135,7 +135,10 @@
   perSystem =
     { pkgs, ... }:
     {
-      checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux) {
+      # Needs investigation on aarch64-linux
+      # vm-test-run-test-backups> qemu-kvm: No machine specified, and there is no default
+      # vm-test-run-test-backups> Use -machine help to list supported machines
+      checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux && pkgs.stdenv.hostPlatform.system != "aarch64-linux") {
         test-backups = (import ../lib/test-base.nix) {
           name = "test-backups";
           nodes.machine = {
