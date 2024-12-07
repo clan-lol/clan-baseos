@@ -1,4 +1,5 @@
 import contextlib
+import platform
 import socket
 import subprocess
 import time
@@ -11,6 +12,9 @@ VMADDR_CID_HYPERVISOR = 2
 
 
 def test_vsock_port(port: int) -> bool:
+    if platform.system() != "Linux":
+        msg = "vsock is only supported on Linux"
+        raise NotImplementedError(msg)
     try:
         s = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)
         s.connect((VMADDR_CID_HYPERVISOR, port))
