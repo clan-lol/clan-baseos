@@ -196,6 +196,7 @@ def deploy_machine(machines: list[Machine]) -> None:
                 machine,
             )
         runtime.join_all()
+        runtime.check_all()
 
 
 def update_command(args: argparse.Namespace) -> None:
