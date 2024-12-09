@@ -17,6 +17,7 @@ from enum import Enum
 from pathlib import Path
 from typing import IO, Any
 
+from clan_cli.async_run import get_async_ctx, is_async_cancelled
 from clan_cli.colors import Color
 from clan_cli.custom_logger import print_trace
 from clan_cli.errors import ClanCmdError, ClanError, CmdOut, indent_command
@@ -87,7 +88,8 @@ def handle_io(
     stdout_extra = {}
     stderr_extra = {}
     if prefix:
-        stdout_extra["command_prefix"] = stderr_extra["command_prefix"] = prefix
+        stdout_extra["command_prefix"] = prefix
+        stderr_extra["command_prefix"] = prefix
     if msg_color and msg_color.stderr:
         stdout_extra["color"] = msg_color.stderr.value
     if msg_color and msg_color.stdout:
@@ -100,6 +102,13 @@ def handle_io(
             msg = f"Command timed out after {timeout} seconds"
             description = prefix
             raise ClanCmdTimeoutError(msg=msg, description=description, timeout=timeout)
+
+        # Check if the command has been cancelled
+        if is_async_cancelled():
+            cmdlog.warning("Command cancelled", extra=stderr_extra)
+
+            # Terminate process
+            break
 
         # Wait for data to be available
         readlist, writelist, _ = select.select(rlist, wlist, [], 0.1)
@@ -116,7 +125,7 @@ def handle_io(
 
         # If Log.STDOUT is set, log the stdout output
         if ret and log in [Log.STDOUT, Log.BOTH]:
-            lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
+            lines = ret.decode("utf-8", "replace").rstrip("\n").rstrip().split("\n")
             for line in lines:
                 cmdlog.info(line, extra=stdout_extra)
 
@@ -133,7 +142,7 @@ def handle_io(
 
         # If Log.STDERR is set, log the stderr output
         if ret and log in [Log.STDERR, Log.BOTH]:
-            lines = ret.decode("utf-8", "replace").rstrip("\n").split("\n")
+            lines = ret.decode("utf-8", "replace").rstrip("\n").rstrip().split("\n")
             for line in lines:
                 cmdlog.info(line, extra=stderr_extra)
 
@@ -273,6 +282,17 @@ def run(
     if options.cwd is None:
         options.cwd = Path.cwd()
 
+    async_ctx = get_async_ctx()
+    # Fill in the options from the thread-local data
+    # if they are not set in the options
+    if async_ctx:
+        if options.prefix is None:
+            options.prefix = async_ctx.prefix
+        if options.stdout is None:
+            options.stdout = async_ctx.stdout
+        if options.stderr is None:
+            options.stderr = async_ctx.stderr
+
     if options.input:
         if any(not ch.isprintable() for ch in options.input.decode("ascii", "replace")):
             filtered_input = "<<binary_blob>>"
@@ -318,7 +338,8 @@ def run(
             stdout=options.stdout,
             stderr=options.stderr,
         )
-        process.wait()
+        if not is_async_cancelled():
+            process.wait()
 
     global TIME_TABLE
     if TIME_TABLE:
@@ -336,7 +357,9 @@ def run(
     )
 
     if options.check and process.returncode != 0:
-        raise ClanCmdError(cmd_out)
+        err = ClanCmdError(cmd_out)
+        err.msg = "Command has been cancelled"
+        raise err
 
     return cmd_out
 
@@ -359,3 +382,6 @@ def run_no_stdout(
         cmd,
         opts,
     )
+
+
+# type: ignore

@@ -6,6 +6,7 @@ import shlex
 import sys
 
 from clan_cli.api import API
+from clan_cli.async_run import AsyncContext, AsyncOpts, AsyncRuntime, is_async_cancelled
 from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import MsgColor, RunOpts, run
 from clan_cli.colors import AnsiColor
@@ -24,7 +25,6 @@ from clan_cli.vars.generate import generate_vars
 from clan_cli.vars.upload import upload_secret_vars
 
 from .inventory import get_all_machines, get_selected_machines
-from .machine_group import MachineGroup
 
 log = logging.getLogger(__name__)
 
@@ -113,10 +113,10 @@ def update_machines(base_path: str, machines: list[InventoryMachine]) -> None:
         # m.override_build_host = machine.deploy.buildHost
         group_machines.append(m)
 
-    deploy_machine(MachineGroup(group_machines))
+    deploy_machine(group_machines)
 
 
-def deploy_machine(machines: MachineGroup) -> None:
+def deploy_machine(machines: list[Machine]) -> None:
     """
     Deploy to all hosts in parallel
     """
@@ -163,11 +163,9 @@ def deploy_machine(machines: MachineGroup) -> None:
             RunOpts(check=False, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)),
             extra_env=env,
         )
-        ret = host.run(
-            switch_cmd,
-            RunOpts(check=False, msg_color=MsgColor(stderr=AnsiColor.DEFAULT)),
-            extra_env=env,
-        )
+
+        if is_async_cancelled():
+            return
 
         # if the machine is mobile, we retry to deploy with the mobile workaround method
         is_mobile = machine.deployment.get("nixosMobileWorkaround", False)
@@ -187,62 +185,72 @@ def deploy_machine(machines: MachineGroup) -> None:
                 extra_env=env,
             )
 
-    if len(machines.group.hosts) > 1:
-        machines.run_function(deploy)
-    else:
-        deploy(machines.machines[0])
+    with AsyncRuntime() as runtime:
+        for machine in machines:
+            machine.info(f"Updating {machine.name}")
+            runtime.async_run(
+                AsyncOpts(
+                    tid=machine.name, async_ctx=AsyncContext(prefix=machine.name)
+                ),
+                deploy,
+                machine,
+            )
+        runtime.join_all()
 
 
-def update(args: argparse.Namespace) -> None:
-    if args.flake is None:
-        msg = "Could not find clan flake toplevel directory"
-        raise ClanError(msg)
-    machines = []
-    if len(args.machines) == 1 and args.target_host is not None:
-        machine = Machine(
-            name=args.machines[0], flake=args.flake, nix_options=args.option
-        )
-        machine.override_target_host = args.target_host
-        machine.override_build_host = args.build_host
-        machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
-        machines.append(machine)
+def update_command(args: argparse.Namespace) -> None:
+    try:
+        if args.flake is None:
+            msg = "Could not find clan flake toplevel directory"
+            raise ClanError(msg)
+        machines = []
+        if len(args.machines) == 1 and args.target_host is not None:
+            machine = Machine(
+                name=args.machines[0], flake=args.flake, nix_options=args.option
+            )
+            machine.override_target_host = args.target_host
+            machine.override_build_host = args.build_host
+            machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
+            machines.append(machine)
 
-    elif args.target_host is not None:
-        print("target host can only be specified for a single machine")
-        exit(1)
-    else:
-        if len(args.machines) == 0:
-            ignored_machines = []
-            for machine in get_all_machines(args.flake, args.option):
-                if machine.deployment.get("requireExplicitUpdate", False):
-                    continue
-                try:
-                    machine.build_host  # noqa: B018
-                except ClanError:  # check if we have a build host set
-                    ignored_machines.append(machine)
-                    continue
-                machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
-                machine.override_build_host = args.build_host
-                machines.append(machine)
-
-            if not machines and ignored_machines != []:
-                print(
-                    "WARNING: No machines to update."
-                    "The following defined machines were ignored because they"
-                    "do not have the `clan.core.networking.targetHost` nixos option set:",
-                    file=sys.stderr,
-                )
-                for machine in ignored_machines:
-                    print(machine, file=sys.stderr)
-
+        elif args.target_host is not None:
+            print("target host can only be specified for a single machine")
+            exit(1)
         else:
-            machines = get_selected_machines(args.flake, args.option, args.machines)
-            for machine in machines:
-                machine.override_build_host = args.build_host
-                machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
+            if len(args.machines) == 0:
+                ignored_machines = []
+                for machine in get_all_machines(args.flake, args.option):
+                    if machine.deployment.get("requireExplicitUpdate", False):
+                        continue
+                    try:
+                        machine.build_host  # noqa: B018
+                    except ClanError:  # check if we have a build host set
+                        ignored_machines.append(machine)
+                        continue
+                    machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
+                    machine.override_build_host = args.build_host
+                    machines.append(machine)
 
-    host_group = MachineGroup(machines)
-    deploy_machine(host_group)
+                if not machines and ignored_machines != []:
+                    print(
+                        "WARNING: No machines to update."
+                        "The following defined machines were ignored because they"
+                        "do not have the `clan.core.networking.targetHost` nixos option set:",
+                        file=sys.stderr,
+                    )
+                    for machine in ignored_machines:
+                        print(machine, file=sys.stderr)
+
+            else:
+                machines = get_selected_machines(args.flake, args.option, args.machines)
+                for machine in machines:
+                    machine.override_build_host = args.build_host
+                    machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
+
+        deploy_machine(machines)
+    except KeyboardInterrupt:
+        log.warning("Interrupted by user")
+        sys.exit(1)
 
 
 def register_update_parser(parser: argparse.ArgumentParser) -> None:
@@ -272,4 +280,4 @@ def register_update_parser(parser: argparse.ArgumentParser) -> None:
         type=str,
         help="Address of the machine to build the flake, in the format of user@host:1234.",
     )
-    parser.set_defaults(func=update)
+    parser.set_defaults(func=update_command)

@@ -49,7 +49,7 @@ def nix_add_to_gcroots(nix_path: Path, dest: Path) -> None:
 
 
 def nix_config() -> dict[str, Any]:
-    cmd = nix_command(["show-config", "--json"])
+    cmd = nix_command(["config", "show", "--json"])
     proc = run_no_stdout(cmd)
     data = json.loads(proc.stdout)
     config = {}

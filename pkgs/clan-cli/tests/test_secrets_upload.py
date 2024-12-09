@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import pytest
-from clan_cli.ssh.host_group import HostGroup
+from clan_cli.ssh.host import Host
 from fixtures_flakes import FlakeForTest
 from helpers import cli
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 def test_secrets_upload(
     monkeypatch: pytest.MonkeyPatch,
     test_flake_with_core: FlakeForTest,
-    host_group: HostGroup,
+    hosts: list[Host],
     age_keys: list["KeyPair"],
 ) -> None:
     monkeypatch.chdir(test_flake_with_core.path)
@@ -48,7 +48,7 @@ def test_secrets_upload(
     )
 
     flake = test_flake_with_core.path.joinpath("flake.nix")
-    host = host_group.hosts[0]
+    host = hosts[0]
     addr = f"{host.user}@{host.host}:{host.port}?StrictHostKeyChecking=no&UserKnownHostsFile=/dev/null&IdentityFile={host.key}"
     new_text = flake.read_text().replace("__CLAN_TARGET_ADDRESS__", addr)
 
