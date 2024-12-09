@@ -1,8 +1,8 @@
 import pytest
-from clan_cli.cmd import Log, RunOpts
+from clan_cli.async_run import AsyncRuntime
+from clan_cli.cmd import ClanCmdTimeoutError, Log, RunOpts
 from clan_cli.errors import ClanError, CmdOut
 from clan_cli.ssh.host import Host
-from clan_cli.ssh.host_group import HostGroup
 from clan_cli.ssh.host_key import HostKeyCheck
 from clan_cli.ssh.parse import parse_deployment_address
 
@@ -20,52 +20,75 @@ def test_parse_ipv6() -> None:
         host = parse_deployment_address("foo", "fe80::1%eth0", HostKeyCheck.STRICT)
 
 
-def test_run(host_group: HostGroup) -> None:
-    proc = host_group.run_local(["echo", "hello"], RunOpts(log=Log.STDERR))
-    assert proc[0].result.stdout == "hello\n"
+def test_run(hosts: list[Host], runtime: AsyncRuntime) -> None:
+    for host in hosts:
+        proc = runtime.async_run(
+            None, host.run_local, ["echo", "hello"], RunOpts(log=Log.STDERR)
+        )
+    assert proc.wait().result.stdout == "hello\n"
 
 
-def test_run_environment(host_group: HostGroup) -> None:
-    p1 = host_group.run(
-        ["echo $env_var"],
-        RunOpts(shell=True, log=Log.STDERR),
-        extra_env={"env_var": "true"},
-    )
-    assert p1[0].result.stdout == "true\n"
-    p2 = host_group.run(["env"], RunOpts(log=Log.STDERR), extra_env={"env_var": "true"})
-    assert "env_var=true" in p2[0].result.stdout
+def test_run_environment(hosts: list[Host], runtime: AsyncRuntime) -> None:
+    for host in hosts:
+        proc = runtime.async_run(
+            None,
+            host.run_local,
+            ["echo $env_var"],
+            RunOpts(shell=True, log=Log.STDERR),
+            extra_env={"env_var": "true"},
+        )
+    assert proc.wait().result.stdout == "true\n"
+
+    for host in hosts:
+        p2 = runtime.async_run(
+            None,
+            host.run_local,
+            ["env"],
+            RunOpts(log=Log.STDERR),
+            extra_env={"env_var": "true"},
+        )
+    assert "env_var=true" in p2.wait().result.stdout
 
 
-def test_run_no_shell(host_group: HostGroup) -> None:
-    proc = host_group.run(["echo", "$hello"], RunOpts(log=Log.STDERR))
-    assert proc[0].result.stdout == "$hello\n"
+def test_run_no_shell(hosts: list[Host], runtime: AsyncRuntime) -> None:
+    for host in hosts:
+        proc = runtime.async_run(
+            None, host.run_local, ["echo", "hello"], RunOpts(log=Log.STDERR)
+        )
+    assert proc.wait().result.stdout == "hello\n"
 
 
-def test_run_function(host_group: HostGroup) -> None:
+def test_run_function(hosts: list[Host], runtime: AsyncRuntime) -> None:
     def some_func(h: Host) -> bool:
         p = h.run(["echo", "hello"])
         return p.stdout == "hello\n"
 
-    res = host_group.run_function(some_func)
-    assert res[0].result
+    for host in hosts:
+        proc = runtime.async_run(None, some_func, host)
+    assert proc.wait().result
 
 
-def test_timeout(host_group: HostGroup) -> None:
+def test_timeout(hosts: list[Host], runtime: AsyncRuntime) -> None:
+    for host in hosts:
+        proc = runtime.async_run(
+            None, host.run_local, ["sleep", "10"], RunOpts(timeout=0.01)
+        )
+    error = proc.wait().error
+    assert isinstance(error, ClanCmdTimeoutError)
+
+
+def test_run_exception(hosts: list[Host], runtime: AsyncRuntime) -> None:
+    for host in hosts:
+        proc = runtime.async_run(
+            None, host.run_local, ["exit 1"], RunOpts(shell=True, check=False)
+        )
+    assert proc.wait().result.returncode == 1
+
     try:
-        host_group.run_local(["sleep", "10"], RunOpts(timeout=0.01))
-    except Exception:
-        pass
-    else:
-        msg = "should have raised TimeoutExpired"
-        raise AssertionError(msg)
-
-
-def test_run_exception(host_group: HostGroup) -> None:
-    r = host_group.run(["exit 1"], RunOpts(check=False, shell=True))
-    assert r[0].result.returncode == 1
-
-    try:
-        host_group.run(["exit 1"], RunOpts(shell=True))
+        for host in hosts:
+            runtime.async_run(None, host.run_local, ["exit 1"], RunOpts(shell=True))
+        runtime.join_all()
+        runtime.check_all()
     except Exception:
         pass
     else:
@@ -73,12 +96,15 @@ def test_run_exception(host_group: HostGroup) -> None:
         raise AssertionError(msg)
 
 
-def test_run_function_exception(host_group: HostGroup) -> None:
+def test_run_function_exception(hosts: list[Host], runtime: AsyncRuntime) -> None:
     def some_func(h: Host) -> CmdOut:
         return h.run_local(["exit 1"], RunOpts(shell=True))
 
     try:
-        host_group.run_function(some_func)
+        for host in hosts:
+            runtime.async_run(None, some_func, host)
+        runtime.join_all()
+        runtime.check_all()
     except Exception:
         pass
     else:

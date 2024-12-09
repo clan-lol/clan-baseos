@@ -7,7 +7,7 @@ from clan_cli.facts.secret_modules.password_store import SecretStore
 from clan_cli.machines.facts import machine_get_fact
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
-from clan_cli.ssh.host_group import HostGroup
+from clan_cli.ssh.host import Host
 from fixtures_flakes import ClanFlake
 from helpers import cli
 
@@ -17,7 +17,7 @@ def test_upload_secret(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
     temporary_home: Path,
-    host_group: HostGroup,
+    hosts: list[Host],
 ) -> None:
     flake.clan_modules = [
         "root-password",
@@ -27,7 +27,7 @@ def test_upload_secret(
     config = flake.machines["vm1"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     config["clan"]["core"]["networking"]["zerotier"]["controller"]["enable"] = True
-    host = host_group.hosts[0]
+    host = hosts[0]
     addr = f"{host.user}@{host.host}:{host.port}?StrictHostKeyChecking=no&UserKnownHostsFile=/dev/null&IdentityFile={host.key}"
     config["clan"]["core"]["networking"]["targetHost"] = addr
     config["clan"]["user-password"]["user"] = "alice"

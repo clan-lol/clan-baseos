@@ -120,6 +120,7 @@ def test_all_dataclasses() -> None:
     excludes = [
         "api/__init__.py",
         "cmd.py",  # We don't want the UI to have access to the cmd module anyway
+        "async_run.py",  # We don't want the UI to have access to the async_run module anyway
     ]
 
     cli_path = Path("clan_cli").resolve()
