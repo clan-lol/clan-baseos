@@ -204,12 +204,10 @@ in
 
         if [[ -e "${current}" ]]; then
           (
-            ${
-              lib.optionalString (db.restore.stopOnRestore != [ ]) ''
-                systemctl stop ${builtins.toString db.restore.stopOnRestore}
-                trap "systemctl start ${builtins.toString db.restore.stopOnRestore}" EXIT
-              ''
-            }
+            ${lib.optionalString (db.restore.stopOnRestore != [ ]) ''
+              systemctl stop ${builtins.toString db.restore.stopOnRestore}
+              trap "systemctl start ${builtins.toString db.restore.stopOnRestore}" EXIT
+            ''}
 
             mkdir -p "${folder}"
             if runuser -u postgres -- psql -d postgres -c "SELECT 1 FROM pg_database WHERE datname = '${db.name}'" | grep -q 1; then
