@@ -100,13 +100,12 @@ interface RndThumbnailProps {
   height?: number;
 }
 export const RndThumbnail = (props: RndThumbnailProps) => {
-  const { name } = props;
-  const seed = Array.from(name).reduce(
-    (acc, char) => acc + char.charCodeAt(0),
-    0,
-  ); // Seed from name
-  const imageSrc = generatePatternedImage(seed, props.width, props.height);
-  return <img src={imageSrc} alt={name} />;
+  const seed = () =>
+    Array.from(props.name).reduce((acc, char) => acc + char.charCodeAt(0), 0); // Seed from name
+  const imageSrc = () =>
+    generatePatternedImage(seed(), props.width, props.height);
+
+  return <img src={imageSrc()} alt={props.name} />;
 };
 
 export const RndThumbnailShow = () => {
