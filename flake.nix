@@ -45,13 +45,15 @@
           # TODO: migrate this @davHau
           # ./docs/flake-module
           ./docs/nix/flake-module.nix
-          ./formatter.nix
           ./lib/flake-module.nix
           ./nixosModules/flake-module.nix
           ./nixosModules/clanCore/vars/flake-module.nix
           ./pkgs/flake-module.nix
           ./templates/flake-module.nix
-        ];
+          # Make treefmt-nix optional
+          # This only works if you set inputs.clan-core.inputs.treefmt-nix.follows
+          # to a non-empty input that doesn't export a flakeModule
+        ] ++ inputs.nixpkgs.lib.optional (inputs.treefmt-nix ? flakeModule) ./formatter.nix;
       }
     );
 }
