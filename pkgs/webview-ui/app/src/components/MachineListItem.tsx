@@ -168,7 +168,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
           <div>
             <Menu
               popoverid={`menu-${props.name}`}
-              label={<Icon icon={"Expand"} />}
+              label={<Icon icon={"More"} />}
             >
               <ul class="menu z-[1] w-52 rounded-box bg-base-100 p-2 shadow">
                 <li>
