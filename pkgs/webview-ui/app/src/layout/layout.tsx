@@ -8,7 +8,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
   createEffect(() => {
     console.log(
       "empty ClanList, redirect to welcome page",
-      clanList().length === 0
+      clanList().length === 0,
     );
     if (clanList().length === 0) {
       navigate("/welcome");

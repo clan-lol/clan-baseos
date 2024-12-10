@@ -11,7 +11,7 @@ export const MachineAvatar = (props: AvatarProps) => {
         <div
           class={cx(
             "rounded-lg border p-2 bg-def-1 border-def-3 size-36",
-            props.class
+            props.class,
           )}
         >
           <RndThumbnail name={props.name || ""} />

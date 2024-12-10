@@ -63,7 +63,7 @@ const InstallMachine = (props: InstallMachineProps) => {
     }
 
     const loading_toast = toast.loading(
-      "Installing machine. Grab coffee (15min)..."
+      "Installing machine. Grab coffee (15min)...",
     );
     const r = await callApi("install_machine", {
       opts: {
@@ -246,13 +246,13 @@ const MachineForm = (props: MachineDetailsProps) => {
         ...values.machine,
         // TODO: Remove this workaround
         tags: Array.from(
-          values.machine.tags || props.initialData.machine.tags || []
+          values.machine.tags || props.initialData.machine.tags || [],
         ),
       },
     });
     if (machine_response.status === "error") {
       toast.error(
-        `Failed to set machine: ${machine_response.errors[0].message}`
+        `Failed to set machine: ${machine_response.errors[0].message}`,
       );
     }
     if (machine_response.status === "success") {
@@ -438,7 +438,7 @@ const MachineForm = (props: MachineDetailsProps) => {
               // disabled={!online()}
               onClick={() => {
                 const modal = document.getElementById(
-                  "install_modal"
+                  "install_modal",
                 ) as HTMLDialogElement | null;
                 modal?.showModal();
               }}
@@ -544,7 +544,7 @@ function WifiModule(props: MachineWifiProps) {
   });
 
   const [nets, setNets] = createSignal<1[]>(
-    new Array(props.initialData.length || 1).fill(1)
+    new Array(props.initialData.length || 1).fill(1),
   );
 
   const handleSubmit = async (values: WifiForm) => {
@@ -555,7 +555,7 @@ function WifiModule(props: MachineWifiProps) {
           ...acc,
           [curr.ssid || ""]: { ssid: curr.ssid, password: curr.password },
         }),
-        {}
+        {},
       );
 
     console.log("submitting", values, networks);
