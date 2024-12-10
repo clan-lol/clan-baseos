@@ -94,7 +94,7 @@ After writing the installer to the USB drive, use it to boot the target machine.
 
 5. Select `NixOS` to boot into the clan installer
 
-6. The installer will display an IP address and a root password, which you can use to connect via SSH.  
+6. The installer will display an IP address and a root password, which you can use to connect via SSH.
     Alternatively you can also use the displayed QR code.
 
 7. Set your keyboard language (i.e. `de` for German keyboards, default is English). Important for writing passwords correctly.
@@ -139,7 +139,7 @@ After writing the installer to the USB drive, use it to boot the target machine.
 
 ---
 
-# Whats next?
+# What's next?
 
 - Deploy a clan machine-configuration on your prepared machine
 
