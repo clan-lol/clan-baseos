@@ -4,6 +4,7 @@ import argparse
 from clan_cli.hyperlink import help_hyperlink
 
 from .check import register_check_parser
+from .fix import register_fix_parser
 from .generate import register_generate_parser
 from .get import register_get_parser
 from .keygen import register_keygen_parser
@@ -52,6 +53,23 @@ Examples:
     )
     register_check_parser(check_parser)
 
+    fix_parser = subparser.add_parser(
+        "fix",
+        help="fix inconsistencies in the vars store",
+        epilog=(
+            """
+This subcommand allows fixing of inconsistencies in the vars store.
+
+Examples:
+
+  $ clan vars fix [MACHINE]
+  Will fix vars for the specified machine.
+        """
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    register_fix_parser(fix_parser)
+
     list_parser = subparser.add_parser(
         "list",
         help="list all vars",
@@ -60,7 +78,7 @@ Examples:
 This subcommand allows listing all non-secret vars for a specific machine.
 
 The resulting list will be a json string with the name of the variable as its key
-and the fact itself as it's value.
+and the variable itself as it's value.
 
 This is how an example output might look like:
 ```

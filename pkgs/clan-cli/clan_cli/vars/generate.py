@@ -392,58 +392,29 @@ def _check_can_migrate(
     )
 
 
-def ensure_consistent_state(
-    machine: "Machine",
-    generator_name: str | None,
-    fix: bool,
-) -> None:
-    """
-    Apply local updates to secrets like re-encrypting with missing keys
-        when new users were added.
-    """
-
-    if generator_name is None:
-        generators = machine.vars_generators
-    else:
-        for generator in machine.vars_generators:
-            if generator_name == generator.name:
-                generators = [generator]
-                break
-        else:
-            err_msg = (
-                f"Could not find generator {generator_name} in machine {machine.name}"
-            )
-            raise ClanError(err_msg)
-    outdated = []
-    for generator in generators:
-        for file in generator.files:
-            if file.secret and machine.secret_vars_store.exists(generator, file.name):
-                if file.deploy:
-                    machine.secret_vars_store.ensure_machine_has_access(
-                        generator, file.name
-                    )
-                needs_update, msg = machine.secret_vars_store.needs_fix(
-                    generator, file.name
-                )
-                if needs_update:
-                    outdated.append((generator_name, file.name, msg))
-    if not fix and outdated:
-        msg = (
-            "The local state of some secret vars is inconsistent and needs to be updated.\n"
-            "Rerun 'clan vars generate' passing '--fix' to apply the necessary changes."
-            "Problems to fix:\n"
-            "\n".join(o[2] for o in outdated if o[2])
-        )
-        raise ClanError(msg)
-
-
 def generate_vars_for_machine(
     machine: "Machine",
     generator_name: str | None,
     regenerate: bool,
-    fix: bool,
 ) -> bool:
-    ensure_consistent_state(machine, generator_name, fix)
+    _generator = None
+    if generator_name:
+        for generator in machine.vars_generators:
+            if generator.name == generator_name:
+                _generator = generator
+                break
+
+    pub_healtcheck_msg = machine.public_vars_store.health_check(_generator)
+    sec_healtcheck_msg = machine.secret_vars_store.health_check(_generator)
+
+    if pub_healtcheck_msg or sec_healtcheck_msg:
+        msg = f"Health check failed for machine {machine.name}:\n"
+        if pub_healtcheck_msg:
+            msg += f"Public vars store: {pub_healtcheck_msg}\n"
+        if sec_healtcheck_msg:
+            msg += f"Secret vars store: {sec_healtcheck_msg}"
+        raise ClanError(msg)
+
     closure = get_closure(machine, generator_name, regenerate)
     if len(closure) == 0:
         return False
@@ -467,14 +438,13 @@ def generate_vars(
     machines: list["Machine"],
     generator_name: str | None = None,
     regenerate: bool = False,
-    fix: bool = False,
 ) -> bool:
     was_regenerated = False
     for machine in machines:
         errors = []
         try:
             was_regenerated |= generate_vars_for_machine(
-                machine, generator_name, regenerate, fix
+                machine, generator_name, regenerate
             )
             machine.flush_caches()
         except Exception as exc:
@@ -502,7 +472,7 @@ def generate_command(args: argparse.Namespace) -> None:
         machines = get_all_machines(args.flake, args.option)
     else:
         machines = get_selected_machines(args.flake, args.option, args.machines)
-    generate_vars(machines, args.generator, args.regenerate, args.fix)
+    generate_vars(machines, args.generator, args.regenerate)
 
 
 def register_generate_parser(parser: argparse.ArgumentParser) -> None:
@@ -530,13 +500,6 @@ def register_generate_parser(parser: argparse.ArgumentParser) -> None:
         action=argparse.BooleanOptionalAction,
         help="whether to regenerate facts for the specified machine",
         default=None,
-    )
-
-    parser.add_argument(
-        "--fix",
-        action=argparse.BooleanOptionalAction,
-        help="whether to fix local state inconsistencies, for example if a secret is not encrypted with the correct keys",
-        default=False,
     )
 
     parser.set_defaults(func=generate_command)

@@ -211,7 +211,7 @@ def test_generate_secret_var_sops_with_default_group(
     with pytest.raises(ClanError):
         cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     # apply fix
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine", "--fix"])
+    cli.run(["vars", "fix", "--flake", str(flake.path), "my_machine"])
     # check if new user can access the secret
     monkeypatch.setenv("USER", "uschi")
     assert sops_store.user_has_access(
@@ -765,7 +765,6 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=False,
-            fix=False,
         )
 
     assert "Updated var my_generator/my_value" in caplog.text
@@ -779,7 +778,6 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=True,
-            fix=False,
         )
     assert "Updated var my_generator/my_value" in caplog.text
     assert "old: world" in caplog.text
@@ -791,7 +789,6 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_generator",
             regenerate=True,
-            fix=False,
         )
     assert "Updated" not in caplog.text
     assert "hello" in caplog.text
@@ -801,7 +798,6 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_secret_generator",
             regenerate=False,
-            fix=False,
         )
     assert "Updated secret var my_secret_generator/my_secret" in caplog.text
     assert "hello" not in caplog.text
@@ -817,7 +813,6 @@ def test_stdout_of_generate(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             "my_secret_generator",
             regenerate=True,
-            fix=False,
         )
     assert "Updated secret var my_secret_generator/my_secret" in caplog.text
     assert "world" not in caplog.text
@@ -919,7 +914,6 @@ def test_fails_when_files_are_left_from_other_backend(
             Machine(name="my_machine", flake=FlakeId(str(flake.path))),
             generator,
             regenerate=False,
-            fix=False,
         )
     my_secret_generator["files"]["my_secret"]["secret"] = False
     my_value_generator["files"]["my_value"]["secret"] = True
@@ -931,7 +925,6 @@ def test_fails_when_files_are_left_from_other_backend(
                 Machine(name="my_machine", flake=FlakeId(str(flake.path))),
                 generator,
                 regenerate=False,
-                fix=False,
             )
 
 
