@@ -1,4 +1,5 @@
 import argparse
+import logging
 import shutil
 
 from clan_cli.api import API
@@ -8,12 +9,18 @@ from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanError
 from clan_cli.inventory import get_inventory, set_inventory
 
+log = logging.getLogger(__name__)
+
 
 @API.register
 def delete_machine(flake: FlakeId, name: str) -> None:
     inventory = get_inventory(flake.path)
 
-    machine = inventory.get("machines", {}).pop(name, None)
+    if "machines" not in inventory:
+        msg = "No machines in inventory"
+        raise ClanError(msg)
+
+    machine = inventory["machines"].pop(name, None)
     if machine is None:
         msg = f"Machine {name} does not exist"
         raise ClanError(msg)
