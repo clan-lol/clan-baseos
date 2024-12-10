@@ -124,6 +124,9 @@ class GObjApi:
                 msg = f"Overwritten method '{m_name}' has different signature than the implementation"
                 raise ClanError(msg)
 
+    def has_obj(self, fn_name: str) -> bool:
+        return fn_name in self._obj_registry or fn_name in self._methods
+
     def get_obj(self, fn_name: str) -> type[ImplFunc]:
         result = self._obj_registry.get(fn_name, None)
         if result is not None:
