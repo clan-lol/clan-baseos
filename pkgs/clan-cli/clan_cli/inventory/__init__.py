@@ -168,15 +168,31 @@ def calc_patches(
     update_flat = flatten_data(update)
     all_values_flat = flatten_data(all_values)
 
+    def is_writeable_key(key: str) -> bool:
+        """
+        Recursively check if a key is writeable.
+        key "machines.machine1.deploy.targetHost" is specified but writeability is only defined for "machines"
+        We pop the last key and check if the parent key is writeable/non-writeable.
+        """
+        remaining = key.split(".")[:-1]
+        while remaining:
+            if ".".join(remaining) in writeables["writeable"]:
+                return True
+            if ".".join(remaining) in writeables["non_writeable"]:
+                return False
+
+            remaining.pop()
+        raise ClanError(f"Cannot determine writeability for key '{key}'")
+
     patchset = {}
     for update_key, update_data in update_flat.items():
-        if update_key in writeables["non_writeable"]:
+        if not is_writeable_key(update_key):
             if update_data != all_values_flat.get(update_key):
                 msg = f"Key '{update_key}' is not writeable."
                 raise ClanError(msg)
             continue
 
-        if update_key in writeables["writeable"]:
+        if is_writeable_key(update_key):
             prev_value = all_values_flat.get(update_key)
             if prev_value and type(update_data) is not type(prev_value):
                 msg = f"Type mismatch for key '{update_key}'. Cannot update {type(all_values_flat.get(update_key))} with {type(update_data)}"
@@ -200,10 +216,6 @@ def calc_patches(
                 patchset[update_key] = update_data
 
             continue
-
-        if update_key not in all_values_flat:
-            msg = f"Key '{update_key}' cannot be set. It does not exist."
-            raise ClanError(msg)
 
         msg = f"Cannot determine writeability for key '{update_key}'"
         raise ClanError(msg)
