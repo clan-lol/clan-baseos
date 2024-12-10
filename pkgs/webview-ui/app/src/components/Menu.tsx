@@ -55,14 +55,12 @@ export const Menu = (props: MenuProps) => {
   return (
     <div>
       <Button
-        variant="light"
+        variant="ghost"
+        size="s"
         popovertarget={props.popoverid}
         popovertargetaction="toggle"
         ref={setReference}
-        class={cx(
-          "btn btn-ghost btn-outline join-item btn-sm",
-          props.buttonClass,
-        )}
+        class={cx("join-item", props.buttonClass)}
         {...props.buttonProps}
       >
         {props.label}
