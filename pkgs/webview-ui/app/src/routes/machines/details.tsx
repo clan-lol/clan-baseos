@@ -1,12 +1,9 @@
-import { callApi, ClanService, SuccessData, SuccessQuery } from "@/src/api";
-import { get_iwd_service } from "@/src/api/wifi";
+import { callApi, SuccessData, SuccessQuery } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
 import Icon from "@/src/components/icon";
-import { RndThumbnail } from "@/src/components/noiseThumbnail";
-import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
 import { selectSshKeys } from "@/src/hooks";
 import {
@@ -16,9 +13,10 @@ import {
   setValue,
 } from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
-import { createQuery, useQueryClient } from "@tanstack/solid-query";
-import { createSignal, For, Show, Switch, Match, JSXElement } from "solid-js";
+import { createQuery } from "@tanstack/solid-query";
+import { createSignal, For, Show } from "solid-js";
 import toast from "solid-toast";
+import { MachineAvatar } from "./avatar";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -65,7 +63,7 @@ const InstallMachine = (props: InstallMachineProps) => {
     }
 
     const loading_toast = toast.loading(
-      "Installing machine. Grab coffee (15min)...",
+      "Installing machine. Grab coffee (15min)..."
     );
     const r = await callApi("install_machine", {
       opts: {
@@ -248,13 +246,13 @@ const MachineForm = (props: MachineDetailsProps) => {
         ...values.machine,
         // TODO: Remove this workaround
         tags: Array.from(
-          values.machine.tags || props.initialData.machine.tags || [],
+          values.machine.tags || props.initialData.machine.tags || []
         ),
       },
     });
     if (machine_response.status === "error") {
       toast.error(
-        `Failed to set machine: ${machine_response.errors[0].message}`,
+        `Failed to set machine: ${machine_response.errors[0].message}`
       );
     }
     if (machine_response.status === "success") {
@@ -305,24 +303,9 @@ const MachineForm = (props: MachineDetailsProps) => {
   return (
     <>
       <Form onSubmit={handleSubmit}>
-        <figure>
-          <div
-            class="avatar placeholder"
-            classList={
-              {
-                // online: onlineStatusQuery.data === "Online",
-                // offline: onlineStatusQuery.data === "Offline",
-              }
-            }
-          >
-            <div class="w-32 rounded-lg border p-2 bg-def-4 border-inv-3">
-              <RndThumbnail name={machineName() || "M"} />
-            </div>
-          </div>
-        </figure>
         <div class="card-body">
           <span class="text-xl text-primary-800">General</span>
-
+          <MachineAvatar name={machineName()} />
           <Field name="machine.name">
             {(field, props) => (
               <TextInput
@@ -455,7 +438,7 @@ const MachineForm = (props: MachineDetailsProps) => {
               // disabled={!online()}
               onClick={() => {
                 const modal = document.getElementById(
-                  "install_modal",
+                  "install_modal"
                 ) as HTMLDialogElement | null;
                 modal?.showModal();
               }}
@@ -561,7 +544,7 @@ function WifiModule(props: MachineWifiProps) {
   });
 
   const [nets, setNets] = createSignal<1[]>(
-    new Array(props.initialData.length || 1).fill(1),
+    new Array(props.initialData.length || 1).fill(1)
   );
 
   const handleSubmit = async (values: WifiForm) => {
@@ -572,7 +555,7 @@ function WifiModule(props: MachineWifiProps) {
           ...acc,
           [curr.ssid || ""]: { ssid: curr.ssid, password: curr.password },
         }),
-        {},
+        {}
       );
 
     console.log("submitting", values, networks);
