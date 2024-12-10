@@ -86,8 +86,27 @@ class WebExecutor(GObject.Object):
         log.debug(f"Webview Request: {json_msg}")
         payload = json.loads(json_msg)
         method_name = payload["method"]
+        data = payload.get("data")
 
         # Get the function gobject from the api
+        if not self.api.has_obj(method_name):
+            self.return_data_to_js(
+                method_name,
+                json.dumps(
+                    {
+                        "op_key": data["op_key"],
+                        "status": "error",
+                        "errors": [
+                            {
+                                "message": "Internal API Error",
+                                "description": f"Function '{method_name}' not found",
+                            }
+                        ],
+                    }
+                ),
+            )
+            return
+
         function_obj = self.api.get_obj(method_name)
 
         # Create an instance of the function gobject
@@ -95,7 +114,6 @@ class WebExecutor(GObject.Object):
         fn_instance.await_result(self.on_result)
 
         # Extract the data from the payload
-        data = payload.get("data")
         if data is None:
             log.error(
                 f"JS function call '{method_name}' has no data field. Skipping execution."
