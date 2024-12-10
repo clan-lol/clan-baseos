@@ -1,12 +1,9 @@
-import { callApi, ClanService, SuccessData, SuccessQuery } from "@/src/api";
-import { get_iwd_service } from "@/src/api/wifi";
+import { callApi, SuccessData, SuccessQuery } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
 import Icon from "@/src/components/icon";
-import { RndThumbnail } from "@/src/components/noiseThumbnail";
-import { SelectInput } from "@/src/components/SelectInput";
 import { TextInput } from "@/src/components/TextInput";
 import { selectSshKeys } from "@/src/hooks";
 import {
@@ -16,9 +13,10 @@ import {
   setValue,
 } from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
-import { createQuery, useQueryClient } from "@tanstack/solid-query";
-import { createSignal, For, Show, Switch, Match, JSXElement } from "solid-js";
+import { createQuery } from "@tanstack/solid-query";
+import { createSignal, For, Show } from "solid-js";
 import toast from "solid-toast";
+import { MachineAvatar } from "./avatar";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -305,24 +303,9 @@ const MachineForm = (props: MachineDetailsProps) => {
   return (
     <>
       <Form onSubmit={handleSubmit}>
-        <figure>
-          <div
-            class="avatar placeholder"
-            classList={
-              {
-                // online: onlineStatusQuery.data === "Online",
-                // offline: onlineStatusQuery.data === "Offline",
-              }
-            }
-          >
-            <div class="w-32 rounded-lg border p-2 bg-def-4 border-inv-3">
-              <RndThumbnail name={machineName() || "M"} />
-            </div>
-          </div>
-        </figure>
         <div class="card-body">
           <span class="text-xl text-primary-800">General</span>
-
+          <MachineAvatar name={machineName()} />
           <Field name="machine.name">
             {(field, props) => (
               <TextInput

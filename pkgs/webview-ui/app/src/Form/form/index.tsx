@@ -2,36 +2,21 @@ import {
   createForm,
   Field,
   FieldArray,
-  FieldElement,
   FieldValues,
   FormStore,
-  getValue,
-  minLength,
   pattern,
   ResponseData,
   setValue,
   getValues,
   insert,
   SubmitHandler,
-  swap,
   reset,
   remove,
   move,
-  setError,
-  setValues,
 } from "@modular-forms/solid";
-import { JSONSchema7, JSONSchema7Type, validate } from "json-schema";
+import { JSONSchema7, JSONSchema7Type } from "json-schema";
 import { TextInput } from "../fields/TextInput";
-import {
-  children,
-  Component,
-  createEffect,
-  For,
-  JSX,
-  Match,
-  Show,
-  Switch,
-} from "solid-js";
+import { createEffect, For, JSX, Match, Show, Switch } from "solid-js";
 import cx from "classnames";
 import { Label } from "../base/label";
 import { SelectInput } from "../fields/Select";
@@ -218,7 +203,7 @@ export function StringField<T extends FieldValues, R extends ResponseData>(
         (r) => r === props.path[props.path.length - 1],
       ),
   };
-  const readonly = props.readonly;
+  const readonly = !!props.readonly;
   return (
     <Switch fallback={<Unsupported schema={props.schema} />}>
       <Match
@@ -388,20 +373,27 @@ export function ListValueDisplay<T extends FieldValues, R extends ResponseData>(
         {props.children}
         <div class="ml-4 min-w-fit pb-4">
           <Button
-            variant="light"
+            variant="ghost"
+            size="s"
+            type="button"
             onClick={moveItemBy(1)}
             disabled={topMost()}
             startIcon={<Icon icon="ArrowBottom" />}
             class="h-12"
           ></Button>
           <Button
-            variant="light"
+            type="button"
+            variant="ghost"
+            size="s"
             onClick={moveItemBy(-1)}
             disabled={bottomMost()}
             class="h-12"
             startIcon={<Icon icon="ArrowTop" />}
           ></Button>
           <Button
+            type="button"
+            variant="ghost"
+            size="s"
             class="h-12"
             startIcon={<Icon icon="Trash" />}
             onClick={removeItem}
@@ -600,7 +592,9 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                           each={fieldArray.items}
                           fallback={
                             // Empty list
-                            <span class="text-neutral-500">No items</span>
+                            <span class="text-neutral-500">
+                              No {itemsSchema().title || "entries"} yet.
+                            </span>
                           }
                         >
                           {(item, idx) => (
@@ -644,7 +638,10 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                           formProps={{
                             class: cx("px-2 w-full"),
                           }}
-                          schema={{ ...itemsSchema(), title: "Add entry" }}
+                          schema={{
+                            ...itemsSchema(),
+                            title: itemsSchema().title || "thing",
+                          }}
                           initialPath={["root"]}
                           // Reset the input field for list items
                           resetOnSubmit={true}
@@ -655,10 +652,12 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                           components={{
                             before: (
                               <Button
-                                variant="light"
+                                variant="ghost"
+                                type="submit"
                                 endIcon={<Icon icon={"Plus"} />}
+                                class="capitalize"
                               >
-                                Add
+                                Add {itemsSchema().title}
                               </Button>
                             ),
                           }}
@@ -847,7 +846,7 @@ export function ObjectFields<T extends FieldValues, R extends ResponseData>(
                                           {key}
                                         </span>
                                         <Button
-                                          variant="light"
+                                          variant="ghost"
                                           class="ml-auto"
                                           size="s"
                                           type="button"

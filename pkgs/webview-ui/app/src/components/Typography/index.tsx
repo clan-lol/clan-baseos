@@ -82,7 +82,7 @@ export const Typography = <H extends Hierarchy>(props: TypographyProps<H>) => {
     inverted,
     hierarchy,
     weight = "normal",
-    tag,
+    tag = "span",
     children,
     classes,
   } = props;

@@ -1,6 +1,6 @@
 /* @refresh reload */
 import { Portal, render } from "solid-js/web";
-import { RouteDefinition, Router } from "@solidjs/router";
+import { Navigate, RouteDefinition, Router } from "@solidjs/router";
 
 import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
@@ -46,6 +46,12 @@ export type AppRoute = Omit<RouteDefinition, "children"> & {
 };
 
 export const routes: AppRoute[] = [
+  {
+    path: "/",
+    label: "",
+    hidden: true,
+    component: () => <Navigate href="/machines" />,
+  },
   {
     path: "/machines",
     label: "Machines",
@@ -139,7 +145,6 @@ export const routes: AppRoute[] = [
     hidden: false,
     component: () => <Welcome />,
   },
-
   {
     path: "/api_testing",
     label: "api_testing",
