@@ -13,6 +13,8 @@
       treefmt.programs.deadnix.enable = true;
       treefmt.settings.global.excludes = [
         "*.png"
+        "*.svg"
+        "package-lock.json"
         "*.jpeg"
         "*.gitignore"
         ".vscode/*"
@@ -24,6 +26,10 @@
         "*.age"
         "*.list"
         "*.desktop"
+        # ignore symlink
+        "docs/site/manual/contribute.md"
+        "*_test_cert"
+        "*_test_key"
       ];
       treefmt.programs.prettier = {
         enable = true;
@@ -32,6 +38,7 @@
           "*.css"
           "*.html"
           "*.js"
+          "*.json"
           "*.json5"
           "*.jsx"
           "*.mdx"
