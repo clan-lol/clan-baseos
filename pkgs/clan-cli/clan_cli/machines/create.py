@@ -16,8 +16,7 @@ from clan_cli.git import commit_file
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
     MachineDeploy,
-    load_inventory_json,
-    merge_template_inventory,
+    get_inventory,
     set_inventory,
 )
 from clan_cli.machines.list import list_nixos_machines
@@ -110,12 +109,9 @@ def create_machine(opts: CreateOptions) -> None:
 
         src = tmpdirp / "machines" / opts.template_name
 
-        has_inventory = (dst / "inventory.json").exists()
-        if not (src / "configuration.nix").exists() and not has_inventory:
-            msg = f"Template machine '{opts.template_name}' does not contain a configuration.nix or inventory.json"
-            description = (
-                "Template machine must contain a configuration.nix or inventory.json"
-            )
+        if not (src / "configuration.nix").exists():
+            msg = f"Template machine '{opts.template_name}' does not contain a configuration.nix"
+            description = "Template machine must contain a configuration.nix"
             raise ClanError(msg, description=description)
 
         def log_copy(src: str, dst: str) -> None:
@@ -125,39 +121,26 @@ def create_machine(opts: CreateOptions) -> None:
 
         shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
 
+    inventory = get_inventory(clan_dir)
+
+    target_host = opts.target_host
+    # TODO: We should allow the template to specify machine metadata if not defined by user
+    new_machine = opts.machine
+    if target_host:
+        new_machine["deploy"] = {"targetHost": target_host}
+
+    inventory["machines"] = inventory.get("machines", {})
+    inventory["machines"][machine_name] = new_machine
+
+    # Commit at the end in that order to avoid commiting halve-baked machines
+    # TODO: automatic rollbacks if something goes wrong
+    set_inventory(inventory, clan_dir, "Imported machine from template")
+
     commit_file(
         clan_dir / "machines" / machine_name,
         repo_dir=clan_dir,
         commit_message=f"Add machine {machine_name}",
     )
-
-    inventory = load_inventory_json(clan_dir)
-
-    # Merge the inventory from the template
-    if has_inventory:
-        template_inventory = load_inventory_json(dst)
-        merge_template_inventory(inventory, template_inventory, machine_name)
-
-    deploy = MachineDeploy()
-    target_host = opts.target_host
-    if target_host:
-        deploy["targetHost"] = target_host
-    # TODO: We should allow the template to specify machine metadata if not defined by user
-    new_machine = InventoryMachine(
-        name=machine_name, deploy=deploy, tags=opts.machine.get("tags", [])
-    )
-    if (
-        not has_inventory
-        and len(opts.machine.get("tags", [])) == 0
-        and new_machine.get("deploy", {}).get("targetHost") is None
-    ):
-        # no need to update inventory if there are no tags or target host
-        return
-
-    inventory["machines"] = inventory.get("machines", {})
-    inventory["machines"][machine_name] = new_machine
-
-    set_inventory(inventory, clan_dir, "Imported machine from template")
 
 
 def create_command(args: argparse.Namespace) -> None:

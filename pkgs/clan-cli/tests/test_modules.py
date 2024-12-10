@@ -6,9 +6,9 @@ import pytest
 from clan_cli.api.modules import list_modules
 from clan_cli.clan_uri import FlakeId
 from clan_cli.inventory import (
+    Inventory,
     Machine,
     MachineDeploy,
-    load_inventory_json,
     set_inventory,
 )
 from clan_cli.machines.create import CreateOptions, create_machine
@@ -70,7 +70,7 @@ def test_add_module_to_inventory(
     )
     subprocess.run(["git", "add", "."], cwd=test_flake_with_core.path, check=True)
 
-    inventory = load_inventory_json(base_path)
+    inventory: Inventory = {}
 
     inventory["services"] = {
         "borgbackup": {
