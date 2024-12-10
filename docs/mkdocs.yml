@@ -180,7 +180,7 @@ extra_css:
 extra:
   social:
     - icon: fontawesome/regular/comment
-      link: https://matrix.to/#/#clan:lassul.us
+      link: https://matrix.to/#/#clan:clan.lol
     - icon: fontawesome/brands/gitlab
       link: https://git.clan.lol/clan/clan-core
     - icon: fontawesome/brands/github
