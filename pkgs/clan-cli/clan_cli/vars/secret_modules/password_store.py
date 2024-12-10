@@ -10,14 +10,17 @@ from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh.upload import upload
+from clan_cli.vars._types import StoreBase
 from clan_cli.vars.generate import Generator, Var
-
-from . import SecretStoreBase
 
 log = logging.getLogger(__name__)
 
 
-class SecretStore(SecretStoreBase):
+class SecretStore(StoreBase):
+    @property
+    def is_secret_store(self) -> bool:
+        return True
+
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
         self.entry_prefix = "clan-vars"

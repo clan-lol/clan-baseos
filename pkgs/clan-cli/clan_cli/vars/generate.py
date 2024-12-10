@@ -18,6 +18,7 @@ from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 from clan_cli.machines.inventory import get_all_machines, get_selected_machines
 from clan_cli.nix import nix_shell
+from clan_cli.vars._types import StoreBase
 
 from .check import check_vars
 from .graph import (
@@ -25,8 +26,6 @@ from .graph import (
     requested_closure,
 )
 from .prompt import Prompt, ask
-from .public_modules import FactStoreBase
-from .secret_modules import SecretStoreBase
 from .var import Var
 
 log = logging.getLogger(__name__)
@@ -99,8 +98,8 @@ def bubblewrap_cmd(generator: str, tmpdir: Path) -> list[str]:
 def decrypt_dependencies(
     machine: "Machine",
     generator: Generator,
-    secret_vars_store: SecretStoreBase,
-    public_vars_store: FactStoreBase,
+    secret_vars_store: StoreBase,
+    public_vars_store: StoreBase,
 ) -> dict[str, dict[str, bytes]]:
     decrypted_dependencies: dict[str, Any] = {}
     for generator_name in set(generator.dependencies):
@@ -143,8 +142,8 @@ def dependencies_as_dir(
 def execute_generator(
     machine: "Machine",
     generator: Generator,
-    secret_vars_store: SecretStoreBase,
-    public_vars_store: FactStoreBase,
+    secret_vars_store: StoreBase,
+    public_vars_store: StoreBase,
     prompt_values: dict[str, str],
 ) -> None:
     if not isinstance(machine.flake, Path):

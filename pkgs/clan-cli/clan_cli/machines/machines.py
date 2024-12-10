@@ -16,8 +16,7 @@ from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata, nix_test
 from clan_cli.ssh.host import Host
 from clan_cli.ssh.host_key import HostKeyCheck
 from clan_cli.ssh.parse import parse_deployment_address
-from clan_cli.vars.public_modules import FactStoreBase
-from clan_cli.vars.secret_modules import SecretStoreBase
+from clan_cli.vars._types import StoreBase
 
 log = logging.getLogger(__name__)
 
@@ -141,12 +140,12 @@ class Machine:
         return self.deployment["vars"]["publicModule"]
 
     @cached_property
-    def secret_vars_store(self) -> SecretStoreBase:
+    def secret_vars_store(self) -> StoreBase:
         module = importlib.import_module(self.secret_vars_module)
         return module.SecretStore(machine=self)
 
     @cached_property
-    def public_vars_store(self) -> FactStoreBase:
+    def public_vars_store(self) -> StoreBase:
         module = importlib.import_module(self.public_vars_module)
         return module.FactStore(machine=self)
 
