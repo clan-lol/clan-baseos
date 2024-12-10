@@ -1,16 +1,14 @@
-import { Component, createEffect, Show } from "solid-js";
-import { Header } from "./header";
+import { Component, createEffect } from "solid-js";
 import { Sidebar } from "@/src/components/Sidebar";
-import { activeURI, clanList } from "../App";
+import { clanList } from "../App";
 import { RouteSectionProps, useNavigate } from "@solidjs/router";
 
 export const Layout: Component<RouteSectionProps> = (props) => {
   const navigate = useNavigate();
   createEffect(() => {
-    console.log("Layout props", props.location);
     console.log(
       "empty ClanList, redirect to welcome page",
-      clanList().length === 0,
+      clanList().length === 0
     );
     if (clanList().length === 0) {
       navigate("/welcome");
@@ -25,10 +23,7 @@ export const Layout: Component<RouteSectionProps> = (props) => {
           type="checkbox"
           class="drawer-toggle hidden"
         />
-        <div class="drawer-content overflow-x-hidden overflow-y-scroll p-2">
-          <Show when={props.location.pathname !== "welcome"}>
-            <Header clan_dir={activeURI} />
-          </Show>
+        <div class="drawer-content my-2 ml-8 overflow-x-hidden overflow-y-scroll rounded-lg border bg-def-1 border-def-3">
           {props.children}
         </div>
         <div

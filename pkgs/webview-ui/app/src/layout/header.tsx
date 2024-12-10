@@ -1,33 +1,13 @@
-import { createQuery } from "@tanstack/solid-query";
-import { activeURI } from "../App";
-import { callApi } from "../api";
-import { Accessor, Show } from "solid-js";
-import { useNavigate } from "@solidjs/router";
-
-import Icon from "../components/icon";
-import { Button } from "../components/button";
+import { JSX } from "solid-js";
+import { Typography } from "../components/Typography";
 
 interface HeaderProps {
-  clan_dir: Accessor<string | null>;
+  title: string;
+  toolbar?: JSX.Element;
 }
 export const Header = (props: HeaderProps) => {
-  const { clan_dir } = props;
-  const navigate = useNavigate();
-
-  const query = createQuery(() => ({
-    queryKey: [clan_dir(), "meta"],
-    queryFn: async () => {
-      const curr = clan_dir();
-      if (curr) {
-        const result = await callApi("show_clan_meta", { uri: curr });
-        if (result.status === "error") throw new Error("Failed to fetch data");
-        return result.data;
-      }
-    },
-  }));
-
   return (
-    <div class="navbar">
+    <div class="navbar border-b px-6 py-4 border-def-3">
       <div class="flex-none">
         <span class="tooltip tooltip-bottom lg:hidden" data-tip="Menu">
           <label
@@ -38,19 +18,13 @@ export const Header = (props: HeaderProps) => {
           </label>
         </span>
       </div>
-      <div class="flex-1"></div>
-      <div class="flex-none">
-        <Show when={activeURI()}>
-          {(d) => (
-            <span class="tooltip tooltip-bottom" data-tip="Clan Settings">
-              <Button
-                variant="light"
-                onClick={() => navigate(`/clans/${window.btoa(d())}`)}
-                startIcon={<Icon icon="Settings" />}
-              ></Button>
-            </span>
-          )}
-        </Show>
+      <div class="flex-1">
+        <Typography hierarchy="title" size="m" weight="medium">
+          {props.title}
+        </Typography>
+      </div>
+      <div class="flex-none items-center justify-center gap-3">
+        {props.toolbar}
       </div>
     </div>
   );
