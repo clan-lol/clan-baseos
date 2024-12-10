@@ -252,17 +252,19 @@ class AsyncRuntime:
             if task.finished and task.async_opts.check:
                 assert task.result is not None
                 error = task.result.error
-                if log.isEnabledFor(logging.DEBUG):
-                    log.error(
-                        f"failed with error: {error}",
-                        extra={"command_prefix": name},
-                        exc_info=error,
-                    )
-                else:
-                    log.error(
-                        f"failed with error: {error}", extra={"command_prefix": name}
-                    )
-                err_count += 1
+                if error is not None:
+                    if log.isEnabledFor(logging.DEBUG):
+                        log.error(
+                            f"failed with error: {error}",
+                            extra={"command_prefix": name},
+                            exc_info=error,
+                        )
+                    else:
+                        log.error(
+                            f"failed with error: {error}",
+                            extra={"command_prefix": name},
+                        )
+                    err_count += 1
 
         if err_count > 0:
             msg = f"{err_count} hosts failed with an error. Check the logs above"
