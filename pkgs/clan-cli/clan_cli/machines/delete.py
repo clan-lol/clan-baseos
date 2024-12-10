@@ -6,12 +6,12 @@ from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanError
-from clan_cli.inventory import load_inventory_json, set_inventory
+from clan_cli.inventory import get_inventory, set_inventory
 
 
 @API.register
 def delete_machine(flake: FlakeId, name: str) -> None:
-    inventory = load_inventory_json(flake.path)
+    inventory = get_inventory(flake.path)
 
     machine = inventory.get("machines", {}).pop(name, None)
     if machine is None:

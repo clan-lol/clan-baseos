@@ -48,16 +48,11 @@ __all__ = [
 ]
 
 
-def get_inventory_path(flake_dir: str | Path, create: bool = True) -> Path:
+def get_inventory_path(flake_dir: str | Path) -> Path:
     """
     Get the path to the inventory file in the flake directory
     """
     inventory_file = (Path(flake_dir) / "inventory.json").resolve()
-
-    if not inventory_file.exists() and create:
-        # Copy over the meta from the flake if the inventory is not initialized
-        init_inventory(str(flake_dir))
-
     return inventory_file
 
 
@@ -174,7 +169,7 @@ def calc_patches(
         key "machines.machine1.deploy.targetHost" is specified but writeability is only defined for "machines"
         We pop the last key and check if the parent key is writeable/non-writeable.
         """
-        remaining = key.split(".")[:-1]
+        remaining = key.split(".")
         while remaining:
             if ".".join(remaining) in writeables["writeable"]:
                 return True
@@ -182,7 +177,9 @@ def calc_patches(
                 return False
 
             remaining.pop()
-        raise ClanError(f"Cannot determine writeability for key '{key}'")
+
+        msg = f"Cannot determine writeability for key '{key}'"
+        raise ClanError(msg, description="F001")
 
     patchset = {}
     for update_key, update_data in update_flat.items():
@@ -342,12 +339,18 @@ def get_inventory_current_priority(flake_dir: str | Path) -> dict:
 @API.register
 def load_inventory_json(flake_dir: str | Path) -> Inventory:
     """
-    Load the inventory file from the flake directory
-    If no file is found, returns the default inventory
+    Load the inventory FILE from the flake directory
+    If no file is found, returns an empty dictionary
+
+    DO NOT USE THIS FUNCTION TO READ THE INVENTORY
+
+    Use load_inventory_eval instead
     """
 
     inventory_file = get_inventory_path(flake_dir)
 
+    if not inventory_file.exists():
+        return {}
     with inventory_file.open() as f:
         try:
             res: dict = json.load(f)
@@ -400,7 +403,7 @@ class WriteInfo:
 
 
 @API.register
-def load_inventory_with_writeable_keys(
+def get_inventory_with_writeable_keys(
     flake_dir: str | Path,
 ) -> WriteInfo:
     """
@@ -426,7 +429,12 @@ def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> 
     and commit it to git with the given message
     """
 
-    write_info = load_inventory_with_writeable_keys(flake_dir)
+    write_info = get_inventory_with_writeable_keys(flake_dir)
+
+    # Remove internals from the inventory
+    inventory.pop("tags", None)  # type: ignore
+    inventory.pop("options", None)  # type: ignore
+    inventory.pop("assertions", None)  # type: ignore
 
     patchset = calc_patches(
         dict(write_info.data_disk),
@@ -435,12 +443,13 @@ def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> 
         write_info.writeables,
     )
 
+    persisted = dict(write_info.data_disk)
     for patch_path, data in patchset.items():
-        patch(dict(write_info.data_disk), patch_path, data)
+        patch(persisted, patch_path, data)
 
     inventory_file = get_inventory_path(flake_dir)
     with inventory_file.open("w") as f:
-        json.dump(write_info.data_disk, f, indent=2)
+        json.dump(persisted, f, indent=2)
 
     commit_file(inventory_file, Path(flake_dir), commit_message=message)
 
@@ -462,40 +471,5 @@ def init_inventory(directory: str, init: Inventory | None = None) -> None:
 
 
 @API.register
-def merge_template_inventory(
-    inventory: Inventory, template_inventory: Inventory, machine_name: str
-) -> None:
-    """
-    Merge the template inventory into the current inventory
-    The template inventory is expected to be a subset of the current inventory
-    """
-    for service_name, instance in template_inventory.get("services", {}).items():
-        if len(instance.keys()) > 0:
-            msg = f"Service {service_name} in template inventory has multiple instances"
-            description = (
-                "Only one instance per service is allowed in a template inventory"
-            )
-            raise ClanError(msg, description=description)
-
-        # services.<service_name>.<instance_name>.config
-        config = next((v for v in instance.values() if "config" in v), None)
-        if not config:
-            msg = f"Service {service_name} in template inventory has no config"
-            description = "Invalid inventory configuration"
-            raise ClanError(msg, description=description)
-
-        # Disallow "config.machines" key
-        if "machines" in config:
-            msg = f"Service {service_name} in template inventory has machines"
-            description = "The 'machines' key is not allowed in template inventory"
-            raise ClanError(msg, description=description)
-
-        # Require "config.roles" key
-        if "roles" not in config:
-            msg = f"Service {service_name} in template inventory has no roles"
-            description = "roles key is required in template inventory"
-            raise ClanError(msg, description=description)
-
-        # TODO: Implement merging of template inventory
-        msg = "Merge template inventory is not implemented yet"
-        raise NotImplementedError(msg)
+def get_inventory(flake_dir: str | Path) -> Inventory:
+    return load_inventory_eval(flake_dir)

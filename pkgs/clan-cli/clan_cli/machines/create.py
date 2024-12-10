@@ -16,7 +16,7 @@ from clan_cli.git import commit_file
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
     MachineDeploy,
-    load_inventory_json,
+    get_inventory,
     set_inventory,
 )
 from clan_cli.machines.list import list_nixos_machines
@@ -121,7 +121,7 @@ def create_machine(opts: CreateOptions) -> None:
 
         shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
 
-    inventory = load_inventory_json(clan_dir)
+    inventory = get_inventory(clan_dir)
 
     target_host = opts.target_host
     # TODO: We should allow the template to specify machine metadata if not defined by user

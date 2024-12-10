@@ -3,16 +3,13 @@ import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypedDict, get_args, get_type_hints
+from typing import Any, TypedDict
 
 from clan_cli.cmd import run_no_stdout
 from clan_cli.errors import ClanCmdError, ClanError
-from clan_cli.inventory import Inventory, load_inventory_json, set_inventory
-from clan_cli.inventory.classes import Service
 from clan_cli.nix import nix_eval
 
 from . import API
-from .serde import from_dict
 
 
 class CategoryInfo(TypedDict):
@@ -247,42 +244,3 @@ def get_module_info(
         features=["inventory"] if has_inventory_feature(module_path) else [],
         constraints=frontmatter.constraints,
     )
-
-
-@API.register
-def get_inventory(base_path: str) -> Inventory:
-    return load_inventory_json(base_path)
-
-
-@API.register
-def set_service_instance(
-    base_path: str, module_name: str, instance_name: str, config: dict[str, Any]
-) -> None:
-    """
-    A function that allows to set any service instance in the inventory.
-    Takes any untyped dict. The dict is then checked and converted into the correct type using the type hints of the service.
-    If any conversion error occurs, the function will raise an error.
-    """
-    service_keys = get_type_hints(Service).keys()
-
-    if module_name not in service_keys:
-        msg = f"{module_name} is not a valid Service attribute. Expected one of {', '.join(service_keys)}."
-        raise ClanError(msg)
-
-    inventory = load_inventory_json(base_path)
-    target_type = get_args(get_type_hints(Service)[module_name])[1]
-
-    module_instance_map: dict[str, Any] = inventory.get("services", {}).get(
-        module_name, {}
-    )
-
-    module_instance_map[instance_name] = from_dict(target_type, config)
-
-    inventory["services"] = inventory.get("services", {})
-    inventory["services"][module_name] = module_instance_map
-
-    set_inventory(
-        inventory, base_path, f"Update {module_name} instance {instance_name}"
-    )
-
-    # TODO: Add a check that rolls back the inventory if the service config is not valid or causes conflicts.
