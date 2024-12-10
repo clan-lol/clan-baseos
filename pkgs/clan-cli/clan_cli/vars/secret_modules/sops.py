@@ -19,10 +19,9 @@ from clan_cli.secrets.secrets import (
     has_secret,
 )
 from clan_cli.ssh.upload import upload
+from clan_cli.vars._types import StoreBase
 from clan_cli.vars.generate import Generator
 from clan_cli.vars.var import Var
-
-from . import SecretStoreBase
 
 
 @dataclass
@@ -37,7 +36,11 @@ class MissingKeyError(ClanError):
         super().__init__(msg)
 
 
-class SecretStore(SecretStoreBase):
+class SecretStore(StoreBase):
+    @property
+    def is_secret_store(self) -> bool:
+        return True
+
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
 

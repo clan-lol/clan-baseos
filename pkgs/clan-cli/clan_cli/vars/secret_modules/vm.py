@@ -3,12 +3,15 @@ from pathlib import Path
 
 from clan_cli.dirs import vm_state_dir
 from clan_cli.machines.machines import Machine
+from clan_cli.vars._types import StoreBase
 from clan_cli.vars.generate import Generator, Var
 
-from . import SecretStoreBase
 
+class SecretStore(StoreBase):
+    @property
+    def is_secret_store(self) -> bool:
+        return True
 
-class SecretStore(SecretStoreBase):
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
         self.dir = vm_state_dir(machine.flake, machine.name) / "secrets"

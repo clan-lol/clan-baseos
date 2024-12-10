@@ -5,8 +5,7 @@ import logging
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
-from clan_cli.vars.public_modules import FactStoreBase
-from clan_cli.vars.secret_modules import SecretStoreBase
+from clan_cli.vars._types import StoreBase
 
 log = logging.getLogger(__name__)
 
@@ -32,9 +31,9 @@ class VarStatus:
 
 def vars_status(machine: Machine, generator_name: None | str = None) -> VarStatus:
     secret_vars_module = importlib.import_module(machine.secret_vars_module)
-    secret_vars_store: SecretStoreBase = secret_vars_module.SecretStore(machine=machine)
+    secret_vars_store: StoreBase = secret_vars_module.SecretStore(machine=machine)
     public_vars_module = importlib.import_module(machine.public_vars_module)
-    public_vars_store: FactStoreBase = public_vars_module.FactStore(machine=machine)
+    public_vars_store: StoreBase = public_vars_module.FactStore(machine=machine)
 
     missing_secret_vars = []
     missing_public_vars = []

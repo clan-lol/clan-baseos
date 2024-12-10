@@ -3,12 +3,15 @@ from pathlib import Path
 
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
+from clan_cli.vars._types import StoreBase
 from clan_cli.vars.generate import Generator, Var
 
-from . import FactStoreBase
 
+class FactStore(StoreBase):
+    @property
+    def is_secret_store(self) -> bool:
+        return False
 
-class FactStore(FactStoreBase):
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
         self.works_remotely = False
