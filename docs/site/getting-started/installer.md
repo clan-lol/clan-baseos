@@ -67,6 +67,13 @@ sudo umount /dev/sdb1
         --ssh-pubkey <pubkey_path>
         ```
         If you do not have an ssh key yet, you can generate one with `ssh-keygen -t ed25519` command.
+        This ssh key will be installed into the root user.
+
+    - **Connect to the installer
+
+        On boot, the installer will display on-screen the IP address it received from the network.
+        If you need to configure Wi-Fi first, refer to the next section.
+        If Multicast-DNS (Avahi) is enabled on your own machine, you can also access the installer using the `flash-installer.local` address.
 
     - **List Keymaps**:
         You can get a list of all keymaps with the following command:
@@ -127,6 +134,12 @@ sudo umount /dev/sdb1
     ```shellSession
     sudo dd bs=4M conv=fsync status=progress if=./nixos-installer-x86_64-linux.iso of=/dev/sd<X>
     ```
+
+    - **Connect to the installer
+
+      On boot, the installer will display on-screen the IP address it received from the network.
+      If you need to configure Wi-Fi first, refer to the next section.
+      If Multicast-DNS (Avahi) is enabled on your own machine, you can also access the installer using the `nixos-installer.local` address.
 
 
 ###  Step 3: Boot From USB Stick
