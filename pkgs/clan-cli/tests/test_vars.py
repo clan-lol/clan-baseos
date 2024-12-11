@@ -546,11 +546,19 @@ def test_depending_on_shared_secret_succeeds(
 
 
 @pytest.mark.with_core
-def test_shared_vars_are_not_regenerated(
+def test_multi_machine_shared_vars(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
     sops_setup: SopsSetup,
 ) -> None:
+    """
+    Ensure that shared vars are regenerated only when they should, and also can be
+    accessed by all machines that should have access.
+
+    Specifically:
+        - make sure shared wars are not regenerated when a second machines is added
+        - make sure vars can still be accessed by all machines, after they are regenerated
+    """
     machine1_config = flake.machines["machine1"]
     machine1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     shared_generator = machine1_config["clan"]["core"]["vars"]["generators"][
@@ -581,9 +589,25 @@ def test_shared_vars_are_not_regenerated(
     m1_value = in_repo_store_1.get(generator, "my_value")
     # generate for machine 2
     cli.run(["vars", "generate", "--flake", str(flake.path), "machine2"])
-    # read out values for machine 2
+    # ensure values are the same for both machines
     assert sops_store_2.get(generator, "my_secret") == m1_secret
     assert in_repo_store_2.get(generator, "my_value") == m1_value
+
+    # ensure shared secret stays available for all machines after regeneration
+    # regenerate for machine 1
+    cli.run(
+        ["vars", "generate", "--flake", str(flake.path), "machine1", "--regenerate"]
+    )
+    # ensure values changed
+    new_secret_1 = sops_store_1.get(generator, "my_secret")
+    new_value_1 = in_repo_store_1.get(generator, "my_value")
+    new_secret_2 = sops_store_2.get(generator, "my_secret")
+    assert new_secret_1 != m1_secret
+    assert new_value_1 != m1_value
+    # ensure that both machines still have access to the same secret
+    assert new_secret_1 == new_secret_2
+    assert sops_store_1.machine_has_access(generator, "my_secret")
+    assert sops_store_2.machine_has_access(generator, "my_secret")
 
 
 @pytest.mark.with_core
