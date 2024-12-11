@@ -15,6 +15,7 @@ import { useNavigate } from "@solidjs/router";
 import { Button } from "@/src/components/button";
 import Icon from "@/src/components/icon";
 import { Header } from "@/src/layout/header";
+import { makePersisted } from "@solid-primitives/storage";
 
 type MachinesModel = Extract<
   OperationResponse<"list_inventory_machines">,
@@ -31,7 +32,7 @@ export const MachineListView: Component = () => {
   const [filter, setFilter] = createSignal<Filter>({ tags: [] });
 
   const inventoryQuery = createQuery<MachinesModel>(() => ({
-    queryKey: [activeURI(), "list_machines", "inventory"],
+    queryKey: [activeURI(), "list_inventory_machines"],
     placeholderData: {},
     enabled: !!activeURI(),
     queryFn: async () => {
@@ -65,6 +66,10 @@ export const MachineListView: Component = () => {
     });
   const navigate = useNavigate();
 
+  const [view, setView] = makePersisted(createSignal<"list" | "grid">("list"), {
+    name: "machines_view",
+    storage: localStorage,
+  });
   return (
     <>
       <Header
@@ -76,21 +81,23 @@ export const MachineListView: Component = () => {
                 variant="light"
                 size="s"
                 onClick={() => refresh()}
-                startIcon={<Icon icon="Reload" />}
+                startIcon={<Icon icon="Update" />}
               ></Button>
             </span>
 
             <div class="border border-def-3">
               <span class="tooltip tooltip-bottom" data-tip="List View">
                 <Button
-                  variant="dark"
+                  onclick={() => setView("list")}
+                  variant={view() == "list" ? "dark" : "light"}
                   size="s"
                   startIcon={<Icon icon="List" />}
                 ></Button>
               </span>
               <span class="tooltip tooltip-bottom" data-tip="Grid View">
                 <Button
-                  variant="light"
+                  onclick={() => setView("grid")}
+                  variant={view() == "grid" ? "dark" : "light"}
                   size="s"
                   startIcon={<Icon icon="Grid" />}
                 ></Button>
@@ -110,7 +117,6 @@ export const MachineListView: Component = () => {
         }
       />
       <div>
-        {/* <Show when={filter()}> */}
         <div class="my-1 flex w-full gap-2 p-2">
           <div class="size-6 p-1">
             <Icon icon="Filter" />
@@ -170,7 +176,13 @@ export const MachineListView: Component = () => {
             </div>
           </Match>
           <Match when={!inventoryQuery.isLoading}>
-            <ul>
+            <div
+              class="my-4 flex flex-wrap gap-6 px-3 py-2"
+              classList={{
+                "flex-col": view() === "list",
+                "": view() === "grid",
+              }}
+            >
               <For each={inventoryMachines()}>
                 {([name, info]) => (
                   <MachineListItem
@@ -180,7 +192,7 @@ export const MachineListView: Component = () => {
                   />
                 )}
               </For>
-            </ul>
+            </div>
           </Match>
         </Switch>
       </div>
