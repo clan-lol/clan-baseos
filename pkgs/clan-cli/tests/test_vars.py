@@ -177,7 +177,10 @@ def test_generate_secret_var_sops_with_default_group(
     config["clan"]["core"]["sops"]["defaultGroups"] = ["my_group"]
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["files"]["my_secret"]["secret"] = True
-    my_generator["script"] = "echo hello > $out/my_secret"
+    my_generator["files"]["my_public"]["secret"] = False
+    my_generator["script"] = (
+        "echo hello > $out/my_secret && echo hello > $out/my_public"
+    )
     flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
