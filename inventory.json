@@ -1,15 +1,7 @@
 {
-  "meta": {
-    "name": "clan-core",
-    "description": null,
-    "icon": null
-  },
   "machines": {
     "test-inventory-machine": {
       "name": "foo",
-      "deploy": {
-        "targetHost": null
-      },
       "description": "A nice thing",
       "icon": "./path/to/icon.png",
       "tags": ["1", "2", "3"]
@@ -50,9 +42,7 @@
     "packages": {
       "editors": {
         "meta": {
-          "name": "Some editor packages",
-          "description": null,
-          "icon": null
+          "name": "Some editor packages"
         },
         "roles": {
           "default": {
@@ -74,9 +64,7 @@
       },
       "browsing": {
         "meta": {
-          "name": "Web browsing packages",
-          "description": null,
-          "icon": null
+          "name": "Web browsing packages"
         },
         "roles": {
           "default": {
@@ -101,9 +89,7 @@
     "single-disk": {
       "default": {
         "meta": {
-          "name": "single-disk",
-          "description": null,
-          "icon": null
+          "name": "single-disk"
         },
         "roles": {
           "default": {
