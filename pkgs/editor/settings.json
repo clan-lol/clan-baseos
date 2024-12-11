@@ -10,9 +10,7 @@
       },
       "options": {
         "nixos": {
-          "expr": "(let pkgs = import <nixpkgs> { }; in (pkgs.lib.evalModules { modules
-         =  (import <nixpkgs/nixos/modules/module-list.nix>) ++ [ ({...}: {
-         nixpkgs.hostPlatform = builtins.currentSystem;} ) ] ; })).options"
+          "expr": "(let pkgs = import <nixpkgs> { }; in (pkgs.lib.evalModules { modules =  (import <nixpkgs/nixos/modules/module-list.nix>) ++ [ ({...}: { nixpkgs.hostPlatform = builtins.currentSystem;} ) ] ; })).options"
         },
         "home-manager": {
           "expr": "(builtins.getFlake \"github:nix-community/home-manager\").homeConfigurations.<name>.options"
