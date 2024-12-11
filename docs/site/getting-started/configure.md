@@ -202,7 +202,7 @@ For renaming jon to your own machine name, you can use the following command:
 git mv ./machines/jon ./machines/newname
 ```
 
-If you only want to setup a single machine at this point, you can delete `sara` from flake.nix as well as from the machines directory:
+If you only want to setup a single machine at this point, you can delete `sara` from `flake.nix` as well as from the machines directory:
 
 ```
 git rm ./machines/sara
@@ -210,8 +210,8 @@ git rm ./machines/sara
 
 ---
 
-## Whats next?
+## What's next?
 
-- [Secrets & Facts](secrets.md): Setting up secrets with nix-sops
+- [Secrets & Facts](secrets.md): Setting up secrets with sops-nix
 
 ---

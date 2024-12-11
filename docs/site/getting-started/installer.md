@@ -4,7 +4,7 @@ Our installer image simplifies the process of performing remote installations.
 
 Follow our step-by-step guide to create and transfer this image onto a bootable USB drive.
 
-!!! info 
+!!! info
     If you already have a NixOS machine you can ssh into (in the cloud for example) you can skip this chapter and go directly to [Configure Machines](configure.md).
 
 ### Step 0. Prerequisites
@@ -54,7 +54,7 @@ sudo umount /dev/sdb1
       flash-installer
     ```
     !!! Note
-        Replace `$HOME/.ssh/id_ed25519.pub` with a path to your SSH public key.  
+        Replace `$HOME/.ssh/id_ed25519.pub` with a path to your SSH public key.
         Replace `/dev/sd<X>` with the drive path you want to flash
 
     !!! Danger "Specifying the wrong device can lead to unrecoverable data loss."
@@ -73,13 +73,13 @@ sudo umount /dev/sdb1
         ```
         clan flash list keymaps
         ```
-    
+
     - **List Languages**:
         You can get a list of all languages with the following command:
         ```
         clan flash list languages
         ```
-    
+
 
 
 
@@ -183,7 +183,7 @@ You're all set up
 
 ---
 
-## Whats next?
+## What's next?
 
 - [Configure Machines](configure.md): Customize machine configuration
 

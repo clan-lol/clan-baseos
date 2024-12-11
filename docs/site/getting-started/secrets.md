@@ -85,7 +85,7 @@ This command helps ensure that your system configuration is correct and free fro
     You can integrate this step into your [Continuous Integration](https://en.wikipedia.org/wiki/Continuous_integration) workflow to ensure that only valid Nix configurations are merged into your codebase.
 
 
-## Whats next?
+## What's next?
 
 - [Deployment](deploy.md): How to remotely deploy your machine
 - Full [Secrets](../manual/secrets.md) guide If you want to know more about how to save and share passwords in your clan
