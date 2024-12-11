@@ -26,7 +26,7 @@ export const BlockDevicesView: Component = () => {
       <div class="tooltip tooltip-bottom" data-tip="Refresh">
         <Button
           onClick={() => loadDevices()}
-          startIcon={<Icon icon="Reload" />}
+          startIcon={<Icon icon="Update" />}
         ></Button>
       </div>
       <div class="flex max-w-screen-lg flex-col gap-4">
