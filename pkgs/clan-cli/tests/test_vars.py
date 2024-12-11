@@ -546,6 +546,47 @@ def test_depending_on_shared_secret_succeeds(
 
 
 @pytest.mark.with_core
+def test_shared_vars_are_not_regenerated(
+    monkeypatch: pytest.MonkeyPatch,
+    flake: ClanFlake,
+    sops_setup: SopsSetup,
+) -> None:
+    machine1_config = flake.machines["machine1"]
+    machine1_config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
+    shared_generator = machine1_config["clan"]["core"]["vars"]["generators"][
+        "shared_generator"
+    ]
+    shared_generator["share"] = True
+    shared_generator["files"]["my_secret"]["secret"] = True
+    shared_generator["files"]["my_value"]["secret"] = False
+    shared_generator["script"] = (
+        "echo $RANDOM > $out/my_value && echo $RANDOM > $out/my_secret"
+    )
+    # machine 2 is equivalent to machine 1
+    flake.machines["machine2"] = machine1_config
+    flake.refresh()
+    monkeypatch.chdir(flake.path)
+    sops_setup.init()
+    machine1 = Machine(name="machine1", flake=FlakeId(str(flake.path)))
+    machine2 = Machine(name="machine2", flake=FlakeId(str(flake.path)))
+    sops_store_1 = sops.SecretStore(machine1)
+    sops_store_2 = sops.SecretStore(machine2)
+    in_repo_store_1 = in_repo.FactStore(machine1)
+    in_repo_store_2 = in_repo.FactStore(machine2)
+    generator = Generator("shared_generator", share=True)
+    # generate for machine 1
+    cli.run(["vars", "generate", "--flake", str(flake.path), "machine1"])
+    # read out values for machine 1
+    m1_secret = sops_store_1.get(generator, "my_secret")
+    m1_value = in_repo_store_1.get(generator, "my_value")
+    # generate for machine 2
+    cli.run(["vars", "generate", "--flake", str(flake.path), "machine2"])
+    # read out values for machine 2
+    assert sops_store_2.get(generator, "my_secret") == m1_secret
+    assert in_repo_store_2.get(generator, "my_value") == m1_value
+
+
+@pytest.mark.with_core
 def test_prompt_create_file(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
