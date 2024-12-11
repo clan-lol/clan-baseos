@@ -1,10 +1,10 @@
 #define _GNU_SOURCE
+#include <dlfcn.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <pwd.h>
-#include <dlfcn.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 typedef struct passwd *(*getpwnam_type)(const char *name);
 
