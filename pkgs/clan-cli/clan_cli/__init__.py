@@ -380,7 +380,7 @@ State can be folders and databases that modules depend on managed by clan.
 
 State directories can be added to on a per machine basis:
 ```
-  config.clanCore.state.[SERVICE_NAME].folders = [
+  config.clan.core.state.[SERVICE_NAME].folders = [
     "/home"
     "/root"
   ];
