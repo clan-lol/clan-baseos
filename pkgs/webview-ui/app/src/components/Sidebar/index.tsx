@@ -19,7 +19,7 @@ export const SidebarSection = (props: {
     <details class="sidebar__section accordeon" open>
       <summary class="accordeon__header">
         <Typography
-          classes="uppercase"
+          class="uppercase"
           tag="p"
           hierarchy="body"
           size="xs"
@@ -47,7 +47,7 @@ export const Sidebar = (props: RouteSectionProps) => {
       const curr = activeURI();
       if (curr) {
         const result = await callApi("show_clan_meta", { uri: curr });
-
+        console.log("refetched meta for ", curr);
         if (result.status === "error") throw new Error("Failed to fetch data");
 
         return result.data;

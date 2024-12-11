@@ -52,7 +52,7 @@ fs.readFile(manifestPath, { encoding: "utf8" }, (err, data) => {
                 console.log(`Rewriting CSS url(): ${asset.url} to ${res}`);
                 return res;
               },
-            })
+            }),
           )
           .process(css, {
             from: `dist/${cssEntry}`,
