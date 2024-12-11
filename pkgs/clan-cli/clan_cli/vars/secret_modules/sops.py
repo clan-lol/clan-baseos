@@ -85,7 +85,9 @@ class SecretStore(StoreBase):
         self, key_dir: Path, generator: Generator, secret_name: str
     ) -> bool:
         secret_path = self.secret_path(generator, secret_name)
-        return sops.SopsKey.load_dir(key_dir) in sops.get_recipients(secret_path)
+        recipient = sops.SopsKey.load_dir(key_dir)
+        recipients = sops.get_recipients(secret_path)
+        return recipient in recipients
 
     def secret_path(self, generator: Generator, secret_name: str) -> Path:
         return self.directory(generator, secret_name)
@@ -247,6 +249,8 @@ class SecretStore(StoreBase):
                         file_found = True
                     else:
                         continue
+                if not file.secret:
+                    continue
 
                 secret_path = self.secret_path(generator, file.name)
                 update_keys(
