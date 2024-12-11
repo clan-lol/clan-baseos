@@ -221,9 +221,10 @@ class SecretStore(StoreBase):
         recipients_to_add = wanted_recipients - current_recipients
         var_id = f"{generator.name}/{name}"
         msg = (
-            f"One or more recipient keys were added to secret{' shared' if generator.share else ''} var '{var_id}', but it was never re-encrypted. "
-            f"This could have been a malicious actor trying to add their keys, please investigate. "
-            f"Added keys: {', '.join(f"{r.key_type.name}:{r.pubkey}" for r in recipients_to_add)}"
+            f"One or more recipient keys were added to secret{' shared' if generator.share else ''} var '{var_id}', but it was never re-encrypted.\n"
+            f"This could have been a malicious actor trying to add their keys, please investigate.\n"
+            f"Added keys: {', '.join(f"{r.key_type.name}:{r.pubkey}" for r in recipients_to_add)}\n"
+            f"If this is intended, run 'clan vars fix' to re-encrypt the secret."
         )
         return needs_update, msg
 
