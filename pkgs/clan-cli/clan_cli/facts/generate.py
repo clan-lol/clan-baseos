@@ -3,6 +3,7 @@ import importlib
 import logging
 import os
 import sys
+import traceback
 from collections.abc import Callable
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -202,8 +203,9 @@ def generate_facts(
                 was_regenerated |= _generate_facts_for_machine(
                     machine, service, regenerate, tmpdir, prompt
                 )
-            except (OSError, ClanError):
-                machine.error("Failed to generate facts")
+            except (OSError, ClanError) as e:
+                machine.error(f"Failed to generate facts: {e}")
+                traceback.print_exc()
                 errors += 1
             if errors > 0:
                 msg = (
