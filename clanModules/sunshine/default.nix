@@ -104,7 +104,7 @@ in
     }"
   ];
 
-  hardware.opengl.enable = true;
+  hardware.graphics.enable = true;
 
   systemd.user.services.sunshine = {
     enable = true;
