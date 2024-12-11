@@ -14,7 +14,7 @@ export const SidebarListItem = (props: SidebarListItem) => {
     <li class="sidebar__list__item">
       <A class="sidebar__list__link" href={href}>
         <Typography
-          classes="sidebar__list__content"
+          class="sidebar__list__content"
           tag="span"
           hierarchy="body"
           size="s"

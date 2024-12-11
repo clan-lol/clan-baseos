@@ -1,6 +1,5 @@
 import { callApi, SuccessData, SuccessQuery } from "@/src/api";
 import { activeURI } from "@/src/App";
-import { BackButton } from "@/src/components/BackButton";
 import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
 import Icon from "@/src/components/icon";
@@ -17,6 +16,7 @@ import { createQuery } from "@tanstack/solid-query";
 import { createSignal, For, Show } from "solid-js";
 import toast from "solid-toast";
 import { MachineAvatar } from "./avatar";
+import { Header } from "@/src/layout/header";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -502,19 +502,21 @@ export const MachineDetails = () => {
   }));
 
   return (
-    <div class="card">
-      <BackButton />
-      <Show
-        when={genericQuery.data}
-        fallback={<span class="loading loading-lg"></span>}
-      >
-        {(data) => (
-          <>
-            <MachineForm initialData={data()} />
-          </>
-        )}
-      </Show>
-    </div>
+    <>
+      <Header title={`${params.id} machine`} showBack />
+      <div class="card">
+        <Show
+          when={genericQuery.data}
+          fallback={<span class="loading loading-lg"></span>}
+        >
+          {(data) => (
+            <>
+              <MachineForm initialData={data()} />
+            </>
+          )}
+        </Show>
+      </div>
+    </>
   );
 };
 

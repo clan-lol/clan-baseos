@@ -6,10 +6,11 @@ export const BackButton = () => {
   const navigate = useNavigate();
   return (
     <Button
-      variant="light"
-      class="w-fit"
+      variant="ghost"
+      size="s"
+      class="mr-2"
       onClick={() => navigate(-1)}
-      startIcon={<Icon icon="CaretRight" />}
+      startIcon={<Icon icon="CaretLeft" />}
     ></Button>
   );
 };

@@ -67,38 +67,27 @@ const weightMap: Record<Weight, string> = {
 
 interface TypographyProps<H extends Hierarchy> {
   hierarchy: H;
+  size: AllowedSizes<H>;
+  children: JSX.Element;
   weight?: Weight;
   color?: Color;
   inverted?: boolean;
-  size: AllowedSizes<H>;
   tag?: Tag;
-  children: JSX.Element;
-  classes?: string;
+  class?: string;
 }
 export const Typography = <H extends Hierarchy>(props: TypographyProps<H>) => {
-  const {
-    size,
-    color = "primary",
-    inverted,
-    hierarchy,
-    weight = "normal",
-    tag = "span",
-    children,
-    classes,
-  } = props;
-
   return (
     <Dynamic
-      component={tag}
+      component={props.tag || "span"}
       class={cx(
-        classes,
-        colorMap[color],
-        inverted && "fnt-clr--inverted",
-        sizeHierarchyMap[hierarchy][size] as string,
-        weightMap[weight],
+        props.class,
+        colorMap[props.color || "primary"],
+        props.inverted && "fnt-clr--inverted",
+        sizeHierarchyMap[props.hierarchy][props.size] as string,
+        weightMap[props.weight || "normal"],
       )}
     >
-      {children}
+      {props.children}
     </Dynamic>
   );
 };

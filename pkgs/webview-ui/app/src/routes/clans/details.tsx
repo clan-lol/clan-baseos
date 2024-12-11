@@ -1,9 +1,7 @@
 import { callApi, ClanServiceInstance, SuccessQuery } from "@/src/api";
-import { BackButton } from "@/src/components/BackButton";
 import { useParams } from "@solidjs/router";
 import { createQuery, useQueryClient } from "@tanstack/solid-query";
 import { createSignal, For, Match, Switch } from "solid-js";
-import { Show } from "solid-js";
 import {
   createForm,
   FieldValues,
@@ -15,9 +13,10 @@ import {
 } from "@modular-forms/solid";
 import { TextInput } from "@/src/components/TextInput";
 import toast from "solid-toast";
-import { get_single_service, set_single_service } from "@/src/api/inventory";
+import { set_single_service } from "@/src/api/inventory";
 import { Button } from "@/src/components/button";
 import Icon from "@/src/components/icon";
+import { Header } from "@/src/layout/header";
 
 interface AdminModuleFormProps {
   admin: AdminData;
@@ -65,30 +64,17 @@ const EditClanForm = (props: EditClanFormProps) => {
       <Field name="icon">
         {(field) => (
           <>
-            <figure class="p-1">
-              <div class="flex flex-col items-center">
-                <div class="text-3xl text-primary-800">{curr_name()}</div>
-                <div class="text-secondary-800">Wide settings</div>
-              </div>
-            </figure>
-            <figure>
-              <Show
-                when={field.value}
-                fallback={
-                  <span class="material-icons aspect-square size-60 rounded-lg text-[18rem]">
-                    group
-                  </span>
-                }
-              >
-                {(icon) => (
-                  <img
-                    class="aspect-square size-60 rounded-lg"
-                    src={icon()}
-                    alt="Clan Logo"
-                  />
-                )}
-              </Show>
-            </figure>
+            <div class="flex flex-col items-center">
+              <div class="text-3xl text-primary-800">{curr_name()}</div>
+              <div class="text-secondary-800">Wide settings</div>
+              <Icon
+                class="mt-4"
+                icon="ClanIcon"
+                viewBox="0 0 72 89"
+                width={96}
+                height={96}
+              />
+            </div>
           </>
         )}
       </Field>
@@ -344,7 +330,6 @@ type AdminData = ClanServiceInstance<"admin">;
 
 export const ClanDetails = () => {
   const params = useParams();
-  const queryClient = useQueryClient();
   const clan_dir = window.atob(params.id);
   // Fetch general meta data
   const clanQuery = createQuery(() => ({
@@ -355,48 +340,17 @@ export const ClanDetails = () => {
       return result.data;
     },
   }));
-  // Fetch admin settings
-  const adminQuery = createQuery(() => ({
-    queryKey: [clan_dir, "inventory", "services", "admin"],
-    queryFn: async () => {
-      const result = await get_single_service(queryClient, clan_dir, "admin");
-      if (!result) throw new Error("Failed to fetch data");
-      return result;
-    },
-  }));
 
   return (
-    <div class="card card-normal">
-      <BackButton />
-      <Show
-        when={!adminQuery.isLoading}
-        fallback={
-          <div>
-            <span class="loading loading-lg"></span>
-          </div>
-        }
-      >
+    <>
+      <Header title={clan_dir} showBack />
+      <div class="flex flex-col justify-center">
         <Switch fallback={<>General data not available</>}>
           <Match when={clanQuery.data}>
             {(d) => <EditClanForm initial={d()} directory={clan_dir} />}
           </Match>
         </Switch>
-      </Show>
-      <div class="divider"></div>
-      <Show
-        when={!adminQuery.isLoading}
-        fallback={
-          <div>
-            <span class="loading loading-lg"></span>
-          </div>
-        }
-      >
-        <Switch fallback={<>Admin data not available</>}>
-          <Match when={adminQuery.data}>
-            {(d) => <AdminModuleForm admin={d()} base_url={clan_dir} />}
-          </Match>
-        </Switch>
-      </Show>
-    </div>
+      </div>
+    </>
   );
 };

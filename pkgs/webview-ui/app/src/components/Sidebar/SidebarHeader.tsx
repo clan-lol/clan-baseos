@@ -1,27 +1,20 @@
-import { createSignal, Show } from "solid-js";
-
+import { createSignal } from "solid-js";
 import { Typography } from "@/src/components/Typography";
 import { SidebarFlyout } from "./SidebarFlyout";
+import "./css/sidebar.css";
 
-interface SidebarHeader {
+interface SidebarProps {
   clanName: string;
+  showFlyout?: () => boolean;
 }
 
-export const SidebarHeader = (props: SidebarHeader) => {
-  const { clanName } = props;
-
-  const [showFlyout, toggleFlyout] = createSignal(false);
-
-  function handleClick() {
-    toggleFlyout(!showFlyout());
-  }
-
-  const renderClanProfile = () => (
+const ClanProfile = (props: SidebarProps) => {
+  return (
     <div
-      class={`sidebar__profile ${showFlyout() ? "sidebar__profile--flyout" : ""}`}
+      class={`sidebar__profile ${props.showFlyout?.() ? "sidebar__profile--flyout" : ""}`}
     >
       <Typography
-        classes="sidebar__profile__character"
+        class="sidebar__profile__character"
         tag="span"
         hierarchy="title"
         size="m"
@@ -29,14 +22,15 @@ export const SidebarHeader = (props: SidebarHeader) => {
         color="primary"
         inverted={true}
       >
-        {clanName.slice(0, 1).toUpperCase()}
+        {props.clanName.slice(0, 1).toUpperCase()}
       </Typography>
     </div>
   );
+};
 
-  const renderClanTitle = () => (
+const ClanTitle = (props: SidebarProps) => {
+  return (
     <Typography
-      classes="sidebar__title"
       tag="h3"
       hierarchy="body"
       size="default"
@@ -44,15 +38,23 @@ export const SidebarHeader = (props: SidebarHeader) => {
       color="primary"
       inverted={true}
     >
-      {clanName}
+      {props.clanName}
     </Typography>
   );
+};
+
+export const SidebarHeader = (props: SidebarProps) => {
+  const [showFlyout, toggleFlyout] = createSignal(false);
+
+  function handleClick() {
+    toggleFlyout(!showFlyout());
+  }
 
   return (
     <header class="sidebar__header">
       <div onClick={handleClick} class="sidebar__header__inner">
-        {renderClanProfile()}
-        {renderClanTitle()}
+        <ClanProfile clanName={props.clanName} showFlyout={showFlyout} />
+        <ClanTitle clanName={props.clanName} />
       </div>
       {showFlyout() && <SidebarFlyout />}
     </header>

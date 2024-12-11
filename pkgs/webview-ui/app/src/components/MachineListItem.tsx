@@ -106,109 +106,104 @@ export const MachineListItem = (props: MachineListItemProps) => {
     setUpdating(false);
   };
   return (
-    <li>
-      <div class="card card-side m-2">
-        <figure class="h-fit rounded-xl border bg-def-2 border-def-5">
-          <RndThumbnail name={name} width={220} height={120} />
-        </figure>
-        <div class="card-body flex-row justify-between ">
-          <div class="flex flex-col">
-            <A href={`/machines/${name}`}>
-              <h2
-                class="card-title underline"
-                classList={{
-                  "text-neutral-500": nixOnly,
-                }}
-              >
-                {name}
-              </h2>
-            </A>
-            <div class="text-slate-600">
-              <Show when={info}>{(d) => d()?.description}</Show>
-            </div>
-            <div class="text-slate-600">
-              <Show when={info}>
-                {(d) => (
-                  <>
-                    <Show when={d().tags}>
-                      {(tags) => (
-                        <span class="flex gap-1">
-                          <For each={tags()}>
-                            {(tag) => (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  props.setFilter((prev) => {
-                                    if (prev.tags.includes(tag)) {
-                                      return prev;
-                                    }
-                                    return {
-                                      ...prev,
-                                      tags: [...prev.tags, tag],
-                                    };
-                                  })
-                                }
-                              >
-                                <span class="rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
-                                  {tag}
-                                </span>
-                              </button>
-                            )}
-                          </For>
-                        </span>
-                      )}
-                    </Show>
-                    {d()?.deploy?.targetHost}
-                  </>
-                )}
-              </Show>
-            </div>
-            <div class="flex flex-row flex-wrap gap-4 py-2"></div>
-          </div>
-          <div>
-            <Menu
-              popoverid={`menu-${props.name}`}
-              label={<Icon icon={"More"} />}
+    <div class="card card-side m-2">
+      <figure class="h-fit rounded-xl border bg-def-2 border-def-5">
+        <RndThumbnail name={name} width={220} height={120} />
+      </figure>
+      <div class="card-body flex-row justify-between ">
+        <div class="flex flex-col">
+          <A href={`/machines/${name}`}>
+            <h2
+              class="card-title underline"
+              classList={{
+                "text-neutral-500": nixOnly,
+              }}
             >
-              <ul class="menu z-[1] w-52 rounded-box bg-base-100 p-2 shadow">
-                <li>
-                  <a
-                    onClick={() => {
-                      navigate("/machines/" + name);
-                    }}
-                  >
-                    Details
-                  </a>
-                </li>
-                <li
-                  classList={{
-                    disabled: !info?.deploy?.targetHost || installing(),
-                  }}
-                  onClick={handleInstall}
-                >
-                  <a>
-                    <Show when={info?.deploy?.targetHost} fallback={"Deploy"}>
-                      {(d) => `Install to ${d()}`}
-                    </Show>
-                  </a>
-                </li>
-                <li
-                  classList={{
-                    disabled: !info?.deploy?.targetHost || updating(),
-                  }}
-                  onClick={handleUpdate}
-                >
-                  <a>
-                    <Show when={info?.deploy?.targetHost} fallback={"Deploy"}>
-                      {(d) => `Update (${d()})`}
-                    </Show>
-                  </a>
-                </li>
-              </ul>
-            </Menu>
+              {name}
+            </h2>
+          </A>
+          <div class="text-slate-600">
+            <Show when={info}>{(d) => d()?.description}</Show>
           </div>
+          <div class="text-slate-600">
+            <Show when={info}>
+              {(d) => (
+                <>
+                  <Show when={d().tags}>
+                    {(tags) => (
+                      <span class="flex gap-1">
+                        <For each={tags()}>
+                          {(tag) => (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                props.setFilter((prev) => {
+                                  if (prev.tags.includes(tag)) {
+                                    return prev;
+                                  }
+                                  return {
+                                    ...prev,
+                                    tags: [...prev.tags, tag],
+                                  };
+                                })
+                              }
+                            >
+                              <span class="rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
+                                {tag}
+                              </span>
+                            </button>
+                          )}
+                        </For>
+                      </span>
+                    )}
+                  </Show>
+                  {d()?.deploy?.targetHost}
+                </>
+              )}
+            </Show>
+          </div>
+          <div class="flex flex-row flex-wrap gap-4 py-2"></div>
+        </div>
+        <div>
+          <Menu popoverid={`menu-${props.name}`} label={<Icon icon={"More"} />}>
+            <ul class="menu z-[1] w-52 rounded-box bg-base-100 p-2 shadow">
+              <li>
+                <a
+                  onClick={() => {
+                    navigate("/machines/" + name);
+                  }}
+                >
+                  Details
+                </a>
+              </li>
+              <li
+                classList={{
+                  disabled: !info?.deploy?.targetHost || installing(),
+                }}
+                onClick={handleInstall}
+              >
+                <a>
+                  <Show when={info?.deploy?.targetHost} fallback={"Deploy"}>
+                    {(d) => `Install to ${d()}`}
+                  </Show>
+                </a>
+              </li>
+              <li
+                classList={{
+                  disabled: !info?.deploy?.targetHost || updating(),
+                }}
+                onClick={handleUpdate}
+              >
+                <a>
+                  <Show when={info?.deploy?.targetHost} fallback={"Deploy"}>
+                    {(d) => `Update (${d()})`}
+                  </Show>
+                </a>
+              </li>
+            </ul>
+          </Menu>
         </div>
       </div>
-    </li>
+    </div>
   );
 };
