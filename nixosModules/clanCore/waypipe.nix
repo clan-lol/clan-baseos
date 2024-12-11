@@ -38,7 +38,7 @@
     };
     # General default settings
     fonts.enableDefaultPackages = lib.mkDefault true;
-    hardware.opengl.enable = lib.mkDefault true;
+    hardware.graphics.enable = lib.mkDefault true;
 
     # User account
     services.getty.autologinUser = lib.mkDefault config.clan.services.waypipe.user;
