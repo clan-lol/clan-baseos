@@ -2,7 +2,6 @@ import argparse
 import importlib
 import logging
 import os
-import subprocess
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -32,9 +31,9 @@ def read_multiline_input(prompt: str = "Finish with Ctrl-D") -> str:
     Read multi-line input from stdin.
     """
     print(prompt, flush=True)
-    proc = subprocess.run(["cat"], stdout=subprocess.PIPE, text=True, check=False)
+    proc = run(["cat"], RunOpts(check=False))
     log.info("Input received. Processing...")
-    return proc.stdout
+    return proc.stdout.rstrip(os.linesep).rstrip()
 
 
 def bubblewrap_cmd(generator: str, facts_dir: Path, secrets_dir: Path) -> list[str]:

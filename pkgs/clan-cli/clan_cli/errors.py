@@ -189,3 +189,13 @@ class ClanCmdError(ClanError):
 
     def __repr__(self) -> str:
         return f"ClanCmdError({self.cmd})"
+
+
+class TorSocksError(ClanError):
+    def __init__(self, msg: str) -> None:
+        super().__init__(msg)
+
+
+class TorConnectionError(ClanError):
+    def __init__(self, msg: str) -> None:
+        super().__init__(msg)
