@@ -3,6 +3,7 @@ import importlib
 import json
 import logging
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -48,12 +49,12 @@ def install_machine(opts: InstallOptions) -> None:
     machine.override_target_host = opts.target_host
 
     secret_facts_module = importlib.import_module(machine.secret_facts_module)
-    log.info(f"installing {machine.name}")
+    machine.info(f"installing {machine.name}")
     secret_facts_store = secret_facts_module.SecretStore(machine=machine)
 
     h = machine.target_host
     target_host = f"{h.user or 'root'}@{h.host}"
-    log.info(f"target host: {target_host}")
+    machine.info(f"target host: {target_host}")
 
     generate_facts([machine])
     generate_vars([machine])
@@ -103,7 +104,7 @@ def install_machine(opts: InstallOptions) -> None:
             ]
 
         if not machine.can_build_locally or opts.build_on_remote:
-            log.info("Architecture mismatch. Building on remote machine")
+            machine.info("Architecture mismatch. Building on remote machine")
             cmd.append("--build-on-remote")
 
         if machine.target_host.port:
@@ -119,62 +120,70 @@ def install_machine(opts: InstallOptions) -> None:
                 ["nixpkgs#nixos-anywhere"],
                 cmd,
             ),
-            RunOpts(log=Log.BOTH),
+            RunOpts(log=Log.BOTH, prefix=machine.name, needs_user_terminal=True),
         )
 
 
 def install_command(args: argparse.Namespace) -> None:
-    if args.flake is None:
-        msg = "Could not find clan flake toplevel directory"
-        raise ClanError(msg)
-    json_ssh_deploy = None
-    if args.json:
-        json_file = Path(args.json)
-        if json_file.is_file():
-            json_ssh_deploy = json.loads(json_file.read_text())
+    try:
+        if args.flake is None:
+            msg = "Could not find clan flake toplevel directory"
+            raise ClanError(msg)
+        json_ssh_deploy = None
+        if args.json:
+            json_file = Path(args.json)
+            if json_file.is_file():
+                json_ssh_deploy = json.loads(json_file.read_text())
+            else:
+                json_ssh_deploy = json.loads(args.json)
+        elif args.png:
+            json_ssh_deploy = json.loads(qrcode_scan(args.png))
+
+        if json_ssh_deploy:
+            target_host = (
+                f"root@{find_reachable_host_from_deploy_json(json_ssh_deploy)}"
+            )
+            password = json_ssh_deploy["pass"]
+        elif args.target_host:
+            target_host = args.target_host
+            password = None
         else:
-            json_ssh_deploy = json.loads(args.json)
-    elif args.png:
-        json_ssh_deploy = json.loads(qrcode_scan(args.png))
+            machine = Machine(
+                name=args.machine, flake=args.flake, nix_options=args.option
+            )
+            target_host = str(machine.target_host)
+            password = None
 
-    if json_ssh_deploy:
-        target_host = f"root@{find_reachable_host_from_deploy_json(json_ssh_deploy)}"
-        password = json_ssh_deploy["pass"]
-    elif args.target_host:
-        target_host = args.target_host
-        password = None
-    else:
-        machine = Machine(name=args.machine, flake=args.flake, nix_options=args.option)
-        target_host = str(machine.target_host)
-        password = None
+        if args.password:
+            password = args.password
 
-    if args.password:
-        password = args.password
+        if not target_host:
+            msg = "No target host provided, please provide a target host."
+            raise ClanError(msg)
 
-    if not target_host:
-        msg = "No target host provided, please provide a target host."
-        raise ClanError(msg)
+        if not args.yes:
+            ask = input(f"Install {args.machine} to {target_host}? [y/N] ")
+            if ask != "y":
+                return None
 
-    if not args.yes:
-        ask = input(f"Install {args.machine} to {target_host}? [y/N] ")
-        if ask != "y":
-            return None
-
-    return install_machine(
-        InstallOptions(
-            flake=args.flake,
-            machine=args.machine,
-            target_host=target_host,
-            kexec=args.kexec,
-            debug=args.debug,
-            no_reboot=args.no_reboot,
-            json_ssh_deploy=json_ssh_deploy,
-            nix_options=args.option,
-            build_on_remote=args.build_on_remote,
-            update_hardware_config=HardwareConfig(args.update_hardware_config),
-            password=password,
-        ),
-    )
+        return install_machine(
+            InstallOptions(
+                flake=args.flake,
+                machine=args.machine,
+                target_host=target_host,
+                kexec=args.kexec,
+                debug=args.debug,
+                no_reboot=args.no_reboot,
+                json_ssh_deploy=json_ssh_deploy,
+                nix_options=args.option,
+                build_on_remote=args.build_on_remote,
+                update_hardware_config=HardwareConfig(args.update_hardware_config),
+                password=password,
+            ),
+        )
+    except KeyboardInterrupt:
+        log.warning("Interrupted by user")
+        sys.exit(1)
 
 
 def find_reachable_host_from_deploy_json(deploy_json: dict[str, str]) -> str:
@@ -252,4 +261,5 @@ def register_install_parser(parser: argparse.ArgumentParser) -> None:
         "--png",
         help="specify the json file for ssh data as the qrcode image (generated by starting the clan installer)",
     )
+
     parser.set_defaults(func=install_command)

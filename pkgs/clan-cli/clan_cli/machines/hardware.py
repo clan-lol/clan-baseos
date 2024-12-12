@@ -71,7 +71,7 @@ def show_machine_deployment_target(clan_dir: Path, machine_name: str) -> str | N
             "--json",
         ]
     )
-    proc = run_no_stdout(cmd)
+    proc = run_no_stdout(cmd, RunOpts(prefix=machine_name))
     res = proc.stdout.strip()
 
     target_host = json.loads(res)
@@ -93,7 +93,7 @@ def show_machine_hardware_platform(clan_dir: Path, machine_name: str) -> str | N
             "--json",
         ]
     )
-    proc = run_no_stdout(cmd)
+    proc = run_no_stdout(cmd, RunOpts(prefix=machine_name))
     res = proc.stdout.strip()
 
     host_platform = json.loads(res)
@@ -160,9 +160,9 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareCon
             *config_command,
         ],
     )
-    out = run(cmd, RunOpts(needs_user_terminal=True))
+    out = run(cmd, RunOpts(needs_user_terminal=True, prefix=machine.name))
     if out.returncode != 0:
-        log.error(out)
+        machine.error(str(out))
         msg = f"Failed to inspect {opts.machine}. Address: {opts.target_host}"
         raise ClanError(msg)
 

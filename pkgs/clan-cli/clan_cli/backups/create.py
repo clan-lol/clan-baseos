@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def create_backup(machine: Machine, provider: str | None = None) -> None:
-    log.info(f"creating backup for {machine.name}")
+    machine.info(f"creating backup for {machine.name}")
     backup_scripts = json.loads(machine.eval_nix("config.clan.core.backups"))
     if provider is None:
         for provider in backup_scripts["providers"]:

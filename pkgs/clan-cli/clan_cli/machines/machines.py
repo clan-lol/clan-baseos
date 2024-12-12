@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Literal
 
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import run_no_stdout
+from clan_cli.cmd import RunOpts, run_no_stdout
 from clan_cli.errors import ClanError
 from clan_cli.facts import public_modules as facts_public_modules
 from clan_cli.facts import secret_modules as facts_secret_modules
@@ -70,7 +70,8 @@ class Machine:
         output = self._eval_cache.get(attr)
         if output is None:
             output = run_no_stdout(
-                nix_eval(["--impure", "--expr", attr])
+                nix_eval(["--impure", "--expr", attr]),
+                opts=RunOpts(prefix=self.name),
             ).stdout.strip()
             self._eval_cache[attr] = output
         return json.loads(output)
@@ -239,7 +240,8 @@ class Machine:
                             "--expr",
                             f'let x = (builtins.fetchTree {{ type = "file"; url = "file://{config_json.name}"; }}); in {{ narHash = x.narHash; path = x.outPath; }}',
                         ]
-                    )
+                    ),
+                    opts=RunOpts(prefix=self.name),
                 ).stdout.strip()
             )
 
@@ -277,9 +279,15 @@ class Machine:
         args += nix_options + self.nix_options
 
         if method == "eval":
-            output = run_no_stdout(nix_eval(args)).stdout.strip()
+            output = run_no_stdout(
+                nix_eval(args), opts=RunOpts(prefix=self.name)
+            ).stdout.strip()
             return output
-        return Path(run_no_stdout(nix_build(args)).stdout.strip())
+        return Path(
+            run_no_stdout(
+                nix_build(args), opts=RunOpts(prefix=self.name)
+            ).stdout.strip()
+        )
 
     def eval_nix(
         self,

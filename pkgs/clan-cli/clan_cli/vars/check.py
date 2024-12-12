@@ -60,7 +60,7 @@ def vars_status(machine: Machine, generator_name: None | str = None) -> VarStatu
 
             if file.secret:
                 if not secret_vars_store.exists(generator, file.name):
-                    log.info(
+                    machine.info(
                         f"Secret var '{file.name}' for service '{generator.name}' in machine {machine.name} is missing."
                     )
                     missing_secret_vars.append(file)
@@ -70,13 +70,13 @@ def vars_status(machine: Machine, generator_name: None | str = None) -> VarStatu
                         file_name=file.name,
                     )
                     if msg:
-                        log.info(
+                        machine.info(
                             f"Secret var '{file.name}' for service '{generator.name}' in machine {machine.name} needs update: {msg}"
                         )
                         unfixed_secret_vars.append(file)
 
             elif not public_vars_store.exists(generator, file.name):
-                log.info(
+                machine.info(
                     f"Public var '{file.name}' for service '{generator.name}' in machine {machine.name} is missing."
                 )
                 missing_public_vars.append(file)
@@ -86,13 +86,13 @@ def vars_status(machine: Machine, generator_name: None | str = None) -> VarStatu
             and public_vars_store.hash_is_valid(generator)
         ):
             invalid_generators.append(generator.name)
-            log.info(
+            machine.info(
                 f"Generator '{generator.name}' in machine {machine.name} has outdated invalidation hash."
             )
-    log.debug(f"missing_secret_vars: {missing_secret_vars}")
-    log.debug(f"missing_public_vars: {missing_public_vars}")
-    log.debug(f"unfixed_secret_vars: {unfixed_secret_vars}")
-    log.debug(f"invalid_generators: {invalid_generators}")
+    machine.debug(f"missing_secret_vars: {missing_secret_vars}")
+    machine.debug(f"missing_public_vars: {missing_public_vars}")
+    machine.debug(f"unfixed_secret_vars: {unfixed_secret_vars}")
+    machine.debug(f"invalid_generators: {invalid_generators}")
     return VarStatus(
         missing_secret_vars,
         missing_public_vars,

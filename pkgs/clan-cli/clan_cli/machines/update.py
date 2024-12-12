@@ -170,7 +170,9 @@ def deploy_machine(machines: list[Machine]) -> None:
         # if the machine is mobile, we retry to deploy with the mobile workaround method
         is_mobile = machine.deployment.get("nixosMobileWorkaround", False)
         if is_mobile and ret.returncode != 0:
-            log.info("Mobile machine detected, applying workaround deployment method")
+            machine.info(
+                "Mobile machine detected, applying workaround deployment method"
+            )
             ret = host.run(
                 test_cmd,
                 RunOpts(msg_color=MsgColor(stderr=AnsiColor.DEFAULT)),

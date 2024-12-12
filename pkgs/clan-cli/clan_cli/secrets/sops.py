@@ -77,7 +77,7 @@ class KeyType(enum.Enum):
                 except FileNotFoundError:
                     return
                 except Exception as ex:
-                    log.warn(f"Could not read age keys from {key_path}: {ex}")
+                    log.warning(f"Could not read age keys from {key_path}: {ex}")
 
             # Sops will try every location, see age/keysource.go
             if key_path := os.environ.get("SOPS_AGE_KEY_FILE"):

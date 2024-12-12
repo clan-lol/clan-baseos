@@ -16,7 +16,7 @@ def upload_secrets(machine: Machine) -> None:
     secret_facts_store = secret_facts_module.SecretStore(machine=machine)
 
     if not secret_facts_store.needs_upload():
-        log.info("Secrets already uploaded")
+        machine.info("Secrets already uploaded")
         return
 
     with TemporaryDirectory(prefix="facts-upload-") as tempdir:
