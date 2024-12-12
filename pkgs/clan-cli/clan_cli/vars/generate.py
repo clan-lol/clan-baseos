@@ -283,13 +283,13 @@ def _migration_file_exists(
     if is_secret:
         if machine.secret_facts_store.exists(generator.name, fact_name):
             return True
-        log.debug(
+        machine.debug(
             f"Cannot migrate fact {fact_name} for service {generator.name}, as it does not exist in the secret fact store"
         )
     if not is_secret:
         if machine.public_facts_store.exists(generator.name, fact_name):
             return True
-        log.debug(
+        machine.debug(
             f"Cannot migrate fact {fact_name} for service {generator.name}, as it does not exist in the public fact store"
         )
     return False

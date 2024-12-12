@@ -3,7 +3,7 @@ import json
 import logging
 from pathlib import Path
 
-from clan_cli.cmd import run_no_stdout
+from clan_cli.cmd import RunOpts, run_no_stdout
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_machines,
@@ -11,12 +11,13 @@ from clan_cli.completions import (
 )
 from clan_cli.dirs import get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanCmdError, ClanError
+from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_eval
 
 log = logging.getLogger(__name__)
 
 
-def list_state_folders(machine: str, service: None | str = None) -> None:
+def list_state_folders(machine: Machine, service: None | str = None) -> None:
     uri = "TODO"
     if (clan_dir_result := get_clan_flake_toplevel_or_env()) is not None:
         flake = clan_dir_result
@@ -31,7 +32,7 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
     res = "{}"
 
     try:
-        proc = run_no_stdout(cmd)
+        proc = run_no_stdout(cmd, opts=RunOpts(prefix=machine.name))
         res = proc.stdout.strip()
     except ClanCmdError as e:
         msg = "Clan might not have meta attributes"
@@ -49,7 +50,7 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
             msg = f"Service {service} isn't configured for this machine."
             raise ClanError(
                 msg,
-                location=f"clan state list {machine} --service {service}",
+                location=f"clan state list {machine.name} --service {service}",
                 description=f"The service: {service} needs to be configured for the machine.",
             )
 
@@ -69,7 +70,9 @@ def list_state_folders(machine: str, service: None | str = None) -> None:
 
 
 def list_command(args: argparse.Namespace) -> None:
-    list_state_folders(machine=args.machine, service=args.service)
+    list_state_folders(
+        Machine(name=args.machine, flake=args.flake), service=args.service
+    )
 
 
 def register_state_parser(parser: argparse.ArgumentParser) -> None:

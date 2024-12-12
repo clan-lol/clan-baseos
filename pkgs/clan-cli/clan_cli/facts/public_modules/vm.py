@@ -15,7 +15,7 @@ class FactStore(FactStoreBase):
         self.machine = machine
         self.works_remotely = False
         self.dir = vm_state_dir(machine.flake, machine.name) / "facts"
-        log.debug(f"FactStore initialized with dir {self.dir}")
+        machine.debug(f"FactStore initialized with dir {self.dir}")
 
     def exists(self, service: str, name: str) -> bool:
         fact_path = self.dir / service / name

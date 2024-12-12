@@ -117,6 +117,7 @@ def prepare_disk(
 
 @contextmanager
 def start_vm(
+    machine: Machine,
     args: list[str],
     packages: list[str],
     extra_env: dict[str, str],
@@ -127,7 +128,7 @@ def start_vm(
     env = os.environ.copy()
     env.update(extra_env)
     cmd = nix_shell(packages, args)
-    log.debug(f"Starting VM with command: {cmd}")
+    machine.debug(f"Starting VM with command: {cmd}")
     with subprocess.Popen(
         cmd, env=env, stdout=stdout, stderr=stderr, stdin=stdin
     ) as process:
@@ -215,7 +216,7 @@ def spawn_vm(
         nix_options = []
     with ExitStack() as stack:
         machine = Machine(name=vm.machine_name, flake=vm.flake_url)
-        log.debug(f"Creating VM for {machine}")
+        machine.debug(f"Creating VM for {machine}")
 
         # store the temporary rootfs inside XDG_CACHE_HOME on the host
         # otherwise, when using /tmp, we risk running out of memory
@@ -292,6 +293,7 @@ def spawn_vm(
             start_waypipe(qemu_cmd.vsock_cid, f"[{vm.machine_name}] "),
             start_virtiofsd(virtiofsd_socket),
             start_vm(
+                machine,
                 qemu_cmd.args,
                 packages,
                 extra_env,

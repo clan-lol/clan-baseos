@@ -49,7 +49,7 @@ def flash_machine(
     extra_args: list[str] | None = None,
 ) -> None:
     devices = [Path(disk.device) for disk in disks]
-    with pause_automounting(devices):
+    with pause_automounting(devices, machine):
         if extra_args is None:
             extra_args = []
         system_config_nix: dict[str, Any] = {}

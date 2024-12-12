@@ -19,7 +19,7 @@ class FactStore(StoreBase):
         self.machine = machine
         self.works_remotely = False
         self.dir = vm_state_dir(machine.flake, machine.name) / "facts"
-        log.debug(f"FactStore initialized with dir {self.dir}")
+        machine.debug(f"FactStore initialized with dir {self.dir}")
 
     @property
     def store_name(self) -> str:
