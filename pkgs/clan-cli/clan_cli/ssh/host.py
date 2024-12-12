@@ -3,6 +3,8 @@
 import logging
 import os
 import shlex
+import socket
+import subprocess
 from dataclasses import dataclass, field
 from shlex import quote
 from typing import Any
@@ -10,6 +12,7 @@ from typing import Any
 from clan_cli.cmd import CmdOut, RunOpts, run
 from clan_cli.colors import AnsiColor
 from clan_cli.errors import ClanError
+from clan_cli.nix import nix_shell
 from clan_cli.ssh.host_key import HostKeyCheck
 
 cmdlog = logging.getLogger(__name__)
@@ -39,13 +42,6 @@ class Host:
     @property
     def target(self) -> str:
         return f"{self.user or 'root'}@{self.host}"
-
-    @property
-    def target_for_rsync(self) -> str:
-        host = self.host
-        if ":" in host:
-            host = f"[{host}]"
-        return f"{self.user or 'root'}@{host}"
 
     def run_local(
         self,
@@ -163,8 +159,20 @@ class Host:
     def ssh_cmd(
         self,
         verbose_ssh: bool = False,
+        tor_socks: bool = False,
         tty: bool = False,
+        password: str | None = None,
     ) -> list[str]:
+        packages = []
+        password_args = []
+        if password:
+            packages.append("nixpkgs#sshpass")
+            password_args = [
+                "sshpass",
+                "-p",
+                password,
+            ]
+
         ssh_opts = self.ssh_cmd_opts
         if verbose_ssh or self.verbose_ssh:
             ssh_opts.extend(["-v"])
@@ -176,8 +184,36 @@ class Host:
         if self.key:
             ssh_opts.extend(["-i", self.key])
 
-        return [
+        if tor_socks:
+            ssh_opts.append("-o")
+            ssh_opts.append("ProxyCommand=nc -x 127.0.0.1:9050 -X 5 %h %p")
+
+        cmd = [
+            *password_args,
             "ssh",
             self.target,
             *ssh_opts,
         ]
+
+        return nix_shell(packages, cmd)
+
+    def connect_ssh_shell(
+        self, *, password: str | None = None, tor_socks: bool = False
+    ) -> None:
+        cmd = self.ssh_cmd(tor_socks=tor_socks, password=password)
+
+        subprocess.run(cmd)
+
+
+def is_ssh_reachable(host: Host) -> bool:
+    sock = socket.socket(
+        socket.AF_INET6 if ":" in host.host else socket.AF_INET, socket.SOCK_STREAM
+    )
+    sock.settimeout(2)
+    try:
+        sock.connect((host.host, host.port or 22))
+        sock.close()
+    except OSError:
+        return False
+    else:
+        return True

@@ -97,7 +97,11 @@ def nix_metadata(flake_url: str | Path) -> dict[str, Any]:
 def nix_shell(packages: list[str], cmd: list[str]) -> list[str]:
     # we cannot use nix-shell inside the nix sandbox
     # in our tests we just make sure we have all the packages
-    if os.environ.get("IN_NIX_SANDBOX") or os.environ.get("CLAN_NO_DYNAMIC_DEPS"):
+    if (
+        os.environ.get("IN_NIX_SANDBOX")
+        or os.environ.get("CLAN_NO_DYNAMIC_DEPS")
+        or len(packages) == 0
+    ):
         return cmd
     return [
         *nix_command(["shell", "--inputs-from", f"{nixpkgs_flake()!s}"]),

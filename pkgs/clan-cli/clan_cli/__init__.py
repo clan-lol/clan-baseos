@@ -30,7 +30,7 @@ from .flash import cli as flash_cli
 from .hyperlink import help_hyperlink
 from .machines import cli as machines
 from .profiler import profile
-from .ssh import cli as ssh_cli
+from .ssh import deploy_info as ssh_cli
 from .vars import cli as vars_cli
 
 log = logging.getLogger(__name__)
@@ -432,7 +432,7 @@ def main() -> None:
         if debug:
             log.exception("Exited with error")
         else:
-            log.error("%s", e)  # noqa: TRY400
+            log.error("%s", e)
             sys.exit(1)
     except KeyboardInterrupt as ex:
         log.warning("Interrupted by user", exc_info=ex)

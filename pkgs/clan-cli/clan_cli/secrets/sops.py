@@ -77,7 +77,7 @@ class KeyType(enum.Enum):
                 except FileNotFoundError:
                     return
                 except Exception as ex:
-                    log.warning(f"Could not read age keys from {key_path}: {ex}")
+                    log.warning(f"Could not read age keys from {key_path}", exc_info=ex)
 
             # Sops will try every location, see age/keysource.go
             if key_path := os.environ.get("SOPS_AGE_KEY_FILE"):
@@ -246,14 +246,10 @@ def sops_run(
 
 def get_public_age_key(privkey: str) -> str:
     cmd = nix_shell(["nixpkgs#age"], ["age-keygen", "-y"])
-    try:
-        res = subprocess.run(
-            cmd, input=privkey, stdout=subprocess.PIPE, text=True, check=True
-        )
-    except subprocess.CalledProcessError as e:
-        msg = "Failed to get public key for age private key. Is the key malformed?"
-        raise ClanError(msg) from e
-    return res.stdout.strip()
+
+    error_msg = "Failed to get public key for age private key. Is the key malformed?"
+    res = run(cmd, RunOpts(input=privkey.encode(), error_msg=error_msg))
+    return res.stdout.rstrip(os.linesep).rstrip()
 
 
 def generate_private_key(out_file: Path | None = None) -> tuple[str, str]:

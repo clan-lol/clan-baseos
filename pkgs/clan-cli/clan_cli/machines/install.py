@@ -1,6 +1,5 @@
 import argparse
 import importlib
-import json
 import logging
 import os
 import sys
@@ -21,7 +20,7 @@ from clan_cli.facts.generate import generate_facts
 from clan_cli.machines.hardware import HardwareConfig
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
-from clan_cli.ssh.cli import is_ipv6, is_reachable, qrcode_scan
+from clan_cli.ssh.deploy_info import DeployInfo, find_reachable_host, ssh_command_parse
 from clan_cli.vars.generate import generate_vars
 
 log = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ class InstallOptions:
     kexec: str | None = None
     debug: bool = False
     no_reboot: bool = False
-    json_ssh_deploy: dict[str, str] | None = None
+    deploy_info: DeployInfo | None = None
     build_on_remote: bool = False
     nix_options: list[str] = field(default_factory=list)
     update_hardware_config: HardwareConfig = HardwareConfig.NONE
@@ -45,6 +44,12 @@ class InstallOptions:
 
 @API.register
 def install_machine(opts: InstallOptions) -> None:
+    # TODO: Fixme, replace opts.machine and opts.flake with machine object
+    # remove opts.deploy_info, opts.target_host and populate machine object
+    if opts.deploy_info:
+        msg = "Deploy info has not been fully implemented yet"
+        raise NotImplementedError(msg)
+
     machine = Machine(opts.machine, flake=opts.flake)
     machine.override_target_host = opts.target_host
 
@@ -129,21 +134,15 @@ def install_command(args: argparse.Namespace) -> None:
         if args.flake is None:
             msg = "Could not find clan flake toplevel directory"
             raise ClanError(msg)
-        json_ssh_deploy = None
-        if args.json:
-            json_file = Path(args.json)
-            if json_file.is_file():
-                json_ssh_deploy = json.loads(json_file.read_text())
-            else:
-                json_ssh_deploy = json.loads(args.json)
-        elif args.png:
-            json_ssh_deploy = json.loads(qrcode_scan(args.png))
+        deploy_info: DeployInfo | None = ssh_command_parse(args)
 
-        if json_ssh_deploy:
-            target_host = (
-                f"root@{find_reachable_host_from_deploy_json(json_ssh_deploy)}"
-            )
-            password = json_ssh_deploy["pass"]
+        if deploy_info:
+            host = find_reachable_host(deploy_info)
+            if host is None:
+                msg = f"Couldn't reach any host address: {deploy_info.addrs}"
+                raise ClanError(msg)
+            target_host = host.target
+            password = deploy_info.pwd
         elif args.target_host:
             target_host = args.target_host
             password = None
@@ -174,7 +173,7 @@ def install_command(args: argparse.Namespace) -> None:
                 kexec=args.kexec,
                 debug=args.debug,
                 no_reboot=args.no_reboot,
-                json_ssh_deploy=json_ssh_deploy,
+                deploy_info=deploy_info,
                 nix_options=args.option,
                 build_on_remote=args.build_on_remote,
                 update_hardware_config=HardwareConfig(args.update_hardware_config),
@@ -184,22 +183,6 @@ def install_command(args: argparse.Namespace) -> None:
     except KeyboardInterrupt:
         log.warning("Interrupted by user")
         sys.exit(1)
-
-
-def find_reachable_host_from_deploy_json(deploy_json: dict[str, str]) -> str:
-    host = None
-    for addr in deploy_json["addrs"]:
-        if is_reachable(addr):
-            host = f"[{addr}]" if is_ipv6(addr) else addr
-            break
-    if not host:
-        msg = f"""
-            Could not reach any of the host addresses provided in the json string.
-            Please doublecheck if they are reachable from your machine.
-            Try `ping [ADDR]` with one of the addresses: {deploy_json['addrs']}
-            """
-        raise ClanError(msg)
-    return host
 
 
 def register_install_parser(parser: argparse.ArgumentParser) -> None:
