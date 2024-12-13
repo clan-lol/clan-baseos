@@ -40,7 +40,6 @@ class Generator:
     files: list[Var] = field(default_factory=list)
     share: bool = False
     validation: str | None = None
-    final_script: str = ""
     prompts: list[Prompt] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
 
@@ -62,13 +61,20 @@ class Generator:
         return cls(
             name=data["name"],
             share=data["share"],
-            final_script=data["finalScript"],
             files=[Var.from_json(data["name"], f) for f in data["files"].values()],
             validation=data["validationHash"],
             dependencies=data["dependencies"],
             migrate_fact=data["migrateFact"],
             prompts=[Prompt.from_json(p) for p in data["prompts"].values()],
         )
+
+    @property
+    def final_script(self) -> Path:
+        assert self._machine is not None
+        final_script = self._machine.build_nix(
+            f"config.clan.core.vars.generators.{self.name}.finalScript"
+        )
+        return final_script
 
 
 def bubblewrap_cmd(generator: str, tmpdir: Path) -> list[str]:
@@ -188,7 +194,7 @@ def execute_generator(
                 prompt_file.write_text(value)
 
         if sys.platform == "linux":
-            cmd = bubblewrap_cmd(generator.final_script, tmpdir)
+            cmd = bubblewrap_cmd(str(generator.final_script), tmpdir)
         else:
             cmd = ["bash", "-c", generator.final_script]
         run(cmd, RunOpts(env=env))
@@ -201,7 +207,7 @@ def execute_generator(
             secret_file = tmpdir_out / file.name
             if not secret_file.is_file():
                 msg = f"did not generate a file for '{file.name}' when running the following command:\n"
-                msg += generator.final_script
+                msg += str(generator.final_script)
                 raise ClanError(msg)
             if file.secret:
                 file_path = secret_vars_store.set(

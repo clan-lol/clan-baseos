@@ -41,7 +41,6 @@ in
           inherit (generator)
             name
             dependencies
-            finalScript
             validationHash
             migrateFact
             prompts
