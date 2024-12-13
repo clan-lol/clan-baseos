@@ -8,9 +8,11 @@ import { SidebarHeader } from "./SidebarHeader";
 import { SidebarListItem } from "./SidebarListItem";
 import { Typography } from "../Typography";
 import "./css/sidebar.css";
+import Icon, { IconVariant } from "../icon";
 
 export const SidebarSection = (props: {
   title: string;
+  icon: IconVariant;
   children: JSX.Element;
 }) => {
   const { title, children } = props;
@@ -19,7 +21,7 @@ export const SidebarSection = (props: {
     <details class="sidebar__section accordeon" open>
       <summary class="accordeon__header">
         <Typography
-          class="uppercase"
+          class="inline-flex w-full gap-2 uppercase"
           tag="p"
           hierarchy="body"
           size="xs"
@@ -27,7 +29,9 @@ export const SidebarSection = (props: {
           color="tertiary"
           inverted={true}
         >
+          <Icon icon={props.icon} />
           {title}
+          <Icon icon="CaretDown" class="ml-auto" />
         </Typography>
       </summary>
       <div class="accordeon__body">{children}</div>
@@ -64,7 +68,7 @@ export const Sidebar = (props: RouteSectionProps) => {
         {(meta) => <SidebarHeader clanName={meta().name} />}
       </Show>
       <div class="sidebar__body max-h-[calc(100vh-4rem)] overflow-scroll">
-        <For each={routes.filter((r) => !r.hidden && r.path != "/clans")}>
+        <For each={routes.filter((r) => !r.hidden)}>
           {(route: AppRoute) => (
             <Show
               when={route.children}
@@ -73,7 +77,10 @@ export const Sidebar = (props: RouteSectionProps) => {
               }
             >
               {(children) => (
-                <SidebarSection title={route.label}>
+                <SidebarSection
+                  title={route.label}
+                  icon={route.icon || "Paperclip"}
+                >
                   <ul>
                     <For each={children().filter((r) => !r.hidden)}>
                       {(child) => (

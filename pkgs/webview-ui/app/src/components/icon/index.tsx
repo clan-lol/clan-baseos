@@ -67,7 +67,7 @@ const icons = {
   Update,
 };
 
-type IconVariant = keyof typeof icons;
+export type IconVariant = keyof typeof icons;
 
 interface IconProps extends JSX.SvgSVGAttributes<SVGElement> {
   icon: IconVariant;

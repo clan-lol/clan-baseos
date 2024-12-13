@@ -19,6 +19,7 @@ import { ModuleList } from "./routes/modules/list";
 import { ModuleDetails } from "./routes/modules/details";
 import { ModuleDetails as AddModule } from "./routes/modules/add";
 import { ApiTester } from "./api_test";
+import { IconVariant } from "./components/icon";
 
 export const client = new QueryClient();
 
@@ -40,7 +41,7 @@ if (import.meta.env.DEV) {
 
 export type AppRoute = Omit<RouteDefinition, "children"> & {
   label: string;
-  icon?: string;
+  icon?: IconVariant;
   children?: AppRoute[];
   hidden?: boolean;
 };
@@ -55,7 +56,7 @@ export const routes: AppRoute[] = [
   {
     path: "/machines",
     label: "Machines",
-    icon: "devices_other",
+    icon: "Grid",
     children: [
       {
         path: "/",
@@ -78,7 +79,8 @@ export const routes: AppRoute[] = [
   {
     path: "/clans",
     label: "Clans",
-    icon: "groups",
+    hidden: true,
+    icon: "List",
     children: [
       {
         path: "/",
@@ -101,7 +103,7 @@ export const routes: AppRoute[] = [
   {
     path: "/modules",
     label: "Modules",
-    icon: "apps",
+    icon: "Search",
     children: [
       {
         path: "/",
@@ -125,32 +127,37 @@ export const routes: AppRoute[] = [
   {
     path: "/tools",
     label: "Tools",
-    icon: "bolt",
+    icon: "Folder",
     children: [
       {
         path: "/flash",
-        label: "Clan Installer",
+        label: "Flash Installer",
         component: () => <Flash />,
-      },
-      {
-        path: "/hosts",
-        label: "Local Hosts",
-        component: () => <HostList />,
       },
     ],
   },
   {
     path: "/welcome",
     label: "",
-    hidden: false,
+    hidden: true,
     component: () => <Welcome />,
   },
   {
-    path: "/api_testing",
-    label: "api_testing",
-    icon: "bolt",
-    hidden: false,
-    component: () => <ApiTester />,
+    path: "/internal-dev",
+    label: "Internal (Only visible in dev mode)",
+    children: [
+      {
+        path: "/hosts",
+        label: "Local Hosts",
+        component: () => <HostList />,
+      },
+      {
+        path: "/api_testing",
+        label: "api_testing",
+        hidden: false,
+        component: () => <ApiTester />,
+      },
+    ],
   },
 ];
 
