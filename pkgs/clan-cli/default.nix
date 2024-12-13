@@ -105,6 +105,7 @@ python3.pkgs.buildPythonApplication {
   makeWrapperArgs =
     [
       "--unset LD_LIBRARY_PATH"
+      "--unset PYTHONPATH"
 
       # TODO: remove gitMinimal here and use the one from runtimeDependencies
       "--suffix"
@@ -210,7 +211,7 @@ python3.pkgs.buildPythonApplication {
   '';
 
   checkPhase = ''
-    PYTHONPATH= $out/bin/clan --help
+    $out/bin/clan --help
   '';
 
   meta.mainProgram = "clan";
