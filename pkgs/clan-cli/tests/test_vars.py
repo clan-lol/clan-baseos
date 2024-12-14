@@ -858,7 +858,7 @@ def test_stdout_of_generate(
             "my_generator",
             regenerate=True,
         )
-    assert "Updated" not in caplog.text
+    assert "Updated var" not in caplog.text
     assert "hello" in caplog.text
     caplog.clear()
     with caplog.at_level(logging.INFO):
