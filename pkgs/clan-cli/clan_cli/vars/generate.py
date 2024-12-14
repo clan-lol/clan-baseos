@@ -17,7 +17,7 @@ from clan_cli.completions import (
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 from clan_cli.machines.inventory import get_all_machines, get_selected_machines
-from clan_cli.nix import nix_shell
+from clan_cli.nix import nix_shell, nix_test_store
 from clan_cli.vars._types import StoreBase
 
 from .check import check_vars
@@ -40,7 +40,6 @@ class Generator:
     files: list[Var] = field(default_factory=list)
     share: bool = False
     validation: str | None = None
-    final_script: str = ""
     prompts: list[Prompt] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
 
@@ -62,7 +61,6 @@ class Generator:
         return cls(
             name=data["name"],
             share=data["share"],
-            final_script=data["finalScript"],
             files=[Var.from_json(data["name"], f) for f in data["files"].values()],
             validation=data["validationHash"],
             dependencies=data["dependencies"],
@@ -70,8 +68,18 @@ class Generator:
             prompts=[Prompt.from_json(p) for p in data["prompts"].values()],
         )
 
+    @property
+    def final_script(self) -> Path:
+        assert self._machine is not None
+        final_script = self._machine.build_nix(
+            f"config.clan.core.vars.generators.{self.name}.finalScript"
+        )
+        return final_script
+
 
 def bubblewrap_cmd(generator: str, tmpdir: Path) -> list[str]:
+    test_store = nix_test_store()
+
     # fmt: off
     return nix_shell(
         [
@@ -81,6 +89,7 @@ def bubblewrap_cmd(generator: str, tmpdir: Path) -> list[str]:
         [
             "bwrap",
             "--ro-bind", "/nix/store", "/nix/store",
+            *(["--ro-bind", str(test_store), str(test_store)] if test_store else []),
             "--tmpfs",  "/usr/lib/systemd",
             "--dev", "/dev",
             "--bind", str(tmpdir), str(tmpdir),
@@ -188,7 +197,7 @@ def execute_generator(
                 prompt_file.write_text(value)
 
         if sys.platform == "linux":
-            cmd = bubblewrap_cmd(generator.final_script, tmpdir)
+            cmd = bubblewrap_cmd(str(generator.final_script), tmpdir)
         else:
             cmd = ["bash", "-c", generator.final_script]
         run(cmd, RunOpts(env=env))
@@ -201,7 +210,7 @@ def execute_generator(
             secret_file = tmpdir_out / file.name
             if not secret_file.is_file():
                 msg = f"did not generate a file for '{file.name}' when running the following command:\n"
-                msg += generator.final_script
+                msg += str(generator.final_script)
                 raise ClanError(msg)
             if file.secret:
                 file_path = secret_vars_store.set(

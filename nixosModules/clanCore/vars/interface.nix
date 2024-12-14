@@ -322,7 +322,7 @@ in
                   - all required programs are in PATH
                   - sandbox is set up correctly
               '';
-              type = lib.types.str;
+              type = lib.types.path;
               readOnly = true;
               internal = true;
             };

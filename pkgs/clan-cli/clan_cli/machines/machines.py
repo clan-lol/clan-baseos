@@ -166,7 +166,11 @@ class Machine:
         generators: dict[str, Any] = clan_vars.get("generators")
         if generators is None:
             return []
-        return [Generator.from_json(gen) for gen in generators.values()]
+        _generators = [Generator.from_json(gen) for gen in generators.values()]
+        for gen in _generators:
+            gen.machine(self)
+
+        return _generators
 
     @property
     def secrets_upload_directory(self) -> str:
