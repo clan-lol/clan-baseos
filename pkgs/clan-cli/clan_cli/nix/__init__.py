@@ -37,7 +37,7 @@ def nix_build(flags: list[str], gcroot: Path | None = None) -> list[str]:
             "--print-out-paths",
             "--print-build-logs",
             *(["--show-trace"] if log.isEnabledFor(logging.DEBUG) else []),
-            *(["--out-root", str(gcroot)] if gcroot is not None else []),
+            *(["--out-root", str(gcroot)] if gcroot is not None else ["--no-link"]),
             *flags,
         ]
     )
