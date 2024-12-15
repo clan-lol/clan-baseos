@@ -72,7 +72,7 @@ class Generator:
     def final_script(self) -> Path:
         assert self._machine is not None
         final_script = self._machine.build_nix(
-            f"config.clan.core.vars.generators.{self.name}.finalScript"
+            f'config.clan.core.vars.generators."{self.name}".finalScript'
         )
         return final_script
 
