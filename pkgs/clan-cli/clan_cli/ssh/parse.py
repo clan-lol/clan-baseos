@@ -1,3 +1,4 @@
+import re
 import urllib.parse
 from typing import Any
 
@@ -18,7 +19,7 @@ def parse_deployment_address(
     parts = host.split("@")
     user: str | None = None
     # count the number of : in the hostname
-    if host.count(":") > 1 and not host.startswith("["):
+    if host.count(":") > 1 and not re.match(r".*\[.*\]", host):
         msg = f"Invalid hostname: {host}. IPv6 addresses must be enclosed in brackets , e.g. [::1]"
         raise ClanError(msg)
     if len(parts) > 1:
