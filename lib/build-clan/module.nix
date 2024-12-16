@@ -17,6 +17,28 @@ let
 
   inherit (clan-core.lib.inventory) buildInventory;
 
+  supportedSystems = [
+    "x86_64-linux"
+    "aarch64-linux"
+    "riscv64-linux"
+    "x86_64-darwin"
+    "aarch64-darwin"
+  ];
+
+  /*
+    An attrset with nixpkgs instantiated for each platform.
+    This is important, as:
+      1. We don't want to call `pkgsForSystem system` multiple times
+      2. We need to fall back to `nixpkgs.legacyPackages.${system}` in case pkgsForSystem returns null
+  */
+  pkgsFor = lib.genAttrs supportedSystems (
+    system:
+    let
+      pkgs = pkgsForSystem system;
+    in
+    if pkgs != null then pkgs else nixpkgs.legacyPackages.${system}
+  );
+
   # map from machine name to service configuration
   # { ${machineName} :: Config }
   serviceConfigs = (
@@ -94,14 +116,6 @@ let
 
   allMachines = inventory.machines or { } // machines;
 
-  supportedSystems = [
-    "x86_64-linux"
-    "aarch64-linux"
-    "riscv64-linux"
-    "x86_64-darwin"
-    "aarch64-darwin"
-  ];
-
   nixosConfigurations = lib.mapAttrs (name: _: nixosConfiguration { inherit name; }) allMachines;
 
   # This instantiates nixos for each system that we support:
@@ -115,7 +129,7 @@ let
           name: _:
           nixosConfiguration {
             inherit name system;
-            pkgs = pkgsForSystem system;
+            pkgs = pkgsFor.${system};
           }
         ) allMachines
       )
@@ -132,7 +146,7 @@ let
             args
             // {
               inherit name system;
-              pkgs = pkgsForSystem system;
+              pkgs = pkgsFor.${system};
             }
           )
         ) allMachines

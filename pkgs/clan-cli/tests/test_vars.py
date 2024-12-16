@@ -8,7 +8,7 @@ from age_keys import SopsSetup
 from clan_cli.clan_uri import FlakeId
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
-from clan_cli.nix import nix_eval, run
+from clan_cli.nix import nix_command, nix_eval, run
 from clan_cli.vars.check import check_vars
 from clan_cli.vars.generate import Generator, generate_vars_for_machine
 from clan_cli.vars.get import get_var
@@ -1074,3 +1074,43 @@ def test_invalidation(
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     value2_new = get_var(machine, "my_generator/my_value").printable_value
     assert value2 == value2_new
+
+
+@pytest.mark.with_core
+def test_build_scripts_for_correct_system(
+    flake: ClanFlake,
+) -> None:
+    """
+    Ensure that the build script is generated for the current local system,
+        not the system of the target machine
+    """
+    from clan_cli.nix import nix_config
+
+    local_system = nix_config()["system"]
+    config = flake.machines["my_machine"]
+    config["nixpkgs"]["hostPlatform"] = (
+        "aarch64-linux" if local_system == "x86_64-linux" else "x86_64-linux"
+    )
+    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["script"] = "echo -n hello > $out/my_value"
+    flake.refresh()
+    # get the current system
+    # build the final script
+    generator = Generator("my_generator")
+    generator._machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))  # NOQA: SLF001
+    final_script = generator.final_script
+    script_path = str(final_script).removeprefix("/build/store")
+    # get the nix derivation for the script
+    cmd_out = run(
+        nix_command(
+            [
+                "show-derivation",
+                script_path,
+            ]
+        )
+    )
+    assert cmd_out.returncode == 0
+    out_json = json.loads(cmd_out.stdout)
+    generator_script_system = next(iter(out_json.values()))["system"]
+    assert generator_script_system == local_system
