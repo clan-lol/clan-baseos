@@ -6,7 +6,7 @@
 }:
 
 let
-  network-status = pkgs.writeShellScript "network-status" ''
+  network-status = pkgs.writeShellScriptBin "network-status" ''
     export PATH=${
       lib.makeBinPath (
         with pkgs;
@@ -50,7 +50,10 @@ in
     ./zfs-latest.nix
   ];
 
-  environment.systemPackages = [ pkgs.nixos-facter ];
+  environment.systemPackages = [
+    pkgs.nixos-facter
+    network-status
+  ];
 
   ########################################################################################################
   #                                                                                                      #
