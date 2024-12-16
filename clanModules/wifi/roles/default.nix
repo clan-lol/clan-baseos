@@ -70,7 +70,7 @@ in
         ${pkgs.findutils}/bin/find /var/lib/iwd -type l -exec rm {} \;
 
         ${toString (
-          lib.mapAttrsFlatten (name: network: ''
+          lib.mapAttrsToList (name: network: ''
             passwd=$(cat "${secret_path name}")
             ssid=$(cat "${ssid_path name}")
             echo "
