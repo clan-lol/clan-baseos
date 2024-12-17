@@ -51,7 +51,7 @@ def complete_machines(
                 run(
                     nix_eval(
                         flags=[
-                            f"{flake}#nixosConfigurations",
+                            f"{flake}#clanInternals.machines.x86_64-linux",
                             "--apply",
                             "builtins.attrNames",
                         ],
