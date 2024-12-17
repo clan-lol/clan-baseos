@@ -11,7 +11,7 @@ import {
   setValue,
   SubmitHandler,
 } from "@modular-forms/solid";
-import { TextInput } from "@/src/components/TextInput";
+import { TextInput } from "@/src/Form/fields/TextInput";
 import toast from "solid-toast";
 import { set_single_service } from "@/src/api/inventory";
 import { Button } from "@/src/components/button";
@@ -215,7 +215,6 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
                 <Field name={`allowedKeys.${idx()}.name`}>
                   {(field, props) => (
                     <TextInput
-                      formStore={formStore}
                       inputProps={props}
                       label={"Name"}
                       adornment={{
@@ -235,7 +234,6 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
                   {(field, props) => (
                     <>
                       <TextInput
-                        formStore={formStore}
                         inputProps={props}
                         label={"Value"}
                         value={field.value ?? ""}
@@ -243,7 +241,10 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
                         class="col-span-6"
                         required
                       />
-                      <span class="tooltip mt-auto" data-tip="Select file">
+                      <span
+                        class="tooltip col-span-12 mt-auto"
+                        data-tip="Select file"
+                      >
                         <label
                           class={"form-control w-full"}
                           aria-disabled={formStore.submitting}

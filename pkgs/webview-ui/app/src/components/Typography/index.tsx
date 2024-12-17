@@ -24,6 +24,7 @@ interface SizeForHierarchy {
   body: {
     default: string;
     xs: string;
+    xxs: string;
     s: string;
   };
   headline: {
@@ -43,10 +44,9 @@ type AllowedSizes<H extends Hierarchy> = keyof SizeForHierarchy[H];
 const sizeHierarchyMap: SizeForHierarchy = {
   body: {
     default: cx("fnt-body-default"),
-    xs: cx("fnt-body-xs"),
     s: cx("fnt-body-s"),
-    // m: cx("fnt-body-m"),
-    // l: cx("fnt-body-l"),
+    xs: cx("fnt-body-xs"),
+    xxs: cx("fnt-body-xxs"),
   },
   headline: {
     default: cx("fnt-headline-default"),

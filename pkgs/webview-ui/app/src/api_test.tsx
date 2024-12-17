@@ -4,7 +4,7 @@ import {
   getValues,
   SubmitHandler,
 } from "@modular-forms/solid";
-import { TextInput } from "./components/TextInput";
+import { TextInput } from "@/src/Form/fields/TextInput";
 import { Button } from "./components/button";
 import { callApi } from "./api";
 import { API } from "@/api/API";
@@ -68,7 +68,6 @@ export const ApiTester = () => {
                 label={"endpoint"}
                 value={field.value || ""}
                 inputProps={fieldProps}
-                formStore={formStore}
               />
             )}
           </Field>
@@ -78,7 +77,6 @@ export const ApiTester = () => {
                 label={"payload"}
                 value={field.value || ""}
                 inputProps={fieldProps}
-                formStore={formStore}
               />
             )}
           </Field>

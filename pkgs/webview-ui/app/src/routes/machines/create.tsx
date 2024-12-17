@@ -2,7 +2,7 @@ import { callApi, OperationArgs } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { Button } from "@/src/components/button";
 import Icon from "@/src/components/icon";
-import { TextInput } from "@/src/components/TextInput";
+import { TextInput } from "@/src/Form/fields/TextInput";
 import { Header } from "@/src/layout/header";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { useNavigate } from "@solidjs/router";
@@ -73,7 +73,7 @@ export function CreateMachine() {
       <Header title="Create Machine" />
       <div class="flex w-full p-4">
         <div class="mt-4 w-full self-stretch px-2">
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} class="">
             <Field
               name="opts.machine.name"
               validate={[required("This field is required")]}
@@ -85,7 +85,6 @@ export function CreateMachine() {
                   </div>
                   <TextInput
                     inputProps={props}
-                    formStore={formStore}
                     value={`${field.value}`}
                     label={"name"}
                     error={field.error}
@@ -99,7 +98,6 @@ export function CreateMachine() {
               {(field, props) => (
                 <TextInput
                   inputProps={props}
-                  formStore={formStore}
                   value={`${field.value}`}
                   label={"description"}
                   error={field.error}
@@ -143,7 +141,6 @@ export function CreateMachine() {
                     <>
                       <TextInput
                         inputProps={props}
-                        formStore={formStore}
                         value={`${field.value}`}
                         label={"Target"}
                         error={field.error}
