@@ -2,16 +2,16 @@ import argparse
 import ipaddress
 import json
 import logging
-import shlex
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from clan_cli.async_run import AsyncRuntime
 from clan_cli.cmd import run
-from clan_cli.errors import ClanError, TorConnectionError, TorSocksError
+from clan_cli.errors import ClanError
 from clan_cli.nix import nix_shell
 from clan_cli.ssh.host import Host, is_ssh_reachable
-from clan_cli.ssh.tor import TorTarget, ssh_tor_reachable
+from clan_cli.ssh.tor import TorTarget, spawn_tor, ssh_tor_reachable
 
 log = logging.getLogger(__name__)
 
@@ -63,12 +63,13 @@ def parse_qr_code(picture_file: Path) -> DeployInfo:
     return DeployInfo.from_json(json.loads(data))
 
 
-def ssh_shell_from_deploy(deploy_info: DeployInfo) -> None:
+def ssh_shell_from_deploy(deploy_info: DeployInfo, runtime: AsyncRuntime) -> None:
     if host := find_reachable_host(deploy_info):
         host.connect_ssh_shell(password=deploy_info.pwd)
     else:
         log.info("Could not reach host via clearnet 'addrs'")
         log.info(f"Trying to reach host via tor '{deploy_info.tor}'")
+        spawn_tor(runtime)
         if not deploy_info.tor:
             msg = "No tor address provided, please provide a tor address."
             raise ClanError(msg)
@@ -98,15 +99,9 @@ def ssh_command(args: argparse.Namespace) -> None:
     if not deploy_info:
         msg = "No --json or --png data provided"
         raise ClanError(msg)
-    try:
-        ssh_shell_from_deploy(deploy_info)
-    except TorSocksError as ex:
-        log.error(ex)
-        tor_cmd = nix_shell(["nixpkgs#tor"], ["tor"])
-        log.error("Is Tor running? If not, you can start it by running:")
-        log.error(f"{' '.join(shlex.quote(arg) for arg in tor_cmd)}")
-    except TorConnectionError:
-        log.error("The onion address is not reachable via Tor.")
+
+    with AsyncRuntime() as runtime:
+        ssh_shell_from_deploy(deploy_info, runtime)
 
 
 def register_parser(parser: argparse.ArgumentParser) -> None:

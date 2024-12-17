@@ -4,9 +4,11 @@ import argparse
 import logging
 import socket
 import struct
+import time
 from dataclasses import dataclass
 
-from clan_cli.cmd import run
+from clan_cli.async_run import AsyncRuntime
+from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.errors import TorConnectionError, TorSocksError
 from clan_cli.nix import nix_shell
 
@@ -96,14 +98,42 @@ def fetch_onion_content(target: TorTarget) -> str:
         return response.decode("utf-8", errors="replace")
 
 
-def spawn_tor() -> None:
+def is_tor_running() -> bool:
+    """Checks if Tor is online."""
+    try:
+        tor_online_test()
+    except TorSocksError:
+        return False
+    else:
+        return True
+
+
+def spawn_tor(runtime: AsyncRuntime) -> None:
     """
-    Spawns a Tor process using `nix-shell`.
+    Spawns a Tor process using `nix-shell` if Tor is not already running.
     """
-    cmd_args = ["tor"]
-    packages = ["nixpkgs#tor"]
-    cmd = nix_shell(packages, cmd_args)
-    run(cmd)
+
+    def start_tor() -> None:
+        """Starts Tor process using nix-shell."""
+        cmd_args = ["tor", "--HardwareAccel", "1"]
+        packages = ["nixpkgs#tor"]
+        cmd = nix_shell(packages, cmd_args)
+        runtime.async_run(None, run, cmd, RunOpts(log=Log.BOTH))
+        log.debug("Attempting to start Tor")
+
+    # Check if Tor is already running
+    if is_tor_running():
+        log.info("Tor is running")
+        return
+
+    # Attempt to start Tor
+    start_tor()
+
+    # Continuously check if Tor has started
+    while not is_tor_running():
+        log.debug("Waiting for Tor to start...")
+        time.sleep(0.2)
+    log.info("Tor is now running")
 
 
 def tor_online_test() -> bool:
