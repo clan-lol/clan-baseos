@@ -20,6 +20,7 @@ import { ModuleDetails } from "./routes/modules/details";
 import { ModuleDetails as AddModule } from "./routes/modules/add";
 import { ApiTester } from "./api_test";
 import { IconVariant } from "./components/icon";
+import { Components } from "./routes/components";
 
 export const client = new QueryClient();
 
@@ -156,6 +157,12 @@ export const routes: AppRoute[] = [
         label: "api_testing",
         hidden: false,
         component: () => <ApiTester />,
+      },
+      {
+        path: "/components",
+        label: "Components",
+        hidden: false,
+        component: () => <Components />,
       },
     ],
   },
