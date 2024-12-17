@@ -20,7 +20,6 @@ from .folders import (
     sops_secrets_folder,
     sops_users_folder,
 )
-from .sops import update_keys
 from .types import (
     VALID_USER_NAME,
     group_name_type,
@@ -97,15 +96,10 @@ def list_directory(directory: Path) -> str:
 
 
 def update_group_keys(flake_dir: Path, group: str) -> list[Path]:
-    updated_paths = []
-    for secret_ in secrets.list_secrets(flake_dir):
-        secret = sops_secrets_folder(flake_dir) / secret_
-        if (secret / "groups" / group).is_symlink():
-            updated_paths += update_keys(
-                secret,
-                secrets.collect_keys_for_path(secret),
-            )
-    return updated_paths
+    def filter_group_secrets(secret: Path) -> bool:
+        return (secret / "groups" / group).is_symlink()
+
+    return secrets.update_secrets(flake_dir, filter_secrets=filter_group_secrets)
 
 
 def add_member(
@@ -207,6 +201,21 @@ def add_secret(flake_dir: Path, group: str, name: str) -> None:
         sops_groups_folder(flake_dir),
         group,
     )
+
+
+def get_groups(
+    flake_dir: Path,
+    type_name: str,
+    name: str,
+) -> list[Path]:
+    groups_dir = sops_groups_folder(flake_dir)
+
+    groups = []
+    if groups_dir.exists():
+        for group in groups_dir.iterdir():
+            if group.is_dir() and (group / type_name / name).exists():
+                groups.append(group)
+    return groups
 
 
 def add_secret_command(args: argparse.Namespace) -> None:

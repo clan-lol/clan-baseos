@@ -2,6 +2,7 @@ import json
 import logging
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from age_keys import SopsSetup
@@ -19,6 +20,9 @@ from clan_cli.vars.secret_modules import password_store, sops
 from clan_cli.vars.set import set_var
 from fixtures_flakes import ClanFlake
 from helpers import cli
+
+if TYPE_CHECKING:
+    from age_keys import KeyPair
 
 
 def test_dependencies_as_files(temp_dir: Path) -> None:
@@ -218,6 +222,7 @@ def test_generate_secret_var_sops_with_default_group(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
     sops_setup: SopsSetup,
+    age_keys: list["KeyPair"],
 ) -> None:
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
@@ -242,10 +247,9 @@ def test_generate_secret_var_sops_with_default_group(
     )
     assert sops_store.exists(Generator("my_generator"), "my_secret")
     assert sops_store.get(Generator("my_generator"), "my_secret").decode() == "hello\n"
-    # add another user and check if secret gets re-encrypted
-    from clan_cli.secrets.sops import generate_private_key
 
-    _, pubkey_uschi = generate_private_key()
+    # add another user to the group and check if secret gets re-encrypted
+    pubkey_user2 = age_keys[1]
     cli.run(
         [
             "secrets",
@@ -253,19 +257,34 @@ def test_generate_secret_var_sops_with_default_group(
             "add",
             "--flake",
             str(flake.path),
-            "uschi",
-            pubkey_uschi,
+            "user2",
+            pubkey_user2.pubkey,
         ]
     )
-    cli.run(["secrets", "groups", "add-user", "my_group", "uschi"])
-    with pytest.raises(ClanError):
-        cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    # apply fix
-    cli.run(["vars", "fix", "--flake", str(flake.path), "my_machine"])
+    cli.run(["secrets", "groups", "add-user", "my_group", "user2"])
     # check if new user can access the secret
-    monkeypatch.setenv("USER", "uschi")
+    monkeypatch.setenv("USER", "user2")
     assert sops_store.user_has_access(
-        "uschi", Generator("my_generator", share=False), "my_secret"
+        "user2", Generator("my_generator", share=False), "my_secret"
+    )
+
+    # Rotate key of a user
+    pubkey_user3 = age_keys[2]
+    cli.run(
+        [
+            "secrets",
+            "users",
+            "add",
+            "--flake",
+            str(flake.path),
+            "--force",
+            "user2",
+            pubkey_user3.pubkey,
+        ]
+    )
+    monkeypatch.setenv("USER", "user2")
+    assert sops_store.user_has_access(
+        "user2", Generator("my_generator", share=False), "my_secret"
     )
 
 

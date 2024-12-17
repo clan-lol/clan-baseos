@@ -17,24 +17,29 @@ from .folders import (
     sops_machines_folder,
     sops_secrets_folder,
 )
+from .groups import get_groups
 from .secrets import update_secrets
 from .sops import read_key, write_key
 from .types import public_or_private_age_key_type, secret_name_type
 
 
-def add_machine(flake_dir: Path, machine: str, pubkey: str, force: bool) -> None:
-    machine_path = sops_machines_folder(flake_dir) / machine
+def add_machine(flake_dir: Path, name: str, pubkey: str, force: bool) -> None:
+    machine_path = sops_machines_folder(flake_dir) / name
     write_key(machine_path, pubkey, sops.KeyType.AGE, overwrite=force)
     paths = [machine_path]
 
+    groups = get_groups(flake_dir, "machines", name)
+
     def filter_machine_secrets(secret: Path) -> bool:
-        return (secret / "machines" / machine).exists()
+        if (secret / "machines" / name).exists():
+            return True
+        return any(secret.joinpath("groups", group.name).exists() for group in groups)
 
     paths.extend(update_secrets(flake_dir, filter_secrets=filter_machine_secrets))
     commit_files(
         paths,
         flake_dir,
-        f"Add machine {machine} to secrets",
+        f"Add machine {name} to secrets",
     )
 
 
