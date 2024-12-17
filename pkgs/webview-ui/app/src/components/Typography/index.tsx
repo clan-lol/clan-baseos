@@ -95,7 +95,7 @@ export const Typography = <H extends Hierarchy>(props: TypographyProps<H>) => {
         props.inverted && "fnt-clr--inverted",
         sizeHierarchyMap[props.hierarchy][props.size] as string,
         weightMap[props.weight || "normal"],
-        props.class
+        props.class,
       )}
       classList={props.classList}
     >
