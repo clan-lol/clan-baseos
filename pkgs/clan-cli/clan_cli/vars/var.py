@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -45,10 +46,10 @@ class Var:
         except UnicodeDecodeError:
             return "<binary blob>"
 
-    def set(self, value: bytes) -> None:
+    def set(self, value: bytes) -> Path | None:
         assert self._store is not None
         assert self._generator is not None
-        self._store.set(self._generator, self, value)
+        return self._store.set(self._generator, self, value)
 
     @property
     def exists(self) -> bool:

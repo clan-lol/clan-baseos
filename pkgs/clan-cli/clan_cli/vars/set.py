@@ -4,6 +4,7 @@ import sys
 
 from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.git import commit_files
 from clan_cli.machines.machines import Machine
 from clan_cli.vars.get import get_var
 from clan_cli.vars.prompt import PromptType
@@ -25,7 +26,13 @@ def set_var(
         _var = get_var(_machine, var)
     else:
         _var = var
-    _var.set(value)
+    path = _var.set(value)
+    if path:
+        commit_files(
+            [path],
+            _machine.flake_dir,
+            f"Update var {_var.id} for machine {_machine.name}",
+        )
 
 
 def set_via_stdin(machine: str, var_id: str, flake: FlakeId) -> None:
