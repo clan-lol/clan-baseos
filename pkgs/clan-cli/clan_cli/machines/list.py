@@ -85,7 +85,7 @@ def get_inventory_machine_details(flake_url: Path, machine_name: str) -> Machine
 def list_nixos_machines(flake_url: str | Path) -> list[str]:
     cmd = nix_eval(
         [
-            f"{flake_url}#nixosConfigurations",
+            f"{flake_url}#clanInternals.machines.x86_64-linux",
             "--apply",
             "builtins.attrNames",
             "--json",
