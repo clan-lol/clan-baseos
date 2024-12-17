@@ -8,7 +8,13 @@ from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
 from . import secrets, sops
-from .folders import list_objects, remove_object, sops_secrets_folder, sops_users_folder
+from .folders import (
+    list_objects,
+    remove_object,
+    sops_secrets_folder,
+    sops_users_folder,
+)
+from .groups import get_groups
 from .secrets import update_secrets
 from .sops import read_key, write_key
 from .types import (
@@ -28,11 +34,16 @@ def add_user(
 ) -> None:
     path = sops_users_folder(flake_dir) / name
 
+    groups = get_groups(flake_dir, "users", name)
+
     def filter_user_secrets(secret: Path) -> bool:
-        return secret.joinpath("users", name).exists()
+        if secret.joinpath("users", name).exists():
+            return True
+        return any(secret.joinpath("groups", group.name).exists() for group in groups)
 
     write_key(path, key, key_type, overwrite=force)
     paths = [path]
+
     paths.extend(update_secrets(flake_dir, filter_secrets=filter_user_secrets))
     commit_files(
         paths,

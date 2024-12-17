@@ -1,4 +1,5 @@
 import argparse
+import functools
 import getpass
 import logging
 import os
@@ -39,18 +40,52 @@ from .types import VALID_SECRET_NAME, secret_name_type
 log = logging.getLogger(__name__)
 
 
+def list_generators_secrets(generators_path: Path) -> list[Path]:
+    for generator_path in generators_path.iterdir():
+        if not generator_path.is_dir():
+            continue
+
+        def validate(generator_path: Path, name: str) -> bool:
+            return has_secret(generator_path / name)
+
+        paths = []
+        for obj in list_objects(
+            generator_path, functools.partial(validate, generator_path)
+        ):
+            paths.append(generator_path / obj)
+        return paths
+    return []
+
+
+def list_vars_secrets(flake_dir: Path) -> list[Path]:
+    secret_paths = []
+    shared_dir = flake_dir / "vars" / "shared"
+    if shared_dir.is_dir():
+        secret_paths.extend(list_generators_secrets(shared_dir))
+
+    machines_dir = flake_dir / "vars" / "per-machine"
+    if machines_dir.is_dir():
+        for machine_dir in machines_dir.iterdir():
+            if not machine_dir.is_dir():
+                continue
+            secret_paths.extend(list_generators_secrets(machine_dir))
+    return secret_paths
+
+
 def update_secrets(
     flake_dir: Path, filter_secrets: Callable[[Path], bool] = lambda _: True
 ) -> list[Path]:
     changed_files = []
-    for name in list_secrets(flake_dir):
-        secret_path = sops_secrets_folder(flake_dir) / name
-        if not filter_secrets(secret_path):
+    secret_paths = [sops_secrets_folder(flake_dir) / s for s in list_secrets(flake_dir)]
+    secret_paths.extend(list_vars_secrets(flake_dir))
+
+    for path in secret_paths:
+        if not filter_secrets(path):
             continue
         changed_files.extend(
             update_keys(
-                secret_path,
-                collect_keys_for_path(secret_path),
+                path,
+                collect_keys_for_path(path),
             )
         )
     return changed_files
@@ -222,7 +257,7 @@ def allow_member(
 ) -> list[Path]:
     source = source_folder / name
     if not source.exists():
-        msg = f"Cannot encrypt {group_folder.parent.name} for '{name}' group. '{name}' group does not exist in {source_folder}: "
+        msg = f"Cannot encrypt {group_folder.parent.name} for '{name}'. '{name}' does not exist in {source_folder}: "
         msg += list_directory(source_folder)
         raise ClanError(msg)
     group_folder.mkdir(parents=True, exist_ok=True)
