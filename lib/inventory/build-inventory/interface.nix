@@ -113,7 +113,7 @@ in
         Each module can be referenced by its `attributeName` in the `inventory.services` attribute set.
 
         !!! Important
-            Each module MUST fullfill the following requirements to be usable with the inventory:
+            Each module MUST fulfill the following requirements to be usable with the inventory:
 
             - The module MUST have a `README.md` file with a `description`.
             - The module MUST have at least `features = [ "inventory" ]` in the frontmatter section.
@@ -124,7 +124,7 @@ in
         ???+ example
             ```nix
             buildClan {
-                # 1. Add the module to the avilable inventory modules
+                # 1. Add the module to the available inventory modules
                 inventory.modules = {
                   custom-module = ./modules/my_module;
                 };
@@ -177,7 +177,7 @@ in
         It is possible to compute tags based on the machines properties or based on other tags.
 
         !!! danger
-            This is a powerfull feature and should be used with caution.
+            This is a powerful feature and should be used with caution.
 
             It is possible to cause infinite recursion by computing tags based on the machines properties or based on other tags.
 
