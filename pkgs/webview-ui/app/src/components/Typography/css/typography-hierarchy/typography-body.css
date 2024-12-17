@@ -15,3 +15,9 @@
   line-height: 132%;
   letter-spacing: 3%;
 }
+
+.fnt-body-xxs {
+  font-size: 0.6875rem;
+  line-height: 132%;
+  letter-spacing: 0.00688rem;
+}
