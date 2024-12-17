@@ -3,7 +3,7 @@ import { activeURI } from "@/src/App";
 import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
 import Icon from "@/src/components/icon";
-import { TextInput } from "@/src/components/TextInput";
+import { TextInput } from "@/src/Form/fields/TextInput";
 import { selectSshKeys } from "@/src/hooks";
 import {
   createForm,
@@ -17,6 +17,7 @@ import { createSignal, For, Show } from "solid-js";
 import toast from "solid-toast";
 import { MachineAvatar } from "./avatar";
 import { Header } from "@/src/layout/header";
+import { InputLabel } from "@/src/components/inputBase";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -302,14 +303,13 @@ const MachineForm = (props: MachineDetailsProps) => {
   };
   return (
     <>
-      <Form onSubmit={handleSubmit}>
-        <div class="card-body">
-          <span class="text-xl text-primary-800">General</span>
-          <MachineAvatar name={machineName()} />
+      <div class="card-body">
+        <span class="text-xl text-primary-800">General</span>
+        <MachineAvatar name={machineName()} />
+        <Form onSubmit={handleSubmit} class="grid grid-cols-12 gap-y-4">
           <Field name="machine.name">
             {(field, props) => (
               <TextInput
-                formStore={formStore}
                 inputProps={props}
                 label="Name"
                 value={field.value ?? ""}
@@ -321,22 +321,23 @@ const MachineForm = (props: MachineDetailsProps) => {
           </Field>
           <Field name="machine.tags" type="string[]">
             {(field, props) => (
-              <For each={field.value}>
-                {(tag) => (
-                  <label class="p-1">
-                    Tags
-                    <span class="mx-2 w-fit rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
-                      {tag}
-                    </span>
-                  </label>
-                )}
-              </For>
+              <>
+                <InputLabel class="col-span-2">Tags</InputLabel>
+                <span class="col-span-10">
+                  <For each={field.value}>
+                    {(tag) => (
+                      <span class="mx-2 w-fit rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
+                        {tag}
+                      </span>
+                    )}
+                  </For>
+                </span>
+              </>
             )}
           </Field>
           <Field name="machine.description">
             {(field, props) => (
               <TextInput
-                formStore={formStore}
                 inputProps={props}
                 label="Description"
                 value={field.value ?? ""}
@@ -348,16 +349,24 @@ const MachineForm = (props: MachineDetailsProps) => {
           </Field>
           <Field name="hw_config">
             {(field, props) => (
-              <label>Hardware report: {field.value || "None"}</label>
+              <>
+                <InputLabel class="col-span-2">
+                  Hardware Configuration
+                </InputLabel>
+                <span class="col-span-10">{field.value || "None"}</span>
+              </>
             )}
           </Field>
           <Field name="disk_schema">
             {(field, props) => (
-              <span>Disk schema: {field.value || "None"}</span>
+              <>
+                <InputLabel class="col-span-2">Disk schema</InputLabel>
+                <span class="col-span-10">{field.value || "None"}</span>
+              </>
             )}
           </Field>
 
-          <div class="collapse collapse-arrow" tabindex="0">
+          <div class="collapse collapse-arrow col-span-full" tabindex="0">
             <input type="checkbox" />
             <div class="collapse-title link px-0 text-xl ">
               Connection Settings
@@ -366,7 +375,6 @@ const MachineForm = (props: MachineDetailsProps) => {
               <Field name="machine.deploy.targetHost">
                 {(field, props) => (
                   <TextInput
-                    formStore={formStore}
                     inputProps={props}
                     label="Target Host"
                     value={field.value ?? ""}
@@ -411,7 +419,7 @@ const MachineForm = (props: MachineDetailsProps) => {
           </div>
 
           {
-            <div class="card-actions justify-end">
+            <div class="card-actions col-span-full justify-end">
               <Button
                 type="submit"
                 disabled={formStore.submitting || !formStore.dirty}
@@ -420,8 +428,8 @@ const MachineForm = (props: MachineDetailsProps) => {
               </Button>
             </div>
           }
-        </div>
-      </Form>
+        </Form>
+      </div>
 
       <div class="card-body">
         <div class="divider"></div>
@@ -579,11 +587,10 @@ function WifiModule(props: MachineWifiProps) {
       <span class="text-neutral">Preconfigure wireless networks</span>
       <For each={nets()}>
         {(_, idx) => (
-          <div class="flex gap-4">
+          <div class="grid grid-cols-2">
             <Field name={`networks.${idx()}.ssid`}>
               {(field, props) => (
                 <TextInput
-                  formStore={formStore}
                   inputProps={props}
                   label="Name"
                   value={field.value ?? ""}
@@ -595,7 +602,6 @@ function WifiModule(props: MachineWifiProps) {
             <Field name={`networks.${idx()}.password`}>
               {(field, props) => (
                 <TextInput
-                  formStore={formStore}
                   inputProps={props}
                   label="Password"
                   value={field.value ?? ""}

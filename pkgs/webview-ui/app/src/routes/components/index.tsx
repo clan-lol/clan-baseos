@@ -41,8 +41,8 @@ export const Components = () => {
                   readonly={readOnly}
                 />
               </>
-            ))
-          )
+            )),
+          ),
         )}
         <span class="col-span-2">Input Ghost</span>
         {disabled.map((disabled) =>
@@ -66,8 +66,8 @@ export const Components = () => {
                   readonly={readOnly}
                 />
               </>
-            ))
-          )
+            )),
+          ),
         )}
         <span class="col-span-2">Input Label</span>
         <span>Default</span>
@@ -96,7 +96,7 @@ export const Components = () => {
           <Field
             name="ef"
             validate={required(
-              "This field is required very long descriptive error message"
+              "This field is required very long descriptive error message",
             )}
           >
             {(field, inputProps) => (

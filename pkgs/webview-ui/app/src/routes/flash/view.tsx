@@ -3,7 +3,7 @@ import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
 import Icon from "@/src/components/icon";
 import { SelectInput } from "@/src/components/SelectInput";
-import { TextInput } from "@/src/components/TextInput";
+import { TextInput } from "@/src/Form/fields/TextInput";
 import { Typography } from "@/src/components/Typography";
 import { Header } from "@/src/layout/header";
 import {
@@ -269,7 +269,6 @@ export const Flash = () => {
                   >
                     {(field, props) => (
                       <TextInput
-                        formStore={formStore}
                         inputProps={props}
                         label="SSID"
                         value={field.value ?? ""}
@@ -286,7 +285,6 @@ export const Flash = () => {
                     {(field, props) => (
                       <div class="relative col-span-3 w-full">
                         <TextInput
-                          formStore={formStore}
                           inputProps={props}
                           type={
                             passwordVisibility()[index()] ? "text" : "password"
@@ -357,7 +355,6 @@ export const Flash = () => {
                 {(field, props) => (
                   <>
                     <TextInput
-                      formStore={formStore}
                       inputProps={props}
                       label="Source (flake URL)"
                       value={String(field.value)}
@@ -377,7 +374,6 @@ export const Flash = () => {
                 {(field, props) => (
                   <>
                     <TextInput
-                      formStore={formStore}
                       inputProps={props}
                       label="Image Name (attribute name)"
                       value={String(field.value)}

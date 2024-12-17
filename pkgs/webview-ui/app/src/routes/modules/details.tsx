@@ -1,29 +1,13 @@
-import { callApi } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { BackButton } from "@/src/components/BackButton";
 import { createModulesQuery } from "@/src/queries";
 import { useParams, useNavigate } from "@solidjs/router";
-import {
-  createEffect,
-  createSignal,
-  For,
-  JSX,
-  Match,
-  Show,
-  Switch,
-} from "solid-js";
+import { createEffect, For, Match, Switch } from "solid-js";
 import { SolidMarkdown } from "solid-markdown";
-import toast from "solid-toast";
 import { ModuleInfo } from "./list";
 import { createQuery } from "@tanstack/solid-query";
 import { JSONSchema7 } from "json-schema";
-import { TextInput } from "@/src/components/TextInput";
-import {
-  createForm,
-  getValue,
-  setValue,
-  SubmitHandler,
-} from "@modular-forms/solid";
+import { SubmitHandler } from "@modular-forms/solid";
 import { DynForm } from "@/src/Form/form";
 import { Button } from "@/src/components/button";
 import Icon from "@/src/components/icon";

@@ -8,7 +8,7 @@ import {
 } from "@modular-forms/solid";
 import toast from "solid-toast";
 import { setActiveURI, setClanList } from "@/src/App";
-import { TextInput } from "@/src/components/TextInput";
+import { TextInput } from "@/src/Form/fields/TextInput";
 import { useNavigate } from "@solidjs/router";
 import { Button } from "@/src/components/button";
 import Icon from "@/src/components/icon";
@@ -165,7 +165,6 @@ export const CreateClan = () => {
                       ),
                       position: "start",
                     }}
-                    formStore={formStore}
                     inputProps={props}
                     label="Template to use"
                     value={field.value ?? ""}

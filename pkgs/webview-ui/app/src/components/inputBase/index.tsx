@@ -56,7 +56,7 @@ export const InputBase = (props: InputBaseProps) => {
 
         // Cursor
         "aria-readonly:cursor-no-drop",
-        props.class
+        props.class,
       )}
       classList={{
         [cx("!border !border-semantic-1 !outline-semantic-1")]: !!props.error,
