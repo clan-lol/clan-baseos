@@ -28,7 +28,7 @@ mkShell {
   inputsFrom = [ self'.devShells.default ];
 
   CLAN_STATIC_PROGRAMS = lib.concatStringsSep ":" (
-    lib.attrNames clan-cli-full.passthru.runtimeDependenciesAsSet
+    lib.attrNames clan-cli-full.passthru.runtimeDependenciesMap
   );
 
   shellHook = ''
