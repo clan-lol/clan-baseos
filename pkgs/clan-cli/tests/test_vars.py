@@ -766,6 +766,17 @@ def test_commit_message(
         commit_message
         == "Update vars via generator my_secret_generator for machine my_machine"
     )
+    # ensure `clan vars set` also sets a reasonable commit message
+    set_var(
+        "my_machine",
+        "my_generator/my_value",
+        b"world",
+        FlakeId(str(flake.path)),
+    )
+    commit_message = run(
+        ["git", "log", "-1", "--pretty=%B"],
+    ).stdout.strip()
+    assert all(x in commit_message for x in ["Update var", "my_generator", "my_value"])
 
 
 @pytest.mark.with_core
