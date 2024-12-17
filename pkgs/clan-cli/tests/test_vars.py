@@ -94,42 +94,7 @@ def test_required_generators() -> None:
 
 
 @pytest.mark.with_core
-def test_generate_public_var(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-) -> None:
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["files"]["my_value"]["secret"] = False
-    my_generator["script"] = "echo hello > $out/my_value"
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    assert not check_vars(machine)
-    vars_text = stringify_all_vars(machine)
-    assert "my_generator/my_value: <not set>" in vars_text
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    assert check_vars(machine)
-    store = in_repo.FactStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    )
-    assert store.exists(Generator("my_generator"), "my_value")
-    assert store.get(Generator("my_generator"), "my_value").decode() == "hello\n"
-    vars_text = stringify_all_vars(machine)
-    assert "my_generator/my_value: hello" in vars_text
-    vars_eval = run(
-        nix_eval(
-            [
-                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_value.value",
-            ]
-        )
-    ).stdout.strip()
-    assert json.loads(vars_eval) == "hello\n"
-
-
-@pytest.mark.with_core
-def test_generate_secret_var_sops(
+def test_generate_public_and_secret_vars(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
     sops_setup: SopsSetup,
@@ -137,17 +102,76 @@ def test_generate_secret_var_sops(
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
+    my_generator["files"]["my_value"]["secret"] = False
     my_generator["files"]["my_secret"]["secret"] = True
-    my_generator["script"] = "echo hello > $out/my_secret"
+    my_generator["script"] = (
+        "echo -n public > $out/my_value; echo -n secret > $out/my_secret; echo -n non-default > $out/value_with_default"
+    )
+
+    my_generator["files"]["value_with_default"]["secret"] = False
+    my_generator["files"]["value_with_default"]["value"]["_type"] = "override"
+    my_generator["files"]["value_with_default"]["value"]["priority"] = 1000  # mkDefault
+    my_generator["files"]["value_with_default"]["value"]["content"] = "default_value"
+
+    my_shared_generator = config["clan"]["core"]["vars"]["generators"][
+        "my_shared_generator"
+    ]
+    my_shared_generator["share"] = True
+    my_shared_generator["files"]["my_shared_value"]["secret"] = False
+    my_shared_generator["script"] = "echo -n shared > $out/my_shared_value"
+
+    dependent_generator = config["clan"]["core"]["vars"]["generators"][
+        "dependent_generator"
+    ]
+    dependent_generator["share"] = False
+    dependent_generator["files"]["my_secret"]["secret"] = True
+    dependent_generator["dependencies"] = ["my_shared_generator"]
+    dependent_generator["script"] = (
+        "cat $in/my_shared_generator/my_shared_value > $out/my_secret"
+    )
+
     flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
+
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     assert not check_vars(machine)
     vars_text = stringify_all_vars(machine)
+    assert "my_generator/my_value: <not set>" in vars_text
+    assert "my_generator/my_secret: <not set>" in vars_text
+    assert "my_shared_generator/my_shared_value: <not set>" in vars_text
+    assert "dependent_generator/my_secret: <not set>" in vars_text
+
+    # ensure evaluating the default value works without generating the value
+    value_non_default = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.value_with_default.value",
+            ]
+        )
+    ).stdout.strip()
+    assert json.loads(value_non_default) == "default_value"
+
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     assert check_vars(machine)
-    assert "my_generator/my_secret: <not set>" in vars_text
+    # get last commit message
+    commit_message = run(
+        ["git", "log", "-3", "--pretty=%B"],
+    ).stdout.strip()
+    assert (
+        "Update vars via generator my_generator for machine my_machine"
+        in commit_message
+    )
+    assert (
+        "Update vars via generator my_shared_generator for machine my_machine"
+        in commit_message
+    )
+    assert get_var(machine, "my_generator/my_value").printable_value == "public"
+    assert (
+        get_var(machine, "my_shared_generator/my_shared_value").printable_value
+        == "shared"
+    )
+    vars_text = stringify_all_vars(machine)
     in_repo_store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
@@ -156,9 +180,32 @@ def test_generate_secret_var_sops(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
     assert sops_store.exists(Generator("my_generator"), "my_secret")
-    assert sops_store.get(Generator("my_generator"), "my_secret").decode() == "hello\n"
-    vars_text = stringify_all_vars(machine)
+    assert sops_store.get(Generator("my_generator"), "my_secret").decode() == "secret"
+    assert sops_store.exists(Generator("dependent_generator"), "my_secret")
+    assert (
+        sops_store.get(Generator("dependent_generator"), "my_secret").decode()
+        == "shared"
+    )
+
+    assert "my_generator/my_value: public" in vars_text
     assert "my_generator/my_secret" in vars_text
+    vars_eval = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_value.value",
+            ]
+        )
+    ).stdout.strip()
+    assert json.loads(vars_eval) == "public"
+
+    value_non_default = run(
+        nix_eval(
+            [
+                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.value_with_default.value",
+            ]
+        )
+    ).stdout.strip()
+    assert json.loads(value_non_default) == "non-default"
     # test regeneration works
     cli.run(
         ["vars", "generate", "--flake", str(flake.path), "my_machine", "--regenerate"]
@@ -522,33 +569,6 @@ def test_share_flag(
 
 
 @pytest.mark.with_core
-def test_depending_on_shared_secret_succeeds(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-    sops_setup: SopsSetup,
-) -> None:
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    shared_generator = config["clan"]["core"]["vars"]["generators"]["shared_generator"]
-    shared_generator["share"] = True
-    shared_generator["files"]["my_secret"]["secret"] = True
-    shared_generator["script"] = "echo hello > $out/my_secret"
-    dependent_generator = config["clan"]["core"]["vars"]["generators"][
-        "dependent_generator"
-    ]
-    dependent_generator["share"] = False
-    dependent_generator["files"]["my_secret"]["secret"] = True
-    dependent_generator["dependencies"] = ["shared_generator"]
-    dependent_generator["script"] = (
-        "cat $in/shared_generator/my_secret > $out/my_secret"
-    )
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    sops_setup.init()
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-
-
-@pytest.mark.with_core
 def test_multi_machine_shared_vars(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -647,36 +667,12 @@ def test_prompt_create_file(
 
 
 @pytest.mark.with_core
-def test_api_get_prompts(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-) -> None:
-    from clan_cli.vars.list import get_prompts
-
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["prompts"]["prompt1"]["type"] = "line"
-    my_generator["files"]["prompt1"]["secret"] = False
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    monkeypatch.setattr("clan_cli.vars.prompt.MOCK_PROMPT_RESPONSE", iter(["input1"]))
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    api_prompts = get_prompts(machine)
-    assert len(api_prompts) == 1
-    assert api_prompts[0].name == "my_generator"
-    assert api_prompts[0].prompts[0].name == "prompt1"
-    assert api_prompts[0].prompts[0].previous_value == "input1"
-
-
-@pytest.mark.with_core
 def test_api_set_prompts(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
 ) -> None:
     from clan_cli.vars._types import GeneratorUpdate
-    from clan_cli.vars.list import set_prompts
+    from clan_cli.vars.list import get_prompts, set_prompts
 
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
@@ -684,8 +680,10 @@ def test_api_set_prompts(
     my_generator["prompts"]["prompt1"]["type"] = "line"
     my_generator["files"]["prompt1"]["secret"] = False
     flake.refresh()
+
     monkeypatch.chdir(flake.path)
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+
     set_prompts(
         machine,
         [
@@ -709,111 +707,11 @@ def test_api_set_prompts(
     )
     assert store.get(Generator("my_generator"), "prompt1").decode() == "input2"
 
-
-@pytest.mark.with_core
-def test_commit_message(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-    sops_setup: SopsSetup,
-) -> None:
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["files"]["my_value"]["secret"] = False
-    my_generator["script"] = "echo hello > $out/my_value"
-    my_secret_generator = config["clan"]["core"]["vars"]["generators"][
-        "my_secret_generator"
-    ]
-    my_secret_generator["files"]["my_secret"]["secret"] = True
-    my_secret_generator["script"] = "echo hello > $out/my_secret"
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    sops_setup.init()
-    cli.run(
-        [
-            "vars",
-            "generate",
-            "--flake",
-            str(flake.path),
-            "my_machine",
-            "--generator",
-            "my_generator",
-        ]
-    )
-    # get last commit message
-    commit_message = run(
-        ["git", "log", "-1", "--pretty=%B"],
-    ).stdout.strip()
-    assert (
-        commit_message
-        == "Update vars via generator my_generator for machine my_machine"
-    )
-    cli.run(
-        [
-            "vars",
-            "generate",
-            "--flake",
-            str(flake.path),
-            "my_machine",
-            "--generator",
-            "my_secret_generator",
-        ]
-    )
-    commit_message = run(
-        ["git", "log", "-1", "--pretty=%B"],
-    ).stdout.strip()
-    assert (
-        commit_message
-        == "Update vars via generator my_secret_generator for machine my_machine"
-    )
-    # ensure `clan vars set` also sets a reasonable commit message
-    set_var(
-        "my_machine",
-        "my_generator/my_value",
-        b"world",
-        FlakeId(str(flake.path)),
-    )
-    commit_message = run(
-        ["git", "log", "-1", "--pretty=%B"],
-    ).stdout.strip()
-    assert all(x in commit_message for x in ["Update var", "my_generator", "my_value"])
-
-
-@pytest.mark.with_core
-def test_default_value(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-) -> None:
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["files"]["my_value"]["secret"] = False
-    my_generator["files"]["my_value"]["value"]["_type"] = "override"
-    my_generator["files"]["my_value"]["value"]["priority"] = 1000  # mkDefault
-    my_generator["files"]["my_value"]["value"]["content"] = "foo"
-    my_generator["script"] = "echo -n hello > $out/my_value"
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    # ensure evaluating the default value works without generating the value
-    value_eval = run(
-        nix_eval(
-            [
-                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_value.value",
-            ]
-        )
-    ).stdout.strip()
-    assert json.loads(value_eval) == "foo"
-    # generate
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    # ensure the value is set correctly
-    value_eval = run(
-        nix_eval(
-            [
-                f"{flake.path}#nixosConfigurations.my_machine.config.clan.core.vars.generators.my_generator.files.my_value.value",
-            ]
-        )
-    ).stdout.strip()
-    assert json.loads(value_eval) == "hello"
+    api_prompts = get_prompts(machine)
+    assert len(api_prompts) == 1
+    assert api_prompts[0].name == "my_generator"
+    assert api_prompts[0].prompts[0].name == "prompt1"
+    assert api_prompts[0].prompts[0].previous_value == "input2"
 
 
 @pytest.mark.with_core
@@ -1025,34 +923,6 @@ def test_keygen(
     cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
     # check public key exists
     assert (temporary_home / "sops" / "users" / "user").is_dir()
-
-
-@pytest.mark.with_core
-def test_vars_get(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-) -> None:
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["files"]["my_value"]["secret"] = False
-    my_generator["script"] = "echo -n hello > $out/my_value"
-    my_shared_generator = config["clan"]["core"]["vars"]["generators"][
-        "my_shared_generator"
-    ]
-    my_shared_generator["share"] = True
-    my_shared_generator["files"]["my_shared_value"]["secret"] = False
-    my_shared_generator["script"] = "echo -n hello > $out/my_shared_value"
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    # get the value of a public var
-    assert get_var(machine, "my_generator/my_value").printable_value == "hello"
-    assert (
-        get_var(machine, "my_shared_generator/my_shared_value").printable_value
-        == "hello"
-    )
 
 
 @pytest.mark.with_core
