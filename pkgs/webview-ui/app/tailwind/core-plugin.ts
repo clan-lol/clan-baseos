@@ -7,6 +7,71 @@ import { parseColor } from "tailwindcss/lib/util/color";
 const toRGB = (value: string) =>
   "rgb(" + parseColor(value).color.join(" ") + ")";
 
+const mkBorderUtils = (
+  theme: (n: string) => unknown,
+  prefix: string,
+  cssProperty: string,
+) => ({
+  // - def colors
+  [`.${prefix}-def-1`]: {
+    [cssProperty]: theme("colors.secondary.50"),
+  },
+  [`.${prefix}-def-2`]: {
+    [cssProperty]: theme("colors.secondary.100"),
+  },
+  [`.${prefix}-def-3`]: {
+    [cssProperty]: theme("colors.secondary.200"),
+  },
+  [`.${prefix}-def-4`]: {
+    [cssProperty]: theme("colors.secondary.300"),
+  },
+  [`.${prefix}-def-5`]: {
+    [cssProperty]: theme("colors.secondary.400"),
+  },
+  // - inverse colors
+  [`.${prefix}-inv-1`]: {
+    [cssProperty]: theme("colors.secondary.800"),
+  },
+  [`.${prefix}-inv-2`]: {
+    [cssProperty]: theme("colors.secondary.900"),
+  },
+  [`.${prefix}-inv-3`]: {
+    [cssProperty]: theme("colors.secondary.900"),
+  },
+  [`.${prefix}-inv-4`]: {
+    [cssProperty]: theme("colors.secondary.950"),
+  },
+  [`.${prefix}-inv-5`]: {
+    [cssProperty]: theme("colors.black"),
+  },
+
+  [`.${prefix}-int-1`]: {
+    [cssProperty]: theme("colors.info.500"),
+  },
+  [`.${prefix}-int-2`]: {
+    [cssProperty]: theme("colors.info.600"),
+  },
+  [`.${prefix}-int-3`]: {
+    [cssProperty]: theme("colors.info.700"),
+  },
+  [`.${prefix}-int-4`]: {
+    [cssProperty]: theme("colors.info.800"),
+  },
+
+  [`.${prefix}-semantic-1`]: {
+    [cssProperty]: theme("colors.error.500"),
+  },
+  [`.${prefix}-semantic-2`]: {
+    [cssProperty]: theme("colors.error.600"),
+  },
+  [`.${prefix}-semantic-3`]: {
+    [cssProperty]: theme("colors.error.700"),
+  },
+  [`.${prefix}-semantic-4`]: {
+    [cssProperty]: theme("colors.error.800"),
+  },
+});
+
 export default plugin.withOptions(
   (_options = {}) =>
     ({ addUtilities, theme }) => {
@@ -44,6 +109,19 @@ export default plugin.withOptions(
           backgroundColor: theme("colors.primary.950"),
         },
         // bg inverse accent
+        ".bg-acc-1": {
+          backgroundColor: theme("colors.primary.50"),
+        },
+        ".bg-acc-2": {
+          backgroundColor: theme("colors.secondary.100"),
+        },
+        ".bg-acc-3": {
+          backgroundColor: theme("colors.secondary.200"),
+        },
+        ".bg-acc-4": {
+          backgroundColor: theme("colors.secondary.300"),
+        },
+        // bg inverse accent
         ".bg-inv-acc-1": {
           backgroundColor: theme("colors.secondary.500"),
         },
@@ -52,6 +130,9 @@ export default plugin.withOptions(
         },
         ".bg-inv-acc-3": {
           backgroundColor: theme("colors.secondary.700"),
+        },
+        ".bg-inv-acc-4": {
+          backgroundColor: theme("colors.primary.900"),
         },
 
         // Text colors
@@ -81,38 +162,21 @@ export default plugin.withOptions(
           color: theme("colors.secondary.400"),
         },
 
-        // Border colors
-        ".border-def-1": {
-          borderColor: theme("colors.secondary.50"),
+        ".fg-semantic-1": {
+          color: theme("colors.error.500"),
         },
-        ".border-def-2": {
-          borderColor: theme("colors.secondary.100"),
+        ".fg-semantic-2": {
+          color: theme("colors.error.600"),
         },
-        ".border-def-3": {
-          borderColor: theme("colors.secondary.200"),
+        ".fg-semantic-3": {
+          color: theme("colors.error.700"),
         },
-        ".border-def-4": {
-          borderColor: theme("colors.secondary.300"),
+        ".fg-semantic-4": {
+          color: theme("colors.error.800"),
         },
-        ".border-def-5": {
-          borderColor: theme("colors.secondary.400"),
-        },
-        // border inverse
-        ".border-inv-1": {
-          borderColor: theme("colors.secondary.800"),
-        },
-        ".border-inv-2": {
-          borderColor: theme("colors.secondary.900"),
-        },
-        ".border-inv-3": {
-          borderColor: theme("colors.secondary.900"),
-        },
-        ".border-inv-4": {
-          borderColor: theme("colors.secondary.950"),
-        },
-        ".border-inv-5": {
-          borderColor: theme("colors.black"),
-        },
+
+        ...mkBorderUtils(theme, "border", "borderColor"),
+        ...mkBorderUtils(theme, "outline", "outlineColor"),
 
         // Example: dark mode utilities (all elements within <html class="dark"> )
         // ".dark .bg-def-1": {
@@ -194,6 +258,7 @@ export default plugin.withOptions(
           },
         },
         boxShadow: {
+          "input-active": "0px 0px 0px 1px #FFF, 0px 0px 0px 2px #203637",
           "inner-primary":
             "2px 2px 0px 0px var(--clr-bg-inv-acc-3, #415E63) inset",
           "inner-primary-active":

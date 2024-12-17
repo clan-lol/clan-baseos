@@ -3,7 +3,7 @@ import { Dynamic } from "solid-js/web";
 import cx from "classnames";
 import "./css/typography.css";
 
-type Hierarchy = "body" | "title" | "headline";
+type Hierarchy = "body" | "title" | "headline" | "label";
 type Color = "primary" | "secondary" | "tertiary";
 type Weight = "normal" | "medium" | "bold";
 type Tag = "span" | "p" | "h1" | "h2" | "h3" | "h4";
@@ -16,6 +16,11 @@ const colorMap: Record<Color, string> = {
 
 // type Size = "default" | "xs" | "s" | "m" | "l";
 interface SizeForHierarchy {
+  label: {
+    default: string;
+    xs: string;
+    s: string;
+  };
   body: {
     default: string;
     xs: string;
@@ -57,6 +62,11 @@ const sizeHierarchyMap: SizeForHierarchy = {
     m: cx("fnt-title-m"),
     l: cx("fnt-title-l"),
   },
+  label: {
+    default: cx("fnt-label-default"),
+    s: cx("fnt-label-s"),
+    xs: cx("fnt-label-xs"),
+  },
 };
 
 const weightMap: Record<Weight, string> = {
@@ -74,18 +84,20 @@ interface TypographyProps<H extends Hierarchy> {
   inverted?: boolean;
   tag?: Tag;
   class?: string;
+  classList?: Record<string, boolean>;
 }
 export const Typography = <H extends Hierarchy>(props: TypographyProps<H>) => {
   return (
     <Dynamic
       component={props.tag || "span"}
       class={cx(
-        props.class,
         colorMap[props.color || "primary"],
         props.inverted && "fnt-clr--inverted",
         sizeHierarchyMap[props.hierarchy][props.size] as string,
         weightMap[props.weight || "normal"],
+        props.class,
       )}
+      classList={props.classList}
     >
       {props.children}
     </Dynamic>
