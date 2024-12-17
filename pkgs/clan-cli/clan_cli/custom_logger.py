@@ -60,7 +60,7 @@ class PrefixFormatter(logging.Formatter):
         # If command_prefix is set, color the prefix with a unique color.
         elif command_prefix:
             command_prefix = command_prefix[
-                :10
+                :20
             ]  # Truncate the command prefix to 10 characters.
             prefix_color = self.hostname_colorcode(command_prefix)
             format_str = color_by_tuple(f"[{command_prefix}]", fg=prefix_color)
