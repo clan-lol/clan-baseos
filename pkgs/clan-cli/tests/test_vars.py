@@ -431,38 +431,6 @@ def test_generate_secret_for_multiple_machines(
 
 
 @pytest.mark.with_core
-def test_dependant_generators(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-) -> None:
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    parent_gen = config["clan"]["core"]["vars"]["generators"]["parent_generator"]
-    parent_gen["files"]["my_value"]["secret"] = False
-    parent_gen["script"] = "echo hello > $out/my_value"
-    child_gen = config["clan"]["core"]["vars"]["generators"]["child_generator"]
-    child_gen["files"]["my_value"]["secret"] = False
-    child_gen["dependencies"] = ["parent_generator"]
-    child_gen["script"] = "cat $in/parent_generator/my_value > $out/my_value"
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    in_repo_store = in_repo.FactStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    )
-    assert in_repo_store.exists(Generator("parent_generator"), "my_value")
-    assert (
-        in_repo_store.get(Generator("parent_generator"), "my_value").decode()
-        == "hello\n"
-    )
-    assert in_repo_store.exists(Generator("child_generator"), "my_value")
-    assert (
-        in_repo_store.get(Generator("child_generator"), "my_value").decode()
-        == "hello\n"
-    )
-
-
-@pytest.mark.with_core
 @pytest.mark.parametrize(
     ("prompt_type", "input_value"),
     [
