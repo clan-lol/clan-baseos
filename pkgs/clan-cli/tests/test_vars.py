@@ -431,41 +431,61 @@ def test_generate_secret_for_multiple_machines(
 
 
 @pytest.mark.with_core
-@pytest.mark.parametrize(
-    ("prompt_type", "input_value"),
-    [
-        ("line", "my input"),
-        ("multiline", "my\nmultiline\ninput\n"),
-        # The hidden type cannot easily be tested, as getpass() reads from /dev/tty directly
-        # ("hidden", "my hidden input"),
-    ],
-)
 def test_prompt(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
-    prompt_type: str,
-    input_value: str,
+    sops_setup: SopsSetup,
 ) -> None:
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["files"]["my_value"]["secret"] = False
+    my_generator["files"]["line_value"]["secret"] = False
+    my_generator["files"]["multiline_value"]["secret"] = False
+
     my_generator["prompts"]["prompt1"]["description"] = "dream2nix"
     my_generator["prompts"]["prompt1"]["createFile"] = False
-    my_generator["prompts"]["prompt1"]["type"] = prompt_type
-    my_generator["script"] = "cat $prompts/prompt1 > $out/my_value"
+    my_generator["prompts"]["prompt1"]["type"] = "line"
+
+    my_generator["prompts"]["prompt2"]["description"] = "dream2nix"
+    my_generator["prompts"]["prompt2"]["createFile"] = False
+    my_generator["prompts"]["prompt2"]["type"] = "line"
+
+    my_generator["prompts"]["prompt_create_file"]["createFile"] = True
+
+    my_generator["script"] = (
+        "cat $prompts/prompt1 > $out/line_value; cat $prompts/prompt2 > $out/multiline_value"
+    )
     flake.refresh()
     monkeypatch.chdir(flake.path)
+    sops_setup.init()
     monkeypatch.setattr(
-        "clan_cli.vars.prompt.MOCK_PROMPT_RESPONSE", iter([input_value])
+        "clan_cli.vars.prompt.MOCK_PROMPT_RESPONSE",
+        iter(["line input", "my\nmultiline\ninput\n", "prompt_create_file"]),
     )
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     in_repo_store = in_repo.FactStore(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
-    assert in_repo_store.exists(Generator("my_generator"), "my_value")
+    assert in_repo_store.exists(Generator("my_generator"), "line_value")
     assert (
-        in_repo_store.get(Generator("my_generator"), "my_value").decode() == input_value
+        in_repo_store.get(Generator("my_generator"), "line_value").decode()
+        == "line input"
+    )
+
+    assert in_repo_store.exists(Generator("my_generator"), "multiline_value")
+    assert (
+        in_repo_store.get(Generator("my_generator"), "multiline_value").decode()
+        == "my\nmultiline\ninput\n"
+    )
+    sops_store = sops.SecretStore(
+        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    )
+    assert sops_store.exists(
+        Generator(name="my_generator", share=False, files=[]), "prompt_create_file"
+    )
+    assert (
+        sops_store.get(Generator(name="my_generator"), "prompt_create_file").decode()
+        == "prompt_create_file"
     )
 
 
@@ -532,39 +552,6 @@ def test_multi_machine_shared_vars(
     assert new_secret_1 == new_secret_2
     assert sops_store_1.machine_has_access(generator, "my_secret")
     assert sops_store_2.machine_has_access(generator, "my_secret")
-
-
-@pytest.mark.with_core
-def test_prompt_create_file(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-    sops_setup: SopsSetup,
-) -> None:
-    """
-    Test that the createFile flag in the prompt configuration works as expected
-    """
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    my_generator["prompts"]["prompt1"]["createFile"] = True
-    my_generator["prompts"]["prompt2"]["createFile"] = False
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    sops_setup.init()
-    monkeypatch.setattr(
-        "clan_cli.vars.prompt.MOCK_PROMPT_RESPONSE", iter(["input1", "input2"])
-    )
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    sops_store = sops.SecretStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    )
-    assert sops_store.exists(
-        Generator(name="my_generator", share=False, files=[]), "prompt1"
-    )
-    assert not sops_store.exists(Generator(name="my_generator"), "prompt2")
-    assert (
-        sops_store.get(Generator(name="my_generator"), "prompt1").decode() == "input1"
-    )
 
 
 @pytest.mark.with_core
