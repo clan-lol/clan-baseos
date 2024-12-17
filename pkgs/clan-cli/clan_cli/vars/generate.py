@@ -199,7 +199,7 @@ def execute_generator(
         if sys.platform == "linux":
             cmd = bubblewrap_cmd(str(generator.final_script), tmpdir)
         else:
-            cmd = ["bash", "-c", generator.final_script]
+            cmd = ["bash", "-c", str(generator.final_script)]
         run(cmd, RunOpts(env=env))
         files_to_commit = []
         # store secrets
