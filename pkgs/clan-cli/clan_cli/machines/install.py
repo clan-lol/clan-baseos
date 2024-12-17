@@ -135,23 +135,24 @@ def install_command(args: argparse.Namespace) -> None:
             msg = "Could not find clan flake toplevel directory"
             raise ClanError(msg)
         deploy_info: DeployInfo | None = ssh_command_parse(args)
+        password = None
 
-        if deploy_info:
+        if args.target_host:
+            target_host = args.target_host
+        elif deploy_info:
             host = find_reachable_host(deploy_info)
             if host is None:
                 msg = f"Couldn't reach any host address: {deploy_info.addrs}"
                 raise ClanError(msg)
             target_host = host.target
-            password = deploy_info.pwd
-        elif args.target_host:
-            target_host = args.target_host
-            password = None
         else:
             machine = Machine(
                 name=args.machine, flake=args.flake, nix_options=args.option
             )
             target_host = machine.target_host.host
-            password = None
+
+        if deploy_info:
+            password = deploy_info.pwd
 
         if args.password:
             password = args.password
