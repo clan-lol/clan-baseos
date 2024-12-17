@@ -731,34 +731,6 @@ def test_stdout_of_generate(
 
 
 @pytest.mark.with_core
-def test_migration_skip(
-    monkeypatch: pytest.MonkeyPatch,
-    flake: ClanFlake,
-    sops_setup: SopsSetup,
-) -> None:
-    config = flake.machines["my_machine"]
-    config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
-    my_service = config["clan"]["core"]["facts"]["services"]["my_service"]
-    my_service["secret"]["my_value"] = {}
-    my_service["generator"]["script"] = "echo -n hello > $secrets/my_value"
-    my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
-    # the var to migrate to is mistakenly marked as not secret (migration should fail)
-    my_generator["files"]["my_value"]["secret"] = False
-    my_generator["migrateFact"] = "my_service"
-    my_generator["script"] = "echo -n world > $out/my_value"
-    flake.refresh()
-    monkeypatch.chdir(flake.path)
-    sops_setup.init()
-    cli.run(["facts", "generate", "--flake", str(flake.path), "my_machine"])
-    cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    in_repo_store = in_repo.FactStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    )
-    assert in_repo_store.exists(Generator("my_generator"), "my_value")
-    assert in_repo_store.get(Generator("my_generator"), "my_value").decode() == "world"
-
-
-@pytest.mark.with_core
 def test_migration(
     monkeypatch: pytest.MonkeyPatch,
     flake: ClanFlake,
@@ -777,7 +749,17 @@ def test_migration(
     my_generator["files"]["my_value"]["secret"] = False
     my_generator["files"]["my_secret"]["secret"] = True
     my_generator["migrateFact"] = "my_service"
-    my_generator["script"] = "echo -n world > $out/my_value"
+    my_generator["script"] = "echo -n other > $out/my_value"
+
+    other_service = config["clan"]["core"]["facts"]["services"]["other_service"]
+    other_service["secret"]["other_value"] = {}
+    other_service["generator"]["script"] = "echo -n hello > $secrets/other_value"
+    other_generator = config["clan"]["core"]["vars"]["generators"]["other_generator"]
+    # the var to migrate to is mistakenly marked as not secret (migration should fail)
+    other_generator["files"]["other_value"]["secret"] = False
+    other_generator["migrateFact"] = "my_service"
+    other_generator["script"] = "echo -n value-from-vars > $out/other_value"
+
     flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
@@ -796,6 +778,12 @@ def test_migration(
     assert in_repo_store.get(Generator("my_generator"), "my_value").decode() == "hello"
     assert sops_store.exists(Generator("my_generator"), "my_secret")
     assert sops_store.get(Generator("my_generator"), "my_secret").decode() == "hello"
+
+    assert in_repo_store.exists(Generator("other_generator"), "other_value")
+    assert (
+        in_repo_store.get(Generator("other_generator"), "other_value").decode()
+        == "value-from-vars"
+    )
 
 
 @pytest.mark.with_core
