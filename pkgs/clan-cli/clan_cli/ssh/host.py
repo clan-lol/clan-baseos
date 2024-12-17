@@ -185,6 +185,7 @@ class Host:
             ssh_opts.extend(["-i", self.key])
 
         if tor_socks:
+            packages.append("nixpkgs#netcat")
             ssh_opts.append("-o")
             ssh_opts.append("ProxyCommand=nc -x 127.0.0.1:9050 -X 5 %h %p")
 
