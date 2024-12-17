@@ -149,7 +149,7 @@ def install_command(args: argparse.Namespace) -> None:
             machine = Machine(
                 name=args.machine, flake=args.flake, nix_options=args.option
             )
-            target_host = machine.target_host.host
+            target_host = machine.target_host.target
 
         if deploy_info:
             password = deploy_info.pwd
