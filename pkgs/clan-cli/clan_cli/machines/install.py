@@ -8,7 +8,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from clan_cli.api import API
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.completions import (
     add_dynamic_completer,
@@ -21,6 +20,7 @@ from clan_cli.machines.hardware import HardwareConfig
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh.deploy_info import DeployInfo, find_reachable_host, ssh_command_parse
+from clan_cli.ssh.host_key import HostKeyCheck
 from clan_cli.vars.generate import generate_vars
 
 log = logging.getLogger(__name__)
@@ -28,14 +28,11 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class InstallOptions:
-    # flake to install
-    flake: FlakeId
-    machine: str
+    machine: Machine
     target_host: str
     kexec: str | None = None
     debug: bool = False
     no_reboot: bool = False
-    deploy_info: DeployInfo | None = None
     build_on_remote: bool = False
     nix_options: list[str] = field(default_factory=list)
     update_hardware_config: HardwareConfig = HardwareConfig.NONE
@@ -44,13 +41,7 @@ class InstallOptions:
 
 @API.register
 def install_machine(opts: InstallOptions) -> None:
-    # TODO: Fixme, replace opts.machine and opts.flake with machine object
-    # remove opts.deploy_info, opts.target_host and populate machine object
-    if opts.deploy_info:
-        msg = "Deploy info has not been fully implemented yet"
-        raise NotImplementedError(msg)
-
-    machine = Machine(opts.machine, flake=opts.flake)
+    machine = opts.machine
     machine.override_target_host = opts.target_host
 
     secret_facts_module = importlib.import_module(machine.secret_facts_module)
@@ -95,7 +86,7 @@ def install_machine(opts: InstallOptions) -> None:
                     str(opts.update_hardware_config.value),
                     str(
                         opts.update_hardware_config.config_path(
-                            opts.flake.path, machine.name
+                            machine.flake.path, machine.name
                         )
                     ),
                 ]
@@ -130,32 +121,34 @@ def install_machine(opts: InstallOptions) -> None:
 
 
 def install_command(args: argparse.Namespace) -> None:
+    host_key_check = HostKeyCheck.from_str(args.host_key_check)
     try:
+        machine = Machine(name=args.machine, flake=args.flake, nix_options=args.option)
+
         if args.flake is None:
             msg = "Could not find clan flake toplevel directory"
             raise ClanError(msg)
+
         deploy_info: DeployInfo | None = ssh_command_parse(args)
-        password = None
 
         if args.target_host:
             target_host = args.target_host
         elif deploy_info:
-            host = find_reachable_host(deploy_info)
+            host = find_reachable_host(deploy_info, host_key_check)
             if host is None:
                 msg = f"Couldn't reach any host address: {deploy_info.addrs}"
                 raise ClanError(msg)
             target_host = host.target
-        else:
-            machine = Machine(
-                name=args.machine, flake=args.flake, nix_options=args.option
-            )
-            target_host = machine.target_host.target
-
-        if deploy_info:
             password = deploy_info.pwd
+        else:
+            target_host = machine.target_host.target
 
         if args.password:
             password = args.password
+        elif deploy_info and deploy_info.pwd:
+            password = deploy_info.pwd
+        else:
+            password = None
 
         if not target_host:
             msg = "No target host provided, please provide a target host."
@@ -168,13 +161,11 @@ def install_command(args: argparse.Namespace) -> None:
 
         return install_machine(
             InstallOptions(
-                flake=args.flake,
-                machine=args.machine,
+                machine=machine,
                 target_host=target_host,
                 kexec=args.kexec,
                 debug=args.debug,
                 no_reboot=args.no_reboot,
-                deploy_info=deploy_info,
                 nix_options=args.option,
                 build_on_remote=args.build_on_remote,
                 update_hardware_config=HardwareConfig(args.update_hardware_config),
@@ -197,6 +188,12 @@ def register_install_parser(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="do not reboot after installation",
         default=False,
+    )
+    parser.add_argument(
+        "--host-key-check",
+        choices=["strict", "ask", "tofu", "none"],
+        default="ask",
+        help="Host key (.ssh/known_hosts) check mode.",
     )
     parser.add_argument(
         "--build-on-remote",
