@@ -207,14 +207,14 @@ class Host:
 
 
 def is_ssh_reachable(host: Host) -> bool:
-    sock = socket.socket(
+    with socket.socket(
         socket.AF_INET6 if ":" in host.host else socket.AF_INET, socket.SOCK_STREAM
-    )
-    sock.settimeout(2)
-    try:
-        sock.connect((host.host, host.port or 22))
-        sock.close()
-    except OSError:
-        return False
-    else:
-        return True
+    ) as sock:
+        sock.settimeout(2)
+        try:
+            sock.connect((host.host, host.port or 22))
+            sock.close()
+        except OSError:
+            return False
+        else:
+            return True

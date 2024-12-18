@@ -48,9 +48,11 @@ export const MachineListItem = (props: MachineListItemProps) => {
     await toast.promise(
       callApi("install_machine", {
         opts: {
-          machine: name,
-          flake: {
-            loc: active_clan,
+          machine: {
+            name: name,
+            flake: {
+              loc: active_clan,
+            },
           },
           no_reboot: true,
           target_host: info?.deploy.targetHost,

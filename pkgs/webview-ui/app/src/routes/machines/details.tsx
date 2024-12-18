@@ -68,10 +68,12 @@ const InstallMachine = (props: InstallMachineProps) => {
     );
     const r = await callApi("install_machine", {
       opts: {
-        flake: {
-          loc: curr_uri,
+        machine: {
+          name: props.name,
+          flake: {
+            loc: curr_uri,
+          },
         },
-        machine: props.name,
         target_host: props.targetHost,
         password: "",
       },
