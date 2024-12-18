@@ -173,6 +173,16 @@ class SecretStore(StoreBase):
             sops_secrets_folder(self.machine.flake_dir) / key_name,
         )
         (output_dir / "key.txt").write_text(key)
+        for generator in self.machine.vars_generators:
+            for file in generator.files:
+                if file.needed_for == "activation":
+                    (output_dir / generator.name / file.name).parent.mkdir(
+                        parents=True,
+                        exist_ok=True,
+                    )
+                    (output_dir / generator.name / file.name).write_bytes(
+                        self.get(generator, file.name)
+                    )
 
     def upload(self) -> None:
         with TemporaryDirectory(prefix="sops-upload-") as tempdir:

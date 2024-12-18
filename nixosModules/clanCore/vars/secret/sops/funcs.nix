@@ -16,7 +16,9 @@ in
   collectFiles =
     vars:
     let
-      relevantFiles = generator: flip filterAttrs generator.files (_name: f: f.secret && f.deploy);
+      relevantFiles =
+        generator:
+        flip filterAttrs generator.files (_name: f: f.secret && f.deploy && (f.neededFor != "activation"));
       allFiles = flatten (
         flip mapAttrsToList vars.generators (
           gen_name: generator:
@@ -24,8 +26,9 @@ in
             fname: file: {
               name = fname;
               generator = gen_name;
+              neededForUsers = file.neededFor == "users";
               inherit (generator) share;
-              inherit (file) owner group neededForUsers;
+              inherit (file) owner group;
             }
           )
         )

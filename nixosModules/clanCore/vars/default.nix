@@ -55,7 +55,7 @@ in
                 mode
                 deploy
                 secret
-                neededForUsers
+                neededFor
                 ;
             }
           );

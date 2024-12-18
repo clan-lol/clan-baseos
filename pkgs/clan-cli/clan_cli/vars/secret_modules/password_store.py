@@ -160,11 +160,20 @@ class SecretStore(StoreBase):
             for generator in self.machine.vars_generators:
                 dir_exists = False
                 for file in generator.files:
+                    if file.needed_for == "activation":
+                        (output_dir / generator.name / file.name).parent.mkdir(
+                            parents=True,
+                            exist_ok=True,
+                        )
+                        (output_dir / generator.name / file.name).write_bytes(
+                            self.get(generator, file.name)
+                        )
+                        continue
                     if not file.deploy:
                         continue
                     if not file.secret:
                         continue
-                    if not dir_exists and not file.needed_for_users:
+                    if not dir_exists and file.needed_for == "services":
                         tar_dir = tarfile.TarInfo(name=generator.name)
                         tar_dir.type = tarfile.DIRTYPE
                         tar_dir.mode = 0o511
@@ -176,7 +185,7 @@ class SecretStore(StoreBase):
                     tar_file.mode = file.mode
                     tar_file.uname = file.owner
                     tar_file.gname = file.group
-                    if file.needed_for_users:
+                    if file.needed_for == "users":
                         user_tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
                     else:
                         tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
