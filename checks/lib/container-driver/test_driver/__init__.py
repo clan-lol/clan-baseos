@@ -1,4 +1,5 @@
 import argparse
+import ctypes
 import os
 import re
 import subprocess
@@ -11,6 +12,55 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from .logger import AbstractLogger, CompositeLogger, TerminalLogger
+
+# Load the C library
+libc = ctypes.CDLL("libc.so.6", use_errno=True)
+
+# Define the mount function
+libc.mount.argtypes = [
+    ctypes.c_char_p,  # source
+    ctypes.c_char_p,  # target
+    ctypes.c_char_p,  # filesystemtype
+    ctypes.c_ulong,  # mountflags
+    ctypes.c_void_p,  # data
+]
+libc.mount.restype = ctypes.c_int
+
+MS_BIND = 0x1000
+MS_REC = 0x4000
+
+
+def mount(
+    source: Path,
+    target: Path,
+    filesystemtype: str,
+    mountflags: int = 0,
+    data: str | None = None,
+) -> None:
+    """
+    A Python wrapper for the mount system call.
+
+    :param source: The source of the file system (e.g., device name, remote filesystem).
+    :param target: The mount point (an existing directory).
+    :param filesystemtype: The filesystem type (e.g., "ext4", "nfs").
+    :param mountflags: Mount options flags.
+    :param data: File system-specific data (e.g., options like "rw").
+    :raises OSError: If the mount system call fails.
+    """
+    # Convert Python strings to C-compatible strings
+    source_c = ctypes.c_char_p(str(source).encode("utf-8"))
+    target_c = ctypes.c_char_p(str(target).encode("utf-8"))
+    fstype_c = ctypes.c_char_p(filesystemtype.encode("utf-8"))
+    data_c = ctypes.c_char_p(data.encode("utf-8")) if data else None
+
+    # Call the mount system call
+    result = libc.mount(
+        source_c, target_c, fstype_c, ctypes.c_ulong(mountflags), data_c
+    )
+
+    if result != 0:
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno))
 
 
 class Error(Exception):
@@ -71,7 +121,7 @@ class Machine:
             self.rootdir,
             "--register=no",
             "--resolv-conf=off",
-            "--bind-ro=/nix/store",
+            "--bind=/nix",
             "--bind",
             self.out_dir,
             "--bind=/proc:/run/host/proc",
@@ -273,7 +323,9 @@ class Machine:
     def succeed(self, command: str, timeout: int | None = None) -> str:
         res = self.execute(command, timeout=timeout)
         if res.returncode != 0:
-            msg = f"Failed to run command {command}"
+            msg = f"Failed to run command {command}\n"
+            msg += f"Exit code: {res.returncode}\n"
+            msg += f"Stdout: {res.stdout}"
             raise RuntimeError(msg)
         return res.stdout
 
@@ -290,6 +342,12 @@ class Machine:
         self.shutdown()
 
 
+NIX_DIR = Path("/nix")
+NIX_STORE = Path("/nix/store/")
+NEW_NIX_DIR = Path("/.nix-rw")
+NEW_NIX_STORE_DIR = NEW_NIX_DIR / "store"
+
+
 def setup_filesystems() -> None:
     # We don't care about cleaning up the mount points, since we're running in a nix sandbox.
     Path("/run").mkdir(parents=True, exist_ok=True)
@@ -298,6 +356,32 @@ def setup_filesystems() -> None:
     Path("/etc").chmod(0o755)
     Path("/etc/os-release").touch()
     Path("/etc/machine-id").write_text("a5ea3f98dedc0278b6f3cc8c37eeaeac")
+    NEW_NIX_STORE_DIR.mkdir(parents=True)
+    # Read /proc/mounts and replicate every bind mount
+    with Path("/proc/self/mounts").open() as f:
+        for line in f:
+            columns = line.split(" ")
+            source = Path(columns[1])
+            if source.parent != NIX_STORE:
+                continue
+            target = NEW_NIX_STORE_DIR / source.name
+            if source.is_dir():
+                target.mkdir()
+            else:
+                target.touch()
+            try:
+                mount(source, target, "none", MS_BIND)
+            except OSError as e:
+                msg = f"mount({source}, {target}) failed"
+                raise Error(msg) from e
+    out = Path(os.environ["out"])
+    (NEW_NIX_STORE_DIR / out.name).mkdir()
+    mount(NEW_NIX_DIR, NIX_DIR, "none", MS_BIND | MS_REC)
+
+
+def load_nix_db(closure_info: Path) -> None:
+    with (closure_info / "registration").open() as f:
+        subprocess.run(["nix-store", "--load-db"], stdin=f, check=True, text=True)
 
 
 class Driver:
@@ -305,7 +389,7 @@ class Driver:
 
     def __init__(
         self,
-        containers: list[Path],
+        containers: list[tuple[Path, Path]],
         logger: AbstractLogger,
         testscript: str,
         out_dir: str,
@@ -315,21 +399,24 @@ class Driver:
         self.out_dir = out_dir
         self.logger = logger
         setup_filesystems()
+        # TODO: this won't work for multiple containers
+        assert len(containers) == 1, "Only one container is supported at the moment"
+        load_nix_db(containers[0][1])
 
         self.tempdir = TemporaryDirectory()
         tempdir_path = Path(self.tempdir.name)
 
         self.machines = []
         for container in containers:
-            name_match = re.match(r".*-nixos-system-(.+)-(.+)", container.name)
+            name_match = re.match(r".*-nixos-system-(.+)-(.+)", container[0].name)
             if not name_match:
-                msg = f"Unable to extract hostname from {container.name}"
+                msg = f"Unable to extract hostname from {container[0].name}"
                 raise Error(msg)
             name = name_match.group(1)
             self.machines.append(
                 Machine(
                     name=name,
-                    toplevel=container,
+                    toplevel=container[0],
                     rootdir=tempdir_path / name,
                     out_dir=self.out_dir,
                     logger=self.logger,
@@ -401,9 +488,11 @@ def main() -> None:
     arg_parser = argparse.ArgumentParser(prog="nixos-test-driver")
     arg_parser.add_argument(
         "--containers",
-        nargs="+",
+        nargs=2,
+        action="append",
         type=Path,
-        help="container system toplevel paths",
+        metavar=("TOPLEVEL_STORE_DIR", "CLOSURE_INFO"),
+        help="container system toplevel store dir and closure info",
     )
     arg_parser.add_argument(
         "--test-script",

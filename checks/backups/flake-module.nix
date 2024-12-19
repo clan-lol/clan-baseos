@@ -27,7 +27,6 @@
         ];
         clan.core.networking.targetHost = "machine";
         networking.hostName = "machine";
-        services.openssh.settings.UseDns = false;
         nixpkgs.hostPlatform = "x86_64-linux";
 
         programs.ssh.knownHosts = {
@@ -37,6 +36,8 @@
 
         services.openssh = {
           enable = true;
+          settings.UsePAM = false;
+          settings.UseDns = false;
           hostKeys = [
             {
               path = "/root/.ssh/id_ed25519";
@@ -46,6 +47,10 @@
         };
 
         users.users.root.openssh.authorizedKeys.keyFiles = [ ../lib/ssh/pubkey ];
+
+        # This is needed to unlock the user for sshd
+        # Because we use sshd without setuid binaries
+        users.users.borg.initialPassword = "hello";
 
         systemd.tmpfiles.settings."vmsecrets" = {
           "/root/.ssh/id_ed25519" = {
@@ -161,15 +166,19 @@
       # vm-test-run-test-backups> qemu-kvm: No machine specified, and there is no default
       # vm-test-run-test-backups> Use -machine help to list supported machines
       checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux && pkgs.stdenv.hostPlatform.system != "aarch64-linux") {
-        test-backups = (import ../lib/test-base.nix) {
+        test-backups = (import ../lib/container-test.nix) {
           name = "test-backups";
           nodes.machine = {
             imports = [
               self.nixosModules.clanCore
               self.nixosModules.test-backup
             ];
-            virtualisation.emptyDiskImages = [ 256 ];
             clan.core.settings.directory = ./.;
+            environment.systemPackages = [
+              (pkgs.writeShellScriptBin "foo" ''
+                echo ${self}
+              '')
+            ];
           };
 
           testScript = ''

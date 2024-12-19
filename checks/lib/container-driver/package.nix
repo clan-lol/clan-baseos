@@ -5,6 +5,7 @@
   setuptools,
   util-linux,
   systemd,
+  nix,
   colorama,
   junit-xml,
 }:
@@ -16,6 +17,7 @@ buildPythonApplication {
     systemd
     colorama
     junit-xml
+    nix
   ] ++ extraPythonPackages python3Packages;
   nativeBuildInputs = [ setuptools ];
   format = "pyproject";

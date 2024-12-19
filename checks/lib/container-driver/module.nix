@@ -7,9 +7,19 @@
 let
   testDriver = hostPkgs.python3.pkgs.callPackage ./package.nix {
     inherit (config) extraPythonPackages;
-    inherit (hostPkgs.pkgs) util-linux systemd;
+    inherit (hostPkgs.pkgs) util-linux systemd nix;
   };
-  containers = map (m: m.system.build.toplevel) (lib.attrValues config.nodes);
+  containers =
+    testScript:
+    map (m: [
+      m.system.build.toplevel
+      (hostPkgs.closureInfo {
+        rootPaths = [
+          m.system.build.toplevel
+          (hostPkgs.writeText "testScript" testScript)
+        ];
+      })
+    ]) (lib.attrValues config.nodes);
   pythonizeName =
     name:
     let
@@ -44,8 +54,6 @@ in
       ''
         mkdir -p $out/bin
 
-        containers=(${toString containers})
-
         ${lib.optionalString (!config.skipTypeCheck) ''
           # prepend type hints so the test script can be type checked with mypy
           cat "${./test-script-prepend.py}" >> testScriptWithTypes
@@ -66,7 +74,13 @@ in
         ln -s ${testDriver}/bin/nixos-test-driver $out/bin/nixos-test-driver
 
         wrapProgram $out/bin/nixos-test-driver \
-          ${lib.concatStringsSep " " (map (name: "--add-flags '--container ${name}'") containers)} \
+          ${
+            lib.concatStringsSep " " (
+              map (container: "--add-flags '--container ${builtins.toString container}'") (
+                containers config.testScriptString
+              )
+            )
+          } \
           --add-flags "--test-script '$out/test-script'"
       ''
   );
