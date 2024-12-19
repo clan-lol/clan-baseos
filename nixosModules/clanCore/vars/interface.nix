@@ -196,14 +196,18 @@ in
                       '';
                       type = str;
                     };
-                    neededForUsers = lib.mkOption {
+                    neededFor = lib.mkOption {
                       description = ''
                         Enabling this option causes the secret to be decrypted/installed before users and groups are created.
                         This can be used to retrieve user's passwords.
                         Setting this option moves the secret to /run/secrets-for-users and disallows setting owner and group to anything else than root.
                       '';
-                      type = bool;
-                      default = false;
+                      type = lib.types.enum [
+                        "activation"
+                        "users"
+                        "services"
+                      ];
+                      default = "services";
                     };
                     owner = lib.mkOption {
                       description = "The user name or id that will own the file.";

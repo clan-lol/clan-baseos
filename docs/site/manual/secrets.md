@@ -23,12 +23,12 @@ clan secrets list
 
 A NixOS machine will automatically import all secrets that are encrypted for the
 current machine. At runtime it will use the host key to decrypt all secrets into
-an in-memory, non-persistent filesystem using [sops-nix](https://github.com/Mic92/sops-nix). 
+an in-memory, non-persistent filesystem using [sops-nix](https://github.com/Mic92/sops-nix).
 In your nixos configuration you can get a path to secrets like this `config.sops.secrets.<name>.path`. For example:
 
 ```nix
 { config, ...}: {
-  sops.secrets.my-password.neededForUsers = true;
+  sops.secrets.my-password.neededFor = "users";
 
   users.users.mic92 = {
     isNormalUser = true;

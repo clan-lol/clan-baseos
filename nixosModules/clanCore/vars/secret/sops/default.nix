@@ -27,8 +27,11 @@ in
     # Before we generate a secret we cannot know the path yet, so we need to set it to an empty string
     fileModule = file: {
       path = lib.mkIf file.config.secret (
-        config.sops.secrets.${"vars/${file.config.generatorName}/${file.config.name}"}.path
-          or "/no-such-path"
+        if file.config.neededFor == "activation" then
+          "/var/lib/sops-nix/${file.config.generatorName}/${file.config.name}"
+        else
+          config.sops.secrets.${"vars/${file.config.generatorName}/${file.config.name}"}.path
+            or "/no-such-path"
       );
     };
     secretModule = "clan_cli.vars.secret_modules.sops";

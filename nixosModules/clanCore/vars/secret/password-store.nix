@@ -69,10 +69,15 @@ in
             file:
             lib.mkIf file.config.secret {
               path =
-                if file.config.neededForUsers then
+                if file.config.neededFor == "users" then
                   "/run/user-secrets/${file.config.generatorName}/${file.config.name}"
+                else if file.config.neededFor == "services" then
+                  "/run/secrets/${file.config.generatorName}/${file.config.name}"
+                else if file.config.neededFor == "activation" then
+                  "${config.clan.password-store.secretLocation}/${file.config.generatorName}/${file.config.name}"
                 else
-                  "/run/secrets/${file.config.generatorName}/${file.config.name}";
+                  throw "unknown neededFor ${file.config.neededFor}";
+
             };
           secretModule = "clan_cli.vars.secret_modules.password_store";
         };

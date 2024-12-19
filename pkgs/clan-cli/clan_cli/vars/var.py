@@ -17,7 +17,7 @@ class Var:
     owner: str = "root"
     group: str = "root"
     mode: int = 0o400
-    needed_for_users: bool = False
+    needed_for: str = "services"
 
     # TODO: those shouldn't be set here
     _store: "StoreBase | None" = None
@@ -78,5 +78,5 @@ class Var:
             owner=data.get("owner", "root"),
             group=data.get("group", "root"),
             mode=int(data.get("mode", "400"), 8),
-            needed_for_users=data.get("neededForUsers", False),
+            needed_for=data.get("neededFor", "services"),
         )
