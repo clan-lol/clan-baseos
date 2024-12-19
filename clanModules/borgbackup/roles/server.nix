@@ -22,6 +22,15 @@ let
   ) [ ] instances;
 in
 {
+  options = {
+    clan.borgbackup.directory = lib.mkOption {
+      type = lib.types.str;
+      default = "/var/lib/borgbackup";
+      description = ''
+        The directory where the borgbackup repositories are stored.
+      '';
+    };
+  };
   config.services.borgbackup.repos =
     let
       borgbackupIpMachinePath = machines: machineDir + machines + "/facts/borgbackup.ssh.pub";
@@ -44,7 +53,7 @@ in
       hosts = builtins.map (machine: {
         name = machine;
         value = {
-          path = "/var/lib/borgbackup/${machine}";
+          path = "${config.clan.borgbackup.directory}/${machine}";
           authorizedKeys = [ (builtins.readFile (borgbackupIpMachinePath machine)) ];
         };
       }) machinesWithKey;
