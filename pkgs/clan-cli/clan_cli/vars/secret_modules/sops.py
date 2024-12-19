@@ -127,7 +127,7 @@ class SecretStore(StoreBase):
         if outdated:
             msg = (
                 "The local state of some secret vars is inconsistent and needs to be updated.\n"
-                "Run 'clan vars fix' to apply the necessary changes."
+                f"Run 'clan vars fix {self.machine.name}' to apply the necessary changes."
                 "Problems to fix:\n"
                 "\n".join(o[2] for o in outdated if o[2])
             )
