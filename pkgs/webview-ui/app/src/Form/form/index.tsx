@@ -248,7 +248,7 @@ export function StringField<T extends FieldValues, R extends ResponseData>(
                 {(options) => (
                   <SelectInput
                     error={field.error}
-                    altLabel={props.schema.title}
+                    // altLabel={props.schema.title}
                     label={props.path.join(".")}
                     helperText={props.schema.description}
                     value={field.value || []}
@@ -276,7 +276,7 @@ export function StringField<T extends FieldValues, R extends ResponseData>(
               <TextInput
                 inputProps={{ ...fieldProps, readonly }}
                 value={field.value as unknown as string}
-                type="password"
+                // type="password"
                 error={field.error}
                 {...commonProps}
                 // required
@@ -525,7 +525,7 @@ export function ArrayFields<T extends FieldValues, R extends ResponseData>(
                           <SelectInput
                             multiple
                             error={field.error}
-                            altLabel={props.schema.title}
+                            // altLabel={props.schema.title}
                             label={listFieldName}
                             helperText={props.schema.description}
                             value={field.value || ""}

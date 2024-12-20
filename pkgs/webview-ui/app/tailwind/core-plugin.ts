@@ -10,7 +10,7 @@ const toRGB = (value: string) =>
 const mkBorderUtils = (
   theme: (n: string) => unknown,
   prefix: string,
-  cssProperty: string
+  cssProperty: string,
 ) => ({
   // - def colors
   [`.${prefix}-def-1`]: {
@@ -278,5 +278,5 @@ export default plugin.withOptions(
       },
       ...typography,
     },
-  })
+  }),
 );

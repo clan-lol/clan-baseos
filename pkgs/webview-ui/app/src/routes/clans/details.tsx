@@ -217,12 +217,12 @@ const AdminModuleForm = (props: AdminModuleFormProps) => {
                     <TextInput
                       inputProps={props}
                       label={"Name"}
-                      adornment={{
-                        position: "start",
-                        content: (
-                          <span class="material-icons text-gray-400">key</span>
-                        ),
-                      }}
+                      // adornment={{
+                      //   position: "start",
+                      //   content: (
+                      //     <span class="material-icons text-gray-400">key</span>
+                      //   ),
+                      // }}
                       value={field.value ?? ""}
                       error={field.error}
                       class="col-span-4"

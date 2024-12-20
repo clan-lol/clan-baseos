@@ -613,7 +613,8 @@ function WifiModule(props: MachineWifiProps) {
                   label="Password"
                   value={field.value ?? ""}
                   error={field.error}
-                  type="password"
+                  // todo
+                  // type="password"
                   required
                 />
               )}
