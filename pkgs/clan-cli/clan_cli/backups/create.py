@@ -17,6 +17,9 @@ def create_backup(machine: Machine, provider: str | None = None) -> None:
     machine.info(f"creating backup for {machine.name}")
     backup_scripts = json.loads(machine.eval_nix("config.clan.core.backups"))
     if provider is None:
+        if not backup_scripts["providers"]:
+            msg = "No providers specified"
+            raise ClanError(msg)
         for provider in backup_scripts["providers"]:
             proc = machine.target_host.run(
                 [backup_scripts["providers"][provider]["create"]],
