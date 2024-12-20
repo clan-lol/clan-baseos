@@ -74,7 +74,12 @@ const mkBorderUtils = (
 
 export default plugin.withOptions(
   (_options = {}) =>
-    ({ addUtilities, theme }) => {
+    ({ addUtilities, theme, addVariant, e }) => {
+      addVariant("popover-open", ({ modifySelectors, separator }) => {
+        modifySelectors(({ className }) => {
+          return `.${e(`popover-open${separator}${className}`)}:popover-open`;
+        });
+      });
       addUtilities({
         // Background colors
         ".bg-def-1": {
