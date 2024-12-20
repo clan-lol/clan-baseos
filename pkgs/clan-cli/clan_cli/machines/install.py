@@ -100,7 +100,9 @@ def install_machine(opts: InstallOptions) -> None:
             ]
 
         if not machine.can_build_locally or opts.build_on_remote:
-            machine.info("Architecture mismatch. Building on remote machine")
+            machine.info(
+                f"Target machine has architecture {machine.system} which cannot be built locally or with the configured remote builders. Building on target machine"
+            )
             cmd.append("--build-on-remote")
 
         if machine.target_host.port:

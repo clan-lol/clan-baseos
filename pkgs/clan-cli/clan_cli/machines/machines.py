@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from time import time
 from typing import TYPE_CHECKING, Any, Literal
 
 from clan_cli.clan_uri import FlakeId
@@ -78,10 +79,32 @@ class Machine:
 
     @property
     def can_build_locally(self) -> bool:
-        # TODO: We could also use the function pkgs.stdenv.hostPlatform.canExecute
-        # but this is good enough for now.
-        output = nix_config()
-        return self.system == output["system"]
+        config = nix_config()
+        if self.system == config["system"] or self.system in config["extra-platforms"]:
+            return True
+
+        unsubstitutable_drv = json.loads(
+            run_no_stdout(
+                nix_eval(
+                    [
+                        "--impure",
+                        "--expr",
+                        f'((builtins.getFlake "{self.flake}").inputs.nixpkgs.legacyPackages.{self.system}.runCommandNoCC "clan-can-build-{int(time())}" {{ }} "touch $out").drvPath',
+                    ]
+                ),
+                opts=RunOpts(prefix=self.name),
+            ).stdout.strip()
+        )
+
+        try:
+            run_no_stdout(
+                nix_build([f"{unsubstitutable_drv}^*"]), opts=RunOpts(prefix=self.name)
+            )
+        except Exception as e:
+            self.debug("failed to build test derivation", exc_info=e)
+            return False
+        else:
+            return True
 
     @property
     def deployment(self) -> dict:
