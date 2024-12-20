@@ -10,7 +10,7 @@ const toRGB = (value: string) =>
 const mkBorderUtils = (
   theme: (n: string) => unknown,
   prefix: string,
-  cssProperty: string,
+  cssProperty: string
 ) => ({
   // - def colors
   [`.${prefix}-def-1`]: {
@@ -75,7 +75,9 @@ const mkBorderUtils = (
 export default plugin.withOptions(
   (_options = {}) =>
     ({ addUtilities, theme, addVariant, e }) => {
+      // @ts-expect-error: lib of tailwind has no types
       addVariant("popover-open", ({ modifySelectors, separator }) => {
+        // @ts-expect-error: lib of tailwind has no types
         modifySelectors(({ className }) => {
           return `.${e(`popover-open${separator}${className}`)}:popover-open`;
         });
@@ -276,5 +278,5 @@ export default plugin.withOptions(
       },
       ...typography,
     },
-  }),
+  })
 );
