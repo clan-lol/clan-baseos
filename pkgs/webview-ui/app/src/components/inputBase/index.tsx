@@ -1,7 +1,7 @@
 import cx from "classnames";
-import { createEffect, JSX, splitProps } from "solid-js";
+import { JSX, Ref, Show, splitProps } from "solid-js";
 import Icon, { IconVariant } from "../icon";
-import { Typography } from "../Typography";
+import { Typography, TypographyProps } from "../Typography";
 
 type Variants = "outlined" | "ghost";
 interface InputBaseProps {
@@ -17,6 +17,9 @@ interface InputBaseProps {
   readonly?: boolean;
   error?: boolean;
   icon?: IconVariant;
+  /** Overrides the input element */
+  inputElem?: JSX.Element;
+  divRef?: Ref<HTMLDivElement>;
 }
 
 const variantBorder: Record<Variants, string> = {
@@ -27,11 +30,7 @@ const variantBorder: Record<Variants, string> = {
 const fgStateClasses = cx("aria-disabled:fg-def-4 aria-readonly:fg-def-3");
 
 export const InputBase = (props: InputBaseProps) => {
-  const [, inputProps] = splitProps(props, ["class"]);
-
-  createEffect(() => {
-    console.log("InputBase", props.value, props.variant);
-  });
+  const [internal, inputProps] = splitProps(props, ["class", "divRef"]);
   return (
     <div
       class={cx(
@@ -56,7 +55,7 @@ export const InputBase = (props: InputBaseProps) => {
 
         // Cursor
         "aria-readonly:cursor-no-drop",
-        props.class,
+        props.class
       )}
       classList={{
         [cx("!border !border-semantic-1 !outline-semantic-1")]: !!props.error,
@@ -66,6 +65,7 @@ export const InputBase = (props: InputBaseProps) => {
       aria-readonly={props.readonly}
       tabIndex={0}
       role="textbox"
+      ref={internal.divRef}
     >
       {props.icon && (
         <i
@@ -77,32 +77,39 @@ export const InputBase = (props: InputBaseProps) => {
           <Icon icon={props.icon} font-size="inherit" color="inherit" />
         </i>
       )}
-      <input
-        tabIndex={-1}
-        class="w-full bg-transparent outline-none aria-readonly:cursor-no-drop"
-        value={props.value}
-        type={props.type ? props.type : "text"}
-        readOnly={props.readonly}
-        placeholder={`${props.placeholder || ""}`}
-        required={props.required}
-        disabled={props.disabled}
-        aria-invalid={props.error}
-        aria-disabled={props.disabled}
-        aria-readonly={props.readonly}
-        {...inputProps}
-      />
+      <Show when={!props.inputElem} fallback={props.inputElem}>
+        <input
+          tabIndex={-1}
+          class="w-full bg-transparent outline-none"
+          value={props.value}
+          type={props.type ? props.type : "text"}
+          readOnly={props.readonly}
+          placeholder={`${props.placeholder || ""}`}
+          required={props.required}
+          disabled={props.disabled}
+          aria-invalid={props.error}
+          aria-disabled={props.disabled}
+          aria-readonly={props.readonly}
+          {...inputProps}
+        />
+      </Show>
     </div>
   );
 };
 
-interface InputLabelProps extends JSX.LabelHTMLAttributes<HTMLLabelElement> {
+export interface InputLabelProps
+  extends JSX.LabelHTMLAttributes<HTMLLabelElement> {
   description?: string;
   required?: boolean;
   error?: boolean;
   help?: string;
+  labelAction?: JSX.Element;
 }
 export const InputLabel = (props: InputLabelProps) => {
-  const [labelProps, forwardProps] = splitProps(props, ["class"]);
+  const [labelProps, forwardProps] = splitProps(props, [
+    "class",
+    "labelAction",
+  ]);
   return (
     <label
       class={cx("flex items-center gap-1", labelProps.class)}
@@ -112,7 +119,7 @@ export const InputLabel = (props: InputLabelProps) => {
         hierarchy="label"
         size="default"
         weight="bold"
-        class="!fg-def-1"
+        class="inline-flex gap-1 align-middle !fg-def-1"
         classList={{
           [cx("!fg-semantic-1")]: !!props.error,
         }}
@@ -138,9 +145,33 @@ export const InputLabel = (props: InputLabelProps) => {
           </span>
         )}
       </Typography>
+      {props.labelAction}
       <Typography hierarchy="body" size="xs" weight="normal" color="secondary">
         {props.description}
       </Typography>
     </label>
+  );
+};
+
+interface InputErrorProps {
+  error: string;
+  typographyProps?: TypographyProps;
+}
+export const InputError = (props: InputErrorProps) => {
+  const [typoClasses, rest] = splitProps(
+    props.typographyProps || { class: "" },
+    ["class"]
+  );
+  return (
+    <Typography
+      hierarchy="body"
+      // @ts-expect-error: Dependent type is to complex to check how it is coupled to the override for now
+      size="xxs"
+      weight="medium"
+      class={cx("col-span-full px-1 !fg-semantic-4", typoClasses)}
+      {...rest}
+    >
+      {props.error}
+    </Typography>
   );
 };
