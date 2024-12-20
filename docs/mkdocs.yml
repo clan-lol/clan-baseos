@@ -1,7 +1,7 @@
 site_name: Clan Documentation
 site_url: https://docs.clan.lol
 repo_url: https://git.clan.lol/clan/clan-core/
-repo_name: clan-core
+repo_name: "_>"
 edit_uri: _edit/main/docs/docs/
 
 validation:
@@ -148,11 +148,13 @@ theme:
   features:
     - navigation.instant
     - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.footer
     - content.code.annotate
     - content.code.copy
     - content.tabs.link
   icon:
-    repo: fontawesome/brands/git-alt
+    repo: fontawesome/brands/git
   custom_dir: overrides
 
   palette:
@@ -181,7 +183,7 @@ extra:
   social:
     - icon: fontawesome/regular/comment
       link: https://matrix.to/#/#clan:clan.lol
-    - icon: fontawesome/brands/gitlab
+    - icon: fontawesome/brands/git
       link: https://git.clan.lol/clan/clan-core
     - icon: fontawesome/brands/github
       link: https://github.com/clan-lol/clan-core
