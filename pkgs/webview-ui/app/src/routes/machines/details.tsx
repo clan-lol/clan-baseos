@@ -18,6 +18,7 @@ import toast from "solid-toast";
 import { MachineAvatar } from "./avatar";
 import { Header } from "@/src/layout/header";
 import { InputLabel } from "@/src/components/inputBase";
+import { FieldLayout } from "@/src/Form/fields/layout";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -308,7 +309,7 @@ const MachineForm = (props: MachineDetailsProps) => {
       <div class="card-body">
         <span class="text-xl text-primary-800">General</span>
         <MachineAvatar name={machineName()} />
-        <Form onSubmit={handleSubmit} class="grid grid-cols-12 gap-y-4">
+        <Form onSubmit={handleSubmit}>
           <Field name="machine.name">
             {(field, props) => (
               <TextInput
@@ -324,16 +325,20 @@ const MachineForm = (props: MachineDetailsProps) => {
           <Field name="machine.tags" type="string[]">
             {(field, props) => (
               <>
-                <InputLabel class="col-span-2">Tags</InputLabel>
-                <span class="col-span-10">
-                  <For each={field.value}>
-                    {(tag) => (
-                      <span class="mx-2 w-fit rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
-                        {tag}
-                      </span>
-                    )}
-                  </For>
-                </span>
+                <FieldLayout
+                  label={<InputLabel>Tags</InputLabel>}
+                  field={
+                    <span class="col-span-10">
+                      <For each={field.value}>
+                        {(tag) => (
+                          <span class="mx-2 w-fit rounded-full px-3 py-1 bg-inv-4 fg-inv-1">
+                            {tag}
+                          </span>
+                        )}
+                      </For>
+                    </span>
+                  }
+                />
               </>
             )}
           </Field>
@@ -351,19 +356,19 @@ const MachineForm = (props: MachineDetailsProps) => {
           </Field>
           <Field name="hw_config">
             {(field, props) => (
-              <>
-                <InputLabel class="col-span-2">
-                  Hardware Configuration
-                </InputLabel>
-                <span class="col-span-10">{field.value || "None"}</span>
-              </>
+              <FieldLayout
+                label={<InputLabel>Hardware Configuration</InputLabel>}
+                field={<span>{field.value || "None"}</span>}
+              />
             )}
           </Field>
           <Field name="disk_schema">
             {(field, props) => (
               <>
-                <InputLabel class="col-span-2">Disk schema</InputLabel>
-                <span class="col-span-10">{field.value || "None"}</span>
+                <FieldLayout
+                  label={<InputLabel>Disk schema</InputLabel>}
+                  field={<span>{field.value || "None"}</span>}
+                />
               </>
             )}
           </Field>
