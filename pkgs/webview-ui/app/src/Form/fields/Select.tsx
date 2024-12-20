@@ -7,14 +7,22 @@ import {
   createMemo,
 } from "solid-js";
 import { Portal } from "solid-js/web";
-import cx from "classnames";
-import { Label } from "../base/label";
 import { useFloating } from "../base";
-import { autoUpdate, flip, hide, shift, size } from "@floating-ui/dom";
+import { autoUpdate, flip, hide, offset, shift, size } from "@floating-ui/dom";
+import { Button } from "@/src/components/button";
+import {
+  InputBase,
+  InputError,
+  InputLabel,
+  InputLabelProps,
+} from "@/src/components/inputBase";
+import { FieldLayout } from "./layout";
+import Icon from "@/src/components/icon";
 
 export interface Option {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface SelectInputpProps {
@@ -22,7 +30,7 @@ interface SelectInputpProps {
   selectProps: JSX.InputHTMLAttributes<HTMLSelectElement>;
   options: Option[];
   label: JSX.Element;
-  altLabel?: JSX.Element;
+  labelProps?: InputLabelProps;
   helperText?: JSX.Element;
   error?: string;
   required?: boolean;
@@ -36,6 +44,7 @@ interface SelectInputpProps {
   disabled?: boolean;
   placeholder?: string;
   multiple?: boolean;
+  loading?: boolean;
 }
 
 export function SelectInput(props: SelectInputpProps) {
@@ -61,6 +70,7 @@ export function SelectInput(props: SelectInputpProps) {
           });
         },
       }),
+      offset({ mainAxis: 2 }),
       shift(),
       flip(),
       hide({
@@ -114,126 +124,144 @@ export function SelectInput(props: SelectInputpProps) {
 
   return (
     <>
-      <label
-        class={cx("form-control w-full", props.class)}
-        aria-disabled={props.disabled}
-      >
-        <div class="label">
-          <Label label={props.label} required={props.required} />
-          <span class="label-text-alt block">{props.altLabel}</span>
-        </div>
-        <button
-          type="button"
-          class="select select-bordered flex items-center gap-2"
-          ref={setReference}
-          formnovalidate
-          onClick={() => {
-            const popover = document.getElementById(_id);
-            if (popover) {
-              popover.togglePopover(); // Show or hide the popover
-            }
-          }}
-          // TODO: Use native popover once Webkti supports it within <form>
-          // popovertarget={_id}
-          // popovertargetaction="toggle"
-        >
-          <Show when={props.adornment && props.adornment.position === "start"}>
-            {props.adornment?.content}
-          </Show>
-          {props.inlineLabel}
-          <div class="flex cursor-default flex-row gap-2">
-            <For each={getValues()} fallback={"Select"}>
-              {(item) => (
-                <div class="rounded-xl bg-slate-800 px-4 py-1 text-sm text-white">
-                  {item}
-                  <Show when={props.multiple}>
-                    <button
-                      class="btn-ghost btn-xs"
-                      type="button"
-                      onClick={(_e) => {
-                        // @ts-expect-error: fieldName is not known ahead of time
-                        props.selectProps.onInput({
-                          currentTarget: {
-                            options: getValues()
-                              .filter((o) => o !== item)
-                              .map((value) => ({
-                                value,
-                                selected: true,
-                                disabled: false,
-                              })),
-                          },
-                        });
-                      }}
-                    >
-                      X
-                    </button>
-                  </Show>
-                </div>
-              )}
-            </For>
-          </div>
-          <select
-            class="hidden"
-            multiple
-            {...props.selectProps}
+      <FieldLayout
+        error={props.error && <InputError error={props.error} />}
+        label={
+          <InputLabel
+            description={""}
             required={props.required}
+            {...props.labelProps}
           >
-            <For each={props.options}>
-              {({ label, value }) => (
-                <option value={value} selected={getValues().includes(value)}>
-                  {label}
-                </option>
-              )}
-            </For>
-          </select>
-          <Show when={props.adornment && props.adornment.position === "end"}>
-            {props.adornment?.content}
-          </Show>
-        </button>
-        <Portal mount={document.body}>
-          <div
-            id={_id}
-            popover
-            ref={setFloating}
-            style={{
-              margin: 0,
-              position: position.strategy,
-              top: `${position.y ?? 0}px`,
-              left: `${position.x ?? 0}px`,
-            }}
-            class="dropdown-content z-[1] rounded-b-box bg-base-100 shadow"
-          >
-            <ul class="menu flex max-h-96 flex-col gap-1 overflow-x-hidden overflow-y-scroll">
+            {props.label}
+          </InputLabel>
+        }
+        field={
+          <>
+            <InputBase
+              error={!!props.error}
+              disabled={props.disabled}
+              required={props.required}
+              class="!justify-start"
+              divRef={setReference}
+              inputElem={
+                <button
+                  // TODO: Keyboard acessibililty
+                  // Currently the popover only opens with onClick
+                  // Options are not selectable with keyboard
+                  tabIndex={-1}
+                  onClick={() => {
+                    const popover = document.getElementById(_id);
+                    if (popover) {
+                      popover.togglePopover(); // Show or hide the popover
+                    }
+                  }}
+                  type="button"
+                  class="flex w-full items-center gap-2"
+                  formnovalidate
+                  // TODO: Use native popover once Webkit supports it within <form>
+                  // popovertarget={_id}
+                  // popovertargetaction="toggle"
+                >
+                  <Show
+                    when={
+                      props.adornment && props.adornment.position === "start"
+                    }
+                  >
+                    {props.adornment?.content}
+                  </Show>
+                  {props.inlineLabel}
+                  <div class="flex cursor-default flex-row gap-2">
+                    <Show
+                      when={
+                        getValues() &&
+                        getValues.length !== 1 &&
+                        getValues()[0] !== ""
+                      }
+                      fallback={props.placeholder}
+                    >
+                      <For each={getValues()} fallback={"Select"}>
+                        {(item) => (
+                          <div class="rounded-xl bg-slate-800 px-4 py-1 text-sm text-white">
+                            {item}
+                            <Show when={props.multiple}>
+                              <button
+                                class="btn-ghost btn-xs"
+                                type="button"
+                                onClick={(_e) => {
+                                  // @ts-expect-error: fieldName is not known ahead of time
+                                  props.selectProps.onInput({
+                                    currentTarget: {
+                                      options: getValues()
+                                        .filter((o) => o !== item)
+                                        .map((value) => ({
+                                          value,
+                                          selected: true,
+                                          disabled: false,
+                                        })),
+                                    },
+                                  });
+                                }}
+                              >
+                                X
+                              </button>
+                            </Show>
+                          </div>
+                        )}
+                      </For>
+                    </Show>
+                  </div>
+                  <Show
+                    when={props.adornment && props.adornment.position === "end"}
+                  >
+                    {props.adornment?.content}
+                  </Show>
+                  <Icon icon="CaretDown" class="ml-auto mr-2"></Icon>
+                </button>
+              }
+            />
+          </>
+        }
+      />
+
+      <Portal mount={document.body}>
+        <div
+          id={_id}
+          popover
+          ref={setFloating}
+          style={{
+            margin: 0,
+            position: position.strategy,
+            top: `${position.y ?? 0}px`,
+            left: `${position.x ?? 0}px`,
+          }}
+          class="z-[1] shadow"
+        >
+          <ul class="menu flex max-h-96 flex-col gap-1 overflow-x-hidden overflow-y-scroll">
+            <Show when={!props.loading} fallback={"Loading ...."}>
               <For each={props.options}>
                 {(opt) => (
                   <>
                     <li>
-                      <button
+                      <Button
+                        variant="ghost"
+                        class="!justify-start"
                         onClick={() => handleClickOption(opt)}
+                        disabled={opt.disabled}
                         classList={{
-                          active: getValues().includes(opt.value),
+                          active:
+                            !opt.disabled && getValues().includes(opt.value),
                         }}
                       >
                         {opt.label}
-                      </button>
+                      </Button>
                     </li>
                   </>
                 )}
               </For>
-            </ul>
-          </div>
-        </Portal>
-        <div class="label">
-          {props.helperText && (
-            <span class="label-text text-neutral">{props.helperText}</span>
-          )}
-          {props.error && (
-            <span class="label-text-alt font-bold text-error-700">
-              {props.error}
-            </span>
-          )}
+            </Show>
+          </ul>
         </div>
-      </label>
+      </Portal>
     </>
   );
 }
