@@ -74,7 +74,14 @@ const mkBorderUtils = (
 
 export default plugin.withOptions(
   (_options = {}) =>
-    ({ addUtilities, theme }) => {
+    ({ addUtilities, theme, addVariant, e }) => {
+      // @ts-expect-error: lib of tailwind has no types
+      addVariant("popover-open", ({ modifySelectors, separator }) => {
+        // @ts-expect-error: lib of tailwind has no types
+        modifySelectors(({ className }) => {
+          return `.${e(`popover-open${separator}${className}`)}:popover-open`;
+        });
+      });
       addUtilities({
         // Background colors
         ".bg-def-1": {

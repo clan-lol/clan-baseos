@@ -118,37 +118,17 @@ def blk_from_dict(data: dict) -> BlkInfo:
     )
 
 
-@dataclass
-class BlockDeviceOptions:
-    hostname: str | None = None
-    keyfile: str | None = None
-
-
 @API.register
-def show_block_devices(options: BlockDeviceOptions) -> Blockdevices:
+def show_block_devices() -> Blockdevices:
     """
-    Abstract api method to show block devices.
+    Api method to show local block devices.
+
     It must return a list of block devices.
     """
-    keyfile = options.keyfile
-    remote = (
-        [
-            "ssh",
-            *(["-i", f"{keyfile}"] if keyfile else []),
-            # Disable strict host key checking
-            "-o StrictHostKeyChecking=accept-new",
-            # Disable known hosts file
-            "-o UserKnownHostsFile=/dev/null",
-            f"{options.hostname}",
-        ]
-        if options.hostname
-        else []
-    )
 
     cmd = nix_shell(
-        ["nixpkgs#util-linux", *(["nixpkgs#openssh"] if options.hostname else [])],
+        ["nixpkgs#util-linux"],
         [
-            *remote,
             "lsblk",
             "--json",
             "--output",

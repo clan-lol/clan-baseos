@@ -1,8 +1,10 @@
 # Disk Templates
 
 
-!!! Danger "!!! Under construction !!!"
+!!! Danger ":fontawesome-solid-road-barrier: Under Construction :fontawesome-solid-road-barrier:"
     Currently under construction use with caution
+
+    :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier:
 
 
 ## Structure

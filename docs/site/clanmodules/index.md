@@ -1,10 +1,12 @@
 # Authoring a clanModule
 
+!!! Danger ":fontawesome-solid-road-barrier: Under Construction :fontawesome-solid-road-barrier:"
+    Currently under construction use with caution
+
+    :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier:
+
 This site will guide you through authoring your first module. Explaining which conventions must be followed, such that others will have an enjoyable experience and the module can be used with minimal effort.
 
-:fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier:
-Under construction
-:fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier: :fontawesome-solid-road-barrier:
 
 !!! Tip
     External ClanModules can be ad-hoc loaded via [`clan.inventory.modules`](../reference/nix-api/inventory.md#modules)

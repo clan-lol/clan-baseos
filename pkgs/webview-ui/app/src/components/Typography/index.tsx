@@ -3,7 +3,7 @@ import { Dynamic } from "solid-js/web";
 import cx from "classnames";
 import "./css/typography.css";
 
-type Hierarchy = "body" | "title" | "headline" | "label";
+export type Hierarchy = "body" | "title" | "headline" | "label";
 type Color = "primary" | "secondary" | "tertiary";
 type Weight = "normal" | "medium" | "bold";
 type Tag = "span" | "p" | "h1" | "h2" | "h3" | "h4";
@@ -75,7 +75,7 @@ const weightMap: Record<Weight, string> = {
   bold: cx("fnt-weight-bold"),
 };
 
-interface TypographyProps<H extends Hierarchy> {
+interface _TypographyProps<H extends Hierarchy> {
   hierarchy: H;
   size: AllowedSizes<H>;
   children: JSX.Element;
@@ -86,7 +86,8 @@ interface TypographyProps<H extends Hierarchy> {
   class?: string;
   classList?: Record<string, boolean>;
 }
-export const Typography = <H extends Hierarchy>(props: TypographyProps<H>) => {
+
+export const Typography = <H extends Hierarchy>(props: _TypographyProps<H>) => {
   return (
     <Dynamic
       component={props.tag || "span"}
@@ -103,3 +104,5 @@ export const Typography = <H extends Hierarchy>(props: TypographyProps<H>) => {
     </Dynamic>
   );
 };
+
+export type TypographyProps = _TypographyProps<Hierarchy>;

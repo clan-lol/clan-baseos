@@ -159,12 +159,12 @@ export const CreateClan = () => {
                 <div class="collapse-title link font-medium ">Advanced</div>
                 <div class="collapse-content">
                   <TextInput
-                    adornment={{
-                      content: (
-                        <span class="-mr-1 text-neutral-500">clan-core #</span>
-                      ),
-                      position: "start",
-                    }}
+                    // adornment={{
+                    //   content: (
+                    //     <span class="-mr-1 text-neutral-500">clan-core #</span>
+                    //   ),
+                    //   position: "start",
+                    // }}
                     inputProps={props}
                     label="Template to use"
                     value={field.value ?? ""}
