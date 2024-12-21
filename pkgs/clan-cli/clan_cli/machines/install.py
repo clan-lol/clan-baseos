@@ -1,5 +1,4 @@
 import argparse
-import importlib
 import logging
 import os
 import sys
@@ -44,9 +43,7 @@ def install_machine(opts: InstallOptions) -> None:
     machine = opts.machine
     machine.override_target_host = opts.target_host
 
-    secret_facts_module = importlib.import_module(machine.secret_facts_module)
     machine.info(f"installing {machine.name}")
-    secret_facts_store = secret_facts_module.SecretStore(machine=machine)
 
     h = machine.target_host
     target_host = f"{h.user or 'root'}@{h.host}"
@@ -63,7 +60,8 @@ def install_machine(opts: InstallOptions) -> None:
             upload_dir_ = upload_dir_[1:]
         upload_dir = tmpdir / upload_dir_
         upload_dir.mkdir(parents=True)
-        secret_facts_store.upload(upload_dir)
+        machine.secret_facts_store.upload(upload_dir)
+        machine.secret_vars_store.populate_dir(upload_dir)
 
         if opts.password:
             os.environ["SSHPASS"] = opts.password

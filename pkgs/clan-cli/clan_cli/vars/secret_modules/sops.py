@@ -172,17 +172,20 @@ class SecretStore(StoreBase):
             self.machine.flake_dir,
             sops_secrets_folder(self.machine.flake_dir) / key_name,
         )
+        (output_dir / "key.txt").touch(mode=0o600)
         (output_dir / "key.txt").write_text(key)
         for generator in self.machine.vars_generators:
             for file in generator.files:
                 if file.needed_for == "activation":
-                    (output_dir / generator.name / file.name).parent.mkdir(
+                    target_path = output_dir / generator.name / file.name
+                    target_path.parent.mkdir(
                         parents=True,
                         exist_ok=True,
                     )
-                    (output_dir / generator.name / file.name).write_bytes(
-                        self.get(generator, file.name)
-                    )
+                    # chmod after in case it doesn't have u+w
+                    target_path.touch(mode=0o600)
+                    target_path.write_bytes(self.get(generator, file.name))
+                    target_path.chmod(file.mode)
 
     def upload(self) -> None:
         with TemporaryDirectory(prefix="sops-upload-") as tempdir:
