@@ -5,7 +5,6 @@
   ...
 }:
 let
-  inherit (lib) mkOption;
   inherit (builtins)
     hashString
     toJSON
@@ -198,9 +197,11 @@ in
                     };
                     neededFor = lib.mkOption {
                       description = ''
-                        Enabling this option causes the secret to be decrypted/installed before users and groups are created.
-                        This can be used to retrieve user's passwords.
-                        Setting this option moves the secret to /run/secrets-for-users and disallows setting owner and group to anything else than root.
+                        This option determines when the secret will be decrypted and deployed to the target machine.
+
+                        By setting this to `activation`, the secret will be deployed prior to running `nixos-rebuild` or `nixos-install`.
+                        By setting this to `user`, the secret will be deployed prior to users and groups are created, allowing
+                        users' passwords to be managed by vars. The secret will be stored in `/run/secrets-for-users` and `owner` and `group` must be `root`.
                       '';
                       type = lib.types.enum [
                         "activation"
