@@ -152,3 +152,7 @@ class StoreBase(ABC):
         if target_hash is None and stored_hash is None:
             return True
         return stored_hash == target_hash
+
+    @abstractmethod
+    def populate_dir(self, output_dir: Path) -> None:
+        pass

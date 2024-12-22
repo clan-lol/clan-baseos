@@ -47,3 +47,7 @@ class FactStore(StoreBase):
             return fact_path.read_bytes()
         msg = f"Fact {name} for service {generator.name} not found"
         raise ClanError(msg)
+
+    def populate_dir(self, output_dir: Path) -> None:
+        msg = "populate_dir is not implemented for public vars stores"
+        raise NotImplementedError(msg)
