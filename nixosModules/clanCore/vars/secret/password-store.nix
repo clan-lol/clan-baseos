@@ -42,6 +42,7 @@ let
   useSystemdActivation =
     (options.systemd ? sysusers && config.systemd.sysusers.enable)
     || (options.services ? userborn && config.services.userborn.enable);
+
   normalSecrets = lib.any (
     gen: lib.any (file: file.neededFor == "services") (lib.attrValues gen.files)
   ) (lib.attrValues config.clan.core.vars.generators);
@@ -75,7 +76,9 @@ in
                 else if file.config.neededFor == "services" then
                   "/run/secrets/${file.config.generatorName}/${file.config.name}"
                 else if file.config.neededFor == "activation" then
-                  "${config.clan.password-store.secretLocation}/${file.config.generatorName}/${file.config.name}"
+                  "${config.clan.password-store.secretLocation}/activation/${file.config.generatorName}/${file.config.name}"
+                else if file.config.neededFor == "partitioning" then
+                  "/run/partitioning-secrets/${file.config.generatorName}/${file.config.name}"
                 else
                   throw "unknown neededFor ${file.config.neededFor}";
 

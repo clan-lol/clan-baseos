@@ -25,8 +25,10 @@ in
     # Before we generate a secret we cannot know the path yet, so we need to set it to an empty string
     fileModule = file: {
       path = lib.mkIf file.config.secret (
-        if file.config.neededFor == "activation" then
-          "/var/lib/sops-nix/${file.config.generatorName}/${file.config.name}"
+        if file.config.neededFor == "partitioning" then
+          "/run/partitioning-secrets/${file.config.generatorName}/${file.config.name}"
+        else if file.config.neededFor == "activation" then
+          "/var/lib/sops-nix/activation/${file.config.generatorName}/${file.config.name}"
         else
           config.sops.secrets.${"vars/${file.config.generatorName}/${file.config.name}"}.path
             or "/no-such-path"

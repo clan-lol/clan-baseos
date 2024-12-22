@@ -152,52 +152,77 @@ class SecretStore(StoreBase):
 
         return local_hash.decode() != remote_hash
 
-    def populate_dir(self, output_dir: Path) -> None:
-        with (
-            tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar,
-            tarfile.open(output_dir / "secrets_for_users.tar.gz", "w:gz") as user_tar,
-        ):
+    def populate_dir(self, output_dir: Path, phases: list[str]) -> None:
+        if "users" in phases:
+            with tarfile.open(
+                output_dir / "secrets_for_users.tar.gz", "w:gz"
+            ) as user_tar:
+                for generator in self.machine.vars_generators:
+                    dir_exists = False
+                    for file in generator.files:
+                        if not file.deploy:
+                            continue
+                        if not file.secret:
+                            continue
+                        tar_file = tarfile.TarInfo(name=f"{generator.name}/{file.name}")
+                        content = self.get(generator, file.name)
+                        tar_file.size = len(content)
+                        tar_file.mode = file.mode
+                        user_tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
+
+        if "services" in phases:
+            with tarfile.open(output_dir / "secrets.tar.gz", "w:gz") as tar:
+                for generator in self.machine.vars_generators:
+                    dir_exists = False
+                    for file in generator.files:
+                        if not file.deploy:
+                            continue
+                        if not file.secret:
+                            continue
+                        if not dir_exists:
+                            tar_dir = tarfile.TarInfo(name=generator.name)
+                            tar_dir.type = tarfile.DIRTYPE
+                            tar_dir.mode = 0o511
+                            tar.addfile(tarinfo=tar_dir)
+                            dir_exists = True
+                        tar_file = tarfile.TarInfo(name=f"{generator.name}/{file.name}")
+                        content = self.get(generator, file.name)
+                        tar_file.size = len(content)
+                        tar_file.mode = file.mode
+                        tar_file.uname = file.owner
+                        tar_file.gname = file.group
+                        tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
+        if "activation" in phases:
             for generator in self.machine.vars_generators:
-                dir_exists = False
                 for file in generator.files:
                     if file.needed_for == "activation":
-                        (output_dir / generator.name / file.name).parent.mkdir(
-                            parents=True,
-                            exist_ok=True,
+                        out_file = (
+                            output_dir / "activation" / generator.name / file.name
                         )
-                        (output_dir / generator.name / file.name).write_bytes(
-                            self.get(generator, file.name)
+                        out_file.parent.mkdir(parents=True, exist_ok=True)
+                        out_file.write_bytes(self.get(generator, file.name))
+        if "partitioning" in phases:
+            for generator in self.machine.vars_generators:
+                for file in generator.files:
+                    if file.needed_for == "partitioning":
+                        out_file = (
+                            output_dir / "partitioning" / generator.name / file.name
                         )
-                        continue
-                    if not file.deploy:
-                        continue
-                    if not file.secret:
-                        continue
-                    if not dir_exists and file.needed_for == "services":
-                        tar_dir = tarfile.TarInfo(name=generator.name)
-                        tar_dir.type = tarfile.DIRTYPE
-                        tar_dir.mode = 0o511
-                        tar.addfile(tarinfo=tar_dir)
-                        dir_exists = True
-                    tar_file = tarfile.TarInfo(name=f"{generator.name}/{file.name}")
-                    content = self.get(generator, file.name)
-                    tar_file.size = len(content)
-                    tar_file.mode = file.mode
-                    tar_file.uname = file.owner
-                    tar_file.gname = file.group
-                    if file.needed_for == "users":
-                        user_tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
-                    else:
-                        tar.addfile(tarinfo=tar_file, fileobj=io.BytesIO(content))
+                        out_file.parent.mkdir(parents=True, exist_ok=True)
+                        out_file.write_bytes(self.get(generator, file.name))
+
         (output_dir / ".pass_info").write_bytes(self.generate_hash())
 
-    def upload(self) -> None:
+    def upload(self, phases: list[str]) -> None:
+        if "partitioning" in phases:
+            msg = "Cannot upload partitioning secrets"
+            raise NotImplementedError(msg)
         if not self.needs_upload():
             log.info("Secrets already uploaded")
             return
         with TemporaryDirectory(prefix="vars-upload-") as tempdir:
             pass_dir = Path(tempdir)
-            self.populate_dir(pass_dir)
+            self.populate_dir(pass_dir, phases)
             upload_dir = Path(
                 self.machine.deployment["password-store"]["secretLocation"]
             )

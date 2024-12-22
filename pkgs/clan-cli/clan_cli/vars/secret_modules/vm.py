@@ -32,11 +32,18 @@ class SecretStore(StoreBase):
         secret_file.write_bytes(value)
         return None  # we manage the files outside of the git repo
 
+    def exists(self, generator: "Generator", name: str) -> bool:
+        return (self.dir / generator.name / name).exists()
+
     def get(self, generator: Generator, name: str) -> bytes:
         secret_file = self.dir / generator.name / name
         return secret_file.read_bytes()
 
-    def populate_dir(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path, phases: list[str]) -> None:
         if output_dir.exists():
             shutil.rmtree(output_dir)
         shutil.copytree(self.dir, output_dir)
+
+    def upload(self, phases: list[str]) -> None:
+        msg = "Cannot upload secrets to VMs"
+        raise NotImplementedError(msg)

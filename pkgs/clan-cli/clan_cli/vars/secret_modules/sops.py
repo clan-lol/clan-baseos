@@ -163,34 +163,56 @@ class SecretStore(StoreBase):
             self.machine.flake_dir, self.secret_path(generator, name)
         ).encode("utf-8")
 
-    def populate_dir(self, output_dir: Path) -> None:
-        key_name = f"{self.machine.name}-age.key"
-        if not has_secret(sops_secrets_folder(self.machine.flake_dir) / key_name):
-            # skip uploading the secret, not managed by us
-            return
-        key = decrypt_secret(
-            self.machine.flake_dir,
-            sops_secrets_folder(self.machine.flake_dir) / key_name,
-        )
-        (output_dir / "key.txt").touch(mode=0o600)
-        (output_dir / "key.txt").write_text(key)
-        for generator in self.machine.vars_generators:
-            for file in generator.files:
-                if file.needed_for == "activation":
-                    target_path = output_dir / generator.name / file.name
-                    target_path.parent.mkdir(
-                        parents=True,
-                        exist_ok=True,
-                    )
-                    # chmod after in case it doesn't have u+w
-                    target_path.touch(mode=0o600)
-                    target_path.write_bytes(self.get(generator, file.name))
-                    target_path.chmod(file.mode)
+    def populate_dir(self, output_dir: Path, phases: list[str]) -> None:
+        if "users" in phases or "services" in phases:
+            key_name = f"{self.machine.name}-age.key"
+            if not has_secret(sops_secrets_folder(self.machine.flake_dir) / key_name):
+                # skip uploading the secret, not managed by us
+                return
+            key = decrypt_secret(
+                self.machine.flake_dir,
+                sops_secrets_folder(self.machine.flake_dir) / key_name,
+            )
+            (output_dir / "key.txt").touch(mode=0o600)
+            (output_dir / "key.txt").write_text(key)
 
-    def upload(self) -> None:
+        if "activation" in phases:
+            for generator in self.machine.vars_generators:
+                for file in generator.files:
+                    if file.needed_for == "activation":
+                        target_path = (
+                            output_dir / "activation" / generator.name / file.name
+                        )
+                        target_path.parent.mkdir(
+                            parents=True,
+                            exist_ok=True,
+                        )
+                        # chmod after in case it doesn't have u+w
+                        target_path.touch(mode=0o600)
+                        target_path.write_bytes(self.get(generator, file.name))
+                        target_path.chmod(file.mode)
+
+        if "partitioning" in phases:
+            for generator in self.machine.vars_generators:
+                for file in generator.files:
+                    if file.needed_for == "partitioning":
+                        target_path = output_dir / generator.name / file.name
+                        target_path.parent.mkdir(
+                            parents=True,
+                            exist_ok=True,
+                        )
+                        # chmod after in case it doesn't have u+w
+                        target_path.touch(mode=0o600)
+                        target_path.write_bytes(self.get(generator, file.name))
+                        target_path.chmod(file.mode)
+
+    def upload(self, phases: list[str]) -> None:
+        if "partitioning" in phases:
+            msg = "Cannot upload partitioning secrets"
+            raise NotImplementedError(msg)
         with TemporaryDirectory(prefix="sops-upload-") as tempdir:
             sops_upload_dir = Path(tempdir)
-            self.populate_dir(sops_upload_dir)
+            self.populate_dir(sops_upload_dir, phases)
             upload(self.machine.target_host, sops_upload_dir, Path("/var/lib/sops-nix"))
 
     def exists(self, generator: Generator, name: str) -> bool:

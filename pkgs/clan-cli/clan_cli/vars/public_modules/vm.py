@@ -48,6 +48,10 @@ class FactStore(StoreBase):
         msg = f"Fact {name} for service {generator.name} not found"
         raise ClanError(msg)
 
-    def populate_dir(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path, phases: list[str]) -> None:
         msg = "populate_dir is not implemented for public vars stores"
+        raise NotImplementedError(msg)
+
+    def upload(self, phases: list[str]) -> None:
+        msg = "upload is not implemented for public vars stores"
         raise NotImplementedError(msg)

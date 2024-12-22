@@ -155,5 +155,9 @@ class StoreBase(ABC):
         return stored_hash == target_hash
 
     @abstractmethod
-    def populate_dir(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path, phases: list[str]) -> None:
+        pass
+
+    @abstractmethod
+    def upload(self, phases: list[str]) -> None:
         pass

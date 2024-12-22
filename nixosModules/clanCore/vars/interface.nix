@@ -207,11 +207,14 @@ in
                       description = ''
                         This option determines when the secret will be decrypted and deployed to the target machine.
 
+                        By setting this to `partitioning`, the secret will be deployed prior to running `disko` allowing
+                        you to manage filesystem encryption keys. These will only be deployed when installing the system.
                         By setting this to `activation`, the secret will be deployed prior to running `nixos-rebuild` or `nixos-install`.
                         By setting this to `user`, the secret will be deployed prior to users and groups are created, allowing
                         users' passwords to be managed by vars. The secret will be stored in `/run/secrets-for-users` and `owner` and `group` must be `root`.
                       '';
                       type = lib.types.enum [
+                        "partitioning"
                         "activation"
                         "users"
                         "services"

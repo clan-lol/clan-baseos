@@ -53,16 +53,20 @@ def install_machine(opts: InstallOptions) -> None:
     generate_facts([machine])
     generate_vars([machine])
 
-    with TemporaryDirectory(prefix="nixos-install-") as tmpdir_:
-        tmpdir = Path(tmpdir_)
-        upload_dir_ = machine.secrets_upload_directory
-
-        if upload_dir_.startswith("/"):
-            upload_dir_ = upload_dir_[1:]
-        upload_dir = tmpdir / upload_dir_
+    with TemporaryDirectory(prefix="nixos-install-") as base_directory:
+        activation_secrets = Path(base_directory) / "activation_secrets"
+        upload_dir = activation_secrets / machine.secrets_upload_directory.lstrip("/")
         upload_dir.mkdir(parents=True)
         machine.secret_facts_store.upload(upload_dir)
-        machine.secret_vars_store.populate_dir(upload_dir)
+        machine.secret_vars_store.populate_dir(
+            upload_dir, phases=["activation", "users", "services"]
+        )
+
+        partitioning_secrets = Path(base_directory) / "partitioning_secrets"
+        partitioning_secrets.mkdir(parents=True)
+        machine.secret_vars_store.populate_dir(
+            partitioning_secrets, phases=["partitioning"]
+        )
 
         if opts.password:
             os.environ["SSHPASS"] = opts.password
@@ -72,8 +76,21 @@ def install_machine(opts: InstallOptions) -> None:
             "--flake",
             f"{machine.flake}#{machine.name}",
             "--extra-files",
-            str(tmpdir),
+            str(activation_secrets),
         ]
+
+        for path in partitioning_secrets.rglob("*"):
+            if path.is_file():
+                cmd.extend(
+                    [
+                        "--disk-encryption-keys",
+                        str(
+                            "/run/partitioning-secrets"
+                            / path.relative_to(partitioning_secrets)
+                        ),
+                        str(path),
+                    ]
+                )
 
         if opts.no_reboot:
             cmd.append("--no-reboot")

@@ -17,7 +17,9 @@ in
     let
       relevantFiles =
         generator:
-        filterAttrs (_name: f: f.secret && f.deploy && (f.neededFor != "activation")) generator.files;
+        filterAttrs (
+          _name: f: f.secret && f.deploy && (f.neededFor == "users" || f.neededFor == "services")
+        ) generator.files;
       allFiles = flatten (
         mapAttrsToList (
           gen_name: generator:

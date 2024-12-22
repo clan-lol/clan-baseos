@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 def upload_secret_vars(machine: Machine) -> None:
     secret_store_module = importlib.import_module(machine.secret_vars_module)
     secret_store = secret_store_module.SecretStore(machine=machine)
-    secret_store.upload()
+    secret_store.upload(phases=["activation", "users", "services"])
 
 
 def upload_command(args: argparse.Namespace) -> None:

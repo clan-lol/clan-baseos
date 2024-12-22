@@ -50,6 +50,10 @@ class FactStore(StoreBase):
     def exists(self, generator: Generator, name: str) -> bool:
         return (self.directory(generator, name) / "value").exists()
 
-    def populate_dir(self, output_dir: Path) -> None:
+    def populate_dir(self, output_dir: Path, phases: list[str]) -> None:
         msg = "populate_dir is not implemented for public vars stores"
+        raise NotImplementedError(msg)
+
+    def upload(self, phases: list[str]) -> None:
+        msg = "upload is not implemented for public vars stores"
         raise NotImplementedError(msg)
