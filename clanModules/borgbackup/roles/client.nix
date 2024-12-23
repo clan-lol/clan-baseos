@@ -152,7 +152,7 @@ in
             # we need yes here to skip the changed url verification
             ''yes y | borg-job-${dest.name} list --json | jq '[.archives[] | {"name": ("${dest.name}::${dest.repo}::" + .name)}]' ''
           ) (lib.attrValues cfg.destinations)
-        }) | ${pkgs.jq}/bin/jq -s 'add'
+        }) | ${pkgs.jq}/bin/jq -s 'add // []'
       '')
       (pkgs.writeShellScriptBin "borgbackup-restore" ''
         set -efux
