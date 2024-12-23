@@ -145,7 +145,7 @@ in
         '') (lib.attrValues cfg.destinations)}
       '')
       (pkgs.writeShellScriptBin "borgbackup-list" ''
-        set -efu
+        set -efu -o pipefail
         (${
           lib.concatMapStringsSep "\n" (
             dest:
