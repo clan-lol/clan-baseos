@@ -21,15 +21,25 @@ class Backup:
 def list_provider(machine: Machine, provider: str) -> list[Backup]:
     results = []
     backup_metadata = json.loads(machine.eval_nix("config.clan.core.backups"))
+    list_command = backup_metadata["providers"][provider]["list"]
     proc = machine.target_host.run(
-        [backup_metadata["providers"][provider]["list"]],
-        RunOpts(log=Log.STDERR, check=False),
+        [list_command],
+        RunOpts(log=Log.NONE, check=False),
     )
     if proc.returncode != 0:
         # TODO this should be a warning, only raise exception if no providers succeed
-        msg = f"failed to list backups for provider {provider}: {proc.stdout}"
+        msg = f"Failed to list backups for provider {provider}:"
+        msg += f"\n{list_command} exited with {proc.returncode}"
+        if proc.stderr:
+            msg += f"\nerror output: {proc.stderr}"
         raise ClanError(msg)
-    parsed_json = json.loads(proc.stdout)
+
+    try:
+        parsed_json = json.loads(proc.stdout)
+    except json.JSONDecodeError as e:
+        msg = f"Failed to parse json output from provider {provider}:\n{proc.stdout}"
+        raise ClanError(msg) from e
+
     for archive in parsed_json:
         results.append(Backup(name=archive["name"], job_name=archive.get("job_name")))
     return results
