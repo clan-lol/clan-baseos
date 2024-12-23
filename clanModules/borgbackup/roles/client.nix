@@ -150,12 +150,12 @@ in
           lib.concatMapStringsSep "\n" (
             dest:
             # we need yes here to skip the changed url verification
-            ''yes y | borg-job-${dest.name} list --json | jq '[.archives[] | {"name": ("${dest.name}::${dest.repo}::" + .name)}]' ''
+            ''echo y | borg-job-${dest.name} list --json | jq '[.archives[] | {"name": ("${dest.name}::${dest.repo}::" + .name)}]' ''
           ) (lib.attrValues cfg.destinations)
         }) | ${pkgs.jq}/bin/jq -s 'add // []'
       '')
       (pkgs.writeShellScriptBin "borgbackup-restore" ''
-        set -efux
+        set -efu -o pipefail
         cd /
         IFS=':' read -ra FOLDER <<< "$FOLDERS"
         job_name=$(echo "$NAME" | ${pkgs.gawk}/bin/awk -F'::' '{print $1}')
@@ -164,7 +164,7 @@ in
           echo "borg-job-$job_name not found: Backup name is invalid" >&2
           exit 1
         fi
-        yes y | borg-job-"$job_name" extract --list "$backup_name" "''${FOLDER[@]}"
+        echo y | borg-job-"$job_name" extract --list "$backup_name" "''${FOLDER[@]}"
       '')
     ];
 
