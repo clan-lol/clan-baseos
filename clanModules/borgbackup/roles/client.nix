@@ -164,7 +164,7 @@ in
           echo "borg-job-$job_name not found: Backup name is invalid" >&2
           exit 1
         fi
-        echo y | borg-job-"$job_name" extract --list "$backup_name" "''${FOLDER[@]}"
+        echo y | borg-job-"$job_name" extract "$backup_name" "''${FOLDER[@]}"
       '')
     ];
 
