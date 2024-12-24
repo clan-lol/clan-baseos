@@ -138,34 +138,43 @@ in
     }) cfg.destinations;
 
     environment.systemPackages = [
-      (pkgs.writeShellScriptBin "borgbackup-create" ''
-        set -efu -o pipefail
-        ${lib.concatMapStringsSep "\n" (dest: ''
-          systemctl start borgbackup-job-${dest.name}
-        '') (lib.attrValues cfg.destinations)}
-      '')
-      (pkgs.writeShellScriptBin "borgbackup-list" ''
-        set -efu -o pipefail
-        (${
-          lib.concatMapStringsSep "\n" (
-            dest:
-            # we need yes here to skip the changed url verification
-            ''echo y | borg-job-${dest.name} list --json | jq '[.archives[] | {"name": ("${dest.name}::${dest.repo}::" + .name)}]' ''
-          ) (lib.attrValues cfg.destinations)
-        }) | ${pkgs.jq}/bin/jq -s 'add // []'
-      '')
-      (pkgs.writeShellScriptBin "borgbackup-restore" ''
-        set -efu -o pipefail
-        cd /
-        IFS=':' read -ra FOLDER <<< "$FOLDERS"
-        job_name=$(echo "$NAME" | ${pkgs.gawk}/bin/awk -F'::' '{print $1}')
-        backup_name=''${NAME#"$job_name"::}
-        if ! command -v borg-job-"$job_name" &> /dev/null; then
-          echo "borg-job-$job_name not found: Backup name is invalid" >&2
-          exit 1
-        fi
-        echo y | borg-job-"$job_name" extract "$backup_name" "''${FOLDER[@]}"
-      '')
+      (pkgs.writeShellApplication {
+        name = "borgbackup-create";
+        runtimeInputs = [ config.systemd.package ];
+        text = ''
+          ${lib.concatMapStringsSep "\n" (dest: ''
+            systemctl start borgbackup-job-${dest.name}
+          '') (lib.attrValues cfg.destinations)}
+        '';
+      })
+      (pkgs.writeShellApplication {
+        name = "borgbackup-list";
+        runtimeInputs = [ pkgs.jq ];
+        text = ''
+          (${
+            lib.concatMapStringsSep "\n" (
+              dest:
+              # we need yes here to skip the changed url verification
+              ''echo y | /run/current-system/sw/bin/borg-job-${dest.name} list --json | jq '[.archives[] | {"name": ("${dest.name}::${dest.repo}::" + .name)}]' ''
+            ) (lib.attrValues cfg.destinations)
+          }) | jq -s 'add // []'
+        '';
+      })
+      (pkgs.writeShellApplication {
+        name = "borgbackup-restore";
+        runtimeInputs = [ pkgs.gawk ];
+        text = ''
+          cd /
+          IFS=':' read -ra FOLDER <<< "''${FOLDERS-}"
+          job_name=$(echo "$NAME" | awk -F'::' '{print $1}')
+          backup_name=''${NAME#"$job_name"::}
+          if [[ ! -x /run/current-system/sw/bin/borg-job-"$job_name" ]]; then
+            echo "borg-job-$job_name not found: Backup name is invalid" >&2
+            exit 1
+          fi
+          echo y | /run/current-system/sw/bin/borg-job-"$job_name" extract "$backup_name" "''${FOLDER[@]}"
+        '';
+      })
     ];
 
     # Facts generation. So the client can authenticate to the server
