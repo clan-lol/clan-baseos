@@ -1,7 +1,7 @@
 (import ../lib/container-test.nix) (
   { pkgs, ... }:
   {
-    name = "secrets";
+    name = "deltachat";
 
     nodes.machine =
       { self, ... }:
