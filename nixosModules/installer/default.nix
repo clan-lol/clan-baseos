@@ -125,7 +125,7 @@ in
       # workaround for https://github.com/NixOS/nixpkgs/issues/219239
       systemctl restart systemd-vconsole-setup.service
 
-      watch --no-title --color ${network-status}
+      watch --no-title --color ${network-status}/bin/network-status
     fi
   '';
 }
