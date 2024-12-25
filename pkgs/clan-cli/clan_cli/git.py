@@ -57,7 +57,17 @@ def _commit_file_to_git(
     :param commit_message: The commit message.
     :raises ClanError: If the file is not in the git repository.
     """
-    with locked_open(repo_dir / ".git" / "clan.lock", "w+"):
+    dotgit = repo_dir / ".git"
+    real_git_dir = repo_dir / ".git"
+    # resolve worktree
+    if dotgit.is_file():
+        actual_git_dir = dotgit.read_text().strip()
+        if not actual_git_dir.startswith("gitdir: "):
+            msg = f"Invalid .git file: {actual_git_dir}"
+            raise ClanError(msg)
+        real_git_dir = repo_dir / actual_git_dir[len("gitdir: ") :]
+
+    with locked_open(real_git_dir / "clan.lock", "w+"):
         for file_path in file_paths:
             cmd = run_cmd(
                 ["git"],
