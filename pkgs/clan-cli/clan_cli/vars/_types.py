@@ -132,13 +132,14 @@ class StoreBase(ABC):
             return None
         return hash_file.read_text().strip()
 
-    def set_validation(self, generator: "Generator", hash_str: str) -> None:
+    def set_validation(self, generator: "Generator", hash_str: str) -> Path:
         """
         Store the invalidation hash that indicates if a generator needs to be re-run
         """
         hash_file = self.directory(generator, ".validation-hash")
         hash_file.parent.mkdir(parents=True, exist_ok=True)
         hash_file.write_text(hash_str)
+        return hash_file
 
     def hash_is_valid(self, generator: "Generator") -> bool:
         """
