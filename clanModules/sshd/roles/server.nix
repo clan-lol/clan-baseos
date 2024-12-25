@@ -53,7 +53,6 @@ in
     clan.core.vars.generators.openssh-rsa = lib.mkIf config.clan.sshd.hostKeys.rsa.enable {
       files."ssh.id_rsa" = { };
       files."ssh.id_rsa.pub".secret = false;
-      migrateFact = "openssh";
       runtimeInputs = [
         pkgs.coreutils
         pkgs.openssh
