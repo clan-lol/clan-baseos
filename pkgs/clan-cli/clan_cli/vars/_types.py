@@ -83,8 +83,8 @@ class StoreBase(ABC):
 
     def rel_dir(self, generator: "Generator", var_name: str) -> Path:
         if generator.share:
-            return Path(f"shared/{generator.name}/{var_name}")
-        return Path(f"per-machine/{self.machine.name}/{generator.name}/{var_name}")
+            return Path("shared") / generator.name / var_name
+        return Path("per-machine") / self.machine.name / generator.name / var_name
 
     def directory(self, generator: "Generator", var_name: str) -> Path:
         return Path(self.machine.flake_dir) / "vars" / self.rel_dir(generator, var_name)
@@ -127,7 +127,7 @@ class StoreBase(ABC):
         Return the invalidation hash that indicates if a generator needs to be re-run
         due to a change in its definition
         """
-        hash_file = self.machine.flake_dir / "vars" / generator.name / "validation"
+        hash_file = self.directory(generator, ".validation-hash")
         if not hash_file.exists():
             return None
         return hash_file.read_text().strip()
@@ -136,7 +136,7 @@ class StoreBase(ABC):
         """
         Store the invalidation hash that indicates if a generator needs to be re-run
         """
-        hash_file = self.machine.flake_dir / "vars" / generator.name / "validation"
+        hash_file = self.directory(generator, ".validation-hash")
         hash_file.parent.mkdir(parents=True, exist_ok=True)
         hash_file.write_text(hash_str)
 
