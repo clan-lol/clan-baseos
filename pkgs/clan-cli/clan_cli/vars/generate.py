@@ -236,9 +236,17 @@ def execute_generator(
                 files_to_commit.append(file_path)
             if generator.validation is not None:
                 if public_changed:
-                    public_vars_store.set_validation(generator, generator.validation)
+                    files_to_commit.append(
+                        public_vars_store.set_validation(
+                            generator, generator.validation
+                        )
+                    )
                 if secret_changed:
-                    secret_vars_store.set_validation(generator, generator.validation)
+                    files_to_commit.append(
+                        secret_vars_store.set_validation(
+                            generator, generator.validation
+                        )
+                    )
     commit_files(
         files_to_commit,
         machine.flake_dir,
