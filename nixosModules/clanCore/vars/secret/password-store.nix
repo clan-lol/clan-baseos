@@ -41,10 +41,10 @@ let
   useSystemdActivation =
     (options.systemd ? sysusers && config.systemd.sysusers.enable)
     || (options.services ? userborn && config.services.userborn.enable);
-  normalSecrets = lib.any (gen: lib.any (file: !file.neededForUsers) (lib.attrValues gen.files)) (
-    lib.attrValues config.clan.core.vars.generators
-  );
-  userSecrets = lib.any (gen: lib.any (file: file.neededForUsers) (lib.attrValues gen.files)) (
+  normalSecrets = lib.any (
+    gen: lib.any (file: file.neededFor == "services") (lib.attrValues gen.files)
+  ) (lib.attrValues config.clan.core.vars.generators);
+  userSecrets = lib.any (gen: lib.any (file: file.neededFor == "users") (lib.attrValues gen.files)) (
     lib.attrValues config.clan.core.vars.generators
   );
 
