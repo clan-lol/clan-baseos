@@ -46,14 +46,20 @@ def bubblewrap_cmd(generator: str, facts_dir: Path, secrets_dir: Path) -> list[s
         ],
         [
             "bwrap",
+            "--unshare-all",
+            "--tmpfs",  "/",
             "--ro-bind", "/nix/store", "/nix/store",
-            "--tmpfs",  "/usr/lib/systemd",
             "--dev", "/dev",
+            # not allowed to bind procfs in some sandboxes
             "--bind", str(facts_dir), str(facts_dir),
             "--bind", str(secrets_dir), str(secrets_dir),
-            "--unshare-all",
-            "--unshare-user",
+            "--chdir", "/",
+            # Doesn't work in our CI?
+            #"--proc", "/proc",
+            #"--hostname", "facts",
+            "--bind", "/proc", "/proc",
             "--uid", "1000",
+            "--gid", "1000",
             "--",
             "bash", "-c", generator
         ],
