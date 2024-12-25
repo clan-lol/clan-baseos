@@ -76,7 +76,7 @@ class StoreBase(ABC):
 
     def backend_collision_error(self, folder: Path) -> None:
         msg = (
-            f"Var folder {folder} exists but doesn't look like a {self.store_name} secret."
+            f"Var folder {folder} exists but doesn't look like a {self.store_name} secret.\n"
             "Potentially a leftover from another backend. Please delete it manually."
         )
         raise ClanError(msg)
