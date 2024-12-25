@@ -79,22 +79,27 @@ in
               description = ''
                 A set of values that invalidate the generated values.
                 If any of these values change, the generated values will be re-generated.
+                Lists are not allowed as of now due to potential ordering issues
               '';
               default = null;
-              type =
-                let
-                  data = nullOr (oneOf [
+              # This is more restrictive than json without lists, but currently
+              # if a value contains a list, we get an infinite recursion which
+              # is hard to understand.
+              type = nullOr (oneOf [
+                bool
+                int
+                str
+                (attrsOf (oneOf [
+                  bool
+                  int
+                  str
+                  (attrsOf (oneOf [
                     bool
                     int
                     str
-                    (attrsOf data)
-                    # lists are not allowed as of now due to potential ordering issues
-                  ]);
-                in
-                data
-                // {
-                  description = "JSON compatible data structure";
-                };
+                  ]))
+                ]))
+              ]);
             };
             # the validationHash is the validation interface to the outside world
             validationHash = lib.mkOption {
