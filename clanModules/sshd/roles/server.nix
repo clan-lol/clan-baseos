@@ -7,10 +7,12 @@
 let
   stringSet = list: builtins.attrNames (builtins.groupBy lib.id list);
 
+  domains = stringSet config.clan.sshd.certificate.searchDomains;
+
   signArgs = builtins.concatStringsSep " " (
-    builtins.map (domain: "-n ${lib.escapeShellArg "${config.clan.core.machineName}.${domain}"}") (
-      stringSet config.clan.sshd.certificate.searchDomains
-    )
+    builtins.map (
+      domain: "-n ${lib.escapeShellArg "${config.clan.core.machineName}.${domain}"}"
+    ) domains
   );
   cfg = config.clan.sshd;
 in
@@ -51,6 +53,10 @@ in
         "openssh"
         "openssh-ca"
       ];
+      validation = {
+        name = config.clan.core.machineName;
+        domains = lib.genAttrs config.clan.sshd.certificate.searchDomains lib.id;
+      };
       runtimeInputs = [
         pkgs.openssh
         pkgs.jq
