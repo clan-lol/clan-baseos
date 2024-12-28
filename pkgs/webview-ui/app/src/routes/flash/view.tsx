@@ -20,6 +20,7 @@ import { createEffect, createSignal, For, Show } from "solid-js";
 import toast from "solid-toast";
 import { FieldLayout } from "@/src/Form/fields/layout";
 import { InputLabel } from "@/src/components/inputBase";
+import { Modal } from "@/src/components/modal";
 
 interface Wifi extends FieldValues {
   ssid: string;
@@ -53,7 +54,7 @@ export const Flash = () => {
   /* ==== WIFI NETWORK ==== */
   const [wifiNetworks, setWifiNetworks] = createSignal<Wifi[]>([]);
   const [passwordVisibility, setPasswordVisibility] = createSignal<boolean[]>(
-    [],
+    []
   );
 
   createEffect(() => {
@@ -77,7 +78,7 @@ export const Flash = () => {
     const updatedNetworks = wifiNetworks().filter((_, i) => i !== index);
     setWifiNetworks(updatedNetworks);
     const updatedVisibility = passwordVisibility().filter(
-      (_, i) => i !== index,
+      (_, i) => i !== index
     );
     setPasswordVisibility(updatedVisibility);
     setValue(formStore, "wifi", updatedNetworks);
@@ -144,11 +145,15 @@ export const Flash = () => {
     }
     return dataTransfer.files;
   };
+  const [confirmOpen, setConfirmOpen] = createSignal(false);
 
-  const handleSubmit = async (values: FlashFormValues) => {
+  const handleConfirm = async (values: FlashFormValues) => {
+    setConfirmOpen(true);
     console.log("Submit:", values);
     toast.error("Not fully implemented yet");
     // Disabled for now. To prevent accidental flashing of local disks
+    // User should confirm the disk to flash to
+
     // try {
     //   await callApi("flash_machine", {
     //     machine: {
@@ -177,6 +182,30 @@ export const Flash = () => {
   return (
     <>
       <Header title="Flash installer" />
+      <Modal
+        open={confirmOpen()}
+        handleClose={() => setConfirmOpen(false)}
+        title="Confirm"
+      >
+        <div class="p-4 flex flex-col gap-4">
+          <div class="flex justify-between rounded-sm border p-4 align-middle border-def-2 text-red-900">
+            <Typography
+              hierarchy="label"
+              weight="medium"
+              size="default"
+              class="flex-wrap break-words pr-4"
+            >
+              Warning: All data on will be lost.
+              <br />
+              Selected disk: '{getValue(formStore, "disk")}'
+            </Typography>
+          </div>
+          <div class="w-full flex justify-between">
+            <Button variant="light">Cancel</Button>
+            <Button>Confirm</Button>
+          </div>
+        </div>
+      </Modal>
       <div class="p-4">
         <Typography tag="p" hierarchy="body" size="default" color="primary">
           USB Utility image.
@@ -185,7 +214,7 @@ export const Flash = () => {
           Will make bootstrapping new machines easier by providing secure remote
           connection to any machine when plugged in.
         </Typography>
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleConfirm}>
           <div class="my-4">
             <Field name="sshKeys" type="File[]">
               {(field, props) => (
@@ -242,7 +271,7 @@ export const Flash = () => {
                 value={field.value || ""}
                 error={field.error}
                 required
-                placeholder="Select a thing where the installer will be flashed to"
+                placeholder="Select a drive where the clan-installer will be flashed to"
                 options={
                   deviceQuery.data?.blockdevices.map((d) => ({
                     value: d.path,
@@ -285,7 +314,7 @@ export const Flash = () => {
                           label="SSID"
                           value={field.value ?? ""}
                           error={field.error}
-                          class="col-span-3"
+                          class="col-span-full "
                           required
                         />
                       )}
@@ -295,40 +324,39 @@ export const Flash = () => {
                       validate={[required("Password is required")]}
                     >
                       {(field, props) => (
-                        <div class="relative col-span-3 w-full">
-                          <TextInput
-                            inputProps={{
-                              ...props,
-                              type: passwordVisibility()[index()]
-                                ? "text"
-                                : "password",
-                            }}
-                            label="Password"
-                            value={field.value ?? ""}
-                            error={field.error}
-                            // adornment={{
-                            //   position: "end",
-                            //   content: (
-                            //     <Button
-                            //       variant="light"
-                            //       type="button"
-                            //       class="flex justify-center opacity-70"
-                            //       onClick={() =>
-                            //         togglePasswordVisibility(index())
-                            //       }
-                            //       startIcon={
-                            //         passwordVisibility()[index()] ? (
-                            //           <Icon icon="EyeClose" />
-                            //         ) : (
-                            //           <Icon icon="EyeOpen" />
-                            //         )
-                            //       }
-                            //     ></Button>
-                            //   ),
-                            // }}
-                            required
-                          />
-                        </div>
+                        <TextInput
+                          class="col-span-full"
+                          inputProps={{
+                            ...props,
+                            type: passwordVisibility()[index()]
+                              ? "text"
+                              : "password",
+                          }}
+                          label="Password"
+                          value={field.value ?? ""}
+                          error={field.error}
+                          // adornment={{
+                          //   position: "end",
+                          //   content: (
+                          //     <Button
+                          //       variant="light"
+                          //       type="button"
+                          //       class="flex justify-center opacity-70"
+                          //       onClick={() =>
+                          //         togglePasswordVisibility(index())
+                          //       }
+                          //       startIcon={
+                          //         passwordVisibility()[index()] ? (
+                          //           <Icon icon="EyeClose" />
+                          //         ) : (
+                          //           <Icon icon="EyeOpen" />
+                          //         )
+                          //       }
+                          //     ></Button>
+                          //   ),
+                          // }}
+                          required
+                        />
                       )}
                     </Field>
                   </div>
