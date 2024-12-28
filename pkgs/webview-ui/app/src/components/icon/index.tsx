@@ -10,6 +10,7 @@ import CaretRight from "@/icons/caret-right.svg";
 import Checkmark from "@/icons/checkmark.svg";
 import ClanIcon from "@/icons/clan-icon.svg";
 import ClanLogo from "@/icons/clan-logo.svg";
+import Close from "@/icons/close.svg";
 import Download from "@/icons/download.svg";
 import Edit from "@/icons/edit.svg";
 import Expand from "@/icons/expand.svg";
@@ -44,6 +45,7 @@ const icons = {
   Checkmark,
   ClanIcon,
   ClanLogo,
+  Close,
   Download,
   Edit,
   Expand,
