@@ -105,7 +105,7 @@ def dataclass_to_dict(obj: Any, *, use_alias: bool = True) -> Any:
                 and getattr(obj, field.name) is not None  # type: ignore
             }
         if isinstance(obj, list | tuple | set):
-            return sorted([_to_dict(item) for item in obj])
+            return [_to_dict(item) for item in obj]
         if isinstance(obj, dict):
             return {sanitize_string(k): _to_dict(v) for k, v in obj.items()}
         if isinstance(obj, Path):
