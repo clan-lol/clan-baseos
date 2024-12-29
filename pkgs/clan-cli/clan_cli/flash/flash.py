@@ -47,9 +47,11 @@ def flash_machine(
     write_efi_boot_entries: bool,
     debug: bool,
     extra_args: list[str] | None = None,
+    use_user_permission: bool = False,
 ) -> None:
     devices = [Path(disk.device) for disk in disks]
-    with pause_automounting(devices, machine):
+    sudo = "pkexec" if use_user_permission else "sudo"
+    with pause_automounting(devices, machine, sudo):
         if extra_args is None:
             extra_args = []
         system_config_nix: dict[str, Any] = {}
@@ -108,10 +110,12 @@ def flash_machine(
             disko_install = []
 
             if os.geteuid() != 0:
+                # Use pkexec to elevate permissions if not running as root
+                perm_prefix = "pkexec" if use_user_permission else "exec sudo"
                 if shutil.which("sudo") is None:
                     msg = "sudo is required to run disko-install as a non-root user"
                     raise ClanError(msg)
-                wrapper = 'set -x; disko_install=$(command -v disko-install); exec sudo "$disko_install" "$@"'
+                wrapper = f'set -x; disko_install=$(command -v disko-install); {perm_prefix} "$disko_install" "$@"'
                 disko_install.extend(["bash", "-c", wrapper])
 
             disko_install.append("disko-install")
@@ -123,6 +127,8 @@ def flash_machine(
                 disko_install.append("--debug")
             for disk in disks:
                 disko_install.extend(["--disk", disk.name, disk.device])
+
+                log.info("Will flash disk %s: %s", disk.name, disk.device)
 
             disko_install.extend(["--extra-files", str(local_dir), upload_dir])
             disko_install.extend(["--flake", str(machine.flake) + "#" + machine.name])

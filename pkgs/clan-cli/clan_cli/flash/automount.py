@@ -7,13 +7,14 @@ from pathlib import Path
 from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
+from clan_cli.nix import nix_shell
 
 log = logging.getLogger(__name__)
 
 
 @contextmanager
 def pause_automounting(
-    devices: list[Path], machine: Machine
+    devices: list[Path], machine: Machine, sudo: str = "pkexec"
 ) -> Generator[None, None, None]:
     """
     Pause automounting on the device for the duration of this context
@@ -32,7 +33,11 @@ def pause_automounting(
         raise ClanError(msg)
 
     str_devs = [str(dev) for dev in devices]
-    cmd = ["sudo", str(inhibit_path), "enable", *str_devs]
+    cmd = nix_shell(
+        ["nixpkgs#pkexec"] if sudo == "pkexec" else [],
+        [sudo, str(inhibit_path), "enable", *str_devs],
+    )
+
     result = run(
         cmd,
         RunOpts(
@@ -42,7 +47,7 @@ def pause_automounting(
     if result.returncode != 0:
         machine.error("Failed to inhibit automounting")
     yield None
-    cmd = ["sudo", str(inhibit_path), "disable", *str_devs]
+    cmd = [sudo, str(inhibit_path), "disable", *str_devs]
     result = run(cmd, RunOpts(log=Log.BOTH, check=False, prefix=machine.name))
     if result.returncode != 0:
         machine.error("Failed to re-enable automounting")
