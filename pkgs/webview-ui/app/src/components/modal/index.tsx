@@ -59,10 +59,10 @@ export const Modal = (props: ModalProps) => {
           }}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseDown={(e) => {
+          onMouseDown={(e: MouseEvent) => {
             e.stopPropagation(); // Prevent backdrop drag conflict
           }}
-          onClick={(e) => e.stopPropagation()} // Prevent backdrop click closing
+          onClick={(e: MouseEvent) => e.stopPropagation()} // Prevent backdrop click closing
         >
           <Dialog.Label
             as="div"

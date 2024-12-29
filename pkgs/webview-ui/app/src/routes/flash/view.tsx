@@ -54,7 +54,7 @@ export const Flash = () => {
   /* ==== WIFI NETWORK ==== */
   const [wifiNetworks, setWifiNetworks] = createSignal<Wifi[]>([]);
   const [passwordVisibility, setPasswordVisibility] = createSignal<boolean[]>(
-    []
+    [],
   );
 
   createEffect(() => {
@@ -78,7 +78,7 @@ export const Flash = () => {
     const updatedNetworks = wifiNetworks().filter((_, i) => i !== index);
     setWifiNetworks(updatedNetworks);
     const updatedVisibility = passwordVisibility().filter(
-      (_, i) => i !== index
+      (_, i) => i !== index,
     );
     setPasswordVisibility(updatedVisibility);
     setValue(formStore, "wifi", updatedNetworks);
@@ -187,8 +187,8 @@ export const Flash = () => {
         handleClose={() => setConfirmOpen(false)}
         title="Confirm"
       >
-        <div class="p-4 flex flex-col gap-4">
-          <div class="flex justify-between rounded-sm border p-4 align-middle border-def-2 text-red-900">
+        <div class="flex flex-col gap-4 p-4">
+          <div class="flex justify-between rounded-sm border p-4 align-middle text-red-900 border-def-2">
             <Typography
               hierarchy="label"
               weight="medium"
@@ -200,7 +200,7 @@ export const Flash = () => {
               Selected disk: '{getValue(formStore, "disk")}'
             </Typography>
           </div>
-          <div class="w-full flex justify-between">
+          <div class="flex w-full justify-between">
             <Button variant="light">Cancel</Button>
             <Button>Confirm</Button>
           </div>
