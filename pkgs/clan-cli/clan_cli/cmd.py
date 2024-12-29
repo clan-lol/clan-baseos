@@ -4,6 +4,7 @@ import math
 import os
 import select
 import shlex
+import shutil
 import signal
 import subprocess
 import threading
@@ -271,6 +272,38 @@ class RunOpts:
     needs_user_terminal: bool = False
     timeout: float = math.inf
     shell: bool = False
+    # Some commands require sudo
+    requires_root_perm: bool = False
+    # Ask for sudo password in a graphical way.
+    # This is needed for GUI applications
+    graphical_perm: bool = False
+
+
+def cmd_with_root(cmd: list[str], graphical: bool = False) -> list[str]:
+    """
+    This function returns a wrapped command that will be run with root permissions.
+    It will use sudo if graphical is False, otherwise it will use run0 or pkexec.
+    """
+    if os.geteuid() == 0:
+        return cmd
+
+    # Decide permission handler
+    if graphical:
+        # TODO(mic92): figure out how to use run0
+        # if shutil.which("run0") is not None:
+        #     perm_prefix = "run0"
+        if shutil.which("pkexec") is not None:
+            return ["pkexec", *cmd]
+        description = (
+            "pkexec is required to launch root commands with graphical permissions"
+        )
+        msg = "Missing graphical permission handler"
+        raise ClanError(msg, description=description)
+    if shutil.which("sudo") is None:
+        msg = "sudo is required to run this command as a non-root user"
+        raise ClanError(msg)
+
+    return ["sudo", *cmd]
 
 
 def run(
@@ -292,6 +325,9 @@ def run(
             options.stdout = async_ctx.stdout
         if options.stderr is None:
             options.stderr = async_ctx.stderr
+
+    if options.requires_root_perm:
+        cmd = cmd_with_root(cmd, options.graphical_perm)
 
     if options.input:
         if any(not ch.isprintable() for ch in options.input.decode("ascii", "replace")):

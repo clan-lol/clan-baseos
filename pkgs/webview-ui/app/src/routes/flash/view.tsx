@@ -176,7 +176,7 @@ export const Flash = () => {
           dry_run: false,
           write_efi_boot_entries: false,
           debug: false,
-          use_pkexec: true,
+          graphical: true,
         }),
         {
           error: (errors) => `Error flashing disk: ${errors}`,
