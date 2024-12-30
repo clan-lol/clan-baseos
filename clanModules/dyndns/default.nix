@@ -12,7 +12,7 @@ let
   # We dedup secrets if they have the same provider + base domain
   secret_id = opt: "${name}-${opt.provider}-${opt.domain}";
   secret_path =
-    opt: config.clan.core.facts.services."${secret_id opt}".secret."${secret_id opt}".path;
+    opt: config.clan.core.vars.generators."${secret_id opt}".files."${secret_id opt}".path;
 
   # We check that a secret has not been set in extraSettings.
   extraSettingsSafe =
@@ -48,11 +48,12 @@ let
   secret_generator = _: opt: {
     name = secret_id opt;
     value = {
-      secret.${secret_id opt} = { };
-      generator.prompt = "Dyndns passphrase for ${secret_id opt}";
-      generator.script = ''
-        echo "$prompt_value" > $secrets/${secret_id opt}
-      '';
+      share = true;
+      migrateFact = "${secret_id opt}";
+      prompts.${secret_id opt} = {
+        type = "hidden";
+        createFile = true;
+      };
     };
   };
 in
@@ -102,6 +103,7 @@ in
                   "password"
                   "token"
                   "api_key"
+                  "secret_api_key"
                 ];
                 default = "password";
                 description = "The field name for the secret";
@@ -131,7 +133,7 @@ in
 
   config = lib.mkMerge [
     (lib.mkIf (cfg.settings != { }) {
-      clan.core.facts.services = lib.mapAttrs' secret_generator cfg.settings;
+      clan.core.vars.generators = lib.mapAttrs' secret_generator cfg.settings;
 
       users.groups.${name} = { };
       users.users.${name} = {
@@ -197,6 +199,8 @@ in
                           attrset['password'] = get_credential(attrset['password'])
                       elif "token" in attrset:
                           attrset['token'] = get_credential(attrset['token'])
+                      elif "secret_api_key" in attrset:
+                          attrset['secret_api_key'] = get_credential(attrset['secret_api_key'])
                       elif "api_key" in attrset:
                           attrset['api_key'] = get_credential(attrset['api_key'])
                       else:
