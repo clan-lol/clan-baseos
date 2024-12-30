@@ -1,4 +1,5 @@
 {
+  inputs,
   config,
   pkgs,
   lib,
@@ -102,6 +103,7 @@ in
                   "password"
                   "token"
                   "api_key"
+                  "secret_api_key"
                 ];
                 default = "password";
                 description = "The field name for the secret";
@@ -126,7 +128,8 @@ in
   };
 
   imports = [
-    ../nginx
+    #../nginx
+    inputs.clan-core.clanModules.nginx
   ];
 
   config = lib.mkMerge [
@@ -197,6 +200,8 @@ in
                           attrset['password'] = get_credential(attrset['password'])
                       elif "token" in attrset:
                           attrset['token'] = get_credential(attrset['token'])
+                      elif "secret_api_key" in attrset:
+                          attrset['secret_api_key'] = get_credential(attrset['secret_api_key'])
                       elif "api_key" in attrset:
                           attrset['api_key'] = get_credential(attrset['api_key'])
                       else:
