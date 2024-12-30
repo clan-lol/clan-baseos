@@ -2,14 +2,13 @@ import importlib
 import json
 import logging
 import os
-import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
 from clan_cli.api import API
-from clan_cli.cmd import Log, RunOpts, run
+from clan_cli.cmd import Log, RunOpts, cmd_with_root, run
 from clan_cli.errors import ClanError
 from clan_cli.facts.generate import generate_facts
 from clan_cli.facts.secret_modules import SecretStoreBase
@@ -47,9 +46,10 @@ def flash_machine(
     write_efi_boot_entries: bool,
     debug: bool,
     extra_args: list[str] | None = None,
+    graphical: bool = False,
 ) -> None:
     devices = [Path(disk.device) for disk in disks]
-    with pause_automounting(devices, machine):
+    with pause_automounting(devices, machine, request_graphical=graphical):
         if extra_args is None:
             extra_args = []
         system_config_nix: dict[str, Any] = {}
@@ -108,10 +108,13 @@ def flash_machine(
             disko_install = []
 
             if os.geteuid() != 0:
-                if shutil.which("sudo") is None:
-                    msg = "sudo is required to run disko-install as a non-root user"
-                    raise ClanError(msg)
-                wrapper = 'set -x; disko_install=$(command -v disko-install); exec sudo "$disko_install" "$@"'
+                wrapper = " ".join(
+                    [
+                        "disko_install=$(command -v disko-install);",
+                        "exec",
+                        *cmd_with_root(['"$disko_install" "$@"'], graphical=graphical),
+                    ]
+                )
                 disko_install.extend(["bash", "-c", wrapper])
 
             disko_install.append("disko-install")
@@ -123,6 +126,8 @@ def flash_machine(
                 disko_install.append("--debug")
             for disk in disks:
                 disko_install.extend(["--disk", disk.name, disk.device])
+
+                log.info("Will flash disk %s: %s", disk.name, disk.device)
 
             disko_install.extend(["--extra-files", str(local_dir), upload_dir])
             disko_install.extend(["--flake", str(machine.flake) + "#" + machine.name])

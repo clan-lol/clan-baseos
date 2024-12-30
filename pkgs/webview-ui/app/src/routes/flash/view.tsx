@@ -14,6 +14,7 @@ import {
   FieldValues,
   setValue,
   getValue,
+  getValues,
 } from "@modular-forms/solid";
 import { createQuery } from "@tanstack/solid-query";
 import { createEffect, createSignal, For, Show } from "solid-js";
@@ -146,63 +147,89 @@ export const Flash = () => {
     return dataTransfer.files;
   };
   const [confirmOpen, setConfirmOpen] = createSignal(false);
+  const [isFlashing, setFlashing] = createSignal(false);
 
-  const handleConfirm = async (values: FlashFormValues) => {
+  const handleSubmit = (values: FlashFormValues) => {
     setConfirmOpen(true);
-    console.log("Submit:", values);
-    toast.error("Not fully implemented yet");
-    // Disabled for now. To prevent accidental flashing of local disks
-    // User should confirm the disk to flash to
-
-    // try {
-    //   await callApi("flash_machine", {
-    //     machine: {
-    //       name: values.machine.devicePath,
-    //       flake: {
-    //         loc: values.machine.flake,
-    //       },
-    //     },
-    //     mode: "format",
-    //     disks: [{ name: "main", device: values.disk }],
-    //     system_config: {
-    //       language: values.language,
-    //       keymap: values.keymap,
-    //       ssh_keys_path: values.sshKeys.map((file) => file.name),
-    //     },
-    //     dry_run: false,
-    //     write_efi_boot_entries: false,
-    //     debug: false,
-    //   });
-    // } catch (error) {
-    //   toast.error(`Error could not flash disk: ${error}`);
-    //   console.error("Error submitting form:", error);
-    // }
+  };
+  const handleConfirm = async () => {
+    // Wait for the flash to complete
+    const values = getValues(formStore) as FlashFormValues;
+    setFlashing(true);
+    console.log("Confirmed flash:", values);
+    try {
+      await toast.promise(
+        callApi("flash_machine", {
+          machine: {
+            name: values.machine.devicePath,
+            flake: {
+              loc: values.machine.flake,
+            },
+          },
+          mode: "format",
+          disks: [{ name: "main", device: values.disk }],
+          system_config: {
+            language: values.language,
+            keymap: values.keymap,
+            ssh_keys_path: values.sshKeys.map((file) => file.name),
+          },
+          dry_run: false,
+          write_efi_boot_entries: false,
+          debug: false,
+          graphical: true,
+        }),
+        {
+          error: (errors) => `Error flashing disk: ${errors}`,
+          loading: "Flashing ... This may take up to 15minutes.",
+          success: "Disk flashed successfully",
+        },
+      );
+    } catch (error) {
+      toast.error(`Error could not flash disk: ${error}`);
+    } finally {
+      setFlashing(false);
+    }
+    setConfirmOpen(false);
   };
 
   return (
     <>
       <Header title="Flash installer" />
       <Modal
-        open={confirmOpen()}
-        handleClose={() => setConfirmOpen(false)}
+        open={confirmOpen() || isFlashing()}
+        handleClose={() => !isFlashing() && setConfirmOpen(false)}
         title="Confirm"
       >
         <div class="flex flex-col gap-4 p-4">
-          <div class="flex justify-between rounded-sm border p-4 align-middle text-red-900 border-def-2">
+          <div class="flex flex-col justify-between rounded-sm border p-4 align-middle text-red-900 border-def-2">
             <Typography
               hierarchy="label"
               weight="medium"
               size="default"
               class="flex-wrap break-words pr-4"
             >
-              Warning: All data on will be lost.
-              <br />
+              Warning: All data will be lost.
+            </Typography>
+            <Typography
+              hierarchy="label"
+              weight="bold"
+              size="default"
+              class="flex-wrap break-words pr-4"
+            >
               Selected disk: '{getValue(formStore, "disk")}'
             </Typography>
           </div>
           <div class="flex w-full justify-between">
-            <Button variant="light">Cancel</Button>
-            <Button>Confirm</Button>
+            <Button
+              disabled={isFlashing()}
+              variant="light"
+              onClick={() => setConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button disabled={isFlashing()} onClick={handleConfirm}>
+              Confirm
+            </Button>
           </div>
         </div>
       </Modal>
@@ -214,7 +241,7 @@ export const Flash = () => {
           Will make bootstrapping new machines easier by providing secure remote
           connection to any machine when plugged in.
         </Typography>
-        <Form onSubmit={handleConfirm}>
+        <Form onSubmit={handleSubmit}>
           <div class="my-4">
             <Field name="sshKeys" type="File[]">
               {(field, props) => (
@@ -259,6 +286,7 @@ export const Flash = () => {
                 labelProps={{
                   labelAction: (
                     <Button
+                      disabled={isFlashing()}
                       class="ml-auto"
                       variant="ghost"
                       size="s"

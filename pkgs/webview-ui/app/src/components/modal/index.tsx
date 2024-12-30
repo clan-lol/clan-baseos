@@ -1,5 +1,5 @@
 import Dialog from "corvu/dialog";
-import { createEffect, createSignal, JSX } from "solid-js";
+import { createSignal, JSX } from "solid-js";
 import { Button } from "../button";
 import Icon from "../icon";
 import cx from "classnames";
@@ -13,7 +13,7 @@ interface ModalProps {
 export const Modal = (props: ModalProps) => {
   const [dragging, setDragging] = createSignal(false);
   const [startOffset, setStartOffset] = createSignal({ x: 0, y: 0 });
-  //   const [dialogStyle, setDialogStyle] = createSignal({ top: 100, left: 100 });
+
   let dialogRef: HTMLDivElement;
 
   const handleMouseDown = (e: MouseEvent) => {
@@ -37,9 +37,6 @@ export const Modal = (props: ModalProps) => {
 
   const handleMouseUp = () => setDragging(false);
 
-  createEffect(() => {
-    console.log("dialog open", props.open);
-  });
   return (
     <Dialog open={props.open} trapFocus={true}>
       <Dialog.Portal>
