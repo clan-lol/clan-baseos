@@ -14,7 +14,7 @@
     else
       {
         devShells.clan-app = pkgs.callPackage ./shell.nix {
-          inherit (config.packages) clan-app;
+          inherit (config.packages) clan-app  webview-wrapper;
           inherit self';
         };
         packages.clan-app = pkgs.python3.pkgs.callPackage ./default.nix {

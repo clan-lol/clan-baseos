@@ -12,6 +12,8 @@
   python3,
   gtk4,
   libadwaita,
+  webview-wrapper,
+  clang,
   self',
 }:
 
@@ -36,6 +38,8 @@ mkShell {
       glib
       ruff
       gtk4
+      clang
+      webview-wrapper
       gtk4.dev # has the demo called 'gtk4-widget-factory'
       libadwaita.devdoc # has the demo called 'adwaita-1-demo'
     ]
@@ -51,7 +55,6 @@ mkShell {
     export GIT_ROOT=$(git rev-parse --show-toplevel)
     export PKG_ROOT=$GIT_ROOT/pkgs/clan-app
 
-    export WEBKIT_DISABLE_COMPOSITING_MODE=1
     # Add current package to PYTHONPATH
     export PYTHONPATH="$PKG_ROOT''${PYTHONPATH:+:$PYTHONPATH:}"
 

@@ -40,6 +40,7 @@ let
     libadwaita
     webkitgtk_6_0
     adwaita-icon-theme
+
   ];
 
   # Deps including python packages from the local project
