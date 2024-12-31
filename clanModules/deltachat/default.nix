@@ -5,7 +5,7 @@
 
   services.maddy =
     let
-      domain = "${config.clan.core.machineName}.local";
+      domain = "${config.clan.core.settings.machine.name}.local";
     in
     {
       enable = true;

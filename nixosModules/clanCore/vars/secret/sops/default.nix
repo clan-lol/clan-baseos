@@ -10,14 +10,14 @@ let
 
   inherit (import ./funcs.nix { inherit lib; }) collectFiles;
 
-  inherit (config.clan.core) machineName;
+  machineName = config.clan.core.settings.machine.name;
 
   secretPath =
     secret:
     if secret.share then
-      config.clan.core.clanDir + "/vars/shared/${secret.generator}/${secret.name}/secret"
+      config.clan.core.settings.directory + "/vars/shared/${secret.generator}/${secret.name}/secret"
     else
-      config.clan.core.clanDir
+      config.clan.core.settings.directory
       + "/vars/per-machine/${machineName}/${secret.generator}/${secret.name}/secret";
 
   vars = collectFiles config.clan.core.vars;
@@ -53,7 +53,7 @@ in
       lib.mkDefault (builtins.toString (pkgs.writeText "dummy.yaml" ""))
     );
     age.keyFile = lib.mkIf (builtins.pathExists (
-      config.clan.core.clanDir + "/sops/secrets/${machineName}-age.key/secret"
+      config.clan.core.settings.directory + "/sops/secrets/${machineName}-age.key/secret"
     )) (lib.mkDefault "/var/lib/sops-nix/key.txt");
   };
 }

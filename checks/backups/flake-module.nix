@@ -147,7 +147,7 @@
               self.nixosModules.test-backup
             ];
             virtualisation.emptyDiskImages = [ 256 ];
-            clan.core.clanDir = ./.;
+            clan.core.settings.directory = ./.;
           };
 
           testScript = ''

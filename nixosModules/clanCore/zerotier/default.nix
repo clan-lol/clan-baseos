@@ -23,7 +23,7 @@ in
     };
     name = lib.mkOption {
       type = lib.types.str;
-      default = config.clan.core.name;
+      default = config.clan.core.settings.name;
       defaultText = "config.clan.core.name";
       description = ''
         zerotier network name

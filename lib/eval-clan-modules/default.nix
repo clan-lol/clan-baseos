@@ -23,7 +23,7 @@ let
         modules = [
           baseModule
           {
-            clan.core.clanDir = clan-core;
+            clan.core.settings.directory = clan-core;
           }
           clan-core.nixosModules.clanCore
         ] ++ modules;
@@ -75,7 +75,7 @@ let
                   baseModule
                   clan-core.nixosModules.clanCore
                   {
-                    clan.core.clanDir = clan-core;
+                    clan.core.settings.directory = clan-core;
                   }
                   # Role interface
                   (module + "/roles/${role}.nix")

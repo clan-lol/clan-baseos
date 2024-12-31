@@ -15,8 +15,8 @@
           self.clanModules.matrix-synapse
           self.nixosModules.clanCore
           {
-            clan.core.machineName = "machine";
-            clan.core.clanDir = ./.;
+            clan.core.settings.machine.name = "machine";
+            clan.core.settings.directory = ./.;
 
             services.nginx.virtualHosts."matrix.clan.test" = {
               enableACME = lib.mkForce false;

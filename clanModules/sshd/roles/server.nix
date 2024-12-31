@@ -69,7 +69,7 @@ in
         "openssh-ca"
       ];
       validation = {
-        name = config.clan.core.machineName;
+        name = config.clan.core.settings.machine.name;
         domains = lib.genAttrs config.clan.sshd.certificate.searchDomains lib.id;
       };
       runtimeInputs = [
@@ -79,9 +79,9 @@ in
       script = ''
         ssh-keygen \
           -s $in/openssh-ca/id_ed25519 \
-          -I ${config.clan.core.machineName} \
+          -I ${config.clan.core.settings.machine.name} \
           -h \
-          -n ${lib.concatMapStringsSep "," (d: "${config.clan.core.machineName}.${d}") domains} \
+          -n ${lib.concatMapStringsSep "," (d: "${config.clan.core.settings.machine.name}.${d}") domains} \
           $in/openssh/ssh.id_ed25519.pub
         mv $in/openssh/ssh.id_ed25519-cert.pub $out/ssh.id_ed25519-cert.pub
       '';

@@ -13,7 +13,7 @@
       clan.postgresql.databases.test.create.options.OWNER = "test";
       clan.postgresql.databases.test.restore.stopOnRestore = [ "sample-service" ];
       clan.localbackup.targets.hdd.directory = "/mnt/external-disk";
-      clan.core.clanDir = ./.;
+      clan.core.settings.directory = ./.;
 
       systemd.services.sample-service = {
         wantedBy = [ "multi-user.target" ];

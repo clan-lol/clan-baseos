@@ -22,10 +22,12 @@ in
         machines = uniqueStrings (roles.moon.machines ++ roles.controller.machines ++ roles.peer.machines);
         networkIps = builtins.foldl' (
           ips: name:
-          if builtins.pathExists "${config.clan.core.clanDir}/machines/${name}/facts/zerotier-ip" then
+          if
+            builtins.pathExists "${config.clan.core.settings.directory}/machines/${name}/facts/zerotier-ip"
+          then
             ips
             ++ [
-              (builtins.readFile "${config.clan.core.clanDir}/machines/${name}/facts/zerotier-ip")
+              (builtins.readFile "${config.clan.core.settings.directory}/machines/${name}/facts/zerotier-ip")
             ]
           else
             ips

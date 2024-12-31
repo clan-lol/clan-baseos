@@ -13,11 +13,14 @@ in
     fileModule = file: {
       path = mkIf (file.config.secret == false) (
         if file.config.share then
-          (config.clan.core.clanDir + "/vars/shared/${file.config.generatorName}/${file.config.name}/value")
+          (
+            config.clan.core.settings.directory
+            + "/vars/shared/${file.config.generatorName}/${file.config.name}/value"
+          )
         else
           (
-            config.clan.core.clanDir
-            + "/vars/per-machine/${config.clan.core.machineName}/${file.config.generatorName}/${file.config.name}/value"
+            config.clan.core.settings.directory
+            + "/vars/per-machine/${config.clan.core.settings.machine.name}/${file.config.generatorName}/${file.config.name}/value"
           )
       );
       value = mkIf (file.config.secret == false) (

@@ -5,8 +5,8 @@
   ...
 }:
 let
-  secretsDir = config.clan.core.clanDir + "/sops/secrets";
-  groupsDir = config.clan.core.clanDir + "/sops/groups";
+  secretsDir = config.clan.core.settings.directory + "/sops/secrets";
+  groupsDir = config.clan.core.settings.directory + "/sops/groups";
 
   # My symlink is in the nixos module detected as a directory also it works in the repl. Is this because of pure evaluation?
   containsSymlink =
@@ -16,7 +16,8 @@ let
 
   containsMachine =
     parent: name: type:
-    type == "directory" && containsSymlink "${parent}/${name}/machines/${config.clan.core.machineName}";
+    type == "directory"
+    && containsSymlink "${parent}/${name}/machines/${config.clan.core.settings.machine.name}";
 
   containsMachineOrGroups =
     name: type:
@@ -37,12 +38,12 @@ in
     # Before we generate a secret we cannot know the path yet, so we need to set it to an empty string
     clan.core.facts.secretPathFunction =
       secret:
-      config.sops.secrets.${"${config.clan.core.machineName}-${secret.config.name}"}.path
+      config.sops.secrets.${"${config.clan.core.settings.machine.name}-${secret.config.name}"}.path
         or "/no-such-path";
     clan.core.facts.secretModule = "clan_cli.facts.secret_modules.sops";
     clan.core.facts.secretUploadDirectory = lib.mkDefault "/var/lib/sops-nix";
     sops.secrets = builtins.mapAttrs (name: _: {
-      sopsFile = config.clan.core.clanDir + "/sops/secrets/${name}/secret";
+      sopsFile = config.clan.core.settings.directory + "/sops/secrets/${name}/secret";
       format = "binary";
     }) secrets;
     # To get proper error messages about missing secrets we need a dummy secret file that is always present
@@ -51,7 +52,8 @@ in
     );
 
     sops.age.keyFile = lib.mkIf (builtins.pathExists (
-      config.clan.core.clanDir + "/sops/secrets/${config.clan.core.machineName}-age.key/secret"
+      config.clan.core.settings.directory
+      + "/sops/secrets/${config.clan.core.settings.machine.name}-age.key/secret"
     )) (lib.mkDefault "/var/lib/sops-nix/key.txt");
   };
 }

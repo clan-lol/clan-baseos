@@ -5,8 +5,8 @@
   ...
 }:
 let
-  clanDir = config.clan.core.clanDir;
-  machineDir = clanDir + "/machines/";
+  dir = config.clan.core.settings.directory;
+  machineDir = dir + "/machines/";
   machinesFileSet = builtins.readDir machineDir;
   machines = lib.mapAttrsToList (name: _: name) machinesFileSet;
 
@@ -27,7 +27,7 @@ in
   options.clan.zerotier-static-peers = {
     excludeHosts = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ config.clan.core.machineName ];
+      default = [ config.clan.core.settings.machine.name ];
       description = "Hosts that should be excluded";
     };
     networkIps = lib.mkOption {

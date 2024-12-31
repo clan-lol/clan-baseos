@@ -10,8 +10,8 @@
       environment.etc."group-secret".source = config.sops.secrets.group-secret.path;
       sops.age.keyFile = "/etc/privkey.age";
 
-      clan.core.clanDir = "${./.}";
-      clan.core.machineName = "machine";
+      clan.core.settings.directory = "${./.}";
+      clan.core.settings.machine.name = "machine";
 
       networking.hostName = "machine";
     };

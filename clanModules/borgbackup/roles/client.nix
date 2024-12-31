@@ -19,7 +19,7 @@ let
     )
   ) [ ] instances;
 
-  inherit (config.clan.core) machineName;
+  machineName = config.clan.core.settings.machine.name;
 
   cfg = config.clan.borgbackup;
   preBackupScript = ''
