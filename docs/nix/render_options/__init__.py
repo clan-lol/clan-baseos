@@ -25,6 +25,7 @@
 
 import json
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -82,19 +83,39 @@ def join_lines_with_indentation(lines: list[str], indent: int = 4) -> str:
     return "\n".join(indent_str + line for line in lines)
 
 
+def sanitize_anchor(text: str) -> str:
+    parts = text.split(".")
+    res = []
+    for part in parts:
+        if "<" in part:
+            continue
+        res.append(part)
+
+    return ".".join(res)
+
+
 def render_option(
-    name: str, option: dict[str, Any], level: int = 3, short_head: str | None = None
+    name: str,
+    option: dict[str, Any],
+    level: int = 3,
+    short_head: str | None = None,
 ) -> str:
     read_only = option.get("readOnly")
 
     res = f"""
-{"#" * level} {sanitize(name) if short_head is None else sanitize(short_head)}
+{"#" * level} {sanitize(name) if short_head is None else sanitize(short_head)} {"{: #"+sanitize_anchor(name)+"}" if level > 1 else ""}
 
+"""
+
+    res += f"""
 {f"**Attribute: `{name}`**" if short_head is not None else ""}
 
 {"**Readonly**" if read_only else ""}
 
-{option.get("description", "No description available.")}
+{option.get("description", "")}
+"""
+    if option.get("type"):
+        res += f"""
 
 **Type**: `{option["type"]}`
 
@@ -104,7 +125,7 @@ def render_option(
 **Default**:
 
 ```nix
-{option["default"]["text"] if option.get("default") else "No default set."}
+{option.get("default",{}).get("text") if option.get("default") else "No default set."}
 ```
         """
     example = option.get("example", {}).get("text")
@@ -131,18 +152,23 @@ def render_option(
         res += f"""
 :simple-git: [{name}]({source_path})
 """
-        res += "\n"
+        res += "\n\n"
 
     return res
 
 
-def print_options(options_file: str, head: str, no_options: str) -> str:
+def print_options(
+    options_file: str, head: str, no_options: str, replace_prefix: str | None = None
+) -> str:
     res = ""
     with (Path(options_file) / "share/doc/nixos/options.json").open() as f:
         options: dict[str, dict[str, Any]] = json.load(f)
 
         res += head if len(options.items()) else no_options
         for option_name, info in options.items():
+            if replace_prefix:
+                option_name = option_name.replace(replace_prefix + ".", "")
+
             res += render_option(option_name, info, 4)
     return res
 
@@ -223,10 +249,13 @@ Every clan module has a `frontmatter` section within its readme. It provides mac
 This provides an overview of the available attributes of the `frontmatter` within the `README.md` of a clan module.
 
 """
-        for option_name, info in options.items():
-            if option_name == "_module.args":
-                continue
-            output += render_option(option_name, info)
+        # for option_name, info in options.items():
+        #     if option_name == "_module.args":
+        #         continue
+        #     output += render_option(option_name, info)
+        root = options_to_tree(options, debug=True)
+        for option in root.suboptions:
+            output += options_docs_from_tree(option, init_level=2)
 
         outfile = Path(OUT) / "clanModules/frontmatter/index.md"
         outfile.parent.mkdir(
@@ -251,28 +280,48 @@ def produce_clan_core_docs() -> None:
     with CLAN_CORE_DOCS.open() as f:
         options: dict[str, dict[str, Any]] = json.load(f)
         module_name = "clan-core"
-        for option_name, info in options.items():
-            outfile = f"{module_name}/index.md"
 
-            # Create separate files for nested options
-            if len(option_name.split(".")) <= 3:
-                # i.e. clan-core.clanDir
-                output = core_outputs.get(
-                    outfile,
-                    module_header(module_name) + clan_core_descr + options_head,
+        transform = {n.replace("clan.core.", ""): v for n, v in options.items()}
+        split = split_options_by_root(transform)
+
+        # Prepopulate the index file header
+        indexfile = f"{module_name}/index.md"
+        core_outputs[indexfile] = (
+            module_header(module_name) + clan_core_descr + options_head
+        )
+
+        for submodule_name, split_options in split.items():
+            outfile = f"{module_name}/{submodule_name}.md"
+            print(
+                f"[clan_core.{submodule_name}] Rendering option of: {submodule_name}... {outfile}"
+            )
+            init_level = 1
+            root = options_to_tree(split_options, debug=True)
+
+            print(f"Submodule {submodule_name} - suboptions", len(root.suboptions))
+
+            module = root.suboptions[0]
+            print("type", module.info.get("type"))
+
+            module_type = module.info.get("type")
+
+            if module_type is not None and "submodule" not in module_type:
+                outfile = indexfile
+                init_level = 2
+
+            output = ""
+            for option in root.suboptions:
+                output += options_docs_from_tree(
+                    option,
+                    init_level=init_level,
+                    prefix=["clan", "core"],
                 )
-                output += render_option(option_name, info)
-                # Update the content
+
+            # Append the content
+            if outfile not in core_outputs:
                 core_outputs[outfile] = output
             else:
-                # Clan sub-options
-                [_, sub] = option_name.split(".")[1:3]
-                outfile = f"{module_name}/{sub}.md"
-                # Get the content or write the header
-                output = core_outputs.get(outfile, render_option_header(sub))
-                output += render_option(option_name, info)
-                # Update the content
-                core_outputs[outfile] = output
+                core_outputs[outfile] += output
 
         for outfile, output in core_outputs.items():
             (Path(OUT) / outfile).parent.mkdir(parents=True, exist_ok=True)
@@ -386,7 +435,7 @@ def produce_clan_modules_docs() -> None:
         links: dict[str, str] = json.load(f)
 
     for module_name, options_file in links.items():
-        print(f"Rendering {module_name}")
+        print(f"Rendering ClanModule: {module_name}")
         readme_file = CLAN_CORE_PATH / "clanModules" / module_name / "README.md"
         with readme_file.open() as f:
             readme = f.read()
@@ -445,7 +494,12 @@ def produce_clan_modules_docs() -> None:
 
 The following options are available when using the `{role}` role.
 """
-                output += print_options(role_options_file, heading, no_options)
+                output += print_options(
+                    role_options_file,
+                    heading,
+                    no_options,
+                    replace_prefix=f"clan.{module_name}",
+                )
         else:
             # No roles means no inventory usage
             output += """## Usage via Inventory
@@ -463,7 +517,6 @@ The following options are available when using the `{role}` role.
 **This module cannot be imported directly in your nixos configuration.**
 
 """
-
         else:
             output += module_nix_usage(module_name)
             no_options = "** This module doesnt require any options to be set.**"
@@ -562,7 +615,9 @@ Each attribute is documented below
 """
     with Path(BUILD_CLAN_PATH).open() as f:
         options: dict[str, dict[str, Any]] = json.load(f)
-        for option_name, info in options.items():
+
+        split = split_options_by_root(options)
+        for option_name, options in split.items():
             # Skip underscore options
             if option_name.startswith("_"):
                 continue
@@ -571,13 +626,53 @@ Each attribute is documented below
             if option_name.startswith("inventory."):
                 continue
 
-            print(f"Rendering option of {option_name}...")
-            output += render_option(option_name, info)
+            print(f"[build_clan_docs] Rendering option of {option_name}...")
+            root = options_to_tree(options)
+
+            for option in root.suboptions:
+                output += options_docs_from_tree(option, init_level=2)
 
     outfile = Path(OUT) / "nix-api/buildclan.md"
     outfile.parent.mkdir(parents=True, exist_ok=True)
     with Path.open(outfile, "w") as of:
         of.write(output)
+
+
+def split_options_by_root(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """
+    Split the flat dictionary of options into a dict of which each entry will construct complete option trees.
+    {
+        "a": { Data }
+        "a.b": { Data }
+        "c": { Data }
+    }
+    ->
+    {
+        "a": {
+            "a": { Data },
+            "a.b": { Data }
+        }
+        "c": {
+            "c": { Data }
+        }
+    }
+    """
+    res: dict[str, dict[str, Any]] = {}
+    for key, value in options.items():
+        parts = key.split(".")
+        root = parts[0]
+        if root not in res:
+            res[root] = {}
+        res[root][key] = value
+    return res
+
+
+@dataclass
+class Option:
+    name: str
+    path: list[str]
+    info: dict[str, Any]
+    suboptions: list["Option"] = field(default_factory=list)
 
 
 def produce_inventory_docs() -> None:
@@ -600,47 +695,21 @@ It can be set via the `inventory` attribute of the [`buildClan`](./buildclan.md#
     with Path(BUILD_CLAN_PATH).open() as f:
         options: dict[str, dict[str, Any]] = json.load(f)
 
-        def by_cat(item: tuple[str, dict[str, Any]]) -> Any:
-            name, _info = item
-            parts = name.split(".") if "." in name else ["root", "sub"]
+        clan_root_option = options_to_tree(options)
+        # Find the inventory options
+        inventory_opt: None | Option = None
+        for opt in clan_root_option.suboptions:
+            if opt.name == "inventory":
+                inventory_opt = opt
+                break
 
-            # Make everything fixed length.
-            remain = 10 - len(parts)
-            parts.extend(["A"] * remain)
-            category = parts[1]
-            # Sort by category,
-            # then by length of the option,
-            # then by the rest of the options
-            comparator = (category, -remain, parts[2:9])
-            return comparator
-
-        seen_categories = set()
-        for option_name, info in sorted(options.items(), key=by_cat):
-            # Skip underscore options
-            if option_name.startswith("_"):
-                continue
-
-            # Skip non inventory sub options
-            if not option_name.startswith("inventory."):
-                continue
-
-            category = option_name.split(".")[1]
-
-            heading_level = 3
-            if category not in seen_categories:
-                heading_level = 2
-                seen_categories.add(category)
-
-            parts = option_name.split(".")
-            short_name = ""
-            for part in parts[1:]:
-                if "<" in part:
-                    continue
-                short_name += ("." + part) if short_name else part
-
-            output += render_option(
-                option_name, info, level=heading_level, short_head=short_name
-            )
+        if not inventory_opt:
+            print("No inventory options found.")
+            exit(1)
+        # Render the inventory options
+        # This for loop excludes the root node
+        for option in inventory_opt.suboptions:
+            output += options_docs_from_tree(option, init_level=2)
 
     outfile = Path(OUT) / "nix-api/inventory.md"
     outfile.parent.mkdir(parents=True, exist_ok=True)
@@ -648,11 +717,117 @@ It can be set via the `inventory` attribute of the [`buildClan`](./buildclan.md#
         of.write(output)
 
 
+def option_short_name(option_name: str) -> str:
+    parts = option_name.split(".")
+    short_name = ""
+    for part in parts[1:]:
+        if "<" in part:
+            continue
+        short_name += ("." + part) if short_name else part
+    return short_name
+
+
+def options_to_tree(options: dict[str, Any], debug: bool = False) -> Option:
+    """
+    Convert the options dictionary to a tree structure.
+    """
+
+    # Helper function to create nested structure
+    def add_to_tree(path_parts: list[str], info: Any, current_node: Option) -> None:
+        if not path_parts:
+            return
+
+        name = path_parts[0]
+        remaining_path = path_parts[1:]
+
+        # Look for an existing suboption
+        for sub in current_node.suboptions:
+            if sub.name == name:
+                add_to_tree(remaining_path, info, sub)
+                return
+
+        # If no existing suboption is found, create a new one
+        new_option = Option(
+            name=name,
+            path=[*current_node.path, name],
+            info={},  # Populate info only at the final leaf
+        )
+        current_node.suboptions.append(new_option)
+
+        # If it's a leaf node, populate info
+        if not remaining_path:
+            new_option.info = info
+        else:
+            add_to_tree(remaining_path, info, new_option)
+
+    # Create the root option
+    root = Option(name="<root>", path=[], info={})
+
+    # Process each key-value pair in the dictionary
+    for key, value in options.items():
+        path_parts = key.split(".")
+        add_to_tree(path_parts, value, root)
+
+    def print_tree(option: Option, level: int = 0) -> None:
+        print("  " * level + option.name + ":", option.path)
+        for sub in option.suboptions:
+            print_tree(sub, level + 1)
+
+    # Example usage
+    if debug:
+        print("Options tree:")
+        print_tree(root)
+
+    return root
+
+
+def options_docs_from_tree(
+    root: Option, init_level: int = 1, prefix: list[str] | None = None
+) -> str:
+    """
+    Render the options from the tree structure.
+
+    Args:
+    root (Option): The root option node.
+    init_level (int): The initial level of indentation.
+    prefix (list str): Will be printed as common prefix of all attribute names.
+    """
+
+    def render_tree(option: Option, level: int = init_level) -> str:
+        output = ""
+
+        should_render = not option.name.startswith("<") and not option.name.startswith(
+            "_"
+        )
+        if should_render:
+            # short_name = option_short_name(option.name)
+            path = ".".join(prefix + option.path) if prefix else ".".join(option.path)
+            output += render_option(
+                path,
+                option.info,
+                level=level,
+                short_head=option.name,
+            )
+
+        for sub in option.suboptions:
+            h_increment = 1 if should_render else 0
+
+            if "_module" in sub.path:
+                continue
+            output += render_tree(sub, level + h_increment)
+
+        return output
+
+    md = render_tree(root)
+    return md
+
+
 if __name__ == "__main__":  #
+    produce_clan_core_docs()
+
     produce_build_clan_docs()
     produce_inventory_docs()
 
-    produce_clan_core_docs()
     produce_clan_modules_docs()
 
     produce_clan_modules_frontmatter_docs()
