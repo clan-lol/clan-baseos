@@ -1,7 +1,7 @@
 { lib, config, ... }:
 let
   directory = config.clan.core.settings.directory;
-  inherit (config.clan.core) machineName;
+  machineName = config.clan.core.settings.machine.name;
   facterJson = "${directory}/machines/${machineName}/facter.json";
   hwConfig = "${directory}/machines/${machineName}/hardware-configuration.nix";
 in

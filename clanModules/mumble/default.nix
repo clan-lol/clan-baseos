@@ -39,7 +39,7 @@ in
     services.murmur = {
       enable = true;
       logDays = -1;
-      registerName = config.clan.core.machineName;
+      registerName = config.clan.core.settings.machine.name;
       openFirewall = true;
       bonjour = true;
       sslKey = "/var/lib/murmur/sslKey";
@@ -97,8 +97,8 @@ in
           XDG_DATA_DIR=${mumbleCfgDir}
           ${populate-channels} --ensure-config '${mumbleCfgPath}' --db-location ${mumbleDatabasePath}
           echo ${machineCertJson}
-          ${populate-channels} --machines '${machineJson}' --username ${config.clan.core.machineName} --db-location ${mumbleDatabasePath}
-          ${populate-channels} --servers '${machineCertJson}' --username ${config.clan.core.machineName} --db-location ${mumbleDatabasePath} --cert True
+          ${populate-channels} --machines '${machineJson}' --username ${config.clan.core.settings.machine.name} --db-location ${mumbleDatabasePath}
+          ${populate-channels} --servers '${machineCertJson}' --username ${config.clan.core.settings.machine.name} --db-location ${mumbleDatabasePath} --cert True
           ${pkgs.mumble}/bin/mumble --config ${mumbleCfgPath} "$@"
           popd
         '';

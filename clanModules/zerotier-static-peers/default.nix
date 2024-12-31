@@ -27,7 +27,7 @@ in
   options.clan.zerotier-static-peers = {
     excludeHosts = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ config.clan.core.machineName ];
+      default = [ config.clan.core.settings.machine.name ];
       description = "Hosts that should be excluded";
     };
     networkIps = lib.mkOption {

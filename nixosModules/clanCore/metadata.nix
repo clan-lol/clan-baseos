@@ -15,6 +15,7 @@ in
       "clanIcon"
     ] "clanIcon has been removed. Use clan.core.icon instead.")
 
+    # The following options have been moved into clan.core.settings
     (lib.mkRenamedOptionModule
       [ "clan" "core" "clanDir" ]
       [
@@ -22,6 +23,17 @@ in
         "core"
         "settings"
         "directory"
+      ]
+    )
+    # The following options have been moved into clan.core.settings.machine
+    (lib.mkRenamedOptionModule
+      [ "clan" "core" "machineName" ]
+      [
+        "clan"
+        "core"
+        "settings"
+        "machine"
+        "name"
       ]
     )
   ];
@@ -34,16 +46,25 @@ in
       '';
       type = types.submodule {
         options = {
-          directory = lib.mkOption {
-            type = lib.types.path;
-            # documentation.nixos.extraModules = [
-            #   ...
-            #   clan-core.nixosModules.clanCore
-            #   { clan.core.settings.directory = ./path/to/flake; }
-            # ];
+          directory = mkOption {
+            type = types.path;
             description = ''
               the location of the flake repo, used to calculate the location of facts and secrets
             '';
+          };
+          machine = mkOption {
+            default = {};
+            type = types.submodule {
+              options = {
+                name = mkOption {
+                  type = types.str;
+                  default = "nixos";
+                  description = ''
+                    the name of the machine
+                  '';
+                };
+              };
+            };
           };
         };
       };
@@ -77,13 +98,6 @@ in
       default = null;
       description = ''
         the description of the machine
-      '';
-    };
-    machineName = lib.mkOption {
-      type = lib.types.str;
-      default = "nixos";
-      description = ''
-        the name of the machine
       '';
     };
     clanPkgs = lib.mkOption {

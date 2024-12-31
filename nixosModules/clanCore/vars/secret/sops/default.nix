@@ -10,7 +10,7 @@ let
 
   inherit (import ./funcs.nix { inherit lib; }) collectFiles;
 
-  inherit (config.clan.core) machineName;
+  machineName = config.clan.core.settings.machine.name;
 
   secretPath =
     secret:

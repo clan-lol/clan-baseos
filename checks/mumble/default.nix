@@ -32,7 +32,7 @@
         imports = [
           common
           {
-            clan.core.machineName = "peer1";
+            clan.core.settings.machine.name = "peer1";
             environment.etc = {
               "mumble-key".source = ./peer_1/peer_1_test_key;
               "mumble-cert".source = ./peer_1/peer_1_test_cert;
@@ -64,7 +64,7 @@
         imports = [
           common
           {
-            clan.core.machineName = "peer2";
+            clan.core.settings.machine.name = "peer2";
             environment.etc = {
               "mumble-key".source = ./peer_2/peer_2_test_key;
               "mumble-cert".source = ./peer_2/peer_2_test_cert;

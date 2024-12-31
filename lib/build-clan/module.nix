@@ -82,6 +82,10 @@ let
               # Settings
               clan.core.settings = {
                 inherit directory;
+
+                machine = {
+                  inherit name;
+                };
               };
               # clan.core.settings.directory = directory;
               # Inherited from clan wide settings
@@ -90,7 +94,8 @@ let
               clan.core.icon = config.inventory.meta.icon;
 
               # Machine specific settings
-              clan.core.machineName = name;
+              # clan.core.settings.machine.name = name;
+
               networking.hostName = lib.mkDefault name;
 
               # speeds up nix commands by using the nixpkgs from the host system (especially useful in VMs)

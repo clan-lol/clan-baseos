@@ -2,7 +2,7 @@
 let
   dir = config.clan.core.settings.directory;
   machineDir = dir + "/machines/";
-  inherit (config.clan.core) machineName;
+  machineName = config.clan.core.settings.machine.name;
 
   # Instances might be empty, if the module is not used via the inventory
   #

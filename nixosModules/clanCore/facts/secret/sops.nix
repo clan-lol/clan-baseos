@@ -16,7 +16,8 @@ let
 
   containsMachine =
     parent: name: type:
-    type == "directory" && containsSymlink "${parent}/${name}/machines/${config.clan.core.machineName}";
+    type == "directory"
+    && containsSymlink "${parent}/${name}/machines/${config.clan.core.settings.machine.name}";
 
   containsMachineOrGroups =
     name: type:
@@ -37,7 +38,7 @@ in
     # Before we generate a secret we cannot know the path yet, so we need to set it to an empty string
     clan.core.facts.secretPathFunction =
       secret:
-      config.sops.secrets.${"${config.clan.core.machineName}-${secret.config.name}"}.path
+      config.sops.secrets.${"${config.clan.core.settings.machine.name}-${secret.config.name}"}.path
         or "/no-such-path";
     clan.core.facts.secretModule = "clan_cli.facts.secret_modules.sops";
     clan.core.facts.secretUploadDirectory = lib.mkDefault "/var/lib/sops-nix";
@@ -51,7 +52,8 @@ in
     );
 
     sops.age.keyFile = lib.mkIf (builtins.pathExists (
-      config.clan.core.settings.directory + "/sops/secrets/${config.clan.core.machineName}-age.key/secret"
+      config.clan.core.settings.directory
+      + "/sops/secrets/${config.clan.core.settings.machine.name}-age.key/secret"
     )) (lib.mkDefault "/var/lib/sops-nix/key.txt");
   };
 }

@@ -47,7 +47,7 @@ in
   options.clan.syncthing-static-peers = {
     excludeMachines = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      example = [ config.clan.core.machineName ];
+      example = [ config.clan.core.settings.machine.name ];
       default = [ ];
       description = ''
         Machines that should not be added.

@@ -141,8 +141,8 @@
                     '';
                     default =
                       config.clan.core.settings.directory
-                      + "/machines/${config.clan.core.machineName}/facts/${fact.config._module.args.name}";
-                    defaultText = lib.literalExpression "\${config.clan.core.settings.directory}/machines/\${config.clan.core.machineName}/facts/\${fact.config._module.args.name}";
+                      + "/machines/${config.clan.core.settings.machine.name}/facts/${fact.config._module.args.name}";
+                    defaultText = lib.literalExpression "\${config.clan.core.settings.directory}/machines/\${config.clan.core.settings.machine.name}/facts/\${fact.config._module.args.name}";
                   };
                   value = lib.mkOption {
                     defaultText = lib.literalExpression "\${config.clan.core.settings.directory}/\${fact.config.path}";

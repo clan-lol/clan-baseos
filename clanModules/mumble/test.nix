@@ -9,7 +9,7 @@ pkgs.nixosTest {
         self.inputs.clan-core.nixosModules.clanCore
         {
           config = {
-            clan.core.machineName = "peer1";
+            clan.core.settings.machine.name = "peer1";
             clan.core.settings.directory = ./.;
 
             documentation.enable = false;
@@ -26,7 +26,7 @@ pkgs.nixosTest {
         {
           config = {
 
-            clan.core.machineName = "peer2";
+            clan.core.settings.machine.name = "peer2";
             clan.core.settings.directory = ./.;
 
             documentation.enable = false;

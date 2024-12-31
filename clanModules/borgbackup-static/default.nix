@@ -9,7 +9,7 @@ in
   options.clan.borgbackup-static = {
     excludeMachines = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      example = [ config.clan.core.machineName ];
+      example = [ config.clan.core.settings.machine.name ];
       default = [ ];
       description = ''
         Machines that should not be backuped.
@@ -20,7 +20,7 @@ in
     };
     includeMachines = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      example = [ config.clan.core.machineName ];
+      example = [ config.clan.core.settings.machine.name ];
       default = [ ];
       description = ''
         Machines that should be backuped.
@@ -63,7 +63,7 @@ in
     in
     lib.mkIf
       (builtins.any (
-        target: target == config.clan.core.machineName
+        target: target == config.clan.core.settings.machine.name
       ) config.clan.borgbackup-static.targets)
       (if (builtins.listToAttrs hosts) != null then builtins.listToAttrs hosts else { });
 
@@ -72,12 +72,12 @@ in
       destinations = builtins.map (d: {
         name = d;
         value = {
-          repo = "borg@${d}:/var/lib/borgbackup/${config.clan.core.machineName}";
+          repo = "borg@${d}:/var/lib/borgbackup/${config.clan.core.settings.machine.name}";
         };
       }) config.clan.borgbackup-static.targets;
     in
     lib.mkIf (builtins.any (
-      target: target == config.clan.core.machineName
+      target: target == config.clan.core.settings.machine.name
     ) config.clan.borgbackup-static.includeMachines) (builtins.listToAttrs destinations);
 
   config.assertions = [

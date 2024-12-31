@@ -20,7 +20,7 @@ in
         else
           (
             config.clan.core.settings.directory
-            + "/vars/per-machine/${config.clan.core.machineName}/${file.config.generatorName}/${file.config.name}/value"
+            + "/vars/per-machine/${config.clan.core.settings.machine.name}/${file.config.generatorName}/${file.config.name}/value"
           )
       );
       value = mkIf (file.config.secret == false) (

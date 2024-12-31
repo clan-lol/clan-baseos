@@ -16,7 +16,7 @@
             };
           }
           {
-            clan.core.machineName = "machine";
+            clan.core.settings.machine.name = "machine";
             clan.core.settings.directory = ./.;
             clan.core.state.testState.folders = [ "/etc/state" ];
             environment.etc.state.text = "hello world";
