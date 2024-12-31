@@ -54,6 +54,26 @@ in
         "name"
       ]
     )
+    (lib.mkRenamedOptionModule
+      [ "clan" "core" "machineDescription" ]
+      [
+        "clan"
+        "core"
+        "settings"
+        "machine"
+        "description"
+      ]
+    )
+    (lib.mkRenamedOptionModule
+      [ "clan" "core" "machineIcon" ]
+      [
+        "clan"
+        "core"
+        "settings"
+        "machine"
+        "icon"
+      ]
+    )
   ];
   options.clan.core = {
     settings = mkOption {
@@ -102,6 +122,20 @@ in
                     the name of the machine
                   '';
                 };
+                icon = lib.mkOption {
+                  type = lib.types.nullOr lib.types.path;
+                  default = null;
+                  description = ''
+                    the location of the machine icon
+                  '';
+                };
+                description = lib.mkOption {
+                  type = lib.types.nullOr lib.types.str;
+                  default = null;
+                  description = ''
+                    the description of the machine
+                  '';
+                };
               };
             };
           };
@@ -109,20 +143,8 @@ in
       };
     };
 
-    machineIcon = lib.mkOption {
-      type = lib.types.nullOr lib.types.path;
-      default = null;
-      description = ''
-        the location of the machine icon
-      '';
-    };
-    machineDescription = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      description = ''
-        the description of the machine
-      '';
-    };
+    # TODO: Move this into settings.clanPkgs ?
+    # This could also be part of the public interface to allow users to override the internal packages
     clanPkgs = lib.mkOption {
       defaultText = "self.packages.${pkgs.system}";
       internal = true;

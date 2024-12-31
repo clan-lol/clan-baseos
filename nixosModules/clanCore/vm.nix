@@ -251,9 +251,9 @@ in
     # for clan vm inspect
     clan.core.vm.inspect = {
       clan_name = config.clan.core.settings.name;
-      machine_icon = config.clan.core.machineIcon or config.clan.core.settings.icon;
+      machine_icon = config.clan.core.settings.machine.icon or config.clan.core.settings.icon;
       machine_name = config.clan.core.settings.machine.name;
-      machine_description = config.clan.core.machineDescription;
+      machine_description = config.clan.core.settings.machine.description;
       memory_size = config.clan.virtualisation.memorySize;
       inherit (config.clan.virtualisation) cores graphics waypipe;
     };
