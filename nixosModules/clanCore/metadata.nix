@@ -53,6 +53,11 @@ in
             '';
           };
           machine = mkOption {
+            description = ''
+              Settings of the machine.
+
+              This is a read-only attribute-set available to the machines of the clan.
+            '';
             default = {};
             type = types.submodule {
               options = {
