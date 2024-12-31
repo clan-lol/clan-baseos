@@ -250,8 +250,8 @@ in
   config = {
     # for clan vm inspect
     clan.core.vm.inspect = {
-      clan_name = config.clan.core.name;
-      machine_icon = config.clan.core.machineIcon or config.clan.core.icon;
+      clan_name = config.clan.core.settings.name;
+      machine_icon = config.clan.core.machineIcon or config.clan.core.settings.icon;
       machine_name = config.clan.core.settings.machine.name;
       machine_description = config.clan.core.machineDescription;
       memory_size = config.clan.virtualisation.memorySize;

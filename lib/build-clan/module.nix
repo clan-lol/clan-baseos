@@ -82,16 +82,14 @@ let
               # Settings
               clan.core.settings = {
                 inherit directory;
+                inherit (config.inventory.meta) name icon;
 
                 machine = {
                   inherit name;
                 };
               };
-              # clan.core.settings.directory = directory;
               # Inherited from clan wide settings
               # TODO: remove these
-              clan.core.name = config.inventory.meta.name;
-              clan.core.icon = config.inventory.meta.icon;
 
               # Machine specific settings
               # clan.core.settings.machine.name = name;
