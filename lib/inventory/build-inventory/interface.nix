@@ -157,7 +157,7 @@ in
       description = ''
         Tags of the inventory are used to group machines together.
 
-        It is recommended to use [`machine.tags`](#machinestags) to define the tags of the machines.
+        It is recommended to use [`machine.tags`](#inventory.machines.tags) to define the tags of the machines.
 
         This can be used to define custom tags that are either statically set or dynamically computed.
 
@@ -185,7 +185,7 @@ in
 
             allButFoo is a computed tag. It will be added to all machines except 'foo'
 
-            `all` is a predefined tag. See the docs of [`tags.all`](#tagsall).
+            `all` is a predefined tag. See the docs of [`tags.all`](#inventory.tags.all).
 
             ```nix
             #  inventory.tags ↓       ↓ inventory.machines
@@ -295,7 +295,7 @@ in
 
         !!! Note
             Services MUST be added to machines via `roles` exclusively.
-            See [`roles.<rolename>.machines`](#servicesrolesmachines) or [`roles.<rolename>.tags`](#servicesrolesmachines) for more information.
+            See [`roles.<rolename>.machines`](#inventory.services.roles.machines) or [`roles.<rolename>.tags`](#inventory.services.roles.tags) for more information.
       '';
       default = { };
       type = types.attrsOf (
@@ -377,7 +377,7 @@ in
                       description = ''
                         Additional configuration of the specific machine.
 
-                        See how [`service.<name>.<name>.config`](#servicesconfig) works in general for further information.
+                        See how [`service.<name>.<name>.config`](#inventory.services.config) works in general for further information.
                       '';
                     };
                   }
@@ -396,7 +396,7 @@ in
 
                         The machines are referenced by their `attributeName` in the `inventory.machines` attribute set.
 
-                        Memberships are decaled here to determine which machines are part of the service.
+                        Memberships are declared here to determine which machines are part of the service.
 
                         Alternatively, `tags` can be used to determine the membership, more dynamically.
                       '';
@@ -416,7 +416,7 @@ in
                       description = ''
                         Additional configuration of the specific role.
 
-                        See how [`service.<name>.<name>.config`](#servicesconfig) works in general for further information.
+                        See how [`service.<name>.<name>.config`](#inventory.services.config) works in general for further information.
                       '';
                     };
                     options.extraModules = extraModulesOption;

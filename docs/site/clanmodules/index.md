@@ -9,7 +9,7 @@ This site will guide you through authoring your first module. Explaining which c
 
 
 !!! Tip
-    External ClanModules can be ad-hoc loaded via [`clan.inventory.modules`](../reference/nix-api/inventory.md#modules)
+    External ClanModules can be ad-hoc loaded via [`clan.inventory.modules`](../reference/nix-api/inventory.md#inventory.modules)
 
 ## Bootstrapping the `clanModule`
 
@@ -48,7 +48,7 @@ clanModules/borgbackup
 === "User module"
 
     If the module should be ad-hoc loaded.
-    It can be made avilable in any project via the [`clan.inventory.modules`](../reference/nix-api/inventory.md#modules) attribute.
+    It can be made avilable in any project via the [`clan.inventory.modules`](../reference/nix-api/inventory.md#inventory.modules) attribute.
 
     ```nix title="flake.nix"
     # ...

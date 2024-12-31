@@ -16,7 +16,7 @@ Clan currently offers the following methods to configure machines:
 
     - machines/`machine_name`/configuration.nix (`autoincluded` if it exists)
 
-    See the complete [list](../manual/adding-machines.md#automatic-register) of auto-loaded files.
+    See the complete [list](../manual/adding-machines.md#automatic-registration) of auto-loaded files.
 
 ???+ Note "Used by CLI & UI"
 

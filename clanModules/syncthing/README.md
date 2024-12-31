@@ -19,7 +19,7 @@ We recommend configuring this module as an sync-service through the provided opt
 - **Share Folders**: Select folders to share with connected devices and configure permissions and synchronization parameters.
 
 !!! info
-    Clan automatically discovers other devices. Automatic discovery requires one machine to be an [introducer](#clansyncthingintroducer)
+    Clan automatically discovers other devices. Automatic discovery requires one machine to be an [introducer](#clan.syncthing.introducer)
 
     If that is not the case you can add the other device by its Device ID manually.
     You can find and share Device IDs under the "Add Device" button in the Web GUI. (`127.0.0.1:8384`)
