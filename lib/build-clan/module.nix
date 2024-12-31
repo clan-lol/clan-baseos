@@ -80,7 +80,10 @@ let
           (
             {
               # Settings
-              clan.core.clanDir = directory;
+              clan.core.settings = {
+                inherit directory;
+              };
+              # clan.core.settings.directory = directory;
               # Inherited from clan wide settings
               # TODO: remove these
               clan.core.name = config.inventory.meta.name;

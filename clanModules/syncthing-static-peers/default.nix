@@ -5,8 +5,8 @@
   ...
 }:
 let
-  clanDir = config.clan.core.clanDir;
-  machineDir = clanDir + "/machines/";
+  dir = config.clan.core.settings.directory;
+  machineDir = dir + "/machines/";
   syncthingPublicKeyPath = machines: machineDir + machines + "/facts/syncthing.pub";
   machinesFileSet = builtins.readDir machineDir;
   machines = lib.mapAttrsToList (name: _: name) machinesFileSet;

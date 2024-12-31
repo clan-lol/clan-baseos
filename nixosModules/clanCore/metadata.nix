@@ -1,4 +1,7 @@
 { lib, pkgs, ... }:
+let
+  inherit (lib) mkOption types;
+in
 {
   imports = [
     (lib.mkRemovedOptionModule [
@@ -11,8 +14,41 @@
       "core"
       "clanIcon"
     ] "clanIcon has been removed. Use clan.core.icon instead.")
+
+    (lib.mkRenamedOptionModule
+      [ "clan" "core" "clanDir" ]
+      [
+        "clan"
+        "core"
+        "settings"
+        "directory"
+      ]
+    )
   ];
   options.clan.core = {
+    settings = mkOption {
+      description = ''
+        Settings of the clan.
+
+        This is a read-only attribute-set available to the machines of the clan.
+      '';
+      type = types.submodule {
+        options = {
+          directory = lib.mkOption {
+            type = lib.types.path;
+            # documentation.nixos.extraModules = [
+            #   ...
+            #   clan-core.nixosModules.clanCore
+            #   { clan.core.settings.directory = ./path/to/flake; }
+            # ];
+            description = ''
+              the location of the flake repo, used to calculate the location of facts and secrets
+            '';
+          };
+        };
+      };
+    };
+
     name = lib.mkOption {
       type = lib.types.str;
       description = ''
@@ -41,17 +77,6 @@
       default = null;
       description = ''
         the description of the machine
-      '';
-    };
-    clanDir = lib.mkOption {
-      type = lib.types.path;
-      # documentation.nixos.extraModules = [
-      #   ...
-      #   clan-core.nixosModules.clanCore
-      #   { clan.core.clanDir = ./path/to/flake; }
-      # ];
-      description = ''
-        the location of the flake repo, used to calculate the location of facts and secrets
       '';
     };
     machineName = lib.mkOption {

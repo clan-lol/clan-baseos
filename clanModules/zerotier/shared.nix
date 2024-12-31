@@ -10,15 +10,17 @@ let
   zeroTierInstance = config.clan.inventory.services.zerotier.${instanceName};
   roles = zeroTierInstance.roles;
   controllerMachine = builtins.head roles.controller.machines;
-  networkIdPath = "${config.clan.core.clanDir}/machines/${controllerMachine}/facts/zerotier-network-id";
+  networkIdPath = "${config.clan.core.settings.directory}/machines/${controllerMachine}/facts/zerotier-network-id";
   networkId = if builtins.pathExists networkIdPath then builtins.readFile networkIdPath else null;
   moons = roles.moon.machines;
   moonIps = builtins.foldl' (
     ips: name:
-    if builtins.pathExists "${config.clan.core.clanDir}/machines/${name}/facts/zerotier-ip" then
+    if
+      builtins.pathExists "${config.clan.core.settings.directory}/machines/${name}/facts/zerotier-ip"
+    then
       ips
       ++ [
-        (builtins.readFile "${config.clan.core.clanDir}/machines/${name}/facts/zerotier-ip")
+        (builtins.readFile "${config.clan.core.settings.directory}/machines/${name}/facts/zerotier-ip")
       ]
     else
       ips

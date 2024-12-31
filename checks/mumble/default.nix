@@ -12,7 +12,7 @@
           self.nixosModules.clanCore
           (self.inputs.nixpkgs + "/nixos/tests/common/x11.nix")
           {
-            clan.core.clanDir = ./.;
+            clan.core.settings.directory = ./.;
             environment.systemPackages = [ pkgs.killall ];
             clan.core.facts.services.mumble.secret."mumble-key".path = "/etc/mumble-key";
             clan.core.facts.services.mumble.public."mumble-cert".path = "/etc/mumble-cert";
@@ -111,12 +111,12 @@
       with subtest("Wait for certificate creation"):
         peer1.wait_for_window(r"^Mumble$")
         peer1.sleep(3) # mumble is slow to register handlers
-        peer1.send_chars("\n") 
-        peer1.send_chars("\n") 
+        peer1.send_chars("\n")
+        peer1.send_chars("\n")
         peer2.wait_for_window(r"^Mumble$")
         peer2.sleep(3) # mumble is slow to register handlers
-        peer2.send_chars("\n") 
-        peer2.send_chars("\n") 
+        peer2.send_chars("\n")
+        peer2.send_chars("\n")
 
       with subtest("Wait for server connect"):
         peer1.wait_for_window(r"^Mumble Server Connect$")
@@ -128,8 +128,8 @@
         peer1.execute("mumble mumble://peer2 >&2 &")
         peer1.wait_for_window(r"^Mumble$")
         peer1.sleep(3) # mumble is slow to register handlers
-        peer1.send_chars("\n") 
-        peer1.send_chars("\n") 
+        peer1.send_chars("\n")
+        peer1.send_chars("\n")
         peer1.wait_for_text("Connected.")
 
         peer2.execute("killall .mumble-wrapped")
@@ -137,8 +137,8 @@
         peer2.execute("mumble mumble://peer1 >&2 &")
         peer2.wait_for_window(r"^Mumble$")
         peer2.sleep(3) # mumble is slow to register handlers
-        peer2.send_chars("\n") 
-        peer2.send_chars("\n") 
+        peer2.send_chars("\n")
+        peer2.send_chars("\n")
         peer2.wait_for_text("Connected.")
     '';
   }

@@ -1,7 +1,7 @@
 { config, lib, ... }:
 let
-  clanDir = config.clan.core.clanDir;
-  machineDir = clanDir + "/machines/";
+  dir = config.clan.core.settings.directory;
+  machineDir = dir + "/machines/";
   inherit (config.clan.core) machineName;
 
   # Instances might be empty, if the module is not used via the inventory

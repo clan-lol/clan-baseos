@@ -13,7 +13,7 @@
           self.nixosModules.clanCore
           {
             clan.core.machineName = "introducer";
-            clan.core.clanDir = ./.;
+            clan.core.settings.directory = ./.;
             environment.etc = {
               "syncthing.pam".source = ./introducer/introducer_test_cert;
               "syncthing.key".source = ./introducer/introducer_test_key;
@@ -54,7 +54,7 @@
           self.nixosModules.clanCore
           {
             clan.core.machineName = "peer1";
-            clan.core.clanDir = ./.;
+            clan.core.settings.directory = ./.;
             clan.syncthing.introducer = lib.strings.removeSuffix "\n" (
               builtins.readFile ./introducer/introducer_device_id
             );
@@ -76,7 +76,7 @@
           self.nixosModules.clanCore
           {
             clan.core.machineName = "peer2";
-            clan.core.clanDir = ./.;
+            clan.core.settings.directory = ./.;
             clan.syncthing.introducer = lib.strings.removeSuffix "\n" (
               builtins.readFile ./introducer/introducer_device_id
             );

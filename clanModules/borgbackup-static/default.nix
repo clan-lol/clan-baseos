@@ -1,7 +1,7 @@
 { lib, config, ... }:
 let
-  clanDir = config.clan.core.clanDir;
-  machineDir = clanDir + "/machines/";
+  dir = config.clan.core.settings.directory;
+  machineDir = dir + "/machines/";
 in
 {
   imports = [ ../borgbackup ];

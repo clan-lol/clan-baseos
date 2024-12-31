@@ -11,7 +11,7 @@
           self.clanModules.zt-tcp-relay
           {
             clan.core.machineName = "machine";
-            clan.core.clanDir = ./.;
+            clan.core.settings.directory = ./.;
           }
         ];
       };

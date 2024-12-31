@@ -16,7 +16,7 @@
           self.nixosModules.clanCore
           {
             clan.core.machineName = "machine";
-            clan.core.clanDir = ./.;
+            clan.core.settings.directory = ./.;
 
             services.nginx.virtualHosts."matrix.clan.test" = {
               enableACME = lib.mkForce false;

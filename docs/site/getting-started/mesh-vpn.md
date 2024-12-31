@@ -10,7 +10,7 @@ include a new machine into the VPN.
 By default all machines within one clan are connected via a chosen network technology.
 
 ```{.no-copy}
-Clan 
+Clan
     Node A
     <-> (zerotier / mycelium / ...)
     Node B
@@ -48,7 +48,7 @@ To introduce a new machine to the VPN, adhere to the following steps:
    configuration, substituting `<CONTROLLER>` with the controller machine name:
    ```nix
    { config, ... }: {
-     clan.core.networking.zerotier.networkId = builtins.readFile (config.clan.core.clanDir + "/machines/<CONTROLLER>/facts/zerotier-network-id");
+     clan.core.networking.zerotier.networkId = builtins.readFile (config.clan.core.settings.directory + "/machines/<CONTROLLER>/facts/zerotier-network-id");
    }
    ```
 1. **Update the New Machine**: Execute:
@@ -73,13 +73,13 @@ To introduce a new machine to the VPN, adhere to the following steps:
                  ```bash
                  $ sudo zerotier-cli info
                  ```
-                 Example Output: 
+                 Example Output:
                  ```{.console, .no-copy}
                  200 info d2c71971db 1.12.1 OFFLINE
                  ```
                  , where `d2c71971db` is the ZeroTier ID.
 
-          
+
         2. **Authorize the New Machine on the Controller**: On the controller machine,
              execute:
 

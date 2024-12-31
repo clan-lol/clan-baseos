@@ -5,8 +5,8 @@
   ...
 }:
 let
-  secretsDir = config.clan.core.clanDir + "/sops/secrets";
-  groupsDir = config.clan.core.clanDir + "/sops/groups";
+  secretsDir = config.clan.core.settings.directory + "/sops/secrets";
+  groupsDir = config.clan.core.settings.directory + "/sops/groups";
 
   # My symlink is in the nixos module detected as a directory also it works in the repl. Is this because of pure evaluation?
   containsSymlink =
@@ -42,7 +42,7 @@ in
     clan.core.facts.secretModule = "clan_cli.facts.secret_modules.sops";
     clan.core.facts.secretUploadDirectory = lib.mkDefault "/var/lib/sops-nix";
     sops.secrets = builtins.mapAttrs (name: _: {
-      sopsFile = config.clan.core.clanDir + "/sops/secrets/${name}/secret";
+      sopsFile = config.clan.core.settings.directory + "/sops/secrets/${name}/secret";
       format = "binary";
     }) secrets;
     # To get proper error messages about missing secrets we need a dummy secret file that is always present
@@ -51,7 +51,7 @@ in
     );
 
     sops.age.keyFile = lib.mkIf (builtins.pathExists (
-      config.clan.core.clanDir + "/sops/secrets/${config.clan.core.machineName}-age.key/secret"
+      config.clan.core.settings.directory + "/sops/secrets/${config.clan.core.machineName}-age.key/secret"
     )) (lib.mkDefault "/var/lib/sops-nix/key.txt");
   };
 }
