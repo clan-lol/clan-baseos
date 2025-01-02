@@ -172,7 +172,7 @@ in
         serviceConfig =
           let
             pyscript =
-              pkgs.writers.writePyPy3Bin "test.py"
+              pkgs.writers.writePython3Bin "generate_secret_config.py"
                 {
                   libraries = [ ];
                   doCheck = false;
