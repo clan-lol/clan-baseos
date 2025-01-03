@@ -281,7 +281,10 @@ const InstallMachine = (props: InstallMachineProps) => {
               initial={{
                 target: props.targetHost || "",
               }}
+              // TODO: Context wrapper that redirects
+              // @ts-expect-error: This cannot be undefined in this context.
               machine_id={props.name}
+              // @ts-expect-error: This cannot be undefined in this context.
               dir={activeURI()}
               handleNext={() => handleNext()}
               footer={<Footer />}
