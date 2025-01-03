@@ -2,7 +2,7 @@ import { callApi, SuccessData, SuccessQuery } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { Button } from "@/src/components/button";
 import { FileInput } from "@/src/components/FileInput";
-import Icon from "@/src/components/icon";
+import Icon, { IconVariant } from "@/src/components/icon";
 import { TextInput } from "@/src/Form/fields/TextInput";
 import { selectSshKeys } from "@/src/hooks";
 import {
@@ -13,12 +13,17 @@ import {
 } from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
 import { createQuery } from "@tanstack/solid-query";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, For, JSX, Match, Show, Switch } from "solid-js";
 import toast from "solid-toast";
 import { MachineAvatar } from "./avatar";
 import { Header } from "@/src/layout/header";
 import { InputLabel } from "@/src/components/inputBase";
 import { FieldLayout } from "@/src/Form/fields/layout";
+import { Modal } from "@/src/components/modal";
+import { Typography } from "@/src/components/Typography";
+import cx from "classnames";
+import { SelectInput } from "@/src/Form/fields/Select";
+import { HWStep } from "./install/hardware-step";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -32,6 +37,65 @@ type Disks = SuccessQuery<"show_block_devices">["data"]["blockdevices"];
 interface InstallForm extends FieldValues {
   disk?: string;
 }
+
+interface GroupProps {
+  children: JSX.Element;
+}
+export const Group = (props: GroupProps) => (
+  <div class="flex flex-col  gap-8 rounded-md border px-4 py-5 bg-def-2 border-def-2">
+    {props.children}
+  </div>
+);
+
+type AdmonitionVariant = "attention" | "danger";
+interface SectionHeaderProps {
+  variant: AdmonitionVariant;
+  headline: JSX.Element;
+}
+const variantColorsMap: Record<AdmonitionVariant, string> = {
+  attention: cx("bg-[#9BD8F2] fg-def-1"),
+  danger: cx("bg-semantic-2 fg-semantic-2"),
+};
+
+const variantIconColorsMap: Record<AdmonitionVariant, string> = {
+  attention: cx("fg-def-1"),
+  danger: cx("fg-semantic-3"),
+};
+
+const variantIconMap: Record<AdmonitionVariant, IconVariant> = {
+  attention: "Attention",
+  danger: "Warning",
+};
+
+export const SectionHeader = (props: SectionHeaderProps) => (
+  <div
+    class={cx(
+      "flex items-center gap-3 rounded-md px-3 py-2",
+      variantColorsMap[props.variant],
+    )}
+  >
+    {
+      <Icon
+        icon={variantIconMap[props.variant]}
+        class={cx("size-5", variantIconColorsMap[props.variant])}
+      />
+    }
+    {props.headline}
+  </div>
+);
+
+const steps = {
+  "1": "Hardware detection",
+  "2": "Disk schema",
+  "3": "Installation",
+};
+
+interface SectionProps {
+  children: JSX.Element;
+}
+const Section = (props: SectionProps) => (
+  <div class="flex flex-col gap-3">{props.children}</div>
+);
 
 interface InstallMachineProps {
   name?: string;
@@ -90,7 +154,6 @@ const InstallMachine = (props: InstallMachineProps) => {
   };
 
   const handleDiskConfirm = async (e: Event) => {
-    e.preventDefault();
     const curr_uri = activeURI();
     const disk = getValue(formStore, "disk");
     const disk_id = props.disks.find((d) => d.name === disk)?.id_link;
@@ -98,9 +161,9 @@ const InstallMachine = (props: InstallMachineProps) => {
       return;
     }
   };
+  const [stepsDone, setStepsDone] = createSignal<StepIdx[]>([]);
 
   const generateReport = async (e: Event) => {
-    e.preventDefault();
     const curr_uri = activeURI();
     if (!curr_uri || !props.name) {
       return;
@@ -113,7 +176,7 @@ const InstallMachine = (props: InstallMachineProps) => {
         machine: props.name,
         keyfile: props.sshKey?.name,
         target_host: props.targetHost,
-        backend: "NIXOS_FACTER",
+        backend: "nixos-facter",
       },
     });
     toast.dismiss(loading_toast);
@@ -126,97 +189,202 @@ const InstallMachine = (props: InstallMachineProps) => {
       toast.success("Report generated successfully");
     }
   };
+
+  type StepIdx = keyof typeof steps;
+  const [step, setStep] = createSignal<StepIdx>("1");
+
+  const handleNext = () => {
+    console.log("Next");
+    setStep((c) => `${+c + 1}` as StepIdx);
+  };
+  const handlePrev = () => {
+    console.log("Next");
+    setStep((c) => `${+c - 1}` as StepIdx);
+  };
+
+  const Footer = () => (
+    <div class="flex justify-between">
+      <Button
+        startIcon={<Icon icon="ArrowLeft" />}
+        variant="light"
+        type="button"
+        onClick={handlePrev}
+        disabled={step() === "1"}
+      >
+        Previous
+      </Button>
+      <Button
+        endIcon={<Icon icon="ArrowRight" />}
+        type="submit"
+        // IMPORTANT: The step itself will try to submit and call the next step
+        // onClick={(e: Event) => handleNext()}
+      >
+        Next
+      </Button>
+    </div>
+  );
   return (
-    <>
-      <Form onSubmit={handleInstall}>
-        <h3 class="text-lg font-bold">
-          <span class="font-normal">Install: </span>
+    <div>
+      <div class="select-none px-6 py-2">
+        <Typography hierarchy="label" size="default">
+          Install:{" "}
+        </Typography>
+        <Typography hierarchy="label" size="default" weight="bold">
           {props.name}
-        </h3>
-        <p class="py-4">
-          Install the system for the first time. This will erase the disk and
-          bootstrap a new device.
-        </p>
+        </Typography>
+      </div>
+      {/* Stepper container */}
+      <div class="flex items-center justify-evenly gap-2 border py-3 bg-def-3 border-def-2">
+        {/* A Step with a circle a number inside. Label is below */}
+        <For each={Object.entries(steps)}>
+          {([idx, label]) => (
+            <div class="flex flex-col items-center gap-3 fg-def-1">
+              <Typography
+                classList={{
+                  [cx("bg-inv-4 fg-inv-1")]: idx == step(),
+                  [cx("bg-def-4 fg-def-1")]: idx < step(),
+                }}
+                useExternColor={true}
+                hierarchy="label"
+                size="default"
+                weight="bold"
+                class="flex size-6 items-center justify-center rounded-full text-center align-middle bg-def-1"
+              >
+                <Show
+                  when={idx >= step()}
+                  fallback={<Icon icon="Checkmark" class="size-5" />}
+                >
+                  {idx}
+                </Show>
+              </Typography>
+              <Typography
+                useExternColor={true}
+                hierarchy="label"
+                size="xs"
+                weight="medium"
+                class="text-center align-top fg-def-3"
+                classList={{
+                  [cx("!fg-def-1")]: idx == step(),
+                }}
+              >
+                {label}
+              </Typography>
+            </div>
+          )}
+        </For>
+      </div>
 
-        <div class="flex flex-col">
-          <div class="text-lg font-semibold">Hardware detection</div>
-          <div class="flex justify-between py-4">
-            <div class="">
-              <Button
-                variant="light"
-                size="s"
-                class="w-full"
-                onclick={generateReport}
-                endIcon={<Icon icon="Report" />}
+      <div class="flex flex-col gap-6 p-6">
+        <Switch fallback={"Undefined content. This Step seems to not exist."}>
+          <Match when={step() === "1"}>
+            <HWStep
+              initial={{
+                target: props.targetHost || "",
+              }}
+              machine_id={props.name}
+              dir={activeURI()}
+              handleNext={() => handleNext()}
+              footer={<Footer />}
+            />
+          </Match>
+          <Match when={step() === "2"}>
+            <span class="flex flex-col gap-4">
+              <Typography hierarchy="body" size="default" weight="bold">
+                Single Disk
+              </Typography>
+              <Typography
+                hierarchy="body"
+                size="xs"
+                weight="medium"
+                class="underline"
               >
-                Run hardware Report
-              </Button>
-            </div>
-          </div>
-          <div class="text-lg font-semibold">Disk schema</div>
-          <div class="flex justify-between py-4">
-            <div class="">
-              <Button
-                variant="light"
-                size="s"
-                class="w-full"
-                onclick={generateReport}
-                endIcon={<Icon icon="Flash" />}
+                Change schema
+              </Typography>
+            </span>
+            <Group>
+              <SelectInput required label="Main Disk" options={[]} value={[]} />
+            </Group>
+            <Footer />
+          </Match>
+          <Match when={step() === "3"}>
+            <Section>
+              <Typography
+                hierarchy="label"
+                size="xs"
+                weight="medium"
+                class="uppercase"
               >
-                Select disk Schema
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <Field name="disk">{(field, fieldProps) => "disk"}</Field>
-        <div role="alert" class="alert my-4">
-          <span class="material-icons">info</span>
-          <div>
-            <div class="font-semibold">Summary:</div>
-            <div class="mb-2">
-              Install to <b>{props.targetHost}</b> using{" "}
-              <b>{props.sshKey?.name || "default ssh key"}</b> for
-              authentication.
-            </div>
-            This may take ~15 minutes depending on the initial closure and the
-            environmental setup.
-          </div>
-        </div>
-        <div class="modal-action">
-          <Show
-            when={confirmDisk()}
-            fallback={
-              <Button
-                class="btn btn-primary btn-wide"
-                onClick={handleDiskConfirm}
-                disabled={!hasDisk()}
-                endIcon={<Icon icon="Flash" />}
+                Hardware Report
+              </Typography>
+              <Group>
+                <FieldLayout
+                  label={<InputLabel>Target</InputLabel>}
+                  field={
+                    <Typography hierarchy="body" size="xs" weight="bold">
+                      192.157.124.81
+                    </Typography>
+                  }
+                ></FieldLayout>
+              </Group>
+            </Section>
+            <Section>
+              <Typography
+                hierarchy="label"
+                size="xs"
+                weight="medium"
+                class="uppercase"
               >
-                Install
-              </Button>
-            }
-          >
-            <Button
-              class="w-full"
-              type="submit"
-              endIcon={<Icon icon="Flash" />}
-            >
-              Install
-            </Button>
-          </Show>
-          <form method="dialog">
-            <Button
-              variant="light"
-              onClick={() => setConfirmDisk(false)}
-              class="btn"
-            >
-              Close
-            </Button>
-          </form>
-        </div>
-      </Form>
-    </>
+                Disk Configuration
+              </Typography>
+              <Group>
+                <FieldLayout
+                  label={<InputLabel>Disk Layout</InputLabel>}
+                  field={
+                    <Typography hierarchy="body" size="xs" weight="bold">
+                      Single Disk
+                    </Typography>
+                  }
+                ></FieldLayout>
+                <hr class="h-px w-full border-none bg-acc-3"></hr>
+                <FieldLayout
+                  label={<InputLabel>Main Disk</InputLabel>}
+                  field={
+                    <Typography hierarchy="body" size="xs" weight="bold">
+                      Samsung evo 850 efkjhasd
+                    </Typography>
+                  }
+                ></FieldLayout>
+              </Group>
+            </Section>
+            <SectionHeader
+              variant="danger"
+              headline={
+                <span>
+                  <Typography
+                    hierarchy="body"
+                    size="s"
+                    weight="bold"
+                    useExternColor
+                  >
+                    Setup your device.
+                  </Typography>
+                  <Typography
+                    hierarchy="body"
+                    size="s"
+                    weight="medium"
+                    useExternColor
+                  >
+                    This will erase the disk and bootstrap fresh.
+                  </Typography>
+                </span>
+              }
+            />
+            <Footer></Footer>
+            <Button startIcon={<Icon icon="Flash" />}>Install</Button>
+          </Match>
+        </Switch>
+      </div>
+    </div>
   );
 };
 
@@ -234,6 +402,8 @@ const MachineForm = (props: MachineDetailsProps) => {
   const targetHost = () => getValue(formStore, "machine.deploy.targetHost");
   const machineName = () =>
     getValue(formStore, "machine.name") || props.initialData.machine.name;
+
+  const [installModalOpen, setInstallModalOpen] = createSignal(false);
 
   const handleSubmit = async (values: MachineFormInterface) => {
     console.log("submitting", values);
@@ -309,7 +479,7 @@ const MachineForm = (props: MachineDetailsProps) => {
       <div class="card-body">
         <span class="text-xl text-primary-800">General</span>
         <MachineAvatar name={machineName()} />
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} class="flex flex-col gap-6">
           <Field name="machine.name">
             {(field, props) => (
               <TextInput
@@ -452,10 +622,7 @@ const MachineForm = (props: MachineDetailsProps) => {
               class="w-full"
               // disabled={!online()}
               onClick={() => {
-                const modal = document.getElementById(
-                  "install_modal",
-                ) as HTMLDialogElement | null;
-                modal?.showModal();
+                setInstallModalOpen(true);
               }}
               endIcon={<Icon icon="Flash" />}
             >
@@ -463,16 +630,19 @@ const MachineForm = (props: MachineDetailsProps) => {
             </Button>
           </div>
 
-          <dialog id="install_modal" class="modal backdrop:bg-transparent">
-            <div class="modal-box w-11/12 max-w-5xl">
-              <InstallMachine
-                name={machineName()}
-                sshKey={sshKey()}
-                targetHost={getValue(formStore, "machine.deploy.targetHost")}
-                disks={[]}
-              />
-            </div>
-          </dialog>
+          <Modal
+            title={`Install machine`}
+            open={installModalOpen()}
+            handleClose={() => setInstallModalOpen(false)}
+            class="min-w-[600px]"
+          >
+            <InstallMachine
+              name={machineName()}
+              sshKey={sshKey()}
+              targetHost={getValue(formStore, "machine.deploy.targetHost")}
+              disks={[]}
+            />
+          </Modal>
 
           <span class="max-w-md text-neutral">
             Update the system if changes should be synced after the installation
