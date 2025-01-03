@@ -3,9 +3,9 @@ import { JSX, Ref, Show, splitProps } from "solid-js";
 import Icon, { IconVariant } from "../icon";
 import { Typography, TypographyProps } from "../Typography";
 
-type Variants = "outlined" | "ghost";
+export type InputVariant = "outlined" | "ghost";
 interface InputBaseProps {
-  variant?: Variants;
+  variant?: InputVariant;
   value?: string;
   inputProps?: JSX.InputHTMLAttributes<HTMLInputElement>;
   required?: boolean;
@@ -22,7 +22,7 @@ interface InputBaseProps {
   divRef?: Ref<HTMLDivElement>;
 }
 
-const variantBorder: Record<Variants, string> = {
+const variantBorder: Record<InputVariant, string> = {
   outlined: "border border-inv-3",
   ghost: "",
 };
@@ -115,40 +115,55 @@ export const InputLabel = (props: InputLabelProps) => {
       class={cx("flex items-center gap-1", labelProps.class)}
       {...forwardProps}
     >
-      <Typography
-        hierarchy="label"
-        size="default"
-        weight="bold"
-        class="inline-flex gap-1 align-middle !fg-def-1"
-        classList={{
-          [cx("!fg-semantic-1")]: !!props.error,
-        }}
-        aria-invalid={props.error}
-      >
-        {props.children}
-        {props.required && (
-          <span class="inline-flex px-1 align-bottom leading-[0.5] fg-def-3">
-            {"*"}
-          </span>
-        )}
-        {props.help && (
-          <span
-            class="tooltip tooltip-bottom inline px-2"
-            data-tip={props.help}
-            style={{
-              "--tooltip-color": "#EFFFFF",
-              "--tooltip-text-color": "#0D1416",
-              "--tooltip-tail": "0.8125rem",
+      <span class="flex flex-col justify-center">
+        <span>
+          <Typography
+            hierarchy="label"
+            size="default"
+            weight="bold"
+            class="inline-flex gap-1 align-middle !fg-def-1"
+            classList={{
+              [cx("!fg-semantic-1")]: !!props.error,
             }}
+            aria-invalid={props.error}
           >
-            <Icon class="inline fg-def-3" icon={"Info"} width={"0.8125rem"} />
-          </span>
-        )}
-      </Typography>
+            {props.children}
+          </Typography>
+          {props.required && (
+            <Typography
+              class="inline-flex px-1 align-text-top leading-[0.5] fg-def-4"
+              useExternColor={true}
+              hierarchy="label"
+              weight="bold"
+              size="xs"
+            >
+              {"∗"}
+            </Typography>
+          )}
+          {props.help && (
+            <span
+              class="tooltip tooltip-bottom inline px-2"
+              data-tip={props.help}
+              style={{
+                "--tooltip-color": "#EFFFFF",
+                "--tooltip-text-color": "#0D1416",
+                "--tooltip-tail": "0.8125rem",
+              }}
+            >
+              <Icon class="inline fg-def-3" icon={"Info"} width={"0.8125rem"} />
+            </span>
+          )}
+        </span>
+        <Typography
+          hierarchy="body"
+          size="xs"
+          weight="normal"
+          color="secondary"
+        >
+          {props.description}
+        </Typography>
+      </span>
       {props.labelAction}
-      <Typography hierarchy="body" size="xs" weight="normal" color="secondary">
-        {props.description}
-      </Typography>
     </label>
   );
 };
