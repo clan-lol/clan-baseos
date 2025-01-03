@@ -27,7 +27,7 @@ export interface Option {
 
 interface SelectInputpProps {
   value: string[] | string;
-  selectProps: JSX.InputHTMLAttributes<HTMLSelectElement>;
+  selectProps?: JSX.InputHTMLAttributes<HTMLSelectElement>;
   options: Option[];
   label: JSX.Element;
   labelProps?: InputLabelProps;
