@@ -5,7 +5,9 @@ import { Typography } from "../Typography";
 type Variants = "dark" | "light" | "ghost";
 type Size = "default" | "s";
 
-const variantColors: Record<Variants, string> = {
+const variantColors: (
+  disabled: boolean | undefined,
+) => Record<Variants, string> = (disabled) => ({
   dark: cx(
     "border border-solid",
     "border-secondary-950 bg-primary-900 text-white",
@@ -13,9 +15,10 @@ const variantColors: Record<Variants, string> = {
     // Hover state
     // Focus state
     // Active state
-    "hover:border-secondary-900 hover:bg-secondary-700",
-    "focus:border-secondary-900",
-    "active:border-secondary-900 active:shadow-inner-primary-active",
+    !disabled && "hover:border-secondary-900 hover:bg-secondary-700",
+    !disabled && "focus:border-secondary-900",
+    !disabled &&
+      "active:border-secondary-900 active:shadow-inner-primary-active",
     // Disabled
     "disabled:bg-secondary-200 disabled:text-secondary-700 disabled:border-secondary-300",
   ),
@@ -26,9 +29,10 @@ const variantColors: Record<Variants, string> = {
     // Hover state
     // Focus state
     // Active state
-    "hover:bg-secondary-200 hover:text-secondary-900",
-    "focus:bg-secondary-200 focus:text-secondary-900",
-    "active:bg-secondary-200 active:text-secondary-950 active:shadow-inner-secondary-active",
+    !disabled && "hover:bg-secondary-200 hover:text-secondary-900",
+    !disabled && "focus:bg-secondary-200 focus:text-secondary-900",
+    !disabled &&
+      "active:bg-secondary-200 active:text-secondary-950 active:shadow-inner-secondary-active",
     // Disabled
     "disabled:bg-secondary-50 disabled:text-secondary-200 disabled:border-secondary-700",
   ),
@@ -37,13 +41,14 @@ const variantColors: Record<Variants, string> = {
     // Hover state
     // Focus state
     // Active state
-    "hover:bg-secondary-200 hover:text-secondary-900",
-    "focus:bg-secondary-200 focus:text-secondary-900",
-    "active:bg-secondary-200 active:text-secondary-950 active:shadow-inner-secondary-active",
+    !disabled && "hover:bg-secondary-200 hover:text-secondary-900",
+    !disabled && "focus:bg-secondary-200 focus:text-secondary-900",
+    !disabled &&
+      "active:bg-secondary-200 active:text-secondary-950 active:shadow-inner-secondary-active",
     // Disabled
     "disabled:bg-secondary-50 disabled:text-secondary-200 disabled:border-secondary-700",
   ),
-};
+});
 
 const sizePaddings: Record<Size, string> = {
   default: cx("rounded-[0.1875rem] px-4 py-2"),
@@ -82,7 +87,7 @@ export const Button = (props: ButtonProps) => {
         "p-4",
         sizePaddings[local.size || "default"],
         // Colors
-        variantColors[local.variant || "dark"],
+        variantColors(props.disabled)[local.variant || "dark"],
         //Font
         "leading-none font-semibold",
         sizeFont[local.size || "default"],

@@ -15,14 +15,11 @@ export const FieldLayout = (props: LayoutProps) => {
   ]);
   return (
     <div
-      class={cx("grid grid-cols-12 items-center", intern.class)}
-      classList={{
-        "mb-[14.5px]": !props.error,
-      }}
+      class={cx("grid grid-cols-10 items-center", intern.class)}
       {...divProps}
     >
-      <label class="col-span-2">{props.label}</label>
-      <div class="col-span-10">{props.field}</div>
+      <label class="col-span-5">{props.label}</label>
+      <div class="col-span-5">{props.field}</div>
       {props.error && <span class="col-span-full">{props.error}</span>}
     </div>
   );

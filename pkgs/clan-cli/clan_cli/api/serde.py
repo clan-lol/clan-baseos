@@ -233,16 +233,18 @@ def construct_value(
 
     # Enums
     if origin is Enum:
-        if field_value not in origin.__members__:
-            msg = f"Expected one of {', '.join(origin.__members__)}, got {field_value}"
-            raise ClanError(msg, location=f"{loc}")
-        return origin.__members__[field_value]  # type: ignore
+        try:
+            return t(field_value)  # type: ignore
+        except ValueError:
+            msg = f"Expected one of {', '.join(str(origin))}, got {field_value}"
+            raise ClanError(msg, location=f"{loc}") from ValueError
 
     if isinstance(t, type) and issubclass(t, Enum):
-        if field_value not in t.__members__:
+        try:
+            return t(field_value)  # type: ignore
+        except ValueError:
             msg = f"Expected one of {', '.join(t.__members__)}, got {field_value}"
-            raise ClanError(msg, location=f"{loc}")
-        return t.__members__[field_value]  # type: ignore
+            raise ClanError(msg, location=f"{loc}") from ValueError
 
     if origin is Annotated:
         (base_type,) = get_args(t)

@@ -266,3 +266,31 @@ def test_literal_field() -> None:
     with pytest.raises(ClanError):
         # Not a valid value
         from_dict(Person, {"name": "open"})
+
+
+def test_enum_roundtrip() -> None:
+    from enum import Enum
+
+    class MyEnum(Enum):
+        FOO = "abc"
+        BAR = 2
+
+    @dataclass
+    class Person:
+        name: MyEnum
+
+    # Both are equivalent
+    data = {"name": "abc"}  # JSON Representation
+    expected = Person(name=MyEnum.FOO)  # Data representation
+
+    assert from_dict(Person, data) == expected
+
+    assert dataclass_to_dict(expected) == data
+
+    # Same test for integer values
+    data2 = {"name": 2}  # JSON Representation
+    expected2 = Person(name=MyEnum.BAR)  # Data representation
+
+    assert from_dict(Person, data2) == expected2
+
+    assert dataclass_to_dict(expected2) == data2

@@ -158,7 +158,6 @@ def find_deleted_paths(
     for key, p_value in persisted.items():
         current_path = f"{parent_key}.{key}" if parent_key else key
         # Check if this key exists in update
-        # breakpoint()
         if key not in update:
             # Key doesn't exist at all -> entire branch deleted
             deleted_paths.add(current_path)

@@ -1,5 +1,10 @@
 import { splitProps, type JSX } from "solid-js";
-import { InputBase, InputError, InputLabel } from "@/src/components/inputBase";
+import {
+  InputBase,
+  InputError,
+  InputLabel,
+  InputVariant,
+} from "@/src/components/inputBase";
 import { Typography } from "@/src/components/Typography";
 import { FieldLayout } from "./layout";
 
@@ -12,10 +17,11 @@ interface TextInputProps {
   value: string;
   inputProps?: JSX.InputHTMLAttributes<HTMLInputElement>;
   placeholder?: string;
+  variant?: InputVariant;
   // Passed to label
   label: JSX.Element;
   help?: string;
-  // Passed to layouad
+  // Passed to layout
   class?: string;
 }
 
@@ -35,6 +41,7 @@ export function TextInput(props: TextInputProps) {
       }
       field={
         <InputBase
+          variant={props.variant}
           error={!!props.error}
           required={props.required}
           disabled={props.disabled}

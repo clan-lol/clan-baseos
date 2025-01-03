@@ -18,6 +18,8 @@ from typing import (
     is_typeddict,
 )
 
+from clan_cli.api.serde import dataclass_to_dict
+
 
 class JSchemaTypeError(Exception):
     pass
@@ -257,7 +259,8 @@ def type_to_dict(
         if type(t) is EnumType:
             return {
                 "type": "string",
-                "enum": list(t.__members__),
+                # Construct every enum value and use the same method as the serde module for converting it into the same literal string
+                "enum": [dataclass_to_dict(t(value)) for value in t],  # type: ignore
             }
         if t is Any:
             msg = f"{scope} - Usage of the Any type is not supported for API functions. In: {scope}"

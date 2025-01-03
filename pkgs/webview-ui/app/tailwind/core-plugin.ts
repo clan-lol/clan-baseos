@@ -128,6 +128,21 @@ export default plugin.withOptions(
         ".bg-acc-4": {
           backgroundColor: theme("colors.secondary.300"),
         },
+
+        // bg inverse accent
+        ".bg-semantic-1": {
+          backgroundColor: theme("colors.error.50"),
+        },
+        ".bg-semantic-2": {
+          backgroundColor: theme("colors.error.100"),
+        },
+        ".bg-semantic-3": {
+          backgroundColor: theme("colors.error.200"),
+        },
+        ".bg-semantic-4": {
+          backgroundColor: theme("colors.error.300"),
+        },
+
         // bg inverse accent
         ".bg-inv-acc-1": {
           backgroundColor: theme("colors.secondary.500"),
