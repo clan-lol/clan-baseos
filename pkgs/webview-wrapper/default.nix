@@ -1,39 +1,32 @@
 { pkgs }:
 
-pkgs.stdenv.mkDerivation rec {
-  pname = "webui";
+pkgs.stdenv.mkDerivation {
+  pname = "webview";
   version = "nigthly";
 
   src = pkgs.fetchFromGitHub {
-    owner = "webui-dev";
-    repo = "python-webui";
-    rev = "0ff3b1351b9e24be4463b1baf2c26966caeae74a"; # Use a specific commit sha or tag for reproducibility
-    sha256 = "sha256-xSOnCkW4iZkSSLKzk6r3hewC3bPJlV7L6aoGEchyEys="; # Replace with actual sha256
+    owner = "webview";
+    repo = "webview";
+    rev = "83a4b4a5bbcb4b0ba2ca3ee226c2da1414719106"; 
+    sha256 = "sha256-5R8kllvP2EBuDANIl07fxv/EcbPpYgeav8Wfz7Kt13c=";
   };
 
   outputs = [ "out" "dev" ];
 
   # Dependencies used during the build process, if any
-  buildInputs = [
-    pkgs.gnumake
+  buildInputs = with pkgs; [
+    gnumake
+    cmake
+    pkg-config
+    webkitgtk_6_0
+    gtk4
   ];
 
-  # Commands to build and install the project
-  buildPhase = ''
-    make
-  '';
-
-  installPhase = ''
-    mkdir -p $out/lib
-    mkdir -p $out/include
-    cp -r dist/* $out/lib
-    cp -r include/* $out/include
-  '';
 
   meta = with pkgs.lib; {
-    description = "Webui is a UI library for C/C++/Go/Rust to build portable desktop/web apps using WebView";
-    homepage = "https://github.com/webui-dev/webui";
+    description = "Tiny cross-platform webview library for C/C++. Uses WebKit (GTK/Cocoa) and Edge WebView2 (Windows)";
+    homepage = "https://github.com/webview/webview";
     license = licenses.mit;
-    platforms = platforms.linux ++ platforms.darwin; # Adjust if needed
+    platforms = platforms.linux ++ platforms.darwin;
   };
 }
