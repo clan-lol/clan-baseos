@@ -394,7 +394,8 @@ def run(
 
     if options.check and process.returncode != 0:
         err = ClanCmdError(cmd_out)
-        err.msg = "Command has been cancelled"
+        err.msg = str(stderr_buf)
+        err.description = "Command has been cancelled"
         raise err
 
     return cmd_out
