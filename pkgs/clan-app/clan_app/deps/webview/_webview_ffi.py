@@ -32,12 +32,6 @@ def _get_lib_names():
     else:  # linux
         return ["libwebview.so"]
 
-def _get_download_urls():
-    """Get the appropriate download URLs based on the platform."""
-    version = _get_webview_version()
-    return [f"https://github.com/webview/webview_deno/releases/download/{version}/{lib_name}" 
-            for lib_name in _get_lib_names()]
-
 def _be_sure_libraries():
     """Ensure libraries exist and return paths."""
     if getattr(sys, 'frozen', False):
@@ -47,38 +41,20 @@ def _be_sure_libraries():
             base_dir = Path(sys.executable).parent / '_internal'
     else:
         base_dir = Path(__file__).parent
-    
-    lib_dir = base_dir / "lib"
+    from ctypes.util import find_library
+
+    lib_dir = os.environ.get("WEBVIEW_LIB_DIR")
+    if not lib_dir:
+        raise RuntimeError("WEBVIEW_LIB_DIR environment variable is not set")
+    lib_dir = Path(lib_dir)
     lib_names = _get_lib_names()
     lib_paths = [lib_dir / lib_name for lib_name in lib_names]
-    
+
     # Check if any library is missing
     missing_libs = [path for path in lib_paths if not path.exists()]
     if not missing_libs:
         return lib_paths
 
-    # Download missing libraries
-    download_urls = _get_download_urls()
-    system = platform.system().lower()
-    
-    lib_dir.mkdir(parents=True, exist_ok=True)
-    
-    for url, lib_path in zip(download_urls, lib_paths):
-        if lib_path.exists():
-            continue
-            
-        print(f"Downloading library from {url}")
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={'User-Agent': 'Mozilla/5.0'}
-            )
-            with urllib.request.urlopen(req) as response, open(lib_path, 'wb') as out_file:
-                out_file.write(response.read())
-        except Exception as e:
-            raise RuntimeError(f"Failed to download library: {e}")
-    
-    return lib_paths
 
 class _WebviewLibrary:
     def __init__(self):
