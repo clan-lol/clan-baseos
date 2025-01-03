@@ -3,10 +3,11 @@ import ArrowBottom from "@/icons/arrow-bottom.svg";
 import ArrowLeft from "@/icons/arrow-left.svg";
 import ArrowRight from "@/icons/arrow-right.svg";
 import ArrowTop from "@/icons/arrow-top.svg";
+import Attention from "@/icons/attention.svg";
 import CaretDown from "@/icons/caret-down.svg";
-import CaretUp from "@/icons/caret-up.svg";
 import CaretLeft from "@/icons/caret-left.svg";
 import CaretRight from "@/icons/caret-right.svg";
+import CaretUp from "@/icons/caret-up.svg";
 import Checkmark from "@/icons/checkmark.svg";
 import ClanIcon from "@/icons/clan-icon.svg";
 import ClanLogo from "@/icons/clan-logo.svg";
@@ -16,31 +17,33 @@ import Edit from "@/icons/edit.svg";
 import Expand from "@/icons/expand.svg";
 import EyeClose from "@/icons/eye-close.svg";
 import EyeOpen from "@/icons/eye-open.svg";
-import Flash from "@/icons/flash.svg";
 import Filter from "@/icons/filter.svg";
+import Flash from "@/icons/flash.svg";
 import Folder from "@/icons/folder.svg";
-import More from "@/icons/more.svg";
-import Report from "@/icons/report.svg";
-import Search from "@/icons/search.svg";
 import Grid from "@/icons/grid.svg";
 import Info from "@/icons/info.svg";
 import List from "@/icons/list.svg";
 import Load from "@/icons/load.svg";
+import More from "@/icons/more.svg";
 import Paperclip from "@/icons/paperclip.svg";
 import Plus from "@/icons/plus.svg";
 import Reload from "@/icons/reload.svg";
+import Report from "@/icons/report.svg";
+import Search from "@/icons/search.svg";
 import Settings from "@/icons/settings.svg";
 import Trash from "@/icons/trash.svg";
 import Update from "@/icons/update.svg";
+import Warning from "@/icons/warning.svg";
 
 const icons = {
   ArrowBottom,
   ArrowLeft,
   ArrowRight,
   ArrowTop,
+  Attention,
   CaretDown,
-  CaretRight,
   CaretLeft,
+  CaretRight,
   CaretUp,
   Checkmark,
   ClanIcon,
@@ -52,21 +55,22 @@ const icons = {
   EyeClose,
   EyeOpen,
   Filter,
-  Folder,
-  More,
-  Report,
-  Search,
   Flash,
+  Folder,
   Grid,
   Info,
   List,
   Load,
+  More,
   Paperclip,
   Plus,
   Reload,
+  Report,
+  Search,
   Settings,
   Trash,
   Update,
+  Warning,
 };
 
 export type IconVariant = keyof typeof icons;
