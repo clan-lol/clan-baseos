@@ -2,25 +2,25 @@
 @import "./typography-color.css";
 
 .fnt-weight-normal {
-  font-weight: normal;
+  font-weight: 300;
 }
 
 .fnt-weight-medium {
-  font-weight: medium;
+  font-weight: 500;
 }
 
 .fnt-weight-bold {
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .fnt-weight-normal.fnt-clr--inverted {
-  font-weight: light;
+  font-weight: 300;
 }
 
 .fnt-weight-medium.fnt-clr--inverted {
-  font-weight: normal;
+  font-weight: 400;
 }
 
 .fnt-weight-bold.fnt-clr--inverted {
-  font-weight: 600;
+  font-weight: 700;
 }
