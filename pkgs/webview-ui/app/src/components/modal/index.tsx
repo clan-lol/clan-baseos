@@ -9,6 +9,7 @@ interface ModalProps {
   handleClose: () => void;
   title: string;
   children: JSX.Element;
+  class?: string;
 }
 export const Modal = (props: ModalProps) => {
   const [dragging, setDragging] = createSignal(false);
@@ -46,7 +47,10 @@ export const Modal = (props: ModalProps) => {
         />
 
         <Dialog.Content
-          class="absolute left-1/3 top-1/3 z-50 min-w-[320px] rounded-md border  border-def-4 focus-visible:outline-none"
+          class={cx(
+            "overflow-hidden absolute left-1/3 top-1/3 z-50 min-w-[560px] rounded-md border border-def-4 focus-visible:outline-none",
+            props.class,
+          )}
           classList={{
             "!cursor-grabbing": dragging(),
             [cx("scale-105 transition-transform")]: dragging(),
@@ -63,7 +67,7 @@ export const Modal = (props: ModalProps) => {
         >
           <Dialog.Label
             as="div"
-            class="flex w-full justify-center rounded-t-md border-b-2 px-4 py-2 align-middle bg-def-3  border-def-5"
+            class="flex w-full justify-center border-b-2 px-4 py-2 align-middle bg-def-3  border-def-5"
             onMouseDown={handleMouseDown}
           >
             <div
@@ -79,7 +83,9 @@ export const Modal = (props: ModalProps) => {
               <hr class="h-px w-full border-none bg-secondary-300" />
               <hr class="h-px w-full border-none bg-secondary-300" />
             </div>
-            <span class="mx-2"> {props.title}</span>
+            <span class="mx-2 select-none whitespace-nowrap">
+              {props.title}
+            </span>
             <div
               class="flex w-full cursor-move flex-col gap-px py-1 "
               classList={{
