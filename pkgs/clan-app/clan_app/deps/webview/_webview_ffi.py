@@ -1,43 +1,47 @@
 import ctypes
-import sys
+import ctypes.util
 import os
 import platform
-import urllib.request
+from ctypes import CFUNCTYPE, c_char_p, c_int, c_void_p
 from pathlib import Path
-from ctypes import c_int, c_char_p, c_void_p, CFUNCTYPE
-import ctypes.util
+
 
 def _encode_c_string(s: str) -> bytes:
     return s.encode("utf-8")
+
 
 def _get_webview_version():
     """Get webview version from environment variable or use default"""
     return os.getenv("WEBVIEW_VERSION", "0.8.1")
 
+
 def _get_lib_names():
     """Get platform-specific library names."""
     system = platform.system().lower()
     machine = platform.machine().lower()
-    
+
     if system == "windows":
         if machine == "amd64" or machine == "x86_64":
             return ["webview.dll", "WebView2Loader.dll"]
-        elif machine == "arm64":
-            raise Exception("arm64 is not supported on Windows")
-    elif system == "darwin":
+        if machine == "arm64":
+            msg = "arm64 is not supported on Windows"
+            raise Exception(msg)
+        return None
+    if system == "darwin":
         if machine == "arm64":
             return ["libwebview.aarch64.dylib"]
-        else:
-            return ["libwebview.x86_64.dylib"]
-    else:  # linux
-        return ["libwebview.so"]
+        return ["libwebview.x86_64.dylib"]
+    # linux
+    return ["libwebview.so"]
+
 
 def _be_sure_libraries():
     """Ensure libraries exist and return paths."""
 
     lib_dir = os.environ.get("WEBVIEW_LIB_DIR")
     if not lib_dir:
-        raise RuntimeError("WEBVIEW_LIB_DIR environment variable is not set")
+        msg = "WEBVIEW_LIB_DIR environment variable is not set"
+        raise RuntimeError(msg)
     lib_dir = Path(lib_dir)
     lib_names = _get_lib_names()
     lib_paths = [lib_dir / lib_name for lib_name in lib_names]
@@ -46,11 +50,12 @@ def _be_sure_libraries():
     missing_libs = [path for path in lib_paths if not path.exists()]
     if not missing_libs:
         return lib_paths
+    return None
 
 
 class _WebviewLibrary:
-    def __init__(self):
-        lib_names=_get_lib_names()
+    def __init__(self) -> None:
+        lib_names = _get_lib_names()
         try:
             library_path = ctypes.util.find_library(lib_names[0])
             if not library_path:
@@ -98,5 +103,6 @@ class _WebviewLibrary:
         self.webview_return.argtypes = [c_void_p, c_char_p, c_int, c_char_p]
 
         self.CFUNCTYPE = CFUNCTYPE
+
 
 _webview_lib = _WebviewLibrary()

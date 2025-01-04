@@ -12,7 +12,7 @@
   python3,
   gtk4,
   libadwaita,
-  webview-wrapper,
+  webview-lib,
   clang,
   self',
 }:
@@ -39,8 +39,8 @@ mkShell {
       ruff
       gtk4
       clang
-      webview-wrapper.dev
-      webview-wrapper
+      webview-lib.dev
+      webview-lib
       gtk4.dev # has the demo called 'gtk4-widget-factory'
       libadwaita.devdoc # has the demo called 'adwaita-1-demo'
     ]
@@ -68,6 +68,6 @@ mkShell {
     export XDG_DATA_DIRS=${gtk4}/share/gsettings-schemas/gtk4-4.14.4:$XDG_DATA_DIRS
     export XDG_DATA_DIRS=${gsettings-desktop-schemas}/share/gsettings-schemas/gsettings-desktop-schemas-46.0:$XDG_DATA_DIRS
 
-    export WEBVIEW_LIB_DIR=${webview-wrapper}/lib
+    export WEBVIEW_LIB_DIR=${webview-lib}/lib
   '';
 }

@@ -7,11 +7,14 @@ pkgs.stdenv.mkDerivation {
   src = pkgs.fetchFromGitHub {
     owner = "webview";
     repo = "webview";
-    rev = "83a4b4a5bbcb4b0ba2ca3ee226c2da1414719106"; 
+    rev = "83a4b4a5bbcb4b0ba2ca3ee226c2da1414719106";
     sha256 = "sha256-5R8kllvP2EBuDANIl07fxv/EcbPpYgeav8Wfz7Kt13c=";
   };
 
-  outputs = [ "out" "dev" ];
+  outputs = [
+    "out"
+    "dev"
+  ];
 
   # Dependencies used during the build process, if any
   buildInputs = with pkgs; [

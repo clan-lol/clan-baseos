@@ -19,6 +19,7 @@
   pytest-xdist, # Run tests in parallel on multiple cores
   pytest-timeout, # Add timeouts to your tests
   webview-ui,
+  webview-lib,
   fontconfig,
 }:
 let
@@ -48,7 +49,7 @@ let
 
   # Runtime binary dependencies required by the application
   runtimeDependencies = [
-
+    webview-lib
   ];
 
   # Dependencies required for running tests
@@ -77,10 +78,9 @@ python3.pkgs.buildPythonApplication rec {
   dontWrapGApps = true;
   preFixup = ''
     makeWrapperArgs+=(
-      # Use software rendering for webkit, mesa causes random crashes with css.
-      --set WEBKIT_DISABLE_COMPOSITING_MODE 1
       --set FONTCONFIG_FILE ${fontconfig.out}/etc/fonts/fonts.conf
       --set WEBUI_PATH "$out/${python3.sitePackages}/clan_app/.webui"
+      --set WEBVIEW_LIB_DIR "${webview-lib}/lib"
       # This prevents problems with mixed glibc versions that might occur when the
       # cli is called through a browser built against another glibc
       --unset LD_LIBRARY_PATH

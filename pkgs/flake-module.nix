@@ -33,7 +33,7 @@
         editor = pkgs.callPackage ./editor/clan-edit-codium.nix { };
         classgen = pkgs.callPackage ./classgen { };
         zerotierone = pkgs.callPackage ./zerotierone { };
-        webview-wrapper = pkgs.callPackage ./webview-wrapper { };
+        webview-lib = pkgs.callPackage ./webview-lib { };
       };
     };
 }
