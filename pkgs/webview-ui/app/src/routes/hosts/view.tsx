@@ -1,5 +1,5 @@
 import { type Component, createSignal, For, Show } from "solid-js";
-import { OperationResponse, pyApi } from "@/src/api";
+import { OperationResponse, callApi } from "@/src/api";
 import { Button } from "@/src/components/button";
 import Icon from "@/src/components/icon";
 
@@ -16,7 +16,7 @@ export const HostList: Component = () => {
       <div class="tooltip tooltip-bottom" data-tip="Refresh install targets">
         <Button
           variant="light"
-          onClick={() => pyApi.show_mdns.dispatch({})}
+          onClick={() => callApi("show_mdns", {})}
           startIcon={<Icon icon="Update" />}
         ></Button>
       </div>

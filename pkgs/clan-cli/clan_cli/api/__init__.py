@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
@@ -10,6 +11,8 @@ from typing import (
     TypeVar,
     get_type_hints,
 )
+
+log = logging.getLogger(__name__)
 
 from .serde import dataclass_to_dict, from_dict, sanitize_string
 
@@ -122,9 +125,10 @@ API.register(open_file)
         @wraps(fn)
         def wrapper(*args: Any, op_key: str, **kwargs: Any) -> ApiResponse[T]:
             try:
-                data: T = fn(*args, **kwargs)
+                data: T = fn(*args, op_key=op_key, **kwargs)
                 return SuccessDataClass(status="success", data=data, op_key=op_key)
             except ClanError as e:
+                log.exception(f"Error calling wrapped {fn.__name__}")
                 return ErrorDataClass(
                     op_key=op_key,
                     status="error",
@@ -137,6 +141,7 @@ API.register(open_file)
                     ],
                 )
             except Exception as e:
+                log.exception(f"Error calling wrapped {fn.__name__}")
                 return ErrorDataClass(
                     op_key=op_key,
                     status="error",

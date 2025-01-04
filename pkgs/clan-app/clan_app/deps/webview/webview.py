@@ -1,10 +1,16 @@
 import ctypes
 import json
+import logging
+import threading
 from collections.abc import Callable
 from enum import IntEnum
 from typing import Any
 
+from clan_cli.api import MethodRegistry, dataclass_to_dict, from_dict
+
 from ._webview_ffi import _encode_c_string, _webview_lib
+
+log = logging.getLogger(__name__)
 
 
 class SizeHint(IntEnum):
@@ -26,7 +32,7 @@ class Webview:
         self, debug: bool = False, size: Size | None = None, window: int | None = None
     ) -> None:
         self._handle = _webview_lib.webview_create(int(debug), window)
-        self._callbacks = {}
+        self._callbacks: dict[str, Callable[..., Any]] = {}
 
         if size:
             self.size = size
@@ -64,6 +70,71 @@ class Webview:
     def run(self) -> None:
         _webview_lib.webview_run(self._handle)
         self.destroy()
+
+    def bind_jsonschema_api(self, api: MethodRegistry) -> None:
+        for name, method in api.functions.items():
+
+            def wrapper(
+                seq: bytes,
+                req: bytes,
+                arg: int,
+                wrap_method: Callable[..., Any] = method,
+                method_name: str = name,
+            ) -> None:
+                def thread_task() -> None:
+                    args = json.loads(req.decode())
+
+                    try:
+                        log.debug(f"Calling {method_name}({args[0]})")
+                        # Initialize dataclasses from the payload
+                        reconciled_arguments = {}
+                        for k, v in args[0].items():
+                            # Some functions expect to be called with dataclass instances
+                            # But the js api returns dictionaries.
+                            # Introspect the function and create the expected dataclass from dict dynamically
+                            # Depending on the introspected argument_type
+                            arg_class = api.get_method_argtype(method_name, k)
+
+                            # TODO: rename from_dict into something like construct_checked_value
+                            # from_dict really takes Anything and returns an instance of the type/class
+                            reconciled_arguments[k] = from_dict(arg_class, v)
+
+                        reconciled_arguments["op_key"] = seq.decode()
+                        # TODO: We could remove the wrapper in the MethodRegistry
+                        # and just call the method directly
+                        result = wrap_method(**reconciled_arguments)
+                        success = True
+                    except Exception as e:
+                        log.exception(f"Error calling {method_name}")
+                        result = str(e)
+                        success = False
+
+                    try:
+                        serialized = json.dumps(
+                            dataclass_to_dict(result), indent=4, ensure_ascii=False
+                        )
+                    except TypeError:
+                        log.exception(f"Error serializing result for {method_name}")
+                        raise
+
+                    log.debug(f"Result for {method_name}: {serialized}")
+                    self.return_(seq.decode(), 0 if success else 1, serialized)
+
+                thread = threading.Thread(target=thread_task)
+                thread.start()
+
+            c_callback = _webview_lib.CFUNCTYPE(
+                None, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p
+            )(wrapper)
+            log.debug(f"Binding {name} to {method}")
+            if name in self._callbacks:
+                msg = f"Callback {name} already exists. Skipping binding."
+                raise RuntimeError(msg)
+
+            self._callbacks[name] = c_callback
+            _webview_lib.webview_bind(
+                self._handle, _encode_c_string(name), c_callback, None
+            )
 
     def bind(self, name: str, callback: Callable[..., Any]) -> None:
         def wrapper(seq: bytes, req: bytes, arg: int) -> None:

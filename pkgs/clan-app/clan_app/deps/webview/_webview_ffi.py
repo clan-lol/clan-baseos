@@ -10,12 +10,12 @@ def _encode_c_string(s: str) -> bytes:
     return s.encode("utf-8")
 
 
-def _get_webview_version():
+def _get_webview_version() -> str:
     """Get webview version from environment variable or use default"""
     return os.getenv("WEBVIEW_VERSION", "0.8.1")
 
 
-def _get_lib_names():
+def _get_lib_names() -> list[str]:
     """Get platform-specific library names."""
     system = platform.system().lower()
     machine = platform.machine().lower()
@@ -25,8 +25,9 @@ def _get_lib_names():
             return ["webview.dll", "WebView2Loader.dll"]
         if machine == "arm64":
             msg = "arm64 is not supported on Windows"
-            raise Exception(msg)
-        return None
+            raise RuntimeError(msg)
+        msg = f"Unsupported architecture: {machine}"
+        raise RuntimeError(msg)
     if system == "darwin":
         if machine == "arm64":
             return ["libwebview.aarch64.dylib"]
@@ -35,16 +36,16 @@ def _get_lib_names():
     return ["libwebview.so"]
 
 
-def _be_sure_libraries():
+def _be_sure_libraries() -> list[Path] | None:
     """Ensure libraries exist and return paths."""
 
     lib_dir = os.environ.get("WEBVIEW_LIB_DIR")
     if not lib_dir:
         msg = "WEBVIEW_LIB_DIR environment variable is not set"
         raise RuntimeError(msg)
-    lib_dir = Path(lib_dir)
+    lib_dir_p = Path(lib_dir)
     lib_names = _get_lib_names()
-    lib_paths = [lib_dir / lib_name for lib_name in lib_names]
+    lib_paths = [lib_dir_p / lib_name for lib_name in lib_names]
 
     # Check if any library is missing
     missing_libs = [path for path in lib_paths if not path.exists()]
@@ -56,10 +57,14 @@ def _be_sure_libraries():
 class _WebviewLibrary:
     def __init__(self) -> None:
         lib_names = _get_lib_names()
+
+        library_path = ctypes.util.find_library(lib_names[0])
+        if not library_path:
+            library_paths = _be_sure_libraries()
+        if not library_paths:
+            msg = f"Failed to find required library: {lib_names}"
+            raise RuntimeError(msg)
         try:
-            library_path = ctypes.util.find_library(lib_names[0])
-            if not library_path:
-                library_paths = _be_sure_libraries()
             self.lib = ctypes.cdll.LoadLibrary(str(library_paths[0]))
         except Exception as e:
             print(f"Failed to load webview library: {e}")

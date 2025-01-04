@@ -9,9 +9,10 @@ import argparse
 import os
 from pathlib import Path
 
+from clan_cli.api import API
 from clan_cli.custom_logger import setup_logging
 
-from clan_app.deps.webview.webview import Webview
+from clan_app.deps.webview.webview import Size, SizeHint, Webview
 
 
 @profile
@@ -37,9 +38,10 @@ def main(argv: list[str] = sys.argv) -> int:
         site_index: Path = Path(os.getenv("WEBUI_PATH", ".")).resolve() / "index.html"
         content_uri = f"file://{site_index}"
 
-    site_index: Path = Path(os.getenv("WEBUI_PATH", ".")).resolve() / "index.html"
-    content_uri = f"file://{site_index}"
+    webview = Webview(debug=args.debug)
+    webview.bind_jsonschema_api(API)
 
-    webview = Webview()
+    webview.size = Size(1280, 1024, SizeHint.NONE)
     webview.navigate(content_uri)
     webview.run()
+    return 0
