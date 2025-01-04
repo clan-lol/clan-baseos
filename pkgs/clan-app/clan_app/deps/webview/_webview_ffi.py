@@ -34,14 +34,6 @@ def _get_lib_names():
 
 def _be_sure_libraries():
     """Ensure libraries exist and return paths."""
-    if getattr(sys, 'frozen', False):
-        if hasattr(sys, '_MEIPASS'):
-            base_dir = Path(sys._MEIPASS)
-        else:
-            base_dir = Path(sys.executable).parent / '_internal'
-    else:
-        base_dir = Path(__file__).parent
-    from ctypes.util import find_library
 
     lib_dir = os.environ.get("WEBVIEW_LIB_DIR")
     if not lib_dir:

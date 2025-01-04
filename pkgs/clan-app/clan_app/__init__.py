@@ -3,17 +3,39 @@ import sys
 
 from clan_cli.profiler import profile
 
-from clan_app.app import MainApplication
-
 log = logging.getLogger(__name__)
 
-from urllib.parse import quote
-
+from clan_cli.custom_logger import setup_logging
 from clan_app.deps.webview.webview import Webview
-
+from pathlib import Path
+import os
+import argparse
+from urllib.parse import quote
 
 @profile
 def main(argv: list[str] = sys.argv) -> int:
+    parser = argparse.ArgumentParser(description="Clan App")
+    parser.add_argument("--content-uri", type=str, help="The URI of the content to display")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    args = parser.parse_args(argv[1:])
+
+    if args.debug:
+        setup_logging(logging.DEBUG, root_log_name=__name__.split(".")[0])
+        setup_logging(logging.DEBUG, root_log_name="clan_cli")
+    else:
+        setup_logging(logging.INFO, root_log_name=__name__.split(".")[0])
+
+    log.debug("Debug mode enabled")
+
+    if args.content_uri:
+        content_uri = args.content_uri
+    else:
+        site_index: Path = Path(os.getenv("WEBUI_PATH", ".")).resolve() / "index.html"
+        content_uri = f"file://{site_index}"
+
+    site_index: Path = Path(os.getenv("WEBUI_PATH", ".")).resolve() / "index.html"
+    content_uri = f"file://{site_index}"
+
     html = """
     <html>
     <body>
@@ -21,8 +43,9 @@ def main(argv: list[str] = sys.argv) -> int:
     </body>
     </html>
     """
+
     webview = Webview()
     webview.navigate(f"data:text/html,{quote(html)}")
+    #webview.navigate(content_uri)
     webview.run()
-    app = MainApplication()
-    return app.run(argv)
+

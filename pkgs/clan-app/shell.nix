@@ -39,6 +39,7 @@ mkShell {
       ruff
       gtk4
       clang
+      webview-wrapper.dev
       webview-wrapper
       gtk4.dev # has the demo called 'gtk4-widget-factory'
       libadwaita.devdoc # has the demo called 'adwaita-1-demo'

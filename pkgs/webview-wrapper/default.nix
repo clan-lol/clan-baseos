@@ -1,4 +1,4 @@
-{ pkgs }:
+{ pkgs, ... }:
 
 pkgs.stdenv.mkDerivation {
   pname = "webview";
@@ -21,7 +21,6 @@ pkgs.stdenv.mkDerivation {
     webkitgtk_6_0
     gtk4
   ];
-
 
   meta = with pkgs.lib; {
     description = "Tiny cross-platform webview library for C/C++. Uses WebKit (GTK/Cocoa) and Edge WebView2 (Windows)";
