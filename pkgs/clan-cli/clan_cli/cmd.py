@@ -393,10 +393,9 @@ def run(
     )
 
     if options.check and process.returncode != 0:
-        err = ClanCmdError(cmd_out)
-        err.msg = str(stderr_buf)
-        err.description = "Command has been cancelled"
-        raise err
+        if is_async_cancelled():
+            cmd_out.msg = "Command cancelled"
+        raise ClanCmdError(cmd_out)
 
     return cmd_out
 

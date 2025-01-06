@@ -43,133 +43,18 @@ export interface GtkResponse<T> {
   op_key: string;
 }
 
-declare global {
-  interface Window {
-    clan: ClanOperations;
-    webkit: {
-      messageHandlers: {
-        gtk: {
-          postMessage: (message: {
-            method: OperationNames;
-            data: OperationArgs<OperationNames>;
-          }) => void;
-        };
-      };
-    };
-  }
-}
-// Make sure window.webkit is defined although the type is not correctly filled yet.
-window.clan = {} as ClanOperations;
-
-const operations = schema.properties;
-const operationNames = Object.keys(operations) as OperationNames[];
-
-type ObserverRegistry = {
-  [K in OperationNames]: Record<
-    string,
-    (response: OperationResponse<K>) => void
-  >;
-};
-const registry: ObserverRegistry = operationNames.reduce(
-  (acc, opName) => ({
-    ...acc,
-    [opName]: {},
-  }),
-  {} as ObserverRegistry,
-);
-
-function createFunctions<K extends OperationNames>(
-  operationName: K,
-): {
-  dispatch: (args: OperationArgs<K>) => void;
-  receive: (fn: (response: OperationResponse<K>) => void, id: string) => void;
-} {
-  window.clan[operationName] = (s: string) => {
-    const f = (response: OperationResponse<K>) => {
-      // Get the correct receiver function for the op_key
-      const receiver = registry[operationName][response.op_key];
-      if (receiver) {
-        receiver(response);
-      }
-    };
-    deserialize(f)(s);
-  };
-
-  return {
-    dispatch: (args: OperationArgs<K>) => {
-      // Send the data to the gtk app
-      window.webkit.messageHandlers.gtk.postMessage({
-        method: operationName,
-        data: args,
-      });
-    },
-    receive: (fn: (response: OperationResponse<K>) => void, id: string) => {
-      // @ts-expect-error: This should work although typescript doesn't let us write
-      registry[operationName][id] = fn;
-    },
-  };
-}
-
-type PyApi = {
-  [K in OperationNames]: {
-    dispatch: (args: OperationArgs<K>) => void;
-    receive: (fn: (response: OperationResponse<K>) => void, id: string) => void;
-  };
-};
-
-function download(filename: string, text: string) {
-  const element = document.createElement("a");
-  element.setAttribute(
-    "href",
-    "data:text/plain;charset=utf-8," + encodeURIComponent(text),
-  );
-  element.setAttribute("download", filename);
-
-  element.style.display = "none";
-  document.body.appendChild(element);
-
-  element.click();
-
-  document.body.removeChild(element);
-}
-
-export const callApi = <K extends OperationNames>(
+export const callApi = async <K extends OperationNames>(
   method: K,
   args: OperationArgs<K>,
-) => {
-  return new Promise<OperationResponse<K>>((resolve) => {
-    const id = nanoid();
-    pyApi[method].receive((response) => {
-      console.log(method, "Received response: ", { response });
-      resolve(response);
-    }, id);
-
-    pyApi[method].dispatch({ ...args, op_key: id });
-  });
+): Promise<OperationResponse<K>> => {
+  console.log("Calling API", method, args);
+  const response = await (
+    window as unknown as Record<
+      OperationNames,
+      (
+        args: OperationArgs<OperationNames>,
+      ) => Promise<OperationResponse<OperationNames>>
+    >
+  )[method](args);
+  return response as OperationResponse<K>;
 };
-
-const deserialize =
-  <T>(fn: (response: T) => void) =>
-  (r: unknown) => {
-    try {
-      fn(r as T);
-    } catch (e) {
-      console.error("Error parsing JSON: ", e);
-      window.localStorage.setItem("error", JSON.stringify(r));
-      console.error(r);
-      console.error("See localStorage 'error'");
-      alert(`Error parsing JSON: ${e}`);
-    }
-  };
-
-// Create the API object
-
-const pyApi: PyApi = {} as PyApi;
-
-operationNames.forEach((opName) => {
-  const name = opName as OperationNames;
-  // @ts-expect-error - TODO: Fix this. Typescript is not recognizing the receive function correctly
-  pyApi[name] = createFunctions(name);
-});
-
-export { pyApi };

@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps
@@ -10,6 +11,8 @@ from typing import (
     TypeVar,
     get_type_hints,
 )
+
+log = logging.getLogger(__name__)
 
 from .serde import dataclass_to_dict, from_dict, sanitize_string
 
@@ -52,7 +55,12 @@ def update_wrapper_signature(wrapper: Callable, wrapped: Callable) -> None:
 
     # Add 'op_key' parameter
     op_key_param = Parameter(
-        "op_key", Parameter.KEYWORD_ONLY, default=None, annotation=str
+        "op_key",
+        Parameter.KEYWORD_ONLY,
+        # we add a None default value so that typescript code gen drops the parameter
+        # FIXME: this is a hack, we should filter out op_key in the typescript code gen
+        default=None,
+        annotation=str,
     )
     params.append(op_key_param)
 
@@ -107,6 +115,32 @@ API.register(open_file)
         self.register(wrapper)
         return fn
 
+    def overwrite_fn(self, fn: Callable[..., Any]) -> None:
+        fn_name = fn.__name__
+
+        if fn_name not in self._registry:
+            msg = f"Function '{fn_name}' is not registered as an API method"
+            raise ClanError(msg)
+
+        fn_signature = signature(fn)
+        abstract_signature = signature(self._registry[fn_name])
+
+        # Remove the default argument of op_key from abstract_signature
+        # FIXME: This is a hack to make the signature comparison work
+        # because the other hack above where default value of op_key is None in the wrapper
+        abstract_params = list(abstract_signature.parameters.values())
+        for i, param in enumerate(abstract_params):
+            if param.name == "op_key":
+                abstract_params[i] = param.replace(default=Parameter.empty)
+                break
+        abstract_signature = abstract_signature.replace(parameters=abstract_params)
+
+        if fn_signature != abstract_signature:
+            msg = f"Expected signature: {abstract_signature}\nActual signature: {fn_signature}"
+            raise ClanError(msg)
+
+        self._registry[fn_name] = fn
+
     F = TypeVar("F", bound=Callable[..., Any])
 
     def register(self, fn: F) -> F:
@@ -125,6 +159,7 @@ API.register(open_file)
                 data: T = fn(*args, **kwargs)
                 return SuccessDataClass(status="success", data=data, op_key=op_key)
             except ClanError as e:
+                log.exception(f"Error calling wrapped {fn.__name__}")
                 return ErrorDataClass(
                     op_key=op_key,
                     status="error",
@@ -137,6 +172,7 @@ API.register(open_file)
                     ],
                 )
             except Exception as e:
+                log.exception(f"Error calling wrapped {fn.__name__}")
                 return ErrorDataClass(
                     op_key=op_key,
                     status="error",

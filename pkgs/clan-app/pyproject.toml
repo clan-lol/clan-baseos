@@ -9,7 +9,7 @@ description = "clan app"
 dynamic = ["version"]
 scripts = { clan-app = "clan_app:main" }
 
-[project.urls]
+[project.urls]  
 Homepage = "https://clan.lol/"
 Documentation = "https://docs.clan.lol/"
 Repository = "https://git.clan.lol/clan/clan-core"

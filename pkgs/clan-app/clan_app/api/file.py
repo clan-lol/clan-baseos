@@ -1,146 +1,96 @@
 # ruff: noqa: N801
-import gi
-
-gi.require_version("Gtk", "4.0")
 
 import logging
-from pathlib import Path
-from typing import Any
+from tkinter import Tk, filedialog
 
-from clan_cli.api import ErrorDataClass, SuccessDataClass
-from clan_cli.api.directory import FileRequest
-from gi.repository import Gio, GLib, Gtk
-
-from clan_app.api import ImplFunc
+from clan_cli.api import ApiError, ErrorDataClass, SuccessDataClass
+from clan_cli.api.directory import FileFilter, FileRequest
 
 log = logging.getLogger(__name__)
 
 
-def remove_none(_list: list) -> list:
-    return [i for i in _list if i is not None]
+def _apply_filters(filters: FileFilter | None) -> list[tuple[str, str]]:
+    if not filters:
+        return []
+
+    filter_patterns = []
+
+    if filters.mime_types:
+        # Tkinter does not directly support MIME types, so this section can be adjusted
+        # if you wish to handle them differently
+        filter_patterns.extend(filters.mime_types)
+
+    if filters.patterns:
+        filter_patterns.extend(filters.patterns)
+
+    if filters.suffixes:
+        suffix_patterns = [f"*.{suffix}" for suffix in filters.suffixes]
+        filter_patterns.extend(suffix_patterns)
+
+    filter_title = filters.title if filters.title else "Custom Files"
+
+    return [(filter_title, " ".join(filter_patterns))]
 
 
-# This implements the abstract function open_file with one argument, file_request,
-# which is a FileRequest object and returns a string or None.
-class open_file(
-    ImplFunc[[FileRequest, str], SuccessDataClass[list[str] | None] | ErrorDataClass]
-):
-    def __init__(self) -> None:
-        super().__init__()
+def open_file(
+    file_request: FileRequest, *, op_key: str
+) -> SuccessDataClass[list[str] | None] | ErrorDataClass:
+    try:
+        root = Tk()
+        root.withdraw()  # Hide the main window
+        root.attributes("-topmost", True)  # Bring the dialogs to the front
 
-    def async_run(self, file_request: FileRequest, op_key: str) -> bool:
-        def on_file_select(file_dialog: Gtk.FileDialog, task: Gio.Task) -> None:
-            try:
-                gfile = file_dialog.open_finish(task)
-                if gfile:
-                    selected_path = remove_none([gfile.get_path()])
-                    self.returns(
-                        SuccessDataClass(
-                            op_key=op_key, data=selected_path, status="success"
-                        )
-                    )
-            except Exception as e:
-                print(f"Error getting selected file or directory: {e}")
+        file_path: str = ""
+        multiple_files: list[str] = []
 
-        def on_file_select_multiple(
-            file_dialog: Gtk.FileDialog, task: Gio.Task
-        ) -> None:
-            try:
-                gfiles: Any = file_dialog.open_multiple_finish(task)
-                if gfiles:
-                    selected_paths = remove_none([gfile.get_path() for gfile in gfiles])
-                    self.returns(
-                        SuccessDataClass(
-                            op_key=op_key, data=selected_paths, status="success"
-                        )
-                    )
-                else:
-                    self.returns(
-                        SuccessDataClass(op_key=op_key, data=None, status="success")
-                    )
-            except Exception as e:
-                print(f"Error getting selected files: {e}")
+        if file_request.mode == "open_file":
+            file_path = filedialog.askopenfilename(
+                title=file_request.title,
+                initialdir=file_request.initial_folder,
+                initialfile=file_request.initial_file,
+                filetypes=_apply_filters(file_request.filters),
+            )
 
-        def on_folder_select(file_dialog: Gtk.FileDialog, task: Gio.Task) -> None:
-            try:
-                gfile = file_dialog.select_folder_finish(task)
-                if gfile:
-                    selected_path = remove_none([gfile.get_path()])
-                    self.returns(
-                        SuccessDataClass(
-                            op_key=op_key, data=selected_path, status="success"
-                        )
-                    )
-                else:
-                    self.returns(
-                        SuccessDataClass(op_key=op_key, data=None, status="success")
-                    )
-            except Exception as e:
-                print(f"Error getting selected directory: {e}")
+        elif file_request.mode == "select_folder":
+            file_path = filedialog.askdirectory(
+                title=file_request.title, initialdir=file_request.initial_folder
+            )
 
-        def on_save_finish(file_dialog: Gtk.FileDialog, task: Gio.Task) -> None:
-            try:
-                gfile = file_dialog.save_finish(task)
-                if gfile:
-                    selected_path = remove_none([gfile.get_path()])
-                    self.returns(
-                        SuccessDataClass(
-                            op_key=op_key, data=selected_path, status="success"
-                        )
-                    )
-                else:
-                    self.returns(
-                        SuccessDataClass(op_key=op_key, data=None, status="success")
-                    )
-            except Exception as e:
-                print(f"Error getting selected file: {e}")
-
-        dialog = Gtk.FileDialog()
-
-        if file_request.title:
-            dialog.set_title(file_request.title)
-
-        if file_request.filters:
-            filters = Gio.ListStore.new(Gtk.FileFilter)
-            file_filters = Gtk.FileFilter()
-
-            if file_request.filters.title:
-                file_filters.set_name(file_request.filters.title)
-
-            if file_request.filters.mime_types:
-                for mime in file_request.filters.mime_types:
-                    file_filters.add_mime_type(mime)
-                    filters.append(file_filters)
-
-            if file_request.filters.patterns:
-                for pattern in file_request.filters.patterns:
-                    file_filters.add_pattern(pattern)
-
-            if file_request.filters.suffixes:
-                for suffix in file_request.filters.suffixes:
-                    file_filters.add_suffix(suffix)
-
-            filters.append(file_filters)
-            dialog.set_filters(filters)
-
-        if file_request.initial_file:
-            p = Path(file_request.initial_file).expanduser()
-            f = Gio.File.new_for_path(str(p))
-            dialog.set_initial_file(f)
-
-        if file_request.initial_folder:
-            p = Path(file_request.initial_folder).expanduser()
-            f = Gio.File.new_for_path(str(p))
-            dialog.set_initial_folder(f)
-
-        # if select_folder
-        if file_request.mode == "select_folder":
-            dialog.select_folder(callback=on_folder_select)
-        if file_request.mode == "open_multiple_files":
-            dialog.open_multiple(callback=on_file_select_multiple)
-        elif file_request.mode == "open_file":
-            dialog.open(callback=on_file_select)
         elif file_request.mode == "save":
-            dialog.save(callback=on_save_finish)
+            file_path = filedialog.asksaveasfilename(
+                title=file_request.title,
+                initialdir=file_request.initial_folder,
+                initialfile=file_request.initial_file,
+                filetypes=_apply_filters(file_request.filters),
+            )
 
-        return GLib.SOURCE_REMOVE
+        elif file_request.mode == "open_multiple_files":
+            tresult = filedialog.askopenfilenames(
+                title=file_request.title,
+                initialdir=file_request.initial_folder,
+                filetypes=_apply_filters(file_request.filters),
+            )
+            multiple_files = list(tresult)
+
+        if len(file_path) == 0 and len(multiple_files) == 0:
+            msg = "No file selected"
+            raise ValueError(msg)  # noqa: TRY301
+
+        multiple_files = [file_path] if len(multiple_files) == 0 else multiple_files
+        return SuccessDataClass(op_key, status="success", data=multiple_files)
+
+    except Exception as e:
+        log.exception("Error opening file")
+        return ErrorDataClass(
+            op_key=op_key,
+            status="error",
+            errors=[
+                ApiError(
+                    message=e.__class__.__name__,
+                    description=str(e),
+                    location=["open_file"],
+                )
+            ],
+        )
+    finally:
+        root.destroy()

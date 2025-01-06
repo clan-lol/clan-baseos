@@ -1,57 +1,34 @@
 {
-  lib,
-  glib,
   gsettings-desktop-schemas,
-  stdenv,
   clan-app,
   mkShell,
   ruff,
-  desktop-file-utils,
-  xdg-utils,
-  mypy,
-  python3,
   gtk4,
-  libadwaita,
+  webview-lib,
+  python3Full,
   self',
 }:
 
-let
-  devshellTestDeps =
-    clan-app.externalTestDeps
-    ++ (with python3.pkgs; [
-      rope
-      mypy
-      setuptools
-      wheel
-      pip
-    ]);
-in
 mkShell {
-  inherit (clan-app) nativeBuildInputs propagatedBuildInputs;
 
   inputsFrom = [ self'.devShells.default ];
 
-  buildInputs =
-    [
-      glib
-      ruff
-      gtk4
-      gtk4.dev # has the demo called 'gtk4-widget-factory'
-      libadwaita.devdoc # has the demo called 'adwaita-1-demo'
-    ]
-    ++ devshellTestDeps
-
-    # Dependencies for testing for linux hosts
-    ++ (lib.optionals stdenv.isLinux [
-      xdg-utils # install desktop files
-      desktop-file-utils # verify desktop files
-    ]);
+  buildInputs = [
+    (python3Full.withPackages (
+      ps:
+      with ps;
+      [
+        ruff
+        mypy
+      ]
+      ++ (clan-app.devshellDeps ps)
+    ))
+  ];
 
   shellHook = ''
     export GIT_ROOT=$(git rev-parse --show-toplevel)
     export PKG_ROOT=$GIT_ROOT/pkgs/clan-app
 
-    export WEBKIT_DISABLE_COMPOSITING_MODE=1
     # Add current package to PYTHONPATH
     export PYTHONPATH="$PKG_ROOT''${PYTHONPATH:+:$PYTHONPATH:}"
 
@@ -63,5 +40,8 @@ mkShell {
 
     export XDG_DATA_DIRS=${gtk4}/share/gsettings-schemas/gtk4-4.14.4:$XDG_DATA_DIRS
     export XDG_DATA_DIRS=${gsettings-desktop-schemas}/share/gsettings-schemas/gsettings-desktop-schemas-46.0:$XDG_DATA_DIRS
+
+    export WEBVIEW_LIB_DIR=${webview-lib}/lib
+    # export WEBVIEW_LIB_DIR=$HOME/Projects/webview/build/core
   '';
 }
