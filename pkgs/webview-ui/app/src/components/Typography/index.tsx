@@ -80,14 +80,11 @@ interface _TypographyProps<H extends Hierarchy> {
   size: AllowedSizes<H>;
   children: JSX.Element;
   weight?: Weight;
-  color?: Color;
+  color?: Color | "inherit";
   inverted?: boolean;
   tag?: Tag;
   class?: string;
   classList?: Record<string, boolean>;
-  // Disable using the color prop
-  // A font color is provided via class / classList or inherited
-  useExternColor?: boolean;
 }
 
 export const Typography = <H extends Hierarchy>(props: _TypographyProps<H>) => {
@@ -95,7 +92,8 @@ export const Typography = <H extends Hierarchy>(props: _TypographyProps<H>) => {
     <Dynamic
       component={props.tag || "span"}
       class={cx(
-        !props.useExternColor && colorMap[props.color || "primary"],
+        props.color === "inherit" && "text-inherit",
+        props.color !== "inherit" && colorMap[props.color || "primary"],
         props.inverted && "fnt-clr--inverted",
         sizeHierarchyMap[props.hierarchy][props.size] as string,
         weightMap[props.weight || "normal"],

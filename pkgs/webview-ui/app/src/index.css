@@ -22,6 +22,12 @@
   src: url(../.fonts/ArchivoSemiCondensed-SemiBold.woff2) format("woff2");
 }
 
+@keyframes slide {
+  to {
+    background-position: 200% 0;
+  }
+}
+
 :root {
   --clr-bg-def-1: theme(colors.white);
   --clr-bg-def-2: theme(colors.secondary.50);
