@@ -18,6 +18,7 @@ import {
 } from "@/src/components/inputBase";
 import { FieldLayout } from "./layout";
 import Icon from "@/src/components/icon";
+import { useContext } from "corvu/dialog";
 
 export interface Option {
   value: string;
@@ -45,9 +46,12 @@ interface SelectInputpProps {
   placeholder?: string;
   multiple?: boolean;
   loading?: boolean;
+  dialogContextId?: string;
 }
 
 export function SelectInput(props: SelectInputpProps) {
+  const dialogContext = useContext(props.dialogContextId);
+
   const _id = createUniqueId();
 
   const [reference, setReference] = createSignal<HTMLElement>();
@@ -223,7 +227,7 @@ export function SelectInput(props: SelectInputpProps) {
         }
       />
 
-      <Portal mount={document.body}>
+      <Portal mount={dialogContext.contentRef?.() || document.body}>
         <div
           id={_id}
           popover
@@ -234,7 +238,7 @@ export function SelectInput(props: SelectInputpProps) {
             top: `${position.y ?? 0}px`,
             left: `${position.x ?? 0}px`,
           }}
-          class="z-[1] shadow"
+          class="z-[1000] shadow"
         >
           <ul class="menu flex max-h-96 flex-col gap-1 overflow-x-hidden overflow-y-scroll">
             <Show when={!props.loading} fallback={"Loading ...."}>
