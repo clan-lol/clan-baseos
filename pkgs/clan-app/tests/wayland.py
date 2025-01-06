@@ -21,7 +21,11 @@ GtkProc = NewType("GtkProc", Popen)
 
 @pytest.fixture
 def app() -> Generator[GtkProc, None, None]:
-    rapp = Popen([sys.executable, "-m", "clan_app"], text=True)
+    cmd = [sys.executable, "-m", "clan_app"]
+    print(f"Running: {cmd}")
+    rapp = Popen(
+        cmd, text=True, stdout=sys.stdout, stderr=sys.stderr, start_new_session=True
+    )
     yield GtkProc(rapp)
     # Cleanup: Terminate your application
     rapp.terminate()

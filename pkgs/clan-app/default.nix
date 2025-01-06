@@ -3,14 +3,8 @@
   runCommand,
   setuptools,
   copyDesktopItems,
-  wrapGAppsHook4,
   clan-cli,
   makeDesktopItem,
-  pytest, # Testing framework
-  pytest-cov, # Generate coverage reports
-  pytest-subprocess, # fake the real subprocess behavior to make your tests more independent.
-  pytest-xdist, # Run tests in parallel on multiple cores
-  pytest-timeout, # Add timeouts to your tests
   webview-ui,
   webview-lib,
   fontconfig,
@@ -26,33 +20,27 @@ let
     mimeTypes = [ "x-scheme-handler/clan" ];
   };
 
-  # Dependencies that are directly used in the project but nor from internal python packages
-  externalPythonDeps = [
-
-  ];
-
   # Runtime binary dependencies required by the application
   runtimeDependencies = [
-    webview-lib
+
   ];
 
-  # Deps including python packages from the local project
-  allPythonDeps = [ (python3Full.pkgs.toPythonModule clan-cli) ] ++ externalPythonDeps;
-
   # Dependencies required for running tests
-  externalTestDeps =
-    externalPythonDeps
-    ++ runtimeDependencies
-    ++ [
-      pytest # Testing framework
+  pyTestDeps =
+    ps:
+    with ps;
+    [
+      (python3Full.pkgs.toPythonModule pytest)
+      # Testing framework
       pytest-cov # Generate coverage reports
       pytest-subprocess # fake the real subprocess behavior to make your tests more independent.
       pytest-xdist # Run tests in parallel on multiple cores
       pytest-timeout # Add timeouts to your tests
-    ];
+    ]
+    ++ pytest.propagatedBuildInputs;
 
-  # Dependencies required for running tests
-  testDependencies = runtimeDependencies ++ allPythonDeps ++ externalTestDeps;
+  clan-cli-module = [ (python3Full.pkgs.toPythonModule clan-cli) ];
+
 in
 python3Full.pkgs.buildPythonApplication rec {
   name = "clan-app";
@@ -76,22 +64,15 @@ python3Full.pkgs.buildPythonApplication rec {
   nativeBuildInputs = [
     setuptools
     copyDesktopItems
-    wrapGAppsHook4
+    fontconfig
   ];
 
   # The necessity of setting buildInputs and propagatedBuildInputs to the
   # same values for your Python package within Nix largely stems from ensuring
   # that all necessary dependencies are consistently available both
   # at build time and runtime,
-  buildInputs = allPythonDeps ++ runtimeDependencies;
-  propagatedBuildInputs =
-    allPythonDeps
-    ++ runtimeDependencies
-    ++ [
-
-      # TODO: see postFixup clan-cli/default.nix:L188
-      clan-cli.propagatedBuildInputs
-    ];
+  buildInputs = clan-cli-module ++ runtimeDependencies;
+  propagatedBuildInputs = buildInputs;
 
   # also re-expose dependencies so we test them in CI
   passthru = {
@@ -99,9 +80,10 @@ python3Full.pkgs.buildPythonApplication rec {
       clan-app-pytest =
         runCommand "clan-app-pytest"
           {
-            buildInputs = buildInputs ++ externalTestDeps;
-            propagatedBuildInputs = propagatedBuildInputs ++ externalTestDeps;
-            inherit nativeBuildInputs;
+            buildInputs = runtimeDependencies ++ [
+              (python3Full.withPackages (ps: clan-cli-module ++ (pyTestDeps ps)))
+              fontconfig
+            ];
           }
           ''
             cp -r ${source} ./src
@@ -121,9 +103,9 @@ python3Full.pkgs.buildPythonApplication rec {
             fc-list
 
             echo "STARTING ..."
-            export WEBVIEW_LIB_DIR "${webview-lib}/lib"
+            export WEBVIEW_LIB_DIR="${webview-lib}/lib"
             export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1
-            ${python3Full}/bin/python3 -m pytest -s -m "not impure" ./tests
+            python3 -m pytest -s -m "not impure" ./tests
             touch $out
           '';
     };
@@ -131,10 +113,7 @@ python3Full.pkgs.buildPythonApplication rec {
 
   # Additional pass-through attributes
   passthru.desktop-file = desktop-file;
-  passthru.externalPythonDeps = externalPythonDeps;
-  passthru.externalTestDeps = externalTestDeps;
-  passthru.runtimeDependencies = runtimeDependencies;
-  passthru.testDependencies = testDependencies;
+  passthru.devshellDeps = ps: (pyTestDeps ps);
 
   postInstall = ''
     mkdir -p $out/${python3Full.sitePackages}/clan_app/.webui

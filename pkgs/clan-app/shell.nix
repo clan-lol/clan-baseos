@@ -1,56 +1,29 @@
 {
-  lib,
-  glib,
   gsettings-desktop-schemas,
-  stdenv,
   clan-app,
   mkShell,
   ruff,
-  desktop-file-utils,
-  xdg-utils,
-  mypy,
-  python3,
   gtk4,
-  libadwaita,
   webview-lib,
-  clang,
+  python3Full,
   self',
 }:
 
-let
-  devshellTestDeps =
-    clan-app.externalTestDeps
-    ++ (with python3.pkgs; [
-      rope
-      mypy
-      setuptools
-      wheel
-      pip
-    ]);
-in
 mkShell {
-  inherit (clan-app) nativeBuildInputs propagatedBuildInputs;
 
   inputsFrom = [ self'.devShells.default ];
 
-  buildInputs =
-    [
-      glib
-      ruff
-      gtk4
-      clang
-      webview-lib.dev
-      webview-lib
-      gtk4.dev # has the demo called 'gtk4-widget-factory'
-      libadwaita.devdoc # has the demo called 'adwaita-1-demo'
-    ]
-    ++ devshellTestDeps
-
-    # Dependencies for testing for linux hosts
-    ++ (lib.optionals stdenv.isLinux [
-      xdg-utils # install desktop files
-      desktop-file-utils # verify desktop files
-    ]);
+  buildInputs = [
+    (python3Full.withPackages (
+      ps:
+      with ps;
+      [
+        ruff
+        mypy
+      ]
+      ++ (clan-app.devshellDeps ps)
+    ))
+  ];
 
   shellHook = ''
     export GIT_ROOT=$(git rev-parse --show-toplevel)
