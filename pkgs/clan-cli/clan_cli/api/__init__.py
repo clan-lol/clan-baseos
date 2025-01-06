@@ -54,9 +54,7 @@ def update_wrapper_signature(wrapper: Callable, wrapped: Callable) -> None:
     params = list(sig.parameters.values())
 
     # Add 'op_key' parameter
-    op_key_param = Parameter(
-        "op_key", Parameter.KEYWORD_ONLY, default=None, annotation=str
-    )
+    op_key_param = Parameter("op_key", Parameter.KEYWORD_ONLY, annotation=str)
     params.append(op_key_param)
 
     # Create a new signature
@@ -110,6 +108,21 @@ API.register(open_file)
         self.register(wrapper)
         return fn
 
+    def overwrite_fn(self, fn: Callable[..., Any]) -> None:
+        fn_name = fn.__name__
+
+        if fn_name not in self._registry:
+            msg = f"Function '{fn_name}' is not registered as an API method"
+            raise ClanError(msg)
+
+        fn_signature = signature(fn)
+        abstract_signature = signature(self._registry[fn_name])
+        if fn_signature != abstract_signature:
+            msg = f"Expected signature: {abstract_signature}\nActual signature: {fn_signature}"
+            raise ClanError(msg)
+
+        self._registry[fn_name] = fn
+
     F = TypeVar("F", bound=Callable[..., Any])
 
     def register(self, fn: F) -> F:
@@ -125,7 +138,7 @@ API.register(open_file)
         @wraps(fn)
         def wrapper(*args: Any, op_key: str, **kwargs: Any) -> ApiResponse[T]:
             try:
-                data: T = fn(*args, op_key=op_key, **kwargs)
+                data: T = fn(*args, **kwargs)
                 return SuccessDataClass(status="success", data=data, op_key=op_key)
             except ClanError as e:
                 log.exception(f"Error calling wrapped {fn.__name__}")

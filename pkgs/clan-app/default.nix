@@ -1,18 +1,11 @@
 {
-  python3,
+  python3Full,
   runCommand,
   setuptools,
   copyDesktopItems,
-  pygobject3,
   wrapGAppsHook4,
-  gtk4,
-  adwaita-icon-theme,
-  pygobject-stubs,
-  gobject-introspection,
   clan-cli,
   makeDesktopItem,
-  libadwaita,
-  webkitgtk_6_0,
   pytest, # Testing framework
   pytest-cov, # Generate coverage reports
   pytest-subprocess, # fake the real subprocess behavior to make your tests more independent.
@@ -35,17 +28,11 @@ let
 
   # Dependencies that are directly used in the project but nor from internal python packages
   externalPythonDeps = [
-    pygobject3
-    pygobject-stubs
-    gtk4
-    libadwaita
-    webkitgtk_6_0
-    adwaita-icon-theme
 
   ];
 
   # Deps including python packages from the local project
-  allPythonDeps = [ (python3.pkgs.toPythonModule clan-cli) ] ++ externalPythonDeps;
+  allPythonDeps = [ (python3Full.pkgs.toPythonModule clan-cli) ] ++ externalPythonDeps;
 
   # Runtime binary dependencies required by the application
   runtimeDependencies = [
@@ -68,9 +55,9 @@ let
   testDependencies = runtimeDependencies ++ allPythonDeps ++ externalTestDeps;
 
   # Setup Python environment with all dependencies for running tests
-  pythonWithTestDeps = python3.withPackages (_ps: testDependencies);
+  pythonWithTestDeps = python3Full.withPackages (_ps: testDependencies);
 in
-python3.pkgs.buildPythonApplication rec {
+python3Full.pkgs.buildPythonApplication rec {
   name = "clan-app";
   src = source;
   format = "pyproject";
@@ -79,7 +66,7 @@ python3.pkgs.buildPythonApplication rec {
   preFixup = ''
     makeWrapperArgs+=(
       --set FONTCONFIG_FILE ${fontconfig.out}/etc/fonts/fonts.conf
-      --set WEBUI_PATH "$out/${python3.sitePackages}/clan_app/.webui"
+      --set WEBUI_PATH "$out/${python3Full.sitePackages}/clan_app/.webui"
       --set WEBVIEW_LIB_DIR "${webview-lib}/lib"
       # This prevents problems with mixed glibc versions that might occur when the
       # cli is called through a browser built against another glibc
@@ -93,8 +80,6 @@ python3.pkgs.buildPythonApplication rec {
     setuptools
     copyDesktopItems
     wrapGAppsHook4
-
-    gobject-introspection
   ];
 
   # The necessity of setting buildInputs and propagatedBuildInputs to the
@@ -149,8 +134,8 @@ python3.pkgs.buildPythonApplication rec {
   passthru.testDependencies = testDependencies;
 
   postInstall = ''
-    mkdir -p $out/${python3.sitePackages}/clan_app/.webui
-    cp -r ${webview-ui}/lib/node_modules/@clan/webview-ui/dist/* $out/${python3.sitePackages}/clan_app/.webui
+    mkdir -p $out/${python3Full.sitePackages}/clan_app/.webui
+    cp -r ${webview-ui}/lib/node_modules/@clan/webview-ui/dist/* $out/${python3Full.sitePackages}/clan_app/.webui
     mkdir -p $out/share/icons/hicolor
     cp -r ./clan_app/assets/white-favicons/* $out/share/icons/hicolor
   '';

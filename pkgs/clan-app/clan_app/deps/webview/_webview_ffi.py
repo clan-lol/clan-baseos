@@ -69,6 +69,7 @@ class _WebviewLibrary:
         except Exception as e:
             print(f"Failed to load webview library: {e}")
             raise
+
         # Define FFI functions
         self.webview_create = self.lib.webview_create
         self.webview_create.argtypes = [c_int, c_void_p]
