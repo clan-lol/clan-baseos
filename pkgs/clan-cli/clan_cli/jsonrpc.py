@@ -10,6 +10,6 @@ class ClanJSONEncoder(json.JSONEncoder):
             return o.to_json()
         # Check if the object is a dataclass
         if dataclasses.is_dataclass(o):
-            return dataclasses.asdict(o)  # type: ignore[call-overload]
+            return dataclasses.asdict(o)  # type: ignore
         # Otherwise, use the default serialization
         return super().default(o)

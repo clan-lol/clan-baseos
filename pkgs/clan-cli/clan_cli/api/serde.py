@@ -302,7 +302,7 @@ def construct_dataclass(
             field_value = data.get(data_field_name)
 
             if field_value is None and (
-                field.type is None or is_type_in_union(field.type, type(None))
+                field.type is None or is_type_in_union(field.type, type(None))  # type: ignore
             ):
                 field_values[field.name] = None
             else:

@@ -54,12 +54,14 @@ def update_wrapper_signature(wrapper: Callable, wrapped: Callable) -> None:
     params = list(sig.parameters.values())
 
     # Add 'op_key' parameter
-    op_key_param = Parameter("op_key", 
-                             Parameter.KEYWORD_ONLY, 
-                             # we add a None default value so that typescript code gen drops the parameter
-                             # FIXME: this is a hack, we should filter out op_key in the typescript code gen
-                             default=None, 
-                            annotation=str)
+    op_key_param = Parameter(
+        "op_key",
+        Parameter.KEYWORD_ONLY,
+        # we add a None default value so that typescript code gen drops the parameter
+        # FIXME: this is a hack, we should filter out op_key in the typescript code gen
+        default=None,
+        annotation=str,
+    )
     params.append(op_key_param)
 
     # Create a new signature

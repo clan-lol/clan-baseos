@@ -40,8 +40,7 @@ def open_file(
         root.withdraw()  # Hide the main window
         root.attributes("-topmost", True)  # Bring the dialogs to the front
 
-
-        file_path: str  = ""
+        file_path: str = ""
         multiple_files: list[str] = []
 
         if file_request.mode == "open_file":
@@ -67,10 +66,10 @@ def open_file(
 
         elif file_request.mode == "open_multiple_files":
             tresult = filedialog.askopenfilenames(
-                    title=file_request.title,
-                    initialdir=file_request.initial_folder,
-                    filetypes=_apply_filters(file_request.filters),
-                )
+                title=file_request.title,
+                initialdir=file_request.initial_folder,
+                filetypes=_apply_filters(file_request.filters),
+            )
             multiple_files = list(tresult)
 
         if len(file_path) == 0 and len(multiple_files) == 0:

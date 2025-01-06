@@ -43,14 +43,18 @@ export interface GtkResponse<T> {
   op_key: string;
 }
 
-
 export const callApi = async <K extends OperationNames>(
   method: K,
   args: OperationArgs<K>,
 ): Promise<OperationResponse<K>> => {
   console.log("Calling API", method, args);
-  const response = await (window as unknown as Record<OperationNames, (args: OperationArgs<OperationNames>) => Promise<OperationResponse<OperationNames>>>)[method](args);
+  const response = await (
+    window as unknown as Record<
+      OperationNames,
+      (
+        args: OperationArgs<OperationNames>,
+      ) => Promise<OperationResponse<OperationNames>>
+    >
+  )[method](args);
   return response as OperationResponse<K>;
 };
-
-
