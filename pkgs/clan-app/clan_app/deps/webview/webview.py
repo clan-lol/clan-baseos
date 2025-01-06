@@ -126,7 +126,7 @@ class Webview:
             c_callback = _webview_lib.CFUNCTYPE(
                 None, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p
             )(wrapper)
-            log.debug(f"Binding {name} to {method}")
+
             if name in self._callbacks:
                 msg = f"Callback {name} already exists. Skipping binding."
                 raise RuntimeError(msg)
