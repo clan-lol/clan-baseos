@@ -29,6 +29,7 @@ def app_run(app_opts: ClanAppOptions) -> int:
         setup_logging(logging.DEBUG, root_log_name="clan_cli")
     else:
         setup_logging(logging.INFO, root_log_name=__name__.split(".")[0])
+        setup_logging(logging.INFO, root_log_name="clan_cli")
 
     log.debug("Debug mode enabled")
 

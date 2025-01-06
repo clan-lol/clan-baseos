@@ -43,27 +43,14 @@ export interface GtkResponse<T> {
   op_key: string;
 }
 
-const operations = schema.properties;
-const operationNames = Object.keys(operations) as OperationNames[];
 
-export const callApi = <K extends OperationNames>(
+export const callApi = async <K extends OperationNames>(
   method: K,
   args: OperationArgs<K>,
-) => {
+): Promise<OperationResponse<K>> => {
   console.log("Calling API", method, args);
-  return (window as any)[method](args);
+  const response = await (window as unknown as Record<OperationNames, (args: OperationArgs<OperationNames>) => Promise<OperationResponse<OperationNames>>>)[method](args);
+  return response as OperationResponse<K>;
 };
 
-const deserialize =
-  <T>(fn: (response: T) => void) =>
-  (r: unknown) => {
-    try {
-      fn(r as T);
-    } catch (e) {
-      console.error("Error parsing JSON: ", e);
-      window.localStorage.setItem("error", JSON.stringify(r));
-      console.error(r);
-      console.error("See localStorage 'error'");
-      alert(`Error parsing JSON: ${e}`);
-    }
-  };
+

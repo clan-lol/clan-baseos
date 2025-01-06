@@ -54,7 +54,12 @@ def update_wrapper_signature(wrapper: Callable, wrapped: Callable) -> None:
     params = list(sig.parameters.values())
 
     # Add 'op_key' parameter
-    op_key_param = Parameter("op_key", Parameter.KEYWORD_ONLY, annotation=str)
+    op_key_param = Parameter("op_key", 
+                             Parameter.KEYWORD_ONLY, 
+                             # we add a None default value so that typescript code gen drops the parameter
+                             # FIXME: this is a hack, we should filter out op_key in the typescript code gen
+                             default=None, 
+                            annotation=str)
     params.append(op_key_param)
 
     # Create a new signature
@@ -117,6 +122,17 @@ API.register(open_file)
 
         fn_signature = signature(fn)
         abstract_signature = signature(self._registry[fn_name])
+
+        # Remove the default argument of op_key from abstract_signature
+        # FIXME: This is a hack to make the signature comparison work
+        # because the other hack above where default value of op_key is None in the wrapper
+        abstract_params = list(abstract_signature.parameters.values())
+        for i, param in enumerate(abstract_params):
+            if param.name == "op_key":
+                abstract_params[i] = param.replace(default=Parameter.empty)
+                break
+        abstract_signature = abstract_signature.replace(parameters=abstract_params)
+
         if fn_signature != abstract_signature:
             msg = f"Expected signature: {abstract_signature}\nActual signature: {fn_signature}"
             raise ClanError(msg)

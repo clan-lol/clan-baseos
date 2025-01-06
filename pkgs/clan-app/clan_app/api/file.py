@@ -40,7 +40,9 @@ def open_file(
         root.withdraw()  # Hide the main window
         root.attributes("-topmost", True)  # Bring the dialogs to the front
 
-        file_paths: list[str] | None = None
+
+        file_path: str  = ""
+        multiple_files: list[str] = []
 
         if file_request.mode == "open_file":
             file_path = filedialog.askopenfilename(
@@ -49,12 +51,12 @@ def open_file(
                 initialfile=file_request.initial_file,
                 filetypes=_apply_filters(file_request.filters),
             )
-            file_paths = [file_path]
+
         elif file_request.mode == "select_folder":
             file_path = filedialog.askdirectory(
                 title=file_request.title, initialdir=file_request.initial_folder
             )
-            file_paths = [file_path]
+
         elif file_request.mode == "save":
             file_path = filedialog.asksaveasfilename(
                 title=file_request.title,
@@ -62,21 +64,21 @@ def open_file(
                 initialfile=file_request.initial_file,
                 filetypes=_apply_filters(file_request.filters),
             )
-            file_paths = [file_path]
+
         elif file_request.mode == "open_multiple_files":
-            file_paths = list(
-                filedialog.askopenfilenames(
+            tresult = filedialog.askopenfilenames(
                     title=file_request.title,
                     initialdir=file_request.initial_folder,
                     filetypes=_apply_filters(file_request.filters),
                 )
-            )
+            multiple_files = list(tresult)
 
-        if not file_paths:
-            msg = "No file selected or operation canceled by the user"
+        if len(file_path) == 0 and len(multiple_files) == 0:
+            msg = "No file selected"
             raise ValueError(msg)  # noqa: TRY301
 
-        return SuccessDataClass(op_key, status="success", data=file_paths)
+        multiple_files = [file_path] if len(multiple_files) == 0 else multiple_files
+        return SuccessDataClass(op_key, status="success", data=multiple_files)
 
     except Exception as e:
         log.exception("Error opening file")

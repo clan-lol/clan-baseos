@@ -26,7 +26,6 @@ export const client = new QueryClient();
 
 const root = document.getElementById("app");
 
-window.clan = window.clan || {};
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   throw new Error(
