@@ -38,7 +38,7 @@ export const SectionHeader = (props: SectionHeaderProps) => (
   <div
     class={cx(
       "flex items-center gap-3 rounded-md px-3 py-2",
-      variantColorsMap[props.variant]
+      variantColorsMap[props.variant],
     )}
   >
     {

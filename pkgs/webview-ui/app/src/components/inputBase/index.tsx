@@ -132,7 +132,7 @@ export const InputLabel = (props: InputLabelProps) => {
           {props.required && (
             <Typography
               class="inline-flex px-1 align-text-top leading-[0.5] fg-def-4"
-              useExternColor={true}
+              color="inherit"
               hierarchy="label"
               weight="bold"
               size="xs"
