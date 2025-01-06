@@ -1,19 +1,19 @@
-import { callApi, SuccessData, SuccessQuery } from "@/src/api";
+import { callApi, SuccessData } from "@/src/api";
 import { activeURI } from "@/src/App";
 import { Button } from "@/src/components/button";
-import { FileInput } from "@/src/components/FileInput";
-import Icon, { IconVariant } from "@/src/components/icon";
+import Icon from "@/src/components/icon";
 import { TextInput } from "@/src/Form/fields/TextInput";
-import { selectSshKeys } from "@/src/hooks";
+
 import {
   createForm,
   FieldValues,
   getValue,
+  getValues,
   setValue,
 } from "@modular-forms/solid";
 import { useParams } from "@solidjs/router";
 import { createQuery } from "@tanstack/solid-query";
-import { createSignal, For, JSX, Match, Show, Switch } from "solid-js";
+import { createSignal, For, Match, Show, Switch } from "solid-js";
 import toast from "solid-toast";
 import { MachineAvatar } from "./avatar";
 import { Header } from "@/src/layout/header";
@@ -22,8 +22,10 @@ import { FieldLayout } from "@/src/Form/fields/layout";
 import { Modal } from "@/src/components/modal";
 import { Typography } from "@/src/components/Typography";
 import cx from "classnames";
-import { SelectInput } from "@/src/Form/fields/Select";
-import { HWStep } from "./install/hardware-step";
+import { HardwareValues, HWStep } from "./install/hardware-step";
+import { DiskStep, DiskValues } from "./install/disk-step";
+import { SummaryStep } from "./install/summary-step";
+import { SectionHeader } from "@/src/components/group";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -32,76 +34,26 @@ type MachineFormInterface = MachineData & {
 
 type MachineData = SuccessData<"get_inventory_machine_details">;
 
-type Disks = SuccessQuery<"show_block_devices">["data"]["blockdevices"];
-
-interface InstallForm extends FieldValues {
-  disk?: string;
-}
-
-interface GroupProps {
-  children: JSX.Element;
-}
-export const Group = (props: GroupProps) => (
-  <div class="flex flex-col  gap-8 rounded-md border px-4 py-5 bg-def-2 border-def-2">
-    {props.children}
-  </div>
-);
-
-type AdmonitionVariant = "attention" | "danger";
-interface SectionHeaderProps {
-  variant: AdmonitionVariant;
-  headline: JSX.Element;
-}
-const variantColorsMap: Record<AdmonitionVariant, string> = {
-  attention: cx("bg-[#9BD8F2] fg-def-1"),
-  danger: cx("bg-semantic-2 fg-semantic-2"),
-};
-
-const variantIconColorsMap: Record<AdmonitionVariant, string> = {
-  attention: cx("fg-def-1"),
-  danger: cx("fg-semantic-3"),
-};
-
-const variantIconMap: Record<AdmonitionVariant, IconVariant> = {
-  attention: "Attention",
-  danger: "Warning",
-};
-
-export const SectionHeader = (props: SectionHeaderProps) => (
-  <div
-    class={cx(
-      "flex items-center gap-3 rounded-md px-3 py-2",
-      variantColorsMap[props.variant],
-    )}
-  >
-    {
-      <Icon
-        icon={variantIconMap[props.variant]}
-        class={cx("size-5", variantIconColorsMap[props.variant])}
-      />
-    }
-    {props.headline}
-  </div>
-);
-
-const steps = {
+const steps: Record<StepIdx, string> = {
   "1": "Hardware detection",
   "2": "Disk schema",
   "3": "Installation",
 };
 
-interface SectionProps {
-  children: JSX.Element;
-}
-const Section = (props: SectionProps) => (
-  <div class="flex flex-col gap-3">{props.children}</div>
-);
+type StepIdx = keyof AllStepsValues;
 
+export interface AllStepsValues extends FieldValues {
+  "1": HardwareValues;
+  "2": DiskValues;
+  "3": NonNullable<unknown>;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 interface InstallMachineProps {
   name?: string;
   targetHost?: string | null;
-  sshKey?: File;
-  disks: Disks;
 }
 const InstallMachine = (props: InstallMachineProps) => {
   const curr = activeURI();
@@ -110,17 +62,19 @@ const InstallMachine = (props: InstallMachineProps) => {
     return <span>No Clan selected</span>;
   }
 
-  const diskPlaceholder = "Select the boot disk of the remote machine";
+  const [formStore, { Form, Field }] = createForm<AllStepsValues>();
 
-  const [formStore, { Form, Field }] = createForm<InstallForm>();
+  const [isInstalling, setIsInstalling] = createSignal<boolean>(false);
+  const [progressText, setProgressText] = createSignal<string>();
+  const [installError, setInstallError] = createSignal<string>();
 
-  const hasDisk = () => getValue(formStore, "disk") !== diskPlaceholder;
-
-  const [confirmDisk, setConfirmDisk] = createSignal(!hasDisk());
-
-  const handleInstall = async (values: InstallForm) => {
+  const handleInstall = async (values: AllStepsValues) => {
     console.log("Installing", values);
     const curr_uri = activeURI();
+
+    const target = values["1"].target;
+    const diskValues = values["2"];
+
     if (!curr_uri) {
       return;
     }
@@ -131,6 +85,42 @@ const InstallMachine = (props: InstallMachineProps) => {
     const loading_toast = toast.loading(
       "Installing machine. Grab coffee (15min)...",
     );
+    setIsInstalling(true);
+    setProgressText("Setting up disk ... (1/5)");
+
+    const disk_response = await callApi("set_machine_disk_schema", {
+      base_path: curr_uri,
+      machine_name: props.name,
+      placeholders: diskValues.placeholders,
+      schema_name: diskValues.schema,
+      force: true,
+    });
+
+    if (disk_response.status === "error") {
+      toast.error(
+        `Failed to set disk schema: ${disk_response.errors[0].message}`,
+      );
+      setProgressText(
+        "Failed to set disk schema. \n" + disk_response.errors[0].message,
+      );
+      return;
+    }
+
+    // Next step
+    if (disk_response.status === "success") {
+      setProgressText("Evaluate configuration ... (2/5)");
+    }
+    // Next step
+    await sleep(2000);
+    setProgressText("Building machine ... (3/5)");
+    await sleep(2000);
+    setProgressText("Formatting remote disk ... (4/5)");
+    await sleep(2000);
+    setProgressText("Copying system ... (5/5)");
+    await sleep(2000);
+    setProgressText("Rebooting remote system ... ");
+    await sleep(2000);
+
     const r = await callApi("install_machine", {
       opts: {
         machine: {
@@ -139,7 +129,7 @@ const InstallMachine = (props: InstallMachineProps) => {
             loc: curr_uri,
           },
         },
-        target_host: props.targetHost,
+        target_host: target,
         password: "",
       },
     });
@@ -153,44 +143,6 @@ const InstallMachine = (props: InstallMachineProps) => {
     }
   };
 
-  const handleDiskConfirm = async (e: Event) => {
-    const curr_uri = activeURI();
-    const disk = getValue(formStore, "disk");
-    const disk_id = props.disks.find((d) => d.name === disk)?.id_link;
-    if (!curr_uri || !disk_id || !props.name) {
-      return;
-    }
-  };
-  const [stepsDone, setStepsDone] = createSignal<StepIdx[]>([]);
-
-  const generateReport = async (e: Event) => {
-    const curr_uri = activeURI();
-    if (!curr_uri || !props.name) {
-      return;
-    }
-
-    const loading_toast = toast.loading("Generating hardware report...");
-    const r = await callApi("generate_machine_hardware_info", {
-      opts: {
-        flake: { loc: curr_uri },
-        machine: props.name,
-        keyfile: props.sshKey?.name,
-        target_host: props.targetHost,
-        backend: "nixos-facter",
-      },
-    });
-    toast.dismiss(loading_toast);
-    // TODO: refresh the machine details
-
-    if (r.status === "error") {
-      toast.error(`Failed to generate report. ${r.errors[0].message}`);
-    }
-    if (r.status === "success") {
-      toast.success("Report generated successfully");
-    }
-  };
-
-  type StepIdx = keyof typeof steps;
   const [step, setStep] = createSignal<StepIdx>("1");
 
   const handleNext = () => {
@@ -223,171 +175,184 @@ const InstallMachine = (props: InstallMachineProps) => {
       </Button>
     </div>
   );
-  return (
-    <div>
-      <div class="select-none px-6 py-2">
-        <Typography hierarchy="label" size="default">
-          Install:{" "}
-        </Typography>
-        <Typography hierarchy="label" size="default" weight="bold">
-          {props.name}
-        </Typography>
-      </div>
-      {/* Stepper container */}
-      <div class="flex items-center justify-evenly gap-2 border py-3 bg-def-3 border-def-2">
-        {/* A Step with a circle a number inside. Label is below */}
-        <For each={Object.entries(steps)}>
-          {([idx, label]) => (
-            <div class="flex flex-col items-center gap-3 fg-def-1">
-              <Typography
-                classList={{
-                  [cx("bg-inv-4 fg-inv-1")]: idx == step(),
-                  [cx("bg-def-4 fg-def-1")]: idx < step(),
-                }}
-                useExternColor={true}
-                hierarchy="label"
-                size="default"
-                weight="bold"
-                class="flex size-6 items-center justify-center rounded-full text-center align-middle bg-def-1"
-              >
-                <Show
-                  when={idx >= step()}
-                  fallback={<Icon icon="Checkmark" class="size-5" />}
-                >
-                  {idx}
-                </Show>
-              </Typography>
-              <Typography
-                useExternColor={true}
-                hierarchy="label"
-                size="xs"
-                weight="medium"
-                class="text-center align-top fg-def-3"
-                classList={{
-                  [cx("!fg-def-1")]: idx == step(),
-                }}
-              >
-                {label}
-              </Typography>
-            </div>
-          )}
-        </For>
-      </div>
 
-      <div class="flex flex-col gap-6 p-6">
-        <Switch fallback={"Undefined content. This Step seems to not exist."}>
-          <Match when={step() === "1"}>
-            <HWStep
-              initial={{
-                target: props.targetHost || "",
-              }}
-              // TODO: Context wrapper that redirects
-              // @ts-expect-error: This cannot be undefined in this context.
-              machine_id={props.name}
-              // @ts-expect-error: This cannot be undefined in this context.
-              dir={activeURI()}
-              handleNext={() => handleNext()}
-              footer={<Footer />}
-            />
-          </Match>
-          <Match when={step() === "2"}>
-            <span class="flex flex-col gap-4">
-              <Typography hierarchy="body" size="default" weight="bold">
-                Single Disk
-              </Typography>
-              <Typography
-                hierarchy="body"
-                size="xs"
-                weight="medium"
-                class="underline"
-              >
-                Change schema
-              </Typography>
-            </span>
-            <Group>
-              <SelectInput required label="Main Disk" options={[]} value={[]} />
-            </Group>
-            <Footer />
-          </Match>
-          <Match when={step() === "3"}>
-            <Section>
-              <Typography
-                hierarchy="label"
-                size="xs"
-                weight="medium"
-                class="uppercase"
-              >
-                Hardware Report
-              </Typography>
-              <Group>
-                <FieldLayout
-                  label={<InputLabel>Target</InputLabel>}
-                  field={
-                    <Typography hierarchy="body" size="xs" weight="bold">
-                      192.157.124.81
-                    </Typography>
-                  }
-                ></FieldLayout>
-              </Group>
-            </Section>
-            <Section>
-              <Typography
-                hierarchy="label"
-                size="xs"
-                weight="medium"
-                class="uppercase"
-              >
-                Disk Configuration
-              </Typography>
-              <Group>
-                <FieldLayout
-                  label={<InputLabel>Disk Layout</InputLabel>}
-                  field={
-                    <Typography hierarchy="body" size="xs" weight="bold">
-                      Single Disk
-                    </Typography>
-                  }
-                ></FieldLayout>
-                <hr class="h-px w-full border-none bg-acc-3"></hr>
-                <FieldLayout
-                  label={<InputLabel>Main Disk</InputLabel>}
-                  field={
-                    <Typography hierarchy="body" size="xs" weight="bold">
-                      Samsung evo 850 efkjhasd
-                    </Typography>
-                  }
-                ></FieldLayout>
-              </Group>
-            </Section>
-            <SectionHeader
-              variant="danger"
-              headline={
-                <span>
+  return (
+    <Switch
+      fallback={
+        <Form onSubmit={handleInstall}>
+          {/* Register each step as form field */}
+          {/* @ts-expect-error: object type is not statically supported */}
+          <Field name="1">{(field, fieldProps) => <></>}</Field>
+          {/* @ts-expect-error: object type is not statically supported */}
+          <Field name="2">{(field, fieldProps) => <></>}</Field>
+
+          {/* Modal Header */}
+          <div class="select-none px-6 py-2">
+            <Typography hierarchy="label" size="default">
+              Install:{" "}
+            </Typography>
+            <Typography hierarchy="label" size="default" weight="bold">
+              {props.name}
+            </Typography>
+          </div>
+          {/* Stepper header */}
+          <div class="flex items-center justify-evenly gap-2 border py-3 bg-def-3 border-def-2">
+            <For each={Object.entries(steps)}>
+              {([idx, label]) => (
+                <div class="flex flex-col items-center gap-3 fg-def-1">
                   <Typography
-                    hierarchy="body"
-                    size="s"
+                    classList={{
+                      [cx("bg-inv-4 fg-inv-1")]: idx == step(),
+                      [cx("bg-def-4 fg-def-1")]: idx < step(),
+                    }}
+                    color="inherit"
+                    hierarchy="label"
+                    size="default"
                     weight="bold"
-                    useExternColor
+                    class="flex size-6 items-center justify-center rounded-full text-center align-middle bg-def-1"
                   >
-                    Setup your device.
+                    <Show
+                      when={idx >= step()}
+                      fallback={<Icon icon="Checkmark" class="size-5" />}
+                    >
+                      {idx}
+                    </Show>
                   </Typography>
                   <Typography
-                    hierarchy="body"
-                    size="s"
+                    color="inherit"
+                    hierarchy="label"
+                    size="xs"
                     weight="medium"
-                    useExternColor
+                    class="text-center align-top fg-def-3"
+                    classList={{
+                      [cx("!fg-def-1")]: idx == step(),
+                    }}
                   >
-                    This will erase the disk and bootstrap fresh.
+                    {label}
                   </Typography>
-                </span>
-              }
-            />
-            <Footer></Footer>
-            <Button startIcon={<Icon icon="Flash" />}>Install</Button>
-          </Match>
-        </Switch>
-      </div>
-    </div>
+                </div>
+              )}
+            </For>
+          </div>
+
+          <div class="flex flex-col gap-6 p-6">
+            <Switch
+              fallback={"Undefined content. This Step seems to not exist."}
+            >
+              <Match when={step() === "1"}>
+                <HWStep
+                  // @ts-expect-error: This cannot be undefined in this context.
+                  machine_id={props.name}
+                  // @ts-expect-error: This cannot be undefined in this context.
+                  dir={activeURI()}
+                  handleNext={(data) => {
+                    const prev = getValue(formStore, "1");
+                    setValue(formStore, "1", { ...prev, ...data });
+                    handleNext();
+                  }}
+                  initial={
+                    getValue(formStore, "1") || {
+                      target: props.targetHost || "",
+                      report: false,
+                    }
+                  }
+                  footer={<Footer />}
+                />
+              </Match>
+              <Match when={step() === "2"}>
+                <DiskStep
+                  // @ts-expect-error: This cannot be undefined in this context.
+                  machine_id={props.name}
+                  // @ts-expect-error: This cannot be undefined in this context.
+                  dir={activeURI()}
+                  footer={<Footer />}
+                  handleNext={(data) => {
+                    const prev = getValue(formStore, "2");
+                    setValue(formStore, "2", { ...prev, ...data });
+                    handleNext();
+                  }}
+                  initial={getValue(formStore, "2")}
+                />
+              </Match>
+              <Match when={step() === "3"}>
+                <SummaryStep
+                  // @ts-expect-error: This cannot be undefined in this context.
+                  machine_id={props.name}
+                  // @ts-expect-error: This cannot be undefined in this context.
+                  dir={activeURI()}
+                  handleNext={() => handleNext()}
+                  // @ts-expect-error: This cannot be known.
+                  initial={getValues(formStore)}
+                  footer={
+                    <div class="flex justify-between">
+                      <Button
+                        startIcon={<Icon icon="ArrowLeft" />}
+                        variant="light"
+                        type="button"
+                        onClick={handlePrev}
+                        disabled={step() === "1"}
+                      >
+                        Previous
+                      </Button>
+                      <Button startIcon={<Icon icon="Flash" />}>Install</Button>
+                    </div>
+                  }
+                />
+              </Match>
+            </Switch>
+          </div>
+        </Form>
+      }
+    >
+      <Match when={isInstalling()}>
+        <div class="flex h-96 w-[40rem] flex-col fg-inv-1">
+          <div class="flex w-full gap-1 p-4 bg-inv-5">
+            <Typography
+              color="inherit"
+              hierarchy="label"
+              size="default"
+              weight="medium"
+            >
+              Install:
+            </Typography>
+            <Typography
+              color="inherit"
+              hierarchy="label"
+              size="default"
+              weight="bold"
+            >
+              {props.name}
+            </Typography>
+          </div>
+          <div class="flex h-full flex-col items-center gap-3 px-4 py-8 bg-inv-4 fg-inv-1">
+            <Icon icon="ClanIcon" viewBox="0 0 72 89" class="size-20" />
+            <div
+              class="h-3 w-80 overflow-hidden rounded-[3px] border-2 border-def-1"
+              style={{
+                background: `repeating-linear-gradient(
+                  45deg,
+                  #ccc,
+                  #ccc 8px,
+                  #eee 8px,
+                  #eee 16px
+                )`,
+                animation: "slide 25s linear infinite",
+                "background-size": "200% 100%",
+              }}
+            ></div>
+            <Typography
+              hierarchy="label"
+              size="default"
+              weight="medium"
+              color="inherit"
+            >
+              {progressText()}
+            </Typography>
+            <Button onClick={() => setIsInstalling(false)}>Cancel</Button>
+          </div>
+        </div>
+      </Match>
+    </Switch>
   );
 };
 
@@ -401,7 +366,6 @@ const MachineForm = (props: MachineDetailsProps) => {
       initialValues: props.initialData,
     });
 
-  const sshKey = () => getValue(formStore, "sshKey");
   const targetHost = () => getValue(formStore, "machine.deploy.targetHost");
   const machineName = () =>
     getValue(formStore, "machine.name") || props.initialData.machine.name;
@@ -479,9 +443,10 @@ const MachineForm = (props: MachineDetailsProps) => {
   };
   return (
     <>
-      <div class="card-body">
-        <span class="text-xl text-primary-800">General</span>
-        <MachineAvatar name={machineName()} />
+      <div class="flex flex-col gap-6 p-4">
+        <span class="mb-2 flex w-full justify-center">
+          <MachineAvatar name={machineName()} />
+        </span>
         <Form onSubmit={handleSubmit} class="flex flex-col gap-6">
           <Field name="machine.name">
             {(field, props) => (
@@ -564,37 +529,6 @@ const MachineForm = (props: MachineDetailsProps) => {
                   />
                 )}
               </Field>
-              <Field name="sshKey" type="File">
-                {(field, props) => (
-                  <>
-                    <FileInput
-                      {...props}
-                      onClick={async (event) => {
-                        event.preventDefault(); // Prevent the native file dialog from opening
-                        const input = event.target;
-                        const files = await selectSshKeys();
-
-                        // Set the files
-                        Object.defineProperty(input, "files", {
-                          value: files,
-                          writable: true,
-                        });
-                        // Define the files property on the input element
-                        const changeEvent = new Event("input", {
-                          bubbles: true,
-                          cancelable: true,
-                        });
-                        input.dispatchEvent(changeEvent);
-                      }}
-                      placeholder={"When empty the default key(s) will be used"}
-                      value={field.value}
-                      error={field.error}
-                      helperText="Provide the SSH key used to connect to the machine"
-                      label="SSH Key"
-                    />
-                  </>
-                )}
-              </Field>
             </div>
           </div>
 
@@ -641,9 +575,7 @@ const MachineForm = (props: MachineDetailsProps) => {
           >
             <InstallMachine
               name={machineName()}
-              sshKey={sshKey()}
               targetHost={getValue(formStore, "machine.deploy.targetHost")}
-              disks={[]}
             />
           </Modal>
 
@@ -692,140 +624,16 @@ export const MachineDetails = () => {
   return (
     <>
       <Header title={`${params.id} machine`} showBack />
-      <div class="card">
-        <Show
-          when={genericQuery.data}
-          fallback={<span class="loading loading-lg"></span>}
-        >
-          {(data) => (
-            <>
-              <MachineForm initialData={data()} />
-            </>
-          )}
-        </Show>
-      </div>
+      <Show
+        when={genericQuery.data}
+        fallback={<span class="loading loading-lg"></span>}
+      >
+        {(data) => (
+          <>
+            <MachineForm initialData={data()} />
+          </>
+        )}
+      </Show>
     </>
   );
 };
-
-interface Wifi extends FieldValues {
-  name: string;
-  ssid?: string;
-  password?: string;
-}
-
-interface WifiForm extends FieldValues {
-  networks: Wifi[];
-}
-
-interface MachineWifiProps {
-  base_url: string;
-  machine_name: string;
-  initialData: Wifi[];
-}
-function WifiModule(props: MachineWifiProps) {
-  // You can use formData to initialize your form fields:
-  // const initialFormState = formData();
-
-  const [formStore, { Form, Field }] = createForm<WifiForm>({
-    initialValues: {
-      networks: props.initialData,
-    },
-  });
-
-  const [nets, setNets] = createSignal<1[]>(
-    new Array(props.initialData.length || 1).fill(1),
-  );
-
-  const handleSubmit = async (values: WifiForm) => {
-    const networks = values.networks
-      .filter((i) => i.ssid)
-      .reduce(
-        (acc, curr) => ({
-          ...acc,
-          [curr.ssid || ""]: { ssid: curr.ssid, password: curr.password },
-        }),
-        {},
-      );
-
-    console.log("submitting", values, networks);
-    // const r = await callApi("set_iwd_service_for_machine", {
-    //   base_url: props.base_url,
-    //   machine_name: props.machine_name,
-    //   networks: networks,
-    // });
-    // if (r.status === "error") {
-    toast.error("Failed to set wifi. Feature disabled temporarily");
-    // }
-    // if (r.status === "success") {
-    //   toast.success("Wifi set successfully");
-    // }
-  };
-
-  return (
-    <Form onSubmit={handleSubmit}>
-      <span class="text-neutral">Preconfigure wireless networks</span>
-      <For each={nets()}>
-        {(_, idx) => (
-          <div class="grid grid-cols-2">
-            <Field name={`networks.${idx()}.ssid`}>
-              {(field, props) => (
-                <TextInput
-                  inputProps={props}
-                  label="Name"
-                  value={field.value ?? ""}
-                  error={field.error}
-                  required
-                />
-              )}
-            </Field>
-            <Field name={`networks.${idx()}.password`}>
-              {(field, props) => (
-                <TextInput
-                  inputProps={props}
-                  label="Password"
-                  value={field.value ?? ""}
-                  error={field.error}
-                  // todo
-                  // type="password"
-                  required
-                />
-              )}
-            </Field>
-            <Button
-              variant="light"
-              class="self-end"
-              type="button"
-              onClick={() => {
-                setNets((c) => c.filter((_, i) => i !== idx()));
-                setValue(formStore, `networks.${idx()}.ssid`, undefined);
-                setValue(formStore, `networks.${idx()}.password`, undefined);
-              }}
-              startIcon={<Icon icon="Trash" />}
-            ></Button>
-          </div>
-        )}
-      </For>
-      <Button
-        class="btn btn-ghost btn-sm my-1 flex items-center justify-center"
-        onClick={(e) => {
-          setNets([...nets(), 1]);
-        }}
-        type="button"
-        startIcon={<Icon icon="Plus" />}
-      >
-        Add Network
-      </Button>
-      {
-        <div class="card-actions mt-4 justify-end">
-          <Button
-            type="submit"
-            disabled={formStore.submitting || !formStore.dirty}
-          >
-            Save
-          </Button>
-        </div>
-      }
-    </Form>
-  );
-}

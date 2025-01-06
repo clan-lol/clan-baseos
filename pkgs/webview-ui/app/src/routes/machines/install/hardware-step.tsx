@@ -16,33 +16,34 @@ import {
 } from "@modular-forms/solid";
 import { createEffect, createSignal, JSX, Match, Switch } from "solid-js";
 import toast from "solid-toast";
-import { Group } from "../details";
 import { TextInput } from "@/src/Form/fields";
 import { createQuery } from "@tanstack/solid-query";
+import { Badge } from "@/src/components/badge";
+import { Group } from "@/src/components/group";
 
-interface Hardware extends FieldValues {
+export type HardwareValues = FieldValues & {
   report: boolean;
   target: string;
-}
+};
 
-export interface StepProps {
+export interface StepProps<T> {
   machine_id: string;
   dir: string;
-  handleNext: () => void;
+  handleNext: (data: T) => void;
   footer: JSX.Element;
-  initial?: Partial<Hardware>;
+  initial?: T;
 }
-export const HWStep = (props: StepProps) => {
-  const [formStore, { Form, Field }] = createForm<Hardware>({
-    initialValues: props.initial || {},
+export const HWStep = (props: StepProps<HardwareValues>) => {
+  const [formStore, { Form, Field }] = createForm<HardwareValues>({
+    initialValues: (props.initial as HardwareValues) || {},
   });
 
-  const handleSubmit: SubmitHandler<Hardware> = async (values, event) => {
+  const handleSubmit: SubmitHandler<HardwareValues> = async (values, event) => {
     console.log("Submit Hardware", { values });
     const valid = await validate(formStore);
     console.log("Valid", valid);
     if (!valid) return;
-    props.handleNext();
+    props.handleNext(values);
   };
 
   const [isGenerating, setIsGenerating] = createSignal(false);
@@ -148,20 +149,46 @@ export const HWStep = (props: StepProps) => {
                       <>
                         <Switch>
                           <Match when={data() === "none"}>
+                            <Badge color="red" icon="Attention">
+                              No report
+                            </Badge>
                             <Button
+                              variant="ghost"
                               disabled={isGenerating()}
                               startIcon={<Icon icon="Report" />}
                               class="w-full"
                               onClick={generateReport}
                             >
-                              Run hardware report
+                              Run hardware detection
                             </Button>
                           </Match>
                           <Match when={data() === "nixos-facter"}>
-                            <div>Detected</div>
+                            <Badge color="primary" icon="Checkmark">
+                              Report detected
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              disabled={isGenerating()}
+                              startIcon={<Icon icon="Report" />}
+                              class="w-full"
+                              onClick={generateReport}
+                            >
+                              Re-run hardware detection
+                            </Button>
                           </Match>
                           <Match when={data() === "nixos-generate-config"}>
-                            <div>Nixos report Detected</div>
+                            <Badge color="primary" icon="Checkmark">
+                              Legacy Report detected
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              disabled={isGenerating()}
+                              startIcon={<Icon icon="Report" />}
+                              class="w-full"
+                              onClick={generateReport}
+                            >
+                              Replace hardware detection
+                            </Button>
                           </Match>
                         </Switch>
                       </>
