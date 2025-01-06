@@ -31,13 +31,13 @@ let
 
   ];
 
-  # Deps including python packages from the local project
-  allPythonDeps = [ (python3Full.pkgs.toPythonModule clan-cli) ] ++ externalPythonDeps;
-
   # Runtime binary dependencies required by the application
   runtimeDependencies = [
     webview-lib
   ];
+
+  # Deps including python packages from the local project
+  allPythonDeps = [ (python3Full.pkgs.toPythonModule clan-cli) ] ++ externalPythonDeps;
 
   # Dependencies required for running tests
   externalTestDeps =
@@ -53,9 +53,6 @@ let
 
   # Dependencies required for running tests
   testDependencies = runtimeDependencies ++ allPythonDeps ++ externalTestDeps;
-
-  # Setup Python environment with all dependencies for running tests
-  pythonWithTestDeps = python3Full.withPackages (_ps: testDependencies);
 in
 python3Full.pkgs.buildPythonApplication rec {
   name = "clan-app";
@@ -100,7 +97,12 @@ python3Full.pkgs.buildPythonApplication rec {
   passthru = {
     tests = {
       clan-app-pytest =
-        runCommand "clan-app-pytest" { inherit buildInputs propagatedBuildInputs nativeBuildInputs; }
+        runCommand "clan-app-pytest"
+          {
+            buildInputs = buildInputs ++ externalTestDeps;
+            propagatedBuildInputs = propagatedBuildInputs ++ externalTestDeps;
+            inherit nativeBuildInputs;
+          }
           ''
             cp -r ${source} ./src
             chmod +w -R ./src
@@ -119,8 +121,9 @@ python3Full.pkgs.buildPythonApplication rec {
             fc-list
 
             echo "STARTING ..."
+            export WEBVIEW_LIB_DIR "${webview-lib}/lib"
             export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1
-            ${pythonWithTestDeps}/bin/python -m pytest -s -m "not impure" ./tests
+            ${python3Full}/bin/python3 -m pytest -s -m "not impure" ./tests
             touch $out
           '';
     };
