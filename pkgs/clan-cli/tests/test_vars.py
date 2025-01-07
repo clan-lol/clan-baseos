@@ -597,23 +597,24 @@ def test_api_set_prompts(
     flake.refresh()
 
     monkeypatch.chdir(flake.path)
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    params = {"machine_name": "my_machine", "base_dir": str(flake.path)}
 
     set_prompts(
-        machine,
-        [
+        **params,
+        updates=[
             GeneratorUpdate(
                 generator="my_generator",
                 prompt_values={"prompt1": "input1"},
             )
         ],
     )
+    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     store = in_repo.FactStore(machine)
     assert store.exists(Generator("my_generator"), "prompt1")
     assert store.get(Generator("my_generator"), "prompt1").decode() == "input1"
     set_prompts(
-        machine,
-        [
+        **params,
+        updates=[
             GeneratorUpdate(
                 generator="my_generator",
                 prompt_values={"prompt1": "input2"},
@@ -622,7 +623,7 @@ def test_api_set_prompts(
     )
     assert store.get(Generator("my_generator"), "prompt1").decode() == "input2"
 
-    api_prompts = get_prompts(machine)
+    api_prompts = get_prompts(**params)
     assert len(api_prompts) == 1
     assert api_prompts[0].name == "my_generator"
     assert api_prompts[0].prompts[0].name == "prompt1"
