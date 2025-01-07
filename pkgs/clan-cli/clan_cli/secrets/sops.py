@@ -6,7 +6,6 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
@@ -194,7 +193,7 @@ def sops_run(
             sops_cmd.append("decrypt")
         else:
             # When sops is used to edit a file the config is only used at
-            # file creation, otherwise the keys from the exising file are
+            # file creation, otherwise the keys from the existing file are
             # used.
             sops_cmd.extend(["--config", manifest.name])
 
@@ -240,6 +239,11 @@ def sops_run(
             if run_opts
             else RunOpts(env=environ)
         )
+        if call == Operation.EDIT:
+            # Use direct stdout / stderr, as else it breaks editor integration.
+            # We never need this in our UI. TUI only.
+            p1 = subprocess.run(cmd, check=False, text=True)
+            return p1.returncode, ""
         p = run(cmd, opts)
         return p.returncode, p.stdout
 
@@ -376,18 +380,12 @@ def encrypt_file(
     folder.mkdir(parents=True, exist_ok=True)
 
     if not content:
-        # Use direct stdout / stderr, as else it breaks editor integration.
-        # We never need this in our UI. TUI only.
+        # This will spawn an editor to edit the file.
         rc, _ = sops_run(
             Operation.EDIT,
             secret_path,
             pubkeys,
-            RunOpts(
-                stdout=sys.stdout.buffer,
-                stderr=sys.stderr.buffer,
-                check=False,
-                log=Log.NONE,
-            ),
+            RunOpts(),
         )
         status = ExitStatus.parse(rc)
         if rc == 0 or status == ExitStatus.FILE_HAS_NOT_BEEN_MODIFIED:
