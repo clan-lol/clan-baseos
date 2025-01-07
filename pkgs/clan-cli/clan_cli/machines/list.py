@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 from clan_cli.api import API
+from clan_cli.api.disk import MachineDiskMatter
 from clan_cli.api.modules import parse_frontmatter
 from clan_cli.api.serde import dataclass_to_dict
 from clan_cli.cmd import RunOpts, run_no_stdout
@@ -41,7 +42,7 @@ def list_inventory_machines(flake_url: str | Path) -> dict[str, Machine]:
 class MachineDetails:
     machine: Machine
     hw_config: HardwareConfig | None = None
-    disk_schema: str | None = None
+    disk_schema: MachineDiskMatter | None = None
 
 
 import re
@@ -69,7 +70,7 @@ def get_inventory_machine_details(flake_url: Path, machine_name: str) -> Machine
     hw_config = HardwareConfig.detect_type(flake_url, machine_name)
 
     machine_dir = specific_machine_dir(flake_url, machine_name)
-    disk_schema: str | None = None
+    disk_schema: MachineDiskMatter | None = None
     disk_path = machine_dir / "disko.nix"
     if disk_path.exists():
         with disk_path.open() as f:
@@ -77,7 +78,7 @@ def get_inventory_machine_details(flake_url: Path, machine_name: str) -> Machine
             header = extract_header(content)
             data, _rest = parse_frontmatter(header)
             if data:
-                disk_schema = data.get("schema")
+                disk_schema = data  # type: ignore
 
     return MachineDetails(machine=machine, hw_config=hw_config, disk_schema=disk_schema)
 
