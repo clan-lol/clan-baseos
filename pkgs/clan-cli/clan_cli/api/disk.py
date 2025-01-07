@@ -3,7 +3,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 from uuid import uuid4
 
 from clan_cli.api import API
@@ -124,6 +124,11 @@ def get_disk_schemas(
     return disk_schemas
 
 
+class MachineDiskMatter(TypedDict):
+    schema_name: str
+    placeholders: dict[str, str]
+
+
 @API.register
 def set_machine_disk_schema(
     base_path: Path,
@@ -134,7 +139,7 @@ def set_machine_disk_schema(
     placeholders: dict[str, str],
     force: bool = False,
 ) -> None:
-    """ "
+    """
     Set the disk placeholders of the template
     """
     # Assert the hw-config must exist before setting the disk
@@ -183,8 +188,13 @@ def set_machine_disk_schema(
             )
             raise ClanError(msg, description=f"Valid options: {ph.options}")
 
+    placeholders_toml = "\n".join(
+        [f"""# {k} = "{v}""" for k, v in placeholders.items() if v is not None]
+    )
     header = f"""# ---
 # schema = "{schema_name}"
+# [placeholders]
+{placeholders_toml}
 # ---
 # This file was automatically generated!
 # CHANGING this configuration requires wiping and reinstalling the machine

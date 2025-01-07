@@ -153,6 +153,7 @@ export function SelectInput(props: SelectInputpProps) {
                   // Currently the popover only opens with onClick
                   // Options are not selectable with keyboard
                   tabIndex={-1}
+                  disabled={props.disabled}
                   onClick={() => {
                     const popover = document.getElementById(_id);
                     if (popover) {
