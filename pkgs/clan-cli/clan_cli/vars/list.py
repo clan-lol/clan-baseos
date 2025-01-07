@@ -3,6 +3,7 @@ import importlib
 import logging
 
 from clan_cli.api import API
+from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
@@ -57,8 +58,8 @@ def _get_previous_value(
 
 
 @API.register
-# TODO: use machine_name
-def get_prompts(machine: Machine) -> list[Generator]:
+def get_prompts(base_dir: str, machine_name: str) -> list[Generator]:
+    machine = Machine(name=machine_name, flake=FlakeId(base_dir))
     generators: list[Generator] = machine.vars_generators
     for generator in generators:
         for prompt in generator.prompts:
@@ -70,7 +71,10 @@ def get_prompts(machine: Machine) -> list[Generator]:
 # TODO: for missing prompts, default to existing values
 # TODO: raise error if mandatory prompt not provided
 @API.register
-def set_prompts(machine: Machine, updates: list[GeneratorUpdate]) -> None:
+def set_prompts(
+    base_dir: str, machine_name: str, updates: list[GeneratorUpdate]
+) -> None:
+    machine = Machine(name=machine_name, flake=FlakeId(base_dir))
     for update in updates:
         for generator in machine.vars_generators:
             if generator.name == update.generator:
