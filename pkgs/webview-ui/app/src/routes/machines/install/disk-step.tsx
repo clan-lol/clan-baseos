@@ -17,6 +17,7 @@ export interface DiskValues extends FieldValues {
     mainDisk: string;
   };
   schema: string;
+  initialized: boolean;
 }
 export const DiskStep = (props: StepProps<DiskValues>) => {
   const [formStore, { Form, Field }] = createForm<DiskValues>({
@@ -74,9 +75,14 @@ export const DiskStep = (props: StepProps<DiskValues>) => {
         </Field>
       </span>
       <Group>
+        {props.initial?.initialized && "Disk has been initialized already"}
         <Field
           name="placeholders.mainDisk"
-          validate={required("Dsik must be provided")}
+          validate={
+            !props.initial?.initialized
+              ? required("Disk must be provided")
+              : undefined
+          }
         >
           {(field, fieldProps) => (
             <SelectInput
@@ -88,18 +94,12 @@ export const DiskStep = (props: StepProps<DiskValues>) => {
                   { label: "No options", value: "" },
                 ]
               }
-              // options={
-              //   deviceQuery.data?.blockdevices.map((d) => ({
-              //     value: d.path,
-              //     label: `${d.path} -- ${d.size} bytes`,
-              //   })) || []
-              // }
               error={field.error}
               label="Main Disk"
               value={field.value || ""}
               placeholder="Select a disk"
               selectProps={fieldProps}
-              required
+              required={!props.initial?.initialized}
             />
           )}
         </Field>

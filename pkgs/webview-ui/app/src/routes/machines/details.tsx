@@ -21,10 +21,10 @@ import { InputLabel } from "@/src/components/inputBase";
 import { FieldLayout } from "@/src/Form/fields/layout";
 import { Modal } from "@/src/components/modal";
 import { Typography } from "@/src/components/Typography";
-import cx from "classnames";
 import { HardwareValues, HWStep } from "./install/hardware-step";
 import { DiskStep, DiskValues } from "./install/disk-step";
 import { SummaryStep } from "./install/summary-step";
+import cx from "classnames";
 import { SectionHeader } from "@/src/components/group";
 
 type MachineFormInterface = MachineData & {
@@ -48,12 +48,30 @@ export interface AllStepsValues extends FieldValues {
   "3": NonNullable<unknown>;
 }
 
+const LoadingBar = () => (
+  <div
+    class="h-3 w-80 overflow-hidden rounded-[3px] border-2 border-def-1"
+    style={{
+      background: `repeating-linear-gradient(
+    45deg,
+    #ccc,
+    #ccc 8px,
+    #eee 8px,
+    #eee 16px
+  )`,
+      animation: "slide 25s linear infinite",
+      "background-size": "200% 100%",
+    }}
+  ></div>
+);
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 interface InstallMachineProps {
   name?: string;
   targetHost?: string | null;
+  machine: MachineData;
 }
 const InstallMachine = (props: InstallMachineProps) => {
   const curr = activeURI();
@@ -64,9 +82,9 @@ const InstallMachine = (props: InstallMachineProps) => {
 
   const [formStore, { Form, Field }] = createForm<AllStepsValues>();
 
+  const [isDone, setIsDone] = createSignal<boolean>(false);
   const [isInstalling, setIsInstalling] = createSignal<boolean>(false);
   const [progressText, setProgressText] = createSignal<string>();
-  const [installError, setInstallError] = createSignal<string>();
 
   const handleInstall = async (values: AllStepsValues) => {
     console.log("Installing", values);
@@ -86,42 +104,36 @@ const InstallMachine = (props: InstallMachineProps) => {
       "Installing machine. Grab coffee (15min)...",
     );
     setIsInstalling(true);
-    setProgressText("Setting up disk ... (1/5)");
 
-    const disk_response = await callApi("set_machine_disk_schema", {
-      base_path: curr_uri,
-      machine_name: props.name,
-      placeholders: diskValues.placeholders,
-      schema_name: diskValues.schema,
-      force: true,
-    });
+    // props.machine.disk_
+    const shouldRunDisk =
+      JSON.stringify(props.machine.disk_schema?.placeholders) !==
+      JSON.stringify(diskValues.placeholders);
 
-    if (disk_response.status === "error") {
-      toast.error(
-        `Failed to set disk schema: ${disk_response.errors[0].message}`,
-      );
-      setProgressText(
-        "Failed to set disk schema. \n" + disk_response.errors[0].message,
-      );
-      return;
+    if (shouldRunDisk) {
+      setProgressText("Setting up disk ... (1/5)");
+      const disk_response = await callApi("set_machine_disk_schema", {
+        base_path: curr_uri,
+        machine_name: props.name,
+        placeholders: diskValues.placeholders,
+        schema_name: diskValues.schema,
+        force: true,
+      });
+
+      if (disk_response.status === "error") {
+        toast.error(
+          `Failed to set disk schema: ${disk_response.errors[0].message}`,
+        );
+        setProgressText(
+          "Failed to set disk schema. \n" + disk_response.errors[0].message,
+        );
+        return;
+      }
     }
 
-    // Next step
-    if (disk_response.status === "success") {
-      setProgressText("Evaluate configuration ... (2/5)");
-    }
-    // Next step
-    await sleep(2000);
-    setProgressText("Building machine ... (3/5)");
-    await sleep(2000);
-    setProgressText("Formatting remote disk ... (4/5)");
-    await sleep(2000);
-    setProgressText("Copying system ... (5/5)");
-    await sleep(2000);
-    setProgressText("Rebooting remote system ... ");
-    await sleep(2000);
+    setProgressText("Installing machine ... (2/5)");
 
-    const r = await callApi("install_machine", {
+    const installPromise = callApi("install_machine", {
       opts: {
         machine: {
           name: props.name,
@@ -133,13 +145,36 @@ const InstallMachine = (props: InstallMachineProps) => {
         password: "",
       },
     });
+
+    // Next step
+    await sleep(10 * 1000);
+    setProgressText("Building machine ... (3/5)");
+    await sleep(10 * 1000);
+    setProgressText("Formatting remote disk ... (4/5)");
+    await sleep(10 * 1000);
+    setProgressText("Copying system ... (5/5)");
+    await sleep(20 * 1000);
+    setProgressText("Rebooting remote system ... ");
+    await sleep(10 * 1000);
+
+    const installResponse = await installPromise;
+
     toast.dismiss(loading_toast);
 
-    if (r.status === "error") {
+    if (installResponse.status === "error") {
       toast.error("Failed to install machine");
+      setIsDone(true);
+      setProgressText(
+        "Failed to install machine. \n" + installResponse.errors[0].message,
+      );
     }
-    if (r.status === "success") {
+
+    if (installResponse.status === "success") {
       toast.success("Machine installed successfully");
+      setIsDone(true);
+      setProgressText(
+        "Machine installed successfully. Please unplug the usb stick and reboot the system.",
+      );
     }
   };
 
@@ -271,7 +306,12 @@ const InstallMachine = (props: InstallMachineProps) => {
                     setValue(formStore, "2", { ...prev, ...data });
                     handleNext();
                   }}
-                  initial={getValue(formStore, "2")}
+                  // @ts-expect-error: The placeholder type is to wide
+                  initial={{
+                    ...props.machine.disk_schema,
+                    ...getValue(formStore, "2"),
+                    initialized: !!props.machine.disk_schema,
+                  }}
                 />
               </Match>
               <Match when={step() === "3"}>
@@ -326,20 +366,7 @@ const InstallMachine = (props: InstallMachineProps) => {
           </div>
           <div class="flex h-full flex-col items-center gap-3 px-4 py-8 bg-inv-4 fg-inv-1">
             <Icon icon="ClanIcon" viewBox="0 0 72 89" class="size-20" />
-            <div
-              class="h-3 w-80 overflow-hidden rounded-[3px] border-2 border-def-1"
-              style={{
-                background: `repeating-linear-gradient(
-                  45deg,
-                  #ccc,
-                  #ccc 8px,
-                  #eee 8px,
-                  #eee 16px
-                )`,
-                animation: "slide 25s linear infinite",
-                "background-size": "200% 100%",
-              }}
-            ></div>
+            {isDone() && <LoadingBar />}
             <Typography
               hierarchy="label"
               size="default"
@@ -500,7 +527,7 @@ const MachineForm = (props: MachineDetailsProps) => {
               />
             )}
           </Field>
-          <Field name="disk_schema">
+          <Field name="disk_schema.schema_name">
             {(field, props) => (
               <>
                 <FieldLayout
@@ -576,6 +603,7 @@ const MachineForm = (props: MachineDetailsProps) => {
             <InstallMachine
               name={machineName()}
               targetHost={getValue(formStore, "machine.deploy.targetHost")}
+              machine={props.initialData}
             />
           </Modal>
 
