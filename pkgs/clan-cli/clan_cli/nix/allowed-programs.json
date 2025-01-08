@@ -16,5 +16,6 @@
   "virtiofsd",
   "zbar",
   "util-linux",
-  "avahi"
+  "avahi",
+  "gnupg"
 ]
