@@ -260,7 +260,11 @@ def _ask_prompts(
     prompt_values: dict[str, str] = {}
     for prompt in generator.prompts:
         var_id = f"{generator.name}/{prompt.name}"
-        prompt_values[prompt.name] = ask(var_id, prompt.prompt_type)
+        prompt_values[prompt.name] = ask(
+            var_id,
+            prompt.prompt_type,
+            prompt.description if prompt.description != prompt.name else None,
+        )
     return prompt_values
 
 

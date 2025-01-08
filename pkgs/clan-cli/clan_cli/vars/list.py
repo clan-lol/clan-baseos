@@ -25,7 +25,9 @@ def secret_store(machine: Machine) -> StoreBase:
     return secret_vars_module.SecretStore(machine=machine)
 
 
-def get_vars(machine: Machine) -> list[Var]:
+@API.register
+def get_vars(base_dir: str, machine_name: str) -> list[Var]:
+    machine = Machine(name=machine_name, flake=FlakeId(base_dir))
     pub_store = public_store(machine)
     sec_store = secret_store(machine)
     all_vars = []
@@ -58,7 +60,7 @@ def _get_previous_value(
 
 
 @API.register
-def get_prompts(base_dir: str, machine_name: str) -> list[Generator]:
+def get_generators(base_dir: str, machine_name: str) -> list[Generator]:
     machine = Machine(name=machine_name, flake=FlakeId(base_dir))
     generators: list[Generator] = machine.vars_generators
     for generator in generators:
@@ -96,7 +98,7 @@ def stringify_vars(_vars: list[Var]) -> str:
 
 
 def stringify_all_vars(machine: Machine) -> str:
-    return stringify_vars(get_vars(machine))
+    return stringify_vars(get_vars(str(machine.flake), machine.name))
 
 
 def list_command(args: argparse.Namespace) -> None:

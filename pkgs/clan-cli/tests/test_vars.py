@@ -170,9 +170,16 @@ def test_generate_public_and_secret_vars(
         "Update vars via generator my_shared_generator for machine my_machine"
         in commit_message
     )
-    assert get_var(machine, "my_generator/my_value").printable_value == "public"
     assert (
-        get_var(machine, "my_shared_generator/my_shared_value").printable_value
+        get_var(
+            str(machine.flake.path), machine.name, "my_generator/my_value"
+        ).printable_value
+        == "public"
+    )
+    assert (
+        get_var(
+            str(machine.flake.path), machine.name, "my_shared_generator/my_shared_value"
+        ).printable_value
         == "shared"
     )
     vars_text = stringify_all_vars(machine)
@@ -587,7 +594,7 @@ def test_api_set_prompts(
     flake: ClanFlake,
 ) -> None:
     from clan_cli.vars._types import GeneratorUpdate
-    from clan_cli.vars.list import get_prompts, set_prompts
+    from clan_cli.vars.list import get_generators, set_prompts
 
     config = flake.machines["my_machine"]
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
@@ -623,11 +630,11 @@ def test_api_set_prompts(
     )
     assert store.get(Generator("my_generator"), "prompt1").decode() == "input2"
 
-    api_prompts = get_prompts(**params)
-    assert len(api_prompts) == 1
-    assert api_prompts[0].name == "my_generator"
-    assert api_prompts[0].prompts[0].name == "prompt1"
-    assert api_prompts[0].prompts[0].previous_value == "input2"
+    generators = get_generators(**params)
+    assert len(generators) == 1
+    assert generators[0].name == "my_generator"
+    assert generators[0].prompts[0].name == "prompt1"
+    assert generators[0].prompts[0].previous_value == "input2"
 
 
 @pytest.mark.with_core
@@ -843,19 +850,27 @@ def test_invalidation(
     monkeypatch.chdir(flake.path)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
-    value1 = get_var(machine, "my_generator/my_value").printable_value
+    value1 = get_var(
+        str(machine.flake.path), machine.name, "my_generator/my_value"
+    ).printable_value
     # generate again and make sure nothing changes without the invalidation data being set
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    value1_new = get_var(machine, "my_generator/my_value").printable_value
+    value1_new = get_var(
+        str(machine.flake.path), machine.name, "my_generator/my_value"
+    ).printable_value
     assert value1 == value1_new
     # set the invalidation data of the generator
     my_generator["validation"] = 1
     flake.refresh()
     # generate again and make sure the value changes
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    value2 = get_var(machine, "my_generator/my_value").printable_value
+    value2 = get_var(
+        str(machine.flake.path), machine.name, "my_generator/my_value"
+    ).printable_value
     assert value1 != value2
     # generate again without changing invalidation data -> value should not change
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    value2_new = get_var(machine, "my_generator/my_value").printable_value
+    value2_new = get_var(
+        str(machine.flake.path), machine.name, "my_generator/my_value"
+    ).printable_value
     assert value2 == value2_new
