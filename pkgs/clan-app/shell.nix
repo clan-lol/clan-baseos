@@ -5,7 +5,6 @@
   ruff,
   gtk4,
   webview-lib,
-  python3Full,
   self',
 }:
 
@@ -14,14 +13,14 @@ mkShell {
   inputsFrom = [ self'.devShells.default ];
 
   buildInputs = [
-    (python3Full.withPackages (
+    (clan-app.pythonRuntime.withPackages (
       ps:
       with ps;
       [
         ruff
         mypy
       ]
-      ++ (clan-app.devshellDeps ps)
+      ++ (clan-app.devshellPyDeps ps)
     ))
   ];
 

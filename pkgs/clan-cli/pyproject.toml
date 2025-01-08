@@ -45,19 +45,4 @@ disallow_untyped_defs = true
 no_implicit_optional = true
 exclude = "clan_cli.nixpkgs"
 
-[[tool.mypy.overrides]]
-module = "argcomplete.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "ipdb.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "pytest.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "setuptools.*"
-ignore_missing_imports = true
 

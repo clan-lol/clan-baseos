@@ -103,21 +103,23 @@
         inherit self';
       };
       packages = {
-        clan-cli = pkgs.python3.pkgs.callPackage ./default.nix {
+        clan-cli = pkgs.callPackage ./default.nix {
           inherit (inputs) nixpkgs;
           inherit (self'.packages) classgen;
           inherit (self'.legacyPackages.schemas) inventory-schema-abstract;
+          pythonRuntime = pkgs.python3;
           clan-core-path = clanCoreWithVendoredDeps;
           includedRuntimeDeps = [
             "age"
             "git"
           ];
         };
-        clan-cli-full = pkgs.python3.pkgs.callPackage ./default.nix {
+        clan-cli-full = pkgs.callPackage ./default.nix {
           inherit (inputs) nixpkgs;
           inherit (self'.packages) classgen;
           inherit (self'.legacyPackages.schemas) inventory-schema-abstract;
           clan-core-path = clanCoreWithVendoredDeps;
+          pythonRuntime = pkgs.python3;
           includedRuntimeDeps = lib.importJSON ./clan_cli/nix/allowed-programs.json;
         };
         clan-cli-docs = pkgs.stdenv.mkDerivation {
