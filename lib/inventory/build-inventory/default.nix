@@ -28,10 +28,10 @@ let
             );
           in
           if tagMembers == [ ] then
-            throw ''
+            lib.warn ''
               inventory.services.${serviceName}.${instanceName}: - ${roleName} tags: no machine with tag '${tag}' found.
               Available tags: ${builtins.toJSON (lib.unique availableTags)}
-            ''
+            '' []
           else
             acc ++ tagMembers
         ) [ ] members.tags or [ ]);
