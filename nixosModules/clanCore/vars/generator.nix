@@ -21,7 +21,7 @@ let
 
   promptsToFilesScript = concatMapStrings promptToFile;
 
-  filePromptNames = attrNames (filterAttrs (_name: prompt: prompt.createFile) config.prompts);
+  filePromptNames = attrNames (filterAttrs (_name: prompt: prompt.persist) config.prompts);
 in
 {
   finalScript = mkOptionDefault (

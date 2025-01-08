@@ -52,7 +52,7 @@ let
       migrateFact = "${secret_id opt}";
       prompts.${secret_id opt} = {
         type = "hidden";
-        createFile = true;
+        persist = true;
       };
     };
   };

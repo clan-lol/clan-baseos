@@ -477,14 +477,14 @@ def test_prompt(
     my_generator["files"]["multiline_value"]["secret"] = False
 
     my_generator["prompts"]["prompt1"]["description"] = "dream2nix"
-    my_generator["prompts"]["prompt1"]["createFile"] = False
+    my_generator["prompts"]["prompt1"]["persist"] = False
     my_generator["prompts"]["prompt1"]["type"] = "line"
 
     my_generator["prompts"]["prompt2"]["description"] = "dream2nix"
-    my_generator["prompts"]["prompt2"]["createFile"] = False
+    my_generator["prompts"]["prompt2"]["persist"] = False
     my_generator["prompts"]["prompt2"]["type"] = "line"
 
-    my_generator["prompts"]["prompt_create_file"]["createFile"] = True
+    my_generator["prompts"]["prompt_create_file"]["persist"] = True
 
     my_generator["script"] = (
         "cat $prompts/prompt1 > $out/line_value; cat $prompts/prompt2 > $out/multiline_value"

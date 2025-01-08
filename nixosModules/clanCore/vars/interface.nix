@@ -253,6 +253,9 @@ in
               default = { };
               type = attrsOf (
                 submodule (prompt: {
+                  imports = [
+                    (lib.mkRenamedOptionModule [ "createFile" ] [ "persist" ])
+                  ];
                   options = {
                     name = lib.mkOption {
                       description = ''
@@ -263,7 +266,7 @@ in
                       default = prompt.config._module.args.name;
                       defaultText = "Name of the prompt";
                     };
-                    createFile = lib.mkOption {
+                    persist = lib.mkOption {
                       description = ''
                         Whether the prompted value should be stored in a file with the same name as the prompt.
 

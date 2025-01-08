@@ -14,9 +14,9 @@ let
     name = "iwd.${name}";
     value = {
       prompts.ssid.type = "line";
-      prompts.ssid.createFile = true;
+      prompts.ssid.persist = true;
       prompts.password.type = "hidden";
-      prompts.password.createFile = true;
+      prompts.password.persist = true;
       share = true;
     };
   };
