@@ -62,6 +62,8 @@ nav:
           - Modules: clanmodules/index.md
           - Disk Templates: manual/disk-templates.md
       - Contribute: manual/contribute.md
+      - Debugging: manual/debugging.md
+      - Repo Layout: manual/repo-layout.md
   # - Concepts:
   #     - Overview: concepts/index.md
   - Reference:

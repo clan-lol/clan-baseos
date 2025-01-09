@@ -92,6 +92,7 @@ def list_nixos_machines(flake_url: str | Path) -> list[str]:
             "--json",
         ]
     )
+
     proc = run_no_stdout(cmd)
 
     try:
