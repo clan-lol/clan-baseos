@@ -14,7 +14,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
 
 === "**Single Disk**"
     Below is the configuration for `disko.nix`
-    ```nix hl_lines="17 48"
+    ```nix hl_lines="13 53"
       --8<-- "docs/code-examples/disko-single-disk.nix"
     ```
 
@@ -22,7 +22,7 @@ lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
 
 === "**Raid 1**"
     Below is the configuration for `disko.nix`
-    ```nix hl_lines="17 48 49"
+    ```nix hl_lines="13 53 54"
       --8<-- "docs/code-examples/disko-raid.nix"
     ```
 
@@ -172,7 +172,7 @@ ssh -p 7172 root@192.168.178.141
 2. Run the `systemd-tty-ask-password-agent` utility to query a password:
 
 ```bash
-systemd-tty-ask-password-agent --query
+systemd-tty-ask-password-agent
 ```
 
 After completing these steps, your NixOS should be successfully installed and ready for use.

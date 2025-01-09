@@ -24,7 +24,7 @@ Let's get your development environment up and running:
 
       - To automatically setup a devshell on entering the directory
         ```bash
-        nix profile install nixpkgs#nix-direnv-flakes
+        nix profile install nixpkgs#nix-direnv-flakes nixpkgs#direnv
         ```
 
 3. **Add direnv to your shell**:
@@ -35,6 +35,9 @@ Let's get your development environment up and running:
       ```bash
       echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc && echo 'eval "$(direnv hook bash)"' >> ~/.bashrc && eval "$SHELL"
       ```
+
+3. **Allow the devshell**
+      - Go to `clan-core/pkgs/clan-cli` and do a `direnv allow` to setup the necessary development environment to execute the `clan` command
 
 4. **Create a Gitea Account**:
       - Register an account on https://git.clan.lol
@@ -91,109 +94,11 @@ Let's get your development environment up and running:
       merge-after-ci --reviewers Mic92 Lassulus Qubasa
       ```
 
-# Debugging
 
-Here are some methods for debugging and testing the clan-cli:
 
-## See all possible packages and tests
+### Whats Next?
 
-To quickly show all possible packages and tests execute:
-
-```bash
-nix flake show --system no-eval
-```
-
-Under `checks` you will find all tests that are executed in our CI. Under `packages` you find all our projects.
-
-```
-git+file:///home/lhebendanz/Projects/clan-core
-├───apps
-│   └───x86_64-linux
-│       ├───install-vm: app
-│       └───install-vm-nogui: app
-├───checks
-│   └───x86_64-linux
-│       ├───borgbackup omitted (use '--all-systems' to show)
-│       ├───check-for-breakpoints omitted (use '--all-systems' to show)
-│       ├───clan-dep-age omitted (use '--all-systems' to show)
-│       ├───clan-dep-bash omitted (use '--all-systems' to show)
-│       ├───clan-dep-e2fsprogs omitted (use '--all-systems' to show)
-│       ├───clan-dep-fakeroot omitted (use '--all-systems' to show)
-│       ├───clan-dep-git omitted (use '--all-systems' to show)
-│       ├───clan-dep-nix omitted (use '--all-systems' to show)
-│       ├───clan-dep-openssh omitted (use '--all-systems' to show)
-│       ├───"clan-dep-python3.11-mypy" omitted (use '--all-systems' to show)
-├───packages
-│   └───x86_64-linux
-│       ├───clan-cli omitted (use '--all-systems' to show)
-│       ├───clan-cli-docs omitted (use '--all-systems' to show)
-│       ├───clan-ts-api omitted (use '--all-systems' to show)
-│       ├───clan-app omitted (use '--all-systems' to show)
-│       ├───default omitted (use '--all-systems' to show)
-│       ├───deploy-docs omitted (use '--all-systems' to show)
-│       ├───docs omitted (use '--all-systems' to show)
-│       ├───editor omitted (use '--all-systems' to show)
-└───templates
-    ├───default: template: Initialize a new clan flake
-    └───new-clan: template: Initialize a new clan flake
-```
-
-You can execute every test separately by following the tree path `nix build .#checks.x86_64-linux.clan-pytest` for example.
-
-## Test Locally in Devshell with Breakpoints
-
-To test the cli locally in a development environment and set breakpoints for debugging, follow these steps:
-
-1. Run the following command to execute your tests and allow for debugging with breakpoints:
-   ```bash
-   cd ./pkgs/clan-cli
-   pytest -n0 -s --maxfail=1 ./tests/test_nameofthetest.py
-   ```
-   You can place `breakpoint()` in your Python code where you want to trigger a breakpoint for debugging.
-
-## Test Locally in a Nix Sandbox
-
-To run tests in a Nix sandbox, you have two options depending on whether your test functions have been marked as impure or not:
-
-### Running Tests Marked as Impure
-
-If your test functions need to execute `nix build` and have been marked as impure because you can't execute `nix build` inside a Nix sandbox, use the following command:
-
-```bash
-nix run .#impure-checks
-```
-
-This command will run the impure test functions.
-
-### Running Pure Tests
-
-For test functions that have not been marked as impure and don't require executing `nix build`, you can use the following command:
-
-```bash
-nix build .#checks.x86_64-linux.clan-pytest --rebuild
-```
-
-This command will run all pure test functions.
-
-### Inspecting the Nix Sandbox
-
-If you need to inspect the Nix sandbox while running tests, follow these steps:
-
-1. Insert an endless sleep into your test code where you want to pause the execution. For example:
-
-   ```python
-   import time
-   time.sleep(3600)  # Sleep for one hour
-   ```
-
-2. Use `cntr` and `psgrep` to attach to the Nix sandbox. This allows you to interactively debug your code while it's paused. For example:
-
-   ```bash
-   psgrep -a -x your_python_process_name
-   cntr attach <container id, container name or process id>
-   ```
-
-Or you can also use the [nix breakpoint hook](https://nixos.org/manual/nixpkgs/stable/#breakpointhook)
+Please look into the [debugging](./debugging.md) guide next!
 
 
 # Standards

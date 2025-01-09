@@ -1,6 +1,9 @@
 # :material-clock-fast: Getting Started
 
-Create your own clan with these initial steps and manage a fleet of machines with one single testable git repository!
+Ready to create your own clan and manage a fleet of machines? Follow these simple steps to get started.
+
+By the end of this guide, you'll have a fresh NixOS configuration ready to push to one or more machines. You'll create a new git repository and a flake, and all you need is at least one machine to push to. This is the easiest way to begin, and we recommend you to copy your existing configuration into this new setup!
+
 
 ### Prerequisites
 
