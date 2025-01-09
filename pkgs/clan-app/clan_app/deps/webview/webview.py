@@ -6,7 +6,13 @@ from collections.abc import Callable
 from enum import IntEnum
 from typing import Any
 
-from clan_cli.api import MethodRegistry, dataclass_to_dict, from_dict
+from clan_cli.api import (
+    ApiError,
+    ErrorDataClass,
+    MethodRegistry,
+    dataclass_to_dict,
+    from_dict,
+)
 
 from ._webview_ffi import _encode_c_string, _webview_lib
 
@@ -18,6 +24,11 @@ class SizeHint(IntEnum):
     MIN = 1
     MAX = 2
     FIXED = 3
+
+
+class FuncStatus(IntEnum):
+    SUCCESS = 0
+    FAILURE = 1
 
 
 class Size:
@@ -85,44 +96,48 @@ class Webview:
                     try:
                         args = json.loads(req.decode())
 
-                        try:
-                            log.debug(f"Calling {method_name}({args[0]})")
-                            # Initialize dataclasses from the payload
-                            reconciled_arguments = {}
-                            for k, v in args[0].items():
-                                # Some functions expect to be called with dataclass instances
-                                # But the js api returns dictionaries.
-                                # Introspect the function and create the expected dataclass from dict dynamically
-                                # Depending on the introspected argument_type
-                                arg_class = api.get_method_argtype(method_name, k)
+                        log.debug(f"Calling {method_name}({args[0]})")
+                        # Initialize dataclasses from the payload
+                        reconciled_arguments = {}
+                        for k, v in args[0].items():
+                            # Some functions expect to be called with dataclass instances
+                            # But the js api returns dictionaries.
+                            # Introspect the function and create the expected dataclass from dict dynamically
+                            # Depending on the introspected argument_type
+                            arg_class = api.get_method_argtype(method_name, k)
 
-                                # TODO: rename from_dict into something like construct_checked_value
-                                # from_dict really takes Anything and returns an instance of the type/class
-                                reconciled_arguments[k] = from_dict(arg_class, v)
+                            # TODO: rename from_dict into something like construct_checked_value
+                            # from_dict really takes Anything and returns an instance of the type/class
+                            reconciled_arguments[k] = from_dict(arg_class, v)
 
-                            reconciled_arguments["op_key"] = seq.decode()
-                            # TODO: We could remove the wrapper in the MethodRegistry
-                            # and just call the method directly
-                            result = wrap_method(**reconciled_arguments)
-                            success = True
-                        except Exception as e:
-                            log.exception(f"Error calling {method_name}")
-                            result = str(e)
-                            success = False
+                        reconciled_arguments["op_key"] = seq.decode()
+                        # TODO: We could remove the wrapper in the MethodRegistry
+                        # and just call the method directly
+                        result = wrap_method(**reconciled_arguments)
 
-                        try:
-                            serialized = json.dumps(
-                                dataclass_to_dict(result), indent=4, ensure_ascii=False
-                            )
-                        except TypeError:
-                            log.exception(f"Error serializing result for {method_name}")
-                            raise
+                        serialized = json.dumps(
+                            dataclass_to_dict(result), indent=4, ensure_ascii=False
+                        )
 
                         log.debug(f"Result for {method_name}: {serialized}")
-                        self.return_(seq.decode(), 0 if success else 1, serialized)
+                        self.return_(seq.decode(), FuncStatus.SUCCESS, serialized)
                     except Exception as e:
-                        log.exception(f"Unhandled error in webview {method_name}")
-                        self.return_(seq.decode(), 1, str(e))
+                        log.exception(f"Error while handling result of {method_name}")
+                        result = ErrorDataClass(
+                            op_key=seq.decode(),
+                            status="error",
+                            errors=[
+                                ApiError(
+                                    message="An internal error occured",
+                                    description=str(e),
+                                    location=["bind_jsonschema_api", method_name],
+                                )
+                            ],
+                        )
+                        serialized = json.dumps(
+                            dataclass_to_dict(result), indent=4, ensure_ascii=False
+                        )
+                        self.return_(seq.decode(), FuncStatus.FAILURE, serialized)
 
                 thread = threading.Thread(target=thread_task)
                 thread.start()
