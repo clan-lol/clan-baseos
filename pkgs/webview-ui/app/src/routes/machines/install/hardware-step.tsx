@@ -105,101 +105,105 @@ export const HWStep = (props: StepProps<HardwareValues>) => {
 
   return (
     <Form onSubmit={handleSubmit} class="flex flex-col gap-6">
-      <Group>
-        <Field name="target" validate={required("Target must be provided")}>
-          {(field, fieldProps) => (
-            <TextInput
-              error={field.error}
-              variant="ghost"
-              label="Target ip"
-              value={field.value || ""}
-              inputProps={fieldProps}
-              required
-            />
-          )}
-        </Field>
-      </Group>
-      <Group>
-        <Field
-          name="report"
-          type="boolean"
-          validate={required("Report must be generated")}
-        >
-          {(field, fieldProps) => (
-            <FieldLayout
-              error={field.error && <InputError error={field.error} />}
-              label={
-                <InputLabel
+      <div class="max-h-[calc(100vh-20rem)] overflow-y-scroll">
+        <div class="flex h-full flex-col gap-6 p-4">
+          <Group>
+            <Field name="target" validate={required("Target must be provided")}>
+              {(field, fieldProps) => (
+                <TextInput
+                  error={field.error}
+                  variant="ghost"
+                  label="Target ip"
+                  value={field.value || ""}
+                  inputProps={fieldProps}
                   required
-                  help="Detect hardware specific drivers from target ip"
-                >
-                  Hardware report
-                </InputLabel>
-              }
-              field={
-                <Switch>
-                  <Match when={hwReportQuery.isLoading}>
-                    <div>Loading...</div>
-                  </Match>
-                  <Match when={hwReportQuery.error}>
-                    <div>Error...</div>
-                  </Match>
-                  <Match when={hwReportQuery.data}>
-                    {(data) => (
-                      <>
-                        <Switch>
-                          <Match when={data() === "none"}>
-                            <Badge color="red" icon="Attention">
-                              No report
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              disabled={isGenerating()}
-                              startIcon={<Icon icon="Report" />}
-                              class="w-full"
-                              onClick={generateReport}
-                            >
-                              Run hardware detection
-                            </Button>
-                          </Match>
-                          <Match when={data() === "nixos-facter"}>
-                            <Badge color="primary" icon="Checkmark">
-                              Report detected
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              disabled={isGenerating()}
-                              startIcon={<Icon icon="Report" />}
-                              class="w-full"
-                              onClick={generateReport}
-                            >
-                              Re-run hardware detection
-                            </Button>
-                          </Match>
-                          <Match when={data() === "nixos-generate-config"}>
-                            <Badge color="primary" icon="Checkmark">
-                              Legacy Report detected
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              disabled={isGenerating()}
-                              startIcon={<Icon icon="Report" />}
-                              class="w-full"
-                              onClick={generateReport}
-                            >
-                              Replace hardware detection
-                            </Button>
-                          </Match>
-                        </Switch>
-                      </>
-                    )}
-                  </Match>
-                </Switch>
-              }
-            />
-          )}
-        </Field>
-      </Group>
+                />
+              )}
+            </Field>
+          </Group>
+          <Group>
+            <Field
+              name="report"
+              type="boolean"
+              validate={required("Report must be generated")}
+            >
+              {(field, fieldProps) => (
+                <FieldLayout
+                  error={field.error && <InputError error={field.error} />}
+                  label={
+                    <InputLabel
+                      required
+                      help="Detect hardware specific drivers from target ip"
+                    >
+                      Hardware report
+                    </InputLabel>
+                  }
+                  field={
+                    <Switch>
+                      <Match when={hwReportQuery.isLoading}>
+                        <div>Loading...</div>
+                      </Match>
+                      <Match when={hwReportQuery.error}>
+                        <div>Error...</div>
+                      </Match>
+                      <Match when={hwReportQuery.data}>
+                        {(data) => (
+                          <>
+                            <Switch>
+                              <Match when={data() === "none"}>
+                                <Badge color="red" icon="Attention">
+                                  No report
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  disabled={isGenerating()}
+                                  startIcon={<Icon icon="Report" />}
+                                  class="w-full"
+                                  onClick={generateReport}
+                                >
+                                  Run hardware detection
+                                </Button>
+                              </Match>
+                              <Match when={data() === "nixos-facter"}>
+                                <Badge color="primary" icon="Checkmark">
+                                  Report detected
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  disabled={isGenerating()}
+                                  startIcon={<Icon icon="Report" />}
+                                  class="w-full"
+                                  onClick={generateReport}
+                                >
+                                  Re-run hardware detection
+                                </Button>
+                              </Match>
+                              <Match when={data() === "nixos-generate-config"}>
+                                <Badge color="primary" icon="Checkmark">
+                                  Legacy Report detected
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  disabled={isGenerating()}
+                                  startIcon={<Icon icon="Report" />}
+                                  class="w-full"
+                                  onClick={generateReport}
+                                >
+                                  Replace hardware detection
+                                </Button>
+                              </Match>
+                            </Switch>
+                          </>
+                        )}
+                      </Match>
+                    </Switch>
+                  }
+                />
+              )}
+            </Field>
+          </Group>
+        </div>
+      </div>
       {props.footer}
     </Form>
   );
