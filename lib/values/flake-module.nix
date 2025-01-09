@@ -6,8 +6,17 @@ let
 in
 {
   perSystem =
-    { pkgs, system, ... }:
     {
+      pkgs,
+      system,
+      lib,
+      ...
+    }:
+    let
+      tests = import ./test.nix { inherit lib; };
+    in
+    {
+      legacyPackages.evalTests-values = tests;
       checks = {
         lib-values-eval = pkgs.runCommand "tests" { nativeBuildInputs = [ pkgs.nix-unit ]; } ''
           export HOME="$(realpath .)"
@@ -15,7 +24,7 @@ in
           nix-unit --eval-store "$HOME" \
             --extra-experimental-features flakes \
             ${inputOverrides} \
-            --flake ${self}#legacyPackages.${system}.evalTests-inventory
+            --flake ${self}#legacyPackages.${system}.evalTests-values
 
           touch $out
         '';
