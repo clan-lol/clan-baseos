@@ -41,6 +41,6 @@ mkShell {
     export XDG_DATA_DIRS=${gsettings-desktop-schemas}/share/gsettings-schemas/gsettings-desktop-schemas-46.0:$XDG_DATA_DIRS
 
     export WEBVIEW_LIB_DIR=${webview-lib}/lib
-    # export WEBVIEW_LIB_DIR=$HOME/Projects/webview/build/core
+    source $PKG_ROOT/.local.env
   '';
 }

@@ -14,7 +14,7 @@ example_clan
 nixos.qcow2
 **/*.glade~
 /docs/out
-
+**/.local.env
 
 # dream2nix
 .dream2nix
