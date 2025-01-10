@@ -28,11 +28,20 @@ export const Modal = (props: ModalProps) => {
 
   const handleMouseMove = (e: MouseEvent) => {
     if (dragging()) {
-      const newTop = e.clientY - startOffset().y;
-      const newLeft = e.clientX - startOffset().x;
+      let newTop = e.clientY - startOffset().y;
+      let newLeft = e.clientX - startOffset().x;
 
+      if (newTop < 0) {
+        newTop = 0;
+      }
+      if (newLeft < 0) {
+        newLeft = 0;
+      }
       dialogRef.style.top = `${newTop}px`;
       dialogRef.style.left = `${newLeft}px`;
+
+      // dialogRef.style.maxHeight = `calc(100vh - ${newTop}px - 2rem)`;
+      // dialogRef.style.maxHeight = `calc(100vh - ${newTop}px - 2rem)`;
     }
   };
 
@@ -53,7 +62,7 @@ export const Modal = (props: ModalProps) => {
           )}
           classList={{
             "!cursor-grabbing": dragging(),
-            [cx("scale-105 transition-transform")]: dragging(),
+            [cx("scale-[101%] transition-transform")]: dragging(),
           }}
           ref={(el) => {
             dialogRef = el;
@@ -112,7 +121,10 @@ export const Modal = (props: ModalProps) => {
               />
             </div>
           </Dialog.Label>
-          <Dialog.Description class="flex flex-col bg-def-1" as="div">
+          <Dialog.Description
+            class="flex max-h-[90vh] flex-col overflow-y-hidden bg-def-1"
+            as="div"
+          >
             {props.children}
           </Dialog.Description>
         </Dialog.Content>

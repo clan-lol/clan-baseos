@@ -5,6 +5,7 @@ import {
   type JSX,
   For,
   createMemo,
+  Accessor,
 } from "solid-js";
 import { Portal } from "solid-js/web";
 import { useFloating } from "../base";
@@ -46,11 +47,12 @@ interface SelectInputpProps {
   placeholder?: string;
   multiple?: boolean;
   loading?: boolean;
-  dialogContextId?: string;
+  portalRef?: Accessor<HTMLElement | null>;
 }
 
 export function SelectInput(props: SelectInputpProps) {
-  const dialogContext = useContext(props.dialogContextId);
+  const dialogContext = (dialogContextId?: string) =>
+    useContext(dialogContextId);
 
   const _id = createUniqueId();
 
@@ -228,7 +230,11 @@ export function SelectInput(props: SelectInputpProps) {
         }
       />
 
-      <Portal mount={dialogContext.contentRef?.() || document.body}>
+      <Portal
+        mount={
+          props.portalRef ? props.portalRef() || document.body : document.body
+        }
+      >
         <div
           id={_id}
           popover

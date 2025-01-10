@@ -25,7 +25,7 @@ import { HardwareValues, HWStep } from "./install/hardware-step";
 import { DiskStep, DiskValues } from "./install/disk-step";
 import { SummaryStep } from "./install/summary-step";
 import cx from "classnames";
-import { SectionHeader } from "@/src/components/group";
+import { VarsStep, VarsValues } from "./install/vars-step";
 
 type MachineFormInterface = MachineData & {
   sshKey?: File;
@@ -37,7 +37,8 @@ type MachineData = SuccessData<"get_inventory_machine_details">;
 const steps: Record<StepIdx, string> = {
   "1": "Hardware detection",
   "2": "Disk schema",
-  "3": "Installation",
+  "3": "Credentials & Data",
+  "4": "Installation",
 };
 
 type StepIdx = keyof AllStepsValues;
@@ -45,7 +46,8 @@ type StepIdx = keyof AllStepsValues;
 export interface AllStepsValues extends FieldValues {
   "1": HardwareValues;
   "2": DiskValues;
-  "3": NonNullable<unknown>;
+  "3": VarsValues;
+  "4": NonNullable<unknown>;
 }
 
 const LoadingBar = () => (
@@ -190,7 +192,7 @@ const InstallMachine = (props: InstallMachineProps) => {
   };
 
   const Footer = () => (
-    <div class="flex justify-between">
+    <div class="flex justify-between p-4">
       <Button
         startIcon={<Icon icon="ArrowLeft" />}
         variant="light"
@@ -214,7 +216,10 @@ const InstallMachine = (props: InstallMachineProps) => {
   return (
     <Switch
       fallback={
-        <Form onSubmit={handleInstall}>
+        <Form
+          onSubmit={handleInstall}
+          class="relative top-0 flex h-full flex-col gap-0"
+        >
           {/* Register each step as form field */}
           {/* @ts-expect-error: object type is not statically supported */}
           <Field name="1">{(field, fieldProps) => <></>}</Field>
@@ -269,78 +274,90 @@ const InstallMachine = (props: InstallMachineProps) => {
               )}
             </For>
           </div>
-
-          <div class="flex flex-col gap-6 p-6">
-            <Switch
-              fallback={"Undefined content. This Step seems to not exist."}
-            >
-              <Match when={step() === "1"}>
-                <HWStep
-                  // @ts-expect-error: This cannot be undefined in this context.
-                  machine_id={props.name}
-                  // @ts-expect-error: This cannot be undefined in this context.
-                  dir={activeURI()}
-                  handleNext={(data) => {
-                    const prev = getValue(formStore, "1");
-                    setValue(formStore, "1", { ...prev, ...data });
-                    handleNext();
-                  }}
-                  initial={
-                    getValue(formStore, "1") || {
-                      target: props.targetHost || "",
-                      report: false,
-                    }
+          <Switch fallback={"Undefined content. This Step seems to not exist."}>
+            <Match when={step() === "1"}>
+              <HWStep
+                // @ts-expect-error: This cannot be undefined in this context.
+                machine_id={props.name}
+                // @ts-expect-error: This cannot be undefined in this context.
+                dir={activeURI()}
+                handleNext={(data) => {
+                  const prev = getValue(formStore, "1");
+                  setValue(formStore, "1", { ...prev, ...data });
+                  handleNext();
+                }}
+                initial={
+                  getValue(formStore, "1") || {
+                    target: props.targetHost || "",
+                    report: false,
                   }
-                  footer={<Footer />}
-                />
-              </Match>
-              <Match when={step() === "2"}>
-                <DiskStep
-                  // @ts-expect-error: This cannot be undefined in this context.
-                  machine_id={props.name}
-                  // @ts-expect-error: This cannot be undefined in this context.
-                  dir={activeURI()}
-                  footer={<Footer />}
-                  handleNext={(data) => {
-                    const prev = getValue(formStore, "2");
-                    setValue(formStore, "2", { ...prev, ...data });
-                    handleNext();
-                  }}
-                  // @ts-expect-error: The placeholder type is to wide
-                  initial={{
-                    ...props.machine.disk_schema,
-                    ...getValue(formStore, "2"),
-                    initialized: !!props.machine.disk_schema,
-                  }}
-                />
-              </Match>
-              <Match when={step() === "3"}>
-                <SummaryStep
-                  // @ts-expect-error: This cannot be undefined in this context.
-                  machine_id={props.name}
-                  // @ts-expect-error: This cannot be undefined in this context.
-                  dir={activeURI()}
-                  handleNext={() => handleNext()}
-                  // @ts-expect-error: This cannot be known.
-                  initial={getValues(formStore)}
-                  footer={
-                    <div class="flex justify-between">
-                      <Button
-                        startIcon={<Icon icon="ArrowLeft" />}
-                        variant="light"
-                        type="button"
-                        onClick={handlePrev}
-                        disabled={step() === "1"}
-                      >
-                        Previous
-                      </Button>
-                      <Button startIcon={<Icon icon="Flash" />}>Install</Button>
-                    </div>
-                  }
-                />
-              </Match>
-            </Switch>
-          </div>
+                }
+                footer={<Footer />}
+              />
+            </Match>
+            <Match when={step() === "2"}>
+              <DiskStep
+                // @ts-expect-error: This cannot be undefined in this context.
+                machine_id={props.name}
+                // @ts-expect-error: This cannot be undefined in this context.
+                dir={activeURI()}
+                footer={<Footer />}
+                handleNext={(data) => {
+                  const prev = getValue(formStore, "2");
+                  setValue(formStore, "2", { ...prev, ...data });
+                  handleNext();
+                }}
+                // @ts-expect-error: The placeholder type is to wide
+                initial={{
+                  ...props.machine.disk_schema,
+                  ...getValue(formStore, "2"),
+                  initialized: !!props.machine.disk_schema,
+                }}
+              />
+            </Match>
+            <Match when={step() === "3"}>
+              <VarsStep
+                // @ts-expect-error: This cannot be undefined in this context.
+                machine_id={props.name}
+                // @ts-expect-error: This cannot be undefined in this context.
+                dir={activeURI()}
+                footer={<Footer />}
+                handleNext={(data) => {
+                  // const prev = getValue(formStore, "2");
+                  // setValue(formStore, "2", { ...prev, ...data });
+                  handleNext();
+                }}
+                initial={{
+                  ...getValue(formStore, "3"),
+                }}
+              />
+            </Match>
+            <Match when={step() === "4"}>
+              <SummaryStep
+                // @ts-expect-error: This cannot be undefined in this context.
+                machine_id={props.name}
+                // @ts-expect-error: This cannot be undefined in this context.
+                dir={activeURI()}
+                handleNext={() => handleNext()}
+                // @ts-expect-error: This cannot be known.
+                initial={getValues(formStore)}
+                footer={
+                  <div class="flex justify-between p-4">
+                    <Button
+                      startIcon={<Icon icon="ArrowLeft" />}
+                      variant="light"
+                      type="button"
+                      onClick={handlePrev}
+                      disabled={step() === "1"}
+                    >
+                      Previous
+                    </Button>
+                    <Button startIcon={<Icon icon="Flash" />}>Install</Button>
+                  </div>
+                }
+              />
+            </Match>
+          </Switch>
         </Form>
       }
     >
