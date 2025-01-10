@@ -189,7 +189,7 @@ def set_machine_disk_schema(
             raise ClanError(msg, description=f"Valid options: {ph.options}")
 
     placeholders_toml = "\n".join(
-        [f"""# {k} = "{v}""" for k, v in placeholders.items() if v is not None]
+        [f"""# {k} = "{v}" """ for k, v in placeholders.items() if v is not None]
     )
     header = f"""# ---
 # schema = "{schema_name}"
