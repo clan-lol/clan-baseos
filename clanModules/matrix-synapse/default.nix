@@ -106,17 +106,6 @@ in
       };
     };
 
-    systemd.tmpfiles.settings."01-matrix" = {
-      "/run/synapse-registration-shared-secret" = {
-        C.argument =
-          config.clan.core.facts.services.matrix-synapse.secret.synapse-registration_shared_secret.path;
-        z = {
-          mode = "0400";
-          user = "matrix-synapse";
-        };
-      };
-    };
-
     clan.postgresql.users.matrix-synapse = { };
     clan.postgresql.databases.matrix-synapse.create.options = {
       TEMPLATE = "template0";
@@ -169,8 +158,14 @@ in
       in
       {
         path = [ pkgs.curl ];
+        serviceConfig.ExecStartPre = lib.mkBefore [
+          "+${pkgs.coreutils}/bin/install -o matrix-synapse -g matrix-synapse ${
+            lib.escapeShellArg
+              config.clan.core.facts.services.matrix-synapse.secret."synapse-registration_shared_secret".path
+          } /run/synapse-registration-shared-secret"
+        ];
         serviceConfig.ExecStartPost = [
-          (''+${pkgs.writeShellScript "matrix-synapse-create-users" usersScript}'')
+          ''+${pkgs.writeShellScript "matrix-synapse-create-users" usersScript}''
         ];
       };
 
