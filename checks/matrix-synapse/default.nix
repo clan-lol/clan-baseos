@@ -31,6 +31,8 @@
             clan.matrix-synapse.users.someuser = { };
 
             clan.core.facts.secretStore = "vm";
+            clan.core.vars.settings.secretStore = "vm";
+            clan.core.vars.settings.publicStore = "in_repo";
 
             # because we use systemd-tmpfiles to copy the secrets, we need to a separate systemd-tmpfiles call to provision them.
             boot.postBootCommands = "${config.systemd.package}/bin/systemd-tmpfiles --create /etc/tmpfiles.d/00-vmsecrets.conf";
@@ -41,21 +43,21 @@
                 d.mode = "0700";
                 z.mode = "0700";
               };
-              "/etc/secrets/synapse-registration_shared_secret" = {
+              "/etc/secrets/matrix-synapse/synapse-registration_shared_secret" = {
                 f.argument = "supersecret";
                 z = {
                   mode = "0400";
                   user = "root";
                 };
               };
-              "/etc/secrets/matrix-password-admin" = {
+              "/etc/secrets/matrix-password-admin/matrix-password-admin" = {
                 f.argument = "matrix-password1";
                 z = {
                   mode = "0400";
                   user = "root";
                 };
               };
-              "/etc/secrets/matrix-password-someuser" = {
+              "/etc/secrets/matrix-password-someuser/matrix-password-someuser" = {
                 f.argument = "matrix-password2";
                 z = {
                   mode = "0400";
