@@ -2,9 +2,15 @@
 
 `Inventory` is an abstract service layer for consistently configuring distributed services across machine boundaries.
 
-See [Inventory API Documentation](../reference/nix-api/inventory.md)
+## Concept
 
-This guide will walk you through setting up a backup service, where the inventory becomes useful.
+Its concept is slightly different to what NixOS veterans might be used to. The inventory is a service definition on a higher level, not a machine configuration. This allows you to define a consistent and coherent service.
+
+The inventory logic will automatically derive the modules and configurations to enable on each machine in your `clan` based on its `role`. This makes it super easy to setup distributed `services` such as Backups, Networking, traditional cloud services, or peer-to-peer based applications.
+
+The following tutorial will walk through setting up a Backup service where the terms `Service` and `Role` will become more clear.
+
+See also: [Inventory API Documentation](../reference/nix-api/inventory.md)
 
 !!! example "Experimental status"
     The inventory implementation is not considered stable yet.
@@ -18,17 +24,13 @@ This guide will walk you through setting up a backup service, where the inventor
 
 ## Services
 
-The inventory defines `services`. Membership of `machines` is defined via roles exclusively.
+The inventory defines `services`. Membership of `machines` is defined via `roles` exclusively.
 
-See the each [module documentation](../reference/clanModules/index.md) for available roles.
-
-!!! Note
-    It is possible to use any [clanModule](../reference/clanModules/index.md) in the inventory and add machines via
-    `roles.default.*`
+See each [modules documentation](../reference/clanModules/index.md) for its available roles.
 
 ### Adding services to machines
 
-A module can be added to one or multiple machines via `Roles`. clan's `Role` interface provide sane defaults for a module this allows the module author to reduce the configuration overhead to a minimum.
+A service can be added to one or multiple machines via `Roles`. clan's `Role` interface provide sane defaults for a module this allows the module author to reduce the configuration overhead to a minimum.
 
 Each service can still be customized and configured according to the modules options.
 
