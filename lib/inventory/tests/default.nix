@@ -178,6 +178,8 @@ in
         msg = "Roles roleXYZ are not defined in the service borgbackup.";
       };
     };
+  # Needs NIX_ABORT_ON_WARN=1
+  # So the lib.warn is turned into abort
   test_inventory_tag_doesnt_exist =
     let
       configs = buildInventory {
@@ -201,8 +203,9 @@ in
     {
       expr = configs;
       expectedError = {
-        type = "ThrownError";
-        msg = "no machine with tag '\\w+' found";
+        type = "Error";
+        # TODO: Add warning matching in nix-unit
+        msg = ".*";
       };
     };
   test_inventory_disabled_service =

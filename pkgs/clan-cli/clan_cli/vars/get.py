@@ -2,10 +2,10 @@ import argparse
 import logging
 import sys
 
+from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.errors import ClanError
-from clan_cli.machines.machines import Machine
 
 from .generate import Var
 from .list import get_vars
@@ -13,8 +13,9 @@ from .list import get_vars
 log = logging.getLogger(__name__)
 
 
-def get_var(machine: Machine, var_id: str) -> Var:
-    vars_ = get_vars(machine)
+@API.register
+def get_var(base_dir: str, machine_name: str, var_id: str) -> Var:
+    vars_ = get_vars(base_dir=base_dir, machine_name=machine_name)
     results = []
     for var in vars_:
         if var.id == var_id:
@@ -42,8 +43,7 @@ def get_var(machine: Machine, var_id: str) -> Var:
 
 
 def get_command(machine_name: str, var_id: str, flake: FlakeId) -> None:
-    machine = Machine(name=machine_name, flake=flake)
-    var = get_var(machine, var_id)
+    var = get_var(str(flake.path), machine_name, var_id)
     if not var.exists:
         msg = f"Var {var.id} has not been generated yet"
         raise ClanError(msg)

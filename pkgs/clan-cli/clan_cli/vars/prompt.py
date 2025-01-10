@@ -37,16 +37,25 @@ class Prompt:
         )
 
 
-def ask(description: str, input_type: PromptType) -> str:
+def ask(
+    ident: str,
+    input_type: PromptType,
+    label: str | None,
+) -> str:
+    text = f"Enter the value for {ident}:"
+    if label:
+        text = f"{label}"
+
     if MOCK_PROMPT_RESPONSE:
         return next(MOCK_PROMPT_RESPONSE)
     match input_type:
         case PromptType.LINE:
-            result = input(f"Enter the value for {description}: ")
+            result = input(f"{text}: ")
         case PromptType.MULTILINE:
-            print(f"Enter the value for {description} (Finish with Ctrl-D): ")
+            print(f"{text} (Finish with Ctrl-D): ")
             result = sys.stdin.read()
         case PromptType.HIDDEN:
-            result = getpass(f"Enter the value for {description} (hidden): ")
+            result = getpass(f"{text} (hidden): ")
+
     log.info("Input received. Processing...")
     return result

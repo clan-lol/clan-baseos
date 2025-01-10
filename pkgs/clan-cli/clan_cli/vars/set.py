@@ -23,7 +23,7 @@ def set_var(
     else:
         _machine = machine
     if isinstance(var, str):
-        _var = get_var(_machine, var)
+        _var = get_var(str(flake.path), _machine.name, var)
     else:
         _var = var
     path = _var.set(value)
@@ -36,12 +36,17 @@ def set_var(
 
 
 def set_via_stdin(machine: str, var_id: str, flake: FlakeId) -> None:
-    _machine = Machine(name=machine, flake=flake)
-    var = get_var(_machine, var_id)
+    var = get_var(str(flake.path), machine, var_id)
     if sys.stdin.isatty():
-        new_value = ask(var.id, PromptType.HIDDEN).encode("utf-8")
+        new_value = ask(
+            var.id,
+            PromptType.HIDDEN,
+            None,
+        ).encode("utf-8")
     else:
         new_value = sys.stdin.buffer.read()
+
+    _machine = Machine(name=machine, flake=flake)
     set_var(_machine, var, new_value, flake)
 
 
