@@ -253,7 +253,9 @@ class Machine:
             info = self.get_unit_info(unit)
             state = info["ActiveState"]
             if state == "failed":
-                msg = f'unit "{unit}" reached state "{state}"'
+                proc = self.systemctl(f"--lines 0 status {unit}")
+                journal = self.execute(f"journalctl -u {unit} --no-pager")
+                msg = f'unit "{unit}" reached state "{state}":\n{proc.stdout}\n{journal.stdout}'
                 raise Error(msg)
 
             if state == "inactive":
