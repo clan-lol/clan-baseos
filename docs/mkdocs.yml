@@ -50,6 +50,7 @@ nav:
       - Deploy Machine: getting-started/deploy.md
   - Guides:
       - Overview: manual/index.md
+      - Manage passwords using vars: manual/manage-root-password-via-vars.md
       - Disk Encryption: getting-started/disk-encryption.md
       - Mesh VPN: getting-started/mesh-vpn.md
       - Backup & Restore: getting-started/backups.md
