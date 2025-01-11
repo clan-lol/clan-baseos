@@ -8,7 +8,12 @@ from typing import Any
 
 from clan_cli.async_run import AsyncRuntime
 from clan_cli.cmd import run
+from clan_cli.completions import (
+    add_dynamic_completer,
+    complete_machines,
+)
 from clan_cli.errors import ClanError
+from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
 from clan_cli.ssh.host import Host, is_ssh_reachable
 from clan_cli.ssh.host_key import HostKeyCheck
@@ -23,6 +28,11 @@ class DeployInfo:
     addrs: list[str]
     tor: str | None = None
     pwd: str | None = None
+
+    @staticmethod
+    def from_hostname(hostname: str, args: argparse.Namespace) -> "DeployInfo":
+        m = Machine(hostname, flake=args.flake)
+        return DeployInfo(addrs=[m.target_host_address])
 
     @staticmethod
     def from_json(data: dict[str, Any]) -> "DeployInfo":
@@ -101,6 +111,8 @@ def ssh_command_parse(args: argparse.Namespace) -> DeployInfo | None:
         return DeployInfo.from_json(data)
     if args.png:
         return parse_qr_code(Path(args.png))
+    if hasattr(args, "machines"):
+        return DeployInfo.from_hostname(args.machines[0], args)
     return None
 
 
@@ -108,7 +120,7 @@ def ssh_command(args: argparse.Namespace) -> None:
     host_key_check = HostKeyCheck.from_str(args.host_key_check)
     deploy_info = ssh_command_parse(args)
     if not deploy_info:
-        msg = "No --json or --png data provided"
+        msg = "No MACHINE, --json or --png data provided"
         raise ClanError(msg)
 
     with AsyncRuntime() as runtime:
@@ -117,6 +129,16 @@ def ssh_command(args: argparse.Namespace) -> None:
 
 def register_parser(parser: argparse.ArgumentParser) -> None:
     group = parser.add_mutually_exclusive_group(required=True)
+    machines_parser = group.add_argument(
+        "machines",
+        type=str,
+        nargs="*",
+        default=[],
+        metavar="MACHINE",
+        help="Machine to ssh into.",
+    )
+    add_dynamic_completer(machines_parser, complete_machines)
+
     group.add_argument(
         "-j",
         "--json",
