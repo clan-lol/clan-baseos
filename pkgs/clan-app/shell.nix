@@ -5,7 +5,6 @@
   ruff,
   gtk4,
   webview-lib,
-  python3Full,
   self',
 }:
 
@@ -14,14 +13,14 @@ mkShell {
   inputsFrom = [ self'.devShells.default ];
 
   buildInputs = [
-    (python3Full.withPackages (
+    (clan-app.pythonRuntime.withPackages (
       ps:
       with ps;
       [
         ruff
         mypy
       ]
-      ++ (clan-app.devshellDeps ps)
+      ++ (clan-app.devshellPyDeps ps)
     ))
   ];
 
@@ -42,6 +41,6 @@ mkShell {
     export XDG_DATA_DIRS=${gsettings-desktop-schemas}/share/gsettings-schemas/gsettings-desktop-schemas-46.0:$XDG_DATA_DIRS
 
     export WEBVIEW_LIB_DIR=${webview-lib}/lib
-    # export WEBVIEW_LIB_DIR=$HOME/Projects/webview/build/core
+    source $PKG_ROOT/.local.env
   '';
 }

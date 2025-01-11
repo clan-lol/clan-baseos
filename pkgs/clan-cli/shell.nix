@@ -5,25 +5,22 @@
   clan-cli-full,
   mkShell,
   ruff,
-  python3,
   self',
 }:
-let
-  devshellTestDeps =
-    clan-cli.passthru.testDependencies
-    ++ (with python3.pkgs; [
-      rope
-      setuptools
-      wheel
-      webcolors
-      pip
-    ]);
-in
+
 mkShell {
   buildInputs = [
+    (clan-cli.pythonRuntime.withPackages (
+      ps:
+      with ps;
+      [
+        ruff
+        mypy
+      ]
+      ++ (clan-cli.devshellPyDeps ps)
+    ))
     nix-unit
-    ruff
-  ] ++ devshellTestDeps;
+  ] ++ clan-cli.runtimeDependencies;
 
   inputsFrom = [ self'.devShells.default ];
 

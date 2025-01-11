@@ -92,13 +92,12 @@
       treefmt.programs.mypy.directories =
         {
           "clan-cli" = {
-            extraPythonPackages = self'.packages.clan-cli.testDependencies;
             directory = "pkgs/clan-cli";
+            extraPythonPackages = (self'.packages.clan-cli.devshellPyDeps pkgs.python3Packages);
           };
           "clan-app" = {
             directory = "pkgs/clan-app";
-            extraPythonPackages =
-              (self'.packages.clan-app.externalTestDeps or [ ]) ++ self'.packages.clan-cli.testDependencies;
+            extraPythonPackages = (self'.packages.clan-app.devshellPyDeps pkgs.python3Packages);
             extraPythonPaths = [ "../clan-cli" ];
           };
         }
@@ -107,8 +106,9 @@
             {
               "clan-vm-manager" = {
                 directory = "pkgs/clan-vm-manager";
-                extraPythonPackages =
-                  self'.packages.clan-vm-manager.externalTestDeps ++ self'.packages.clan-cli.testDependencies;
+                extraPythonPackages = self'.packages.clan-vm-manager.externalTestDeps ++ [
+                  (pkgs.python3.withPackages (ps: self'.packages.clan-cli.devshellPyDeps ps))
+                ];
                 extraPythonPaths = [ "../clan-cli" ];
               };
             }
