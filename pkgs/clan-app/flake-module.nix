@@ -9,9 +9,6 @@
       self',
       ...
     }:
-    if lib.elem system lib.platforms.darwin then
-      { }
-    else
       {
         devShells.clan-app = pkgs.callPackage ./shell.nix {
           inherit (config.packages) clan-app webview-lib;
