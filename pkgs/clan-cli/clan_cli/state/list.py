@@ -25,7 +25,7 @@ def list_state_folders(machine: Machine, service: None | str = None) -> None:
         flake = Path()
     cmd = nix_eval(
         [
-            f"{flake}#nixosConfigurations.{machine}.config.clan.core.state",
+            f"{flake}#nixosConfigurations.{machine.name}.config.clan.core.state",
             "--json",
         ]
     )
