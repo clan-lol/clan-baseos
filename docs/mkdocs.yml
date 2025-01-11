@@ -65,6 +65,7 @@ nav:
       - Contribute: manual/contribute.md
       - Debugging: manual/debugging.md
       - Repo Layout: manual/repo-layout.md
+      - Migrate existing Flakes: manual/migration-guide.md
   # - Concepts:
   #     - Overview: concepts/index.md
   - Reference:
