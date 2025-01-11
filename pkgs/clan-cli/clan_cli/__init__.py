@@ -214,9 +214,14 @@ For more detailed information, visit: {help_hyperlink("getting-started", "https:
         description="Ssh to a remote machine",
         epilog=(
             f"""
-This subcommand allows seamless ssh access to the nixos-image builders.
+This subcommand allows seamless ssh access to the nixos-image builders or a machine of your clan.
 
 Examples:
+
+  $ clan ssh [ssh_args ...] berlin`
+
+  Will ssh in to the machine called `berlin`, using the
+  `clan.core.networking.targetHost` specified in its configuration
 
   $ clan ssh [ssh_args ...] --json [JSON]
   Will ssh in to the machine based on the deployment information contained in
