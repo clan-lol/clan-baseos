@@ -30,8 +30,9 @@ def _get_lib_names() -> list[str]:
         raise RuntimeError(msg)
     if system == "darwin":
         if machine == "arm64":
-            return ["libwebview.aarch64.dylib"]
-        return ["libwebview.x86_64.dylib"]
+            return ["libwebview.dylib"]
+        msg = "Not supported"
+        raise RuntimeError(msg)
     # linux
     return ["libwebview.so"]
 
