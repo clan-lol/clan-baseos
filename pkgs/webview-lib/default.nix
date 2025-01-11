@@ -1,6 +1,6 @@
 { pkgs, ... }:
 
-pkgs.stdenv.mkDerivation {
+pkgs.clangStdenv.mkDerivation {
   pname = "webview";
   version = "nigthly";
 
@@ -17,12 +17,16 @@ pkgs.stdenv.mkDerivation {
   ];
 
   # Dependencies used during the build process, if any
+  nativeBuildInputs = with pkgs; [
+    gnumake
+    cmake
+    clang-tools
+    pkg-config
+  ];
+
   buildInputs =
     with pkgs;
     [
-      gnumake
-      cmake
-      pkg-config
     ]
     ++ pkgs.lib.optionals stdenv.isLinux [
       webkitgtk_6_0
