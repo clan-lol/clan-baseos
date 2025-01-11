@@ -11,17 +11,19 @@ This guide assumes
 - a machine has been added to the clan (see [Adding Machines](./adding-machines.md))
 
 This section will walk you through the following steps:
+
 1. declare a `generator` in the machine's nixos configuration
-1. inspect the status via the clan cli
-1. generate the vars
-1. observer the changes
-1. update the machine
-1. share the root password between machines
-1. change the password
+2. inspect the status via the clan cli
+3. generate the vars
+4. observer the changes
+5. update the machine
+6. share the root password between machines
+7. change the password
 
 ## Declare the generator
 
 In this example, a `vars` `generator` is used to:
+
 - prompt the user for the password
 - run the required `mkpasswd` command to generate the hash
 - store the hash in a file
