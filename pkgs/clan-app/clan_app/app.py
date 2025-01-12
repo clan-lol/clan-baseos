@@ -12,7 +12,7 @@ from pathlib import Path
 from clan_cli.api import API
 from clan_cli.custom_logger import setup_logging
 
-from clan_app.api.file import open_file
+from clan_app.api.file_gtk import open_file
 from clan_app.deps.webview.webview import Size, SizeHint, Webview
 
 

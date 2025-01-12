@@ -12,6 +12,8 @@ mkShell {
 
   inputsFrom = [ self'.devShells.default ];
 
+  inherit (clan-app) nativeBuildInputs propagatedBuildInputs;
+
   buildInputs = [
     (clan-app.pythonRuntime.withPackages (
       ps:
@@ -22,7 +24,7 @@ mkShell {
       ]
       ++ (clan-app.devshellPyDeps ps)
     ))
-  ];
+  ] ++ clan-app.runtimeDeps;
 
   shellHook = ''
     export GIT_ROOT=$(git rev-parse --show-toplevel)
