@@ -7,6 +7,9 @@
   webview-lib,
   fontconfig,
   pythonRuntime,
+  wrapGAppsHook4,
+  gobject-introspection,
+  gtk4,
 }:
 let
   source = ./.;
@@ -20,13 +23,14 @@ let
     mimeTypes = [ "x-scheme-handler/clan" ];
   };
 
-  # Runtime binary dependencies required by the application
   runtimeDependencies = [
-
+    gobject-introspection
+    gtk4
   ];
 
   pyDeps = ps: [
-    ps.tkinter
+    ps.pygobject3
+    ps.pygobject-stubs
   ];
 
   # Dependencies required for running tests
@@ -70,7 +74,10 @@ pythonRuntime.pkgs.buildPythonApplication {
     (pythonRuntime.withPackages (ps: [ ps.setuptools ]))
     copyDesktopItems
     fontconfig
-  ];
+
+    # gtk4 deps
+    wrapGAppsHook4
+  ] ++ runtimeDependencies;
 
   # The necessity of setting buildInputs and propagatedBuildInputs to the
   # same values for your Python package within Nix largely stems from ensuring
@@ -120,6 +127,7 @@ pythonRuntime.pkgs.buildPythonApplication {
   # Additional pass-through attributes
   passthru.desktop-file = desktop-file;
   passthru.devshellPyDeps = ps: (pyTestDeps ps) ++ (pyDeps ps);
+  passthru.runtimeDeps = runtimeDependencies;
   passthru.pythonRuntime = pythonRuntime;
 
   postInstall = ''
