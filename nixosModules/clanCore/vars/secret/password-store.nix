@@ -15,6 +15,7 @@ let
     ];
     text = ''
       set -efu -o pipefail
+      set -x
 
       src=$1
       target=$2
@@ -28,7 +29,7 @@ let
         mount --bind --make-private "$target".tmp "$target".tmp
         mount --bind --make-private "$target" "$target"
         tar -xf "$src" -C "$target".tmp
-        move-mount --beneath --move "$target".tmp "$target" 2>/dev/null
+        move-mount --beneath --move "$target".tmp "$target"
         umount -R "$target".tmp
         rmdir "$target".tmp
         umount --lazy "$target"
