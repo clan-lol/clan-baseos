@@ -62,14 +62,14 @@
               user = "root";
             };
           };
-          "/etc/secrets/borgbackup.ssh" = {
+          "/etc/secrets/borgbackup/borgbackup.ssh" = {
             C.argument = "${../lib/ssh/privkey}";
             z = {
               mode = "0400";
               user = "root";
             };
           };
-          "/etc/secrets/borgbackup.repokey" = {
+          "/etc/secrets/borgbackup/borgbackup.repokey" = {
             C.argument = builtins.toString (pkgs.writeText "repokey" "repokey12345");
             z = {
               mode = "0400";
@@ -78,8 +78,7 @@
           };
         };
         clan.core.facts.secretStore = "vm";
-        # TODO: set this backend as well, once we have implemented it.
-        #clan.core.vars.settings.secretStore = "vm";
+        clan.core.vars.settings.secretStore = "vm";
 
         environment.systemPackages = [ self.packages.${pkgs.system}.clan-cli ];
         environment.etc.install-closure.source = "${closureInfo}/store-paths";

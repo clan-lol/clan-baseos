@@ -1,7 +1,7 @@
 { config, lib, ... }:
 let
   dir = config.clan.core.settings.directory;
-  machineDir = dir + "/machines/";
+  machineDir = dir + "/vars/per-machine/";
   machineName = config.clan.core.settings.machine.name;
 
   # Instances might be empty, if the module is not used via the inventory
@@ -33,7 +33,8 @@ in
   };
   config.services.borgbackup.repos =
     let
-      borgbackupIpMachinePath = machines: machineDir + machines + "/facts/borgbackup.ssh.pub";
+      borgbackupIpMachinePath = machine: machineDir + machine + "/borgbackup/borgbackup.ssh.pub/value";
+
       machinesMaybeKey = builtins.map (
         machine:
         let
@@ -44,7 +45,7 @@ in
         else
           lib.warn ''
             Machine ${machine} does not have a borgbackup key at ${fullPath},
-            run `clan facts generate ${machine}` to generate it.
+            run `clan var generate ${machine}` to generate it.
           '' null
       ) allClients;
 

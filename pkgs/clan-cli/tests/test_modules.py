@@ -18,7 +18,8 @@ from fixtures_flakes import FlakeForTest
 if TYPE_CHECKING:
     from age_keys import KeyPair
 
-from clan_cli.machines.facts import machine_get_fact
+# from clan_cli.vars.var import machine_get_fact
+from clan_cli.machines.machines import Machine as MachineMachine
 from helpers import cli
 
 
@@ -86,10 +87,25 @@ def test_add_module_to_inventory(
 
     set_inventory(inventory, base_path, "Add borgbackup service")
 
-    cmd = ["facts", "generate", "--flake", str(test_flake_with_core.path), "machine1"]
+    # cmd = ["facts", "generate", "--flake", str(test_flake_with_core.path), "machine1"]
+    cmd = ["vars", "generate", "--flake", str(test_flake_with_core.path), "machine1"]
+
     cli.run(cmd)
 
-    ssh_key = machine_get_fact(base_path, "machine1", "borgbackup.ssh.pub")
+    machine = MachineMachine(
+        name="machine1", flake=FlakeId(str(test_flake_with_core.path))
+    )
+
+    generator = None
+
+    for gen in machine.vars_generators:
+        if gen.name == "borgbackup":
+            generator = gen
+            break
+
+    assert generator
+
+    ssh_key = machine.public_vars_store.get(generator, "borgbackup.ssh.pub")
 
     cmd = nix_eval(
         [
@@ -100,4 +116,4 @@ def test_add_module_to_inventory(
     proc = run_no_stdout(cmd)
     res = json.loads(proc.stdout.strip())
 
-    assert res["machine1"]["authorizedKeys"] == [ssh_key]
+    assert res["machine1"]["authorizedKeys"] == [ssh_key.decode()]

@@ -12,7 +12,7 @@
 
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
 
-    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.url = "github:pinpox/sops-nix/lazy-assertions";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
 
     systems.url = "github:nix-systems/default";
