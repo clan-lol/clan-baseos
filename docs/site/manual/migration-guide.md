@@ -17,14 +17,12 @@ you have a working setup, you can easily transfer your Nix configurations over.
 
 We assume you are already using NixOS flakes to manage your configuration. If
 not, migrate to a flake-based setup following the official [NixOS
-documentation](https://nix.dev/manual/nix/2.25/command-ref/new-cli/nix3-flake.html)
+documentation](https://nix.dev/manual/nix/2.25/command-ref/new-cli/nix3-flake.html).
 The snippet below shows a common Nix flake. For this example we will assume you
 have have two hosts: **berlin** and **cologne**.
 
 ```nix
 {
-  description = "My NixOS systems";
-
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
   outputs = { self, nixpkgs, ... }: {
@@ -32,7 +30,7 @@ have have two hosts: **berlin** and **cologne**.
     nixosConfigurations = {
 
       berlin = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux"; # TODO should we use nixpkgs.hostPlatform here too?
+        system = "x86_64-linux";
         modules = [./machines/berlin/configuration.nix];
       };
 
@@ -78,8 +76,6 @@ For the provide flake example, your flake should now look like this:
 
 ```nix
 {
-  description = "My NixOS systems";
-
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
   outputs = { self, nixpkgs, ... }:
