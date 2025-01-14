@@ -55,9 +55,9 @@ class Identity:
 
     def node_id(self) -> str:
         nid = self.public.split(":")[0]
-        assert (
-            len(nid) == 10
-        ), f"node_id must be 10 characters long, got {len(nid)}: {nid}"
+        assert len(nid) == 10, (
+            f"node_id must be 10 characters long, got {len(nid)}: {nid}"
+        )
         return nid
 
 
@@ -172,9 +172,9 @@ def create_identity() -> Identity:
 
 
 def compute_zerotier_ip(network_id: str, identity: Identity) -> ipaddress.IPv6Address:
-    assert (
-        len(network_id) == 16
-    ), f"network_id must be 16 characters long, got '{network_id}'"
+    assert len(network_id) == 16, (
+        f"network_id must be 16 characters long, got '{network_id}'"
+    )
     nwid = int(network_id, 16)
     node_id = int(identity.node_id(), 16)
     addr_parts = bytearray(
