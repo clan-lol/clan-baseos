@@ -93,14 +93,6 @@ def test_upload_secret(
     assert not store.exists("", "password")
     assert not store.exists("", "password-hash")
 
-    # Assert that root-password is valid
-    # pwd_secret = store.get("", "password").decode()
-    # assert pwd_secret.isprintable()
-    # assert pwd_secret.isascii()
-    # pwd_hash = store.get("", "password-hash").decode()
-    # assert pwd_hash.isprintable()
-    # assert pwd_hash.isascii()
-
     # Assert that user-password is valid
     pwd_secret = store.get("", "user-password").decode()
     assert pwd_secret.isprintable()
