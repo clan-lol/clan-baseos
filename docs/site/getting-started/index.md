@@ -54,6 +54,8 @@ clan --help
 
 ### Step 2: Initialize Your Project
 
+If you want to migrate an existing project, follow this [guide](https://docs.clan.lol/manual/migration-guide/).
+
 Set the foundation of your Clan project by initializing it as follows:
 
 ```bash
