@@ -30,7 +30,7 @@ in
           readFile file.config.path
         else
           # if the file is not found, we want to downgrade the priority, to allow overriding via mkDefault
-          mkOptionDefault (readFile file.config.path)
+          mkOptionDefault (throw "File not found: ${file.config.path}")
       );
     };
   };
