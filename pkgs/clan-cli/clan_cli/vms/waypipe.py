@@ -16,7 +16,7 @@ def test_vsock_port(port: int) -> bool:
         msg = "vsock is only supported on Linux"
         raise NotImplementedError(msg)
     try:
-        with socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM) as s:
+        with socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM) as s:  # type: ignore[attr-defined]
             s.connect((VMADDR_CID_HYPERVISOR, port))
     except OSError:
         return False
