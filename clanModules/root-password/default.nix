@@ -29,7 +29,7 @@
       else
         xkcdpass --numwords 3 --delimiter - --count 1 | tr -d "\n" > $out/password
       fi
-      cat $out/password | mkpasswd -s -m sha-512 | tr -d "\n" > $out/password-hash
+      mkpasswd -s -m sha-512 <  $out/password | tr -d "\n" > $out/password-hash
     '';
   };
 }
