@@ -18,7 +18,6 @@
       pkgs.mkpasswd
       pkgs.xkcdpass
     ];
-    prompts.password.createFile = true;
     prompts.password.type = "hidden";
     prompts.password.description = "You can autogenerate a password, if you leave this prompt blank.";
 
@@ -29,7 +28,7 @@
       else
         xkcdpass --numwords 3 --delimiter - --count 1 | tr -d "\n" > $out/password
       fi
-      mkpasswd -s -m sha-512 <  $out/password | tr -d "\n" > $out/password-hash
+      mkpasswd -s -m sha-512 < $out/password | tr -d "\n" > $out/password-hash
     '';
   };
 }
