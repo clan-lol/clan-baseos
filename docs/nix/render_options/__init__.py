@@ -103,7 +103,7 @@ def render_option(
     read_only = option.get("readOnly")
 
     res = f"""
-{"#" * level} {sanitize(name) if short_head is None else sanitize(short_head)} {"{: #"+sanitize_anchor(name)+"}" if level > 1 else ""}
+{"#" * level} {sanitize(name) if short_head is None else sanitize(short_head)} {"{: #" + sanitize_anchor(name) + "}" if level > 1 else ""}
 
 """
 
@@ -125,7 +125,7 @@ def render_option(
 **Default**:
 
 ```nix
-{option.get("default",{}).get("text") if option.get("default") else "No default set."}
+{option.get("default", {}).get("text") if option.get("default") else "No default set."}
 ```
         """
     example = option.get("example", {}).get("text")

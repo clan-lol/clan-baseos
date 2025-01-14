@@ -492,7 +492,7 @@ def read_key(path: Path) -> tuple[str, KeyType]:
             raise ClanError(msg) from e
     key_type = KeyType.validate(key.get("type"))
     if key_type is None:
-        msg = f"Invalid key type in {path.name}: \"{key_type}\" (expected one of {', '.join(KeyType.__members__.keys())})."
+        msg = f'Invalid key type in {path.name}: "{key_type}" (expected one of {", ".join(KeyType.__members__.keys())}).'
         raise ClanError(msg)
     publickey = key.get("publickey")
     if not publickey:

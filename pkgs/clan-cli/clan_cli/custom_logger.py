@@ -146,7 +146,9 @@ def print_trace(msg: str, logger: logging.Logger, prefix: str | None) -> None:
     if len(callers) == 1:
         callers_str = f"Caller: {callers[0]}\n"
     else:
-        callers_str = "\n".join(f"{i+1}: {caller}" for i, caller in enumerate(callers))
+        callers_str = "\n".join(
+            f"{i + 1}: {caller}" for i, caller in enumerate(callers)
+        )
         callers_str = f"Callers:\n{callers_str}"
     logger.debug(f"{msg} \n{callers_str}", extra={"command_prefix": prefix})
 

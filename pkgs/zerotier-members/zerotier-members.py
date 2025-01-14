@@ -14,9 +14,9 @@ class ClanError(Exception):
 
 
 def compute_zerotier_ip(network_id: str, identity: str) -> ipaddress.IPv6Address:
-    assert (
-        len(network_id) == 16
-    ), "network_id must be 16 characters long, got {network_id}"
+    assert len(network_id) == 16, (
+        "network_id must be 16 characters long, got {network_id}"
+    )
     nwid = int(network_id, 16)
     node_id = int(identity, 16)
     addr_parts = bytearray(

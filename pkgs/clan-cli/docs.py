@@ -327,7 +327,7 @@ def build_command_reference() -> None:
         filename = cmd.title.split(" ")[0]
         markdown = files.get(folder / f"{filename}.md", "")
 
-        markdown += f"{'#'*(cmd.level)} {cmd.title.capitalize()}\n\n"
+        markdown += f"{'#' * (cmd.level)} {cmd.title.capitalize()}\n\n"
 
         markdown += f"{cmd.description}\n\n" if cmd.description else ""
 

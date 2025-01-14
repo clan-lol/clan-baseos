@@ -102,9 +102,9 @@ class Machine:
             .read_text()
             .split()
         )
-        assert (
-            len(childs) == 1
-        ), f"Expected exactly one child process for systemd-nspawn, got {childs}"
+        assert len(childs) == 1, (
+            f"Expected exactly one child process for systemd-nspawn, got {childs}"
+        )
         try:
             return int(childs[0])
         except ValueError as e:

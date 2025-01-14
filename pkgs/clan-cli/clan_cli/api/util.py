@@ -115,9 +115,9 @@ def type_to_dict(
         for f in fields:
             if f.name.startswith("_"):
                 continue
-            assert not isinstance(
-                f.type, str
-            ), f"Expected field type to be a type, got {f.type}, Have you imported `from __future__ import annotations`?"
+            assert not isinstance(f.type, str), (
+                f"Expected field type to be a type, got {f.type}, Have you imported `from __future__ import annotations`?"
+            )
             properties[f.metadata.get("alias", f.name)] = type_to_dict(
                 f.type,
                 f"{scope} {t.__name__}.{f.name}",  # type: ignore

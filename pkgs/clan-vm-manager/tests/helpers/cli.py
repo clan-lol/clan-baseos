@@ -14,7 +14,7 @@ def print_trace(msg: str) -> None:
 
     if "run_no_stdout" in callers[0]:
         callers = get_callers(3, 3 + trace_depth)
-    callers_str = "\n".join(f"{i+1}: {caller}" for i, caller in enumerate(callers))
+    callers_str = "\n".join(f"{i + 1}: {caller}" for i, caller in enumerate(callers))
     log.debug(f"{msg} \nCallers: \n{callers_str}")
 
 
