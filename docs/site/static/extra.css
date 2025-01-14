@@ -15,3 +15,11 @@
 .md-header img {
   filter: invert(100%) brightness(100%);
 }
+
+.md-nav__title {
+  color: black;
+}
+
+.md-nav__item.md-nav__item--section label span {
+  color: black;
+}
