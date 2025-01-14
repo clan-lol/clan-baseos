@@ -81,8 +81,26 @@ def test_generate_secret(
         Machine(name="vm2", flake=FlakeId(str(test_flake_with_core.path)))
     )
 
-    assert store2.exists("", "password")
-    assert store2.exists("", "password-hash")
+    # Should not exist clan facts generate
+    assert not store2.exists("", "password")
+    assert not store2.exists("", "password-hash")
+    # clan vars generate
+    # TODO: Test vars
+    # varsStore = VarsSecretStore(
+    #     machine=Machine(name="vm2", flake=FlakeId(str(test_flake_with_core.path)))
+    # )
+    # generators = get_generators(str(test_flake_with_core.path), "vm2")
+    # generator = next((gen for gen in generators if gen.name == "root-password"), None)
+
+    # if not generator:
+    #     raise Exception("Generator not found")
+
+    # password_update = GeneratorUpdate(
+    #     generator=generator.name, prompt_values={"password": "1234"}
+    # )
+    # set_prompts(str(test_flake_with_core.path), "vm2", [password_update])
+    # assert varsStore.exists(generator, "root-password")
+
     assert store2.exists("", "user-password")
     assert store2.exists("", "user-password-hash")
     assert store2.exists("", "age.key")
@@ -95,14 +113,6 @@ def test_generate_secret(
     age_secret = store2.get("", "age.key").decode()
     assert age_secret.isprintable()
     assert is_valid_age_key(age_secret)
-
-    # Assert that root-password is valid
-    pwd_secret = store2.get("", "password").decode()
-    assert pwd_secret.isprintable()
-    assert pwd_secret.isascii()
-    pwd_hash = store2.get("", "password-hash").decode()
-    assert pwd_hash.isprintable()
-    assert pwd_hash.isascii()
 
     # Assert that user-password is valid
     pwd_secret = store2.get("", "user-password").decode()
