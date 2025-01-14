@@ -75,9 +75,9 @@ def show_command(args: argparse.Namespace) -> None:
     flake_path = args.flake.path
     meta = show_clan_meta(flake_path)
 
-    print(f"Name: {meta.get("name")}")
-    print(f"Description: {meta.get("description", '-')}")
-    print(f"Icon: {meta.get("icon", '-')}")
+    print(f"Name: {meta.get('name')}")
+    print(f"Description: {meta.get('description', '-')}")
+    print(f"Icon: {meta.get('icon', '-')}")
 
 
 def register_parser(parser: argparse.ArgumentParser) -> None:

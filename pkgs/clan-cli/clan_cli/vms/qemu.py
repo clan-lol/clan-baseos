@@ -99,8 +99,8 @@ def qemu_command(
         portmap = {}
     kernel_cmdline = [
         (Path(nixos_config["toplevel"]) / "kernel-params").read_text(),
-        f'init={nixos_config["toplevel"]}/init',
-        f'regInfo={nixos_config["regInfo"]}/registration',
+        f"init={nixos_config['toplevel']}/init",
+        f"regInfo={nixos_config['regInfo']}/registration",
         "console=hvc0",
     ]
     if not vm.waypipe.enable:

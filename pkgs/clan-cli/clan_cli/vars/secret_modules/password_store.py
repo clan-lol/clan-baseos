@@ -141,7 +141,7 @@ class SecretStore(StoreBase):
             # TODO get the path to the secrets from the machine
             [
                 "cat",
-                f"{self.machine.deployment["password-store"]["secretLocation"]}/.pass_info",
+                f"{self.machine.deployment['password-store']['secretLocation']}/.pass_info",
             ],
             RunOpts(log=Log.STDERR, check=False),
         ).stdout.strip()

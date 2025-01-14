@@ -116,7 +116,7 @@ class CmdOut:
 {optional_text("Command", self.command)}
 {optional_text("Stdout", self.stdout)}
 {optional_text("Stderr", self.stderr)}
-{'Return Code:':<{label_width}} {self.returncode}
+{"Return Code:":<{label_width}} {self.returncode}
 """
         ]
         if self.msg:
@@ -135,7 +135,7 @@ class CmdOut:
                 f"""
 {optional_text("Environment", diffed_dict_str)}
 {text_heading(heading="Metadata")}
-{'Work Dir:':<{label_width}} '{self.cwd}'
+{"Work Dir:":<{label_width}} '{self.cwd}'
 """
             ]
         return "\n".join(error_msg)
