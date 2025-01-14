@@ -116,26 +116,28 @@ in
     };
     clan.postgresql.databases.matrix-synapse.restore.stopOnRestore = [ "matrix-synapse" ];
 
-    clan.core.facts.services =
+    clan.core.vars.generators =
       {
         "matrix-synapse" = {
-          secret."synapse-registration_shared_secret" = { };
-          generator.path = with pkgs; [
+          files."synapse-registration_shared_secret" = { };
+          runtimeInputs = with pkgs; [
             coreutils
             pwgen
           ];
-          generator.script = ''
-            echo -n "$(pwgen -s 32 1)" > "$secrets"/synapse-registration_shared_secret
+          migrateFact = "matrix-synapse";
+          script = ''
+            echo -n "$(pwgen -s 32 1)" > "$out"/synapse-registration_shared_secret
           '';
         };
       }
       // lib.mapAttrs' (
         name: user:
         lib.nameValuePair "matrix-password-${user.name}" {
-          secret."matrix-password-${user.name}" = { };
-          generator.path = with pkgs; [ xkcdpass ];
-          generator.script = ''
-            xkcdpass -n 4 -d - > "$secrets"/${lib.escapeShellArg "matrix-password-${user.name}"}
+          files."matrix-password-${user.name}" = { };
+          migrateFact = "matrix-password-${user.name}";
+          runtimeInputs = with pkgs; [ xkcdpass ];
+          script = ''
+            xkcdpass -n 4 -d - > "$out"/${lib.escapeShellArg "matrix-password-${user.name}"}
           '';
         }
       ) cfg.users;
@@ -152,7 +154,7 @@ in
           + lib.concatMapStringsSep "\n" (user: ''
             # only create user if it doesn't exist
             /run/current-system/sw/bin/matrix-synapse-register_new_matrix_user --exists-ok --password-file ${
-              config.clan.core.facts.services."matrix-password-${user.name}".secret."matrix-password-${user.name}".path
+              config.clan.core.vars.generators."matrix-password-${user.name}".files."matrix-password-${user.name}".path
             } --user "${user.name}" ${if user.admin then "--admin" else "--no-admin"}
           '') (lib.attrValues cfg.users);
       in
@@ -161,7 +163,7 @@ in
         serviceConfig.ExecStartPre = lib.mkBefore [
           "+${pkgs.coreutils}/bin/install -o matrix-synapse -g matrix-synapse ${
             lib.escapeShellArg
-              config.clan.core.facts.services.matrix-synapse.secret."synapse-registration_shared_secret".path
+              config.clan.core.vars.generators.matrix-synapse.files."synapse-registration_shared_secret".path
           } /run/synapse-registration-shared-secret"
         ];
         serviceConfig.ExecStartPost = [
