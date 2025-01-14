@@ -237,5 +237,5 @@ def register_update_hardware_config(parser: argparse.ArgumentParser) -> None:
         "--backend",
         help="The type of hardware report to generate.",
         choices=["nixos-generate-config", "nixos-facter"],
-        default="nixos-generate-config",
+        default="nixos-facter",
     )

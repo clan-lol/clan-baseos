@@ -163,7 +163,8 @@ replace `[MACHINE_NAME]` with the name of the machine i.e. `jon` and `[HOSTNAME]
     clan machines update-hardware-config jon
     ```
 
-    This command connects to the ip configured in the previous step, runs `nixos-generate-config` to detect hardware configurations (excluding filesystems), and writes them to `machines/jon/hardware-configuration.nix`.
+    This command connects to the ip configured in the previous step, runs [nixos-facter](https://github.com/nix-community/nixos-facter)
+    to detect hardware configurations (excluding filesystems), and writes them to `machines/jon/facter.json`.
 
 ### Step 3: Custom Disk Formatting
 
