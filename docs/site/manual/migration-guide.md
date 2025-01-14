@@ -132,7 +132,7 @@ configuration.
 A minimal example is provided below, add it to your flake outputs.
 
 ```nix
-devShells."x86_64-linux".default = nixpkgs.mkShell {
+devShells."x86_64-linux".default = nixpkgs.legacyPackages."x86_64-linux".mkShell {
   packages = [ clan-core.packages."x86_64-linux".clan-cli ];
 };
 ```
