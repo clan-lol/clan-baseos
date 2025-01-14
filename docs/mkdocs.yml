@@ -152,8 +152,7 @@ theme:
   name: material
   features:
     - navigation.instant
-    - navigation.tabs
-    - navigation.tabs.sticky
+    - navigation.sections
     - navigation.footer
     - content.code.annotate
     - content.code.copy
