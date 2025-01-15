@@ -7,7 +7,6 @@ let
   inherit (lib)
     filterAttrs
     flatten
-    flip
     mapAttrsToList
     ;
 in
@@ -18,20 +17,18 @@ in
     let
       relevantFiles =
         generator:
-        flip filterAttrs generator.files (_name: f: f.secret && f.deploy && (f.neededFor != "activation"));
+        filterAttrs (_name: f: f.secret && f.deploy && (f.neededFor != "activation")) generator.files;
       allFiles = flatten (
-        flip mapAttrsToList vars.generators (
+        mapAttrsToList (
           gen_name: generator:
-          flip mapAttrsToList (relevantFiles generator) (
-            fname: file: {
-              name = fname;
-              generator = gen_name;
-              neededForUsers = file.neededFor == "users";
-              inherit (generator) share;
-              inherit (file) owner group;
-            }
-          )
-        )
+          mapAttrsToList (fname: file: {
+            name = fname;
+            generator = gen_name;
+            neededForUsers = file.neededFor == "users";
+            inherit (generator) share;
+            inherit (file) owner group;
+          }) (relevantFiles generator)
+        ) vars.generators
       );
     in
     allFiles;
