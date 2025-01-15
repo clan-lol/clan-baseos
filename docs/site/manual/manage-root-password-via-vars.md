@@ -55,7 +55,7 @@ Create a new nix file `root-password.nix` with the following content and import 
   # set the root password to the file containing the hash
   users.users.root.hashedPasswordFile =
     # clan will make sure, this path exists
-    config.clan.vars.generators.root-password.files.password-hash.path;
+    config.clan.core.vars.generators.root-password.files.password-hash.path;
 }
 ```
 
@@ -91,7 +91,7 @@ Updated var root-password/password-hash
 With the last step, a new file was created in your repository:
 `vars/per-machine/my-machine/root-password/password-hash/value`
 
-If the repository is a git repository, a commit was created automaticallyooooo:
+If the repository is a git repository, a commit was created automatically:
 ```shellSession
 $ git log -n1
 commit ... (HEAD -> master)
