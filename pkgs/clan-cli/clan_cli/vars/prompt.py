@@ -32,7 +32,7 @@ class Prompt:
             name=data["name"],
             description=data["description"],
             prompt_type=PromptType(data["type"]),
-            create_file=data.get("persist", data["createFile"]),
+            create_file=data.get("persist", data["persist"]),
             previous_value=data.get("previousValue"),
         )
 

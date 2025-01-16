@@ -6,8 +6,6 @@
 }:
 let
 
-  inherit (lib) flip;
-
   inherit (import ./funcs.nix { inherit lib; }) collectFiles;
 
   machineName = config.clan.core.settings.machine.name;
@@ -38,16 +36,18 @@ in
   };
 
   config.sops = lib.mkIf (config.clan.core.vars.settings.secretStore == "sops") {
+
     secrets = lib.listToAttrs (
-      flip map vars (secret: {
+      map (secret: {
         name = "vars/${secret.generator}/${secret.name}";
         value = {
           inherit (secret) owner group neededForUsers;
           sopsFile = secretPath secret;
           format = "binary";
         };
-      })
+      }) (builtins.filter (x: builtins.pathExists (secretPath x)) vars)
     );
+
     # To get proper error messages about missing secrets we need a dummy secret file that is always present
     defaultSopsFile = lib.mkIf config.sops.validateSopsFiles (
       lib.mkDefault (builtins.toString (pkgs.writeText "dummy.yaml" ""))

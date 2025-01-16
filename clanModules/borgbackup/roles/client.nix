@@ -63,9 +63,9 @@ in
             rsh = lib.mkOption {
               type = lib.types.str;
               default = "ssh -i ${
-                config.clan.core.facts.services.borgbackup.secret."borgbackup.ssh".path
+                config.clan.core.vars.generators.borgbackup.files."borgbackup.ssh".path
               } -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=Yes";
-              defaultText = "ssh -i \${config.clan.core.facts.services.borgbackup.secret.\"borgbackup.ssh\".path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
+              defaultText = "ssh -i \${config.clan.core.vars.generators.borgbackup.files.\"borgbackup.ssh\".path} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
               description = "the rsh to use for the backup";
             };
           };
@@ -126,7 +126,7 @@ in
 
       encryption = {
         mode = "repokey";
-        passCommand = "cat ${config.clan.core.facts.services.borgbackup.secret."borgbackup.repokey".path}";
+        passCommand = "cat ${config.clan.core.vars.generators.borgbackup.files."borgbackup.repokey".path}";
       };
 
       prune.keep = {
@@ -177,20 +177,21 @@ in
       })
     ];
 
-    # Facts generation. So the client can authenticate to the server
-    clan.core.facts.services.borgbackup = {
-      public."borgbackup.ssh.pub" = { };
-      secret."borgbackup.ssh" = { };
-      secret."borgbackup.repokey" = { };
-      generator.path = [
-        pkgs.openssh
+    clan.core.vars.generators.borgbackup = {
+
+      files."borgbackup.ssh.pub".secret = false;
+      files."borgbackup.ssh" = { };
+      files."borgbackup.repokey" = { };
+
+      migrateFact = "borgbackup";
+      runtimeInputs = [
         pkgs.coreutils
+        pkgs.openssh
         pkgs.xkcdpass
       ];
-      generator.script = ''
-        ssh-keygen -t ed25519 -N "" -f "$secrets"/borgbackup.ssh
-        mv "$secrets"/borgbackup.ssh.pub "$facts"/borgbackup.ssh.pub
-        xkcdpass -n 4 -d - > "$secrets"/borgbackup.repokey
+      script = ''
+        ssh-keygen -t ed25519 -N "" -f $out/borgbackup.ssh
+        xkcdpass -n 4 -d - > $out/borgbackup.repokey
       '';
     };
 
