@@ -438,7 +438,7 @@ def main() -> None:
             log.exception("Exited with error")
         else:
             log.error("%s", e)
-            sys.exit(1)
+        sys.exit(1)
     except KeyboardInterrupt as ex:
         log.warning("Interrupted by user", exc_info=ex)
         sys.exit(1)
