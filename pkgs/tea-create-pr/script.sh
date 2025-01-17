@@ -10,7 +10,7 @@ TMPDIR="$(mktemp -d)"
 currentBranch="$(git rev-parse --abbrev-ref HEAD)"
 user_unparsed="$(tea whoami)"
 user="$(echo "$user_unparsed" | tr -d '\n' | cut -f4 -d' ')"
-tempRemoteBranch="$user-$currentBranch"
+tempRemoteBranch="$currentBranch"
 
 
 # Function to check if a remote exists
