@@ -355,7 +355,7 @@ Examples:
   If the `--target-host` flag is omitted will try to find host information by
   checking the deployment configuration inside the specified machine.
 
-For more detailed information, visit: {help_hyperlink("deploy", "https://docs.clan.lol/deploy")}
+For more detailed information, visit: {help_hyperlink("deploy", "https://docs.clan.lol/getting-started/deploy")}
         """
         ),
         formatter_class=argparse.RawTextHelpFormatter,
