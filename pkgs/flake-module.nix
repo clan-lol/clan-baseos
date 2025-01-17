@@ -23,7 +23,7 @@
     { config, pkgs, ... }:
     {
       packages = {
-        tea-create-pr = pkgs.callPackage ./tea-create-pr { formatter = config.treefmt.build.wrapper; };
+        tea-create-pr = pkgs.callPackage ./tea-create-pr { };
         zerotier-members = pkgs.callPackage ./zerotier-members { };
         zt-tcp-relay = pkgs.callPackage ./zt-tcp-relay { };
         moonlight-sunshine-accept = pkgs.callPackage ./moonlight-sunshine-accept { };
