@@ -1,6 +1,5 @@
 {
   self,
-  inputs,
   lib,
   ...
 }:
@@ -17,18 +16,68 @@
       { lib, modulesPath, ... }:
       {
         imports = [
-          self.clanModules.single-disk
           (modulesPath + "/testing/test-instrumentation.nix") # we need these 2 modules always to be able to run the tests
           (modulesPath + "/profiles/qemu-guest.nix")
           ../lib/minify.nix
         ];
-        clan.single-disk.device = "/dev/vda";
 
         environment.etc."install-successful".text = "ok";
 
         nixpkgs.hostPlatform = "x86_64-linux";
         boot.consoleLogLevel = lib.mkForce 100;
         boot.kernelParams = [ "boot.shell_on_fail" ];
+
+        # disko config
+        boot.loader.grub.efiSupport = lib.mkDefault true;
+        boot.loader.grub.efiInstallAsRemovable = lib.mkDefault true;
+        clan.core.vars.settings.secretStore = "vm";
+        clan.core.vars.generators.test = {
+          files.test.neededFor = "partitioning";
+          script = ''
+            echo "notok" > $out/test
+          '';
+        };
+        disko.devices = {
+          disk = {
+            main = {
+              type = "disk";
+              device = "/dev/vda";
+
+              preCreateHook = ''
+                test -e /run/partitioning-secrets/test/test
+              '';
+
+              content = {
+                type = "gpt";
+                partitions = {
+                  boot = {
+                    size = "1M";
+                    type = "EF02"; # for grub MBR
+                    priority = 1;
+                  };
+                  ESP = {
+                    size = "512M";
+                    type = "EF00";
+                    content = {
+                      type = "filesystem";
+                      format = "vfat";
+                      mountpoint = "/boot";
+                      mountOptions = [ "umask=0077" ];
+                    };
+                  };
+                  root = {
+                    size = "100%";
+                    content = {
+                      type = "filesystem";
+                      format = "ext4";
+                      mountpoint = "/";
+                    };
+                  };
+                };
+              };
+            };
+          };
+        };
       };
   };
   perSystem =
