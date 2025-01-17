@@ -1,3 +1,4 @@
+# Inventory
 
 `Inventory` is an abstract service layer for consistently configuring distributed services across machine boundaries.
 

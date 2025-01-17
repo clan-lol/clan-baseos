@@ -1,4 +1,4 @@
-# Create an Installer Image
+# Installer
 
 Our installer image simplifies the process of performing remote installations.
 
@@ -197,3 +197,10 @@ Press ++ctrl+d++ to exit `IWD`.
 
 You're all set up
 
+---
+
+## What's next?
+
+- [Configure Machines](configure.md): Customize machine configuration
+
+---

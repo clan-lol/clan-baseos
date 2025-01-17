@@ -1,3 +1,4 @@
+# Clan with `flake-parts`
 
 Clan supports integration with [flake.parts](https://flake.parts/) a tool which allows composing nixos modules in a modular way.
 
