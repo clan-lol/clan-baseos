@@ -24,7 +24,14 @@ in
         nix-unit --eval-store "$HOME" \
           --extra-experimental-features flakes \
           ${inputOverrides} \
-          --flake ${self}#legacyPackages.${system}.evalTests-module-clan-vars
+          --flake ${
+            self.filter {
+              include = [
+                "flakeModules"
+                "nixosModules"
+              ];
+            }
+          }#legacyPackages.${system}.evalTests-module-clan-vars
 
         touch $out
       '';

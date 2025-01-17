@@ -4,8 +4,14 @@
   self,
   ...
 }:
+let
+  inherit (lib)
+    filter
+    pathExists
+    ;
+in
 {
-  imports = [
+  imports = filter pathExists [
     ./jsonschema/flake-module.nix
     ./inventory/flake-module.nix
     ./build-clan/flake-module.nix

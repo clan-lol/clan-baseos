@@ -24,7 +24,16 @@ in
           nix-unit --eval-store "$HOME" \
             --extra-experimental-features flakes \
             ${inputOverrides} \
-            --flake ${self}#legacyPackages.${system}.evalTests-values
+            --flake ${
+              self.filter {
+                include = [
+                  "flakeModules"
+                  "lib/default.nix"
+                  "lib/flake-module.nix"
+                  "lib/values"
+                ];
+              }
+            }#legacyPackages.${system}.evalTests-values
 
           touch $out
         '';

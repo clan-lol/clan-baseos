@@ -24,10 +24,18 @@
   outputs =
     inputs@{
       flake-parts,
+      nixpkgs,
       self,
       systems,
       ...
     }:
+    let
+      inherit (nixpkgs.lib)
+        filter
+        optional
+        pathExists
+        ;
+    in
     flake-parts.lib.mkFlake { inherit inputs; } (
       { ... }:
       {
@@ -36,24 +44,29 @@
           directory = self;
         };
         systems = import systems;
-        imports = [
-          ./checks/flake-module.nix
-          ./clanModules/flake-module.nix
-          ./flakeModules/flake-module.nix
-          (import ./flakeModules/clan.nix inputs.self)
-          ./devShell.nix
-          # TODO: migrate this @davHau
-          # ./docs/flake-module
-          ./docs/nix/flake-module.nix
-          ./lib/flake-module.nix
-          ./nixosModules/flake-module.nix
-          ./nixosModules/clanCore/vars/flake-module.nix
-          ./pkgs/flake-module.nix
-          ./templates/flake-module.nix
+        imports =
+          # only imporing existing paths allows to minimize the flake for test
+          # by removing files
+          filter pathExists [
+            ./checks/flake-module.nix
+            ./clanModules/flake-module.nix
+            ./devShell.nix
+            ./docs/nix/flake-module.nix
+            ./flakeModules/flake-module.nix
+            ./lib/filter-clan-core/flake-module.nix
+            ./lib/flake-module.nix
+            ./nixosModules/clanCore/vars/flake-module.nix
+            ./nixosModules/flake-module.nix
+            ./pkgs/flake-module.nix
+            ./templates/flake-module.nix
+          ]
+          ++ [
+            (if pathExists ./flakeModules/clan.nix then import ./flakeModules/clan.nix inputs.self else { })
+          ]
           # Make treefmt-nix optional
           # This only works if you set inputs.clan-core.inputs.treefmt-nix.follows
           # to a non-empty input that doesn't export a flakeModule
-        ] ++ inputs.nixpkgs.lib.optional (inputs.treefmt-nix ? flakeModule) ./formatter.nix;
+          ++ optional (pathExists ./formatter.nix && inputs.treefmt-nix ? flakeModule) ./formatter.nix;
       }
     );
 }

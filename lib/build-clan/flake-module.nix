@@ -20,7 +20,6 @@ in
       jsonDocs = import ./eval-docs.nix {
         inherit pkgs lib;
       };
-
     in
     {
       legacyPackages.clan-internals-docs = jsonDocs.optionsJSON;
@@ -39,7 +38,20 @@ in
           nix-unit --eval-store "$HOME" \
             --extra-experimental-features flakes \
             ${inputOverrides} \
-            --flake ${self}#legacyPackages.${system}.evalTests-build-clan
+            --flake ${
+              self.filter {
+                include = [
+                  "flakeModules"
+                  "inventory.json"
+                  "lib/build-clan"
+                  "lib/default.nix"
+                  "lib/flake-module.nix"
+                  "lib/inventory"
+                  "machines"
+                  "nixosModules"
+                ];
+              }
+            }#legacyPackages.${system}.evalTests-build-clan
 
           touch $out
         '';

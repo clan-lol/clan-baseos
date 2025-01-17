@@ -69,7 +69,13 @@
             ];
           }
           ''
-            export CLAN_CORE_PATH=${self}
+            export CLAN_CORE_PATH=${
+              self.filter {
+                include = [
+                  "clanModules"
+                ];
+              }
+            }
             export CLAN_CORE_DOCS=${jsonDocs.clanCore}/share/doc/nixos/options.json
             # A file that contains the links to all clanModule docs
             export CLAN_MODULES_VIA_ROLES=${clanModulesViaRoles}

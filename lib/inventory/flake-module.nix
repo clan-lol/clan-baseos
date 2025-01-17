@@ -46,7 +46,19 @@ in
           nix-unit --eval-store "$HOME" \
             --extra-experimental-features flakes \
             ${inputOverrides} \
-            --flake ${self}#legacyPackages.${system}.evalTests-inventory
+            --flake ${
+              self.filter {
+                include = [
+                  "flakeModules"
+                  "lib/default.nix"
+                  "lib/flake-module.nix"
+                  "lib/inventory"
+                  "lib/frontmatter"
+                  "clanModules/flake-module.nix"
+                  "clanModules/borgbackup"
+                ];
+              }
+            }#legacyPackages.${system}.evalTests-inventory
 
           touch $out
         '';

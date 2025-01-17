@@ -1,6 +1,13 @@
-{ ... }:
+{ lib, ... }:
+let
+  inherit (lib)
+    filterAttrs
+    pathExists
+    ;
+in
 {
-  flake.clanModules = {
+  # only import available files, as this allows to filter the files for tests.
+  flake.clanModules = filterAttrs (_name: pathExists) {
     admin = ./admin;
     borgbackup = ./borgbackup;
     borgbackup-static = ./borgbackup-static;

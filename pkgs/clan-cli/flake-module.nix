@@ -12,7 +12,16 @@
       ...
     }:
     let
-      flakeLock = lib.importJSON (self + /flake.lock);
+      clanCore = self.filter {
+        include = [
+          "clanModules"
+          "flakeModules"
+          "lib"
+          "nixosModules"
+          "flake.lock"
+        ];
+      };
+      flakeLock = lib.importJSON (clanCore + "/flake.lock");
       flakeInputs = builtins.removeAttrs inputs [ "self" ];
       flakeLockVendoredDeps =
         flakeLock:
@@ -43,7 +52,7 @@
         inputs = lib.mapAttrs (name: _input: name) flakeInputs;
         locked = {
           lastModified = 1;
-          path = "${self}";
+          path = "${clanCore}";
           type = "path";
         };
         original = {
@@ -81,11 +90,11 @@
             set -e
             export HOME=$(realpath .)
             export NIX_STATE_DIR=$HOME
-            cp -r ${self} $out
+            cp -r ${clanCore} $out
             chmod +w -R $out
             cp ${clanCoreLockFile} $out/flake.lock
             nix flake lock $out --extra-experimental-features 'nix-command flakes'
-            clanCoreHash=$(nix hash path ${self} --extra-experimental-features 'nix-command')
+            clanCoreHash=$(nix hash path ${clanCore} --extra-experimental-features 'nix-command')
             for templateDir in $(find $out/templates -mindepth 1 -maxdepth 1 -type d); do
               if ! [ -e "$templateDir/flake.nix" ]; then
                 continue

@@ -1,6 +1,12 @@
-{ self, ... }:
+{ self, lib, ... }:
+let
+  inherit (lib)
+    filter
+    pathExists
+    ;
+in
 {
-  imports = [
+  imports = filter pathExists [
     ./backups/flake-module.nix
     ./devshell/flake-module.nix
     ./flash/flake-module.nix
