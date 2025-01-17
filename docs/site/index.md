@@ -4,13 +4,13 @@ hide:
   - toc
 ---
 
-# :material-home: Welcome to **Clan**'s awesome documentation
+# :material-home: Welcome to **Clan**'s  documentation
 
 [Getting Started](./getting-started/index.md){ .md-button }
 
-## What's inside
+## Tutorials
 
-This documentation is structured into the following sections
+**Learning-oriented adventures with a hands-on experience.**
 
 <div class="grid cards" markdown>
 
@@ -19,25 +19,69 @@ This documentation is structured into the following sections
     ---
 
     Create your own clan and get everything
-    running in a couple of minutes.
+    running in minutes
 
     [:octicons-arrow-right-24: Getting started](./getting-started/index.md)
 
-
--   :material-sign-direction:{ .lg .middle } __Guides__
-
-    ---
-
-    Instructions and explanations for practical Implementations ordered by Topic.
-
-    [:octicons-arrow-right-24: Guides](./manual/index.md)
-
--   :material-api:{ .lg .middle } __Reference__
+-   :fontawesome-solid-user-group:{ .lg .middle } __Authoring Modules__
 
     ---
 
-    Detailed Specification of Functions and APIs.
+    Create clanModules that can be reused by the community.
 
-    [:octicons-arrow-right-24: Reference](./reference/index.md)
+    [:octicons-arrow-right-24: Authoring clanModules](./clanmodules/index.md)
+
+</div>
+
+## :material-book: Guides
+
+**How-to Guides for achieving a certain goal or solving a specific issue.**
+
+<div class="grid cards" markdown>
+
+-   [Autoincludes](./manual/adding-machines.md)
+
+    ---
+
+    Learn how Clan automatically includes machines and Nix files.
+
+-   [Vars Backend](./manual/vars-backend.md)
+
+    ---
+
+    Learn how to manage secrets with facts.
+
+-   [Inventory](./manual/inventory.md)
+
+    ---
+
+    Clan's declaration format for running **services** on one or multiple **machines**.
+
+-   [Flake-parts](./manual/flake-parts.md)
+
+    ---
+
+    Use clan with [https://flake-parts.dev]()
+
+-   [Contribute](./manual/contribute.md)
+
+    ---
+
+    Discover how to set up a development environment to contribute to Clan!
+
+</div>
+
+## API Reference
+
+**Auto generated API Documentation**
+
+<div class="grid cards" markdown>
+
+-   [Reference Overview](./reference/index.md)
+
+    ---
+
+    Learn how to interface with Clan programmatically
+
 
 </div>

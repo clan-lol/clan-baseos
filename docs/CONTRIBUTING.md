@@ -1,4 +1,5 @@
-# Contributing
+# Contributing to Clan
+
 
 **Continuous Integration (CI)**: Each pull request gets automatically tested by gitea. If any errors are detected, it will block pull requests until they're resolved.
 
@@ -94,12 +95,40 @@ Let's get your development environment up and running:
       merge-after-ci --reviewers Mic92 Lassulus Qubasa
       ```
 
+## Related Projects
 
+- **Data Mesher**: [dm](https://git.clan.lol/clan/dm)
+- **Nixos Facter**: [nixos-facter](https://github.com/nix-community/nixos-facter)
+- **Nixos Anywhere**: [nixos-anywhere](https://github.com/nix-community/nixos-anywhere)
+- **Disko**: [disko](https://github.com/nix-community/disko)
 
-### Whats Next?
+## Fixing Bugs or Adding Features in Clan-CLI
 
-Please look into the [debugging](./debugging.md) guide next!
+If you have a bug fix or feature that involves a related project, clone the relevant repository and replace its invocation in your local setup.
 
+For instance, if you need to update `nixos-anywhere` in clan-cli, find its usage:
+
+```python
+run(
+    nix_shell(
+        ["nixpkgs#nixos-anywhere"],
+        cmd,
+    ),
+    RunOpts(log=Log.BOTH, prefix=machine.name, needs_user_terminal=True),
+)
+```
+
+You can replace `"nixpkgs#nixos-anywhere"` with your local path:
+
+```python
+run(
+    nix_shell(
+        ["<path_to_local_src>#nixos-anywhere"],
+        cmd,
+    ),
+    RunOpts(log=Log.BOTH, prefix=machine.name, needs_user_terminal=True),
+)
+```
 
 # Standards
 

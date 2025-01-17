@@ -43,20 +43,19 @@ exclude_docs: |
 nav:
   - Home: index.md
   - Getting Started:
-      - Getting Started: getting-started/index.md
-      - Installer: getting-started/installer.md
-      - Configure: getting-started/configure.md
+      - Setup Clan: getting-started/index.md
+      - Create Installer: getting-started/installer.md
+      - Add Machines: getting-started/configure.md
       - Secrets & Facts: getting-started/secrets.md
       - Deploy Machine: getting-started/deploy.md
   - Guides:
-      - Overview: manual/index.md
-      - Manage passwords using vars: manual/manage-root-password-via-vars.md
       - Disk Encryption: getting-started/disk-encryption.md
       - Mesh VPN: getting-started/mesh-vpn.md
       - Backup & Restore: getting-started/backups.md
-      - Adding Machines: manual/adding-machines.md
+      - Vars Backend: manual/vars-backend.md
+      - Facts Backend: manual/secrets.md
+      - Autoincludes: manual/adding-machines.md
       - Inventory: manual/inventory.md
-      - Secrets: manual/secrets.md
       - Secure Boot: manual/secure-boot.md
       - Flake-parts: manual/flake-parts.md
       - Authoring:

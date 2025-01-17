@@ -1,4 +1,3 @@
-# Secrets / Facts
 
 Clan enables encryption of secrets (such as passwords & keys) ensuring security and ease-of-use among users.
 
@@ -84,8 +83,3 @@ This command helps ensure that your system configuration is correct and free fro
 
     You can integrate this step into your [Continuous Integration](https://en.wikipedia.org/wiki/Continuous_integration) workflow to ensure that only valid Nix configurations are merged into your codebase.
 
-
-## What's next?
-
-- [Deployment](deploy.md): How to remotely deploy your machine
-- Full [Secrets](../manual/secrets.md) guide If you want to know more about how to save and share passwords in your clan

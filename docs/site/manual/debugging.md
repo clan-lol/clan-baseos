@@ -1,4 +1,3 @@
-# Debugging
 
 Here are some methods for debugging and testing the clan-cli
 
@@ -152,6 +151,3 @@ If you need to inspect the Nix sandbox while running tests, follow these steps:
 
 Or you can also use the [nix breakpoint hook](https://nixos.org/manual/nixpkgs/stable/#breakpointhook)
 
-### What's next?
-
-Please look into the [repo layout](./repo-layout.md) guide next!
