@@ -167,6 +167,7 @@ let
       (builtins.fromJSON (builtins.readFile inventoryFile))
     else
       { };
+
 in
 {
   imports = [
@@ -189,7 +190,9 @@ in
       inventory.machines = lib.mapAttrs (_n: _: { }) config.machines;
     }
     # Merge the meta attributes from the buildClan function
-    { inventory.modules = clan-core.clanModules; }
+    {
+      inventory.modules = clan-core.clanModules;
+    }
     # config.inventory.meta <- config.meta
     { inventory.meta = config.meta; }
     # Set default for computed tags
