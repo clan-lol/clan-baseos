@@ -35,6 +35,5 @@ eval {
     rest
     # implementation
     ./module.nix
-    ./imports.nix
   ];
 }
