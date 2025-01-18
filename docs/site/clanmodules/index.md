@@ -53,7 +53,7 @@ clanModules/borgbackup
     ```nix title="flake.nix"
     # ...
     buildClan {
-        # 1. Add the module to the avilable inventory modules
+        # 1. Add the module to the avilable clanModules with inventory support
         inventory.modules = {
             custom-module = ./modules/my_module;
         };
@@ -111,7 +111,7 @@ Adds the roles: `client` and `server`
     Sometimes a `ClanModule` should be usable via both clan's `inventory` concept but also natively as a NixOS module.
 
     > In the long term, we want most modules to implement support for the inventory,
-    > but we are also aware that there are certain low-level modules that always serve as a backend for other higher-level inventory modules.
+    > but we are also aware that there are certain low-level modules that always serve as a backend for other higher-level `clanModules` with inventory support.
     > These modules may not want to implement inventory interfaces as they are always used directly by other modules.
 
     This can be achieved by placing an additional `default.nix` into the root of the ClanModules directory as shown:
