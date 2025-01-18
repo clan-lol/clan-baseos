@@ -18,16 +18,6 @@ Every folder `machines/{machineName}` will be registered automatically as a Clan
     - [x] `machines/{machineName}/disko.nix` Automatically loaded, for further information see the [disko docs](https://github.com/nix-community/disko/blob/master/docs/quickstart.md).
 
 
-## Automatic Imports
-
-The `buildClan` function will automatically import modules if a directory named `<CLAN_ROOT>/imports` exists within the Clan. Below are the conditions for automatically importing `clanModules`:
-
-- **Clan Modules**: Modules located in `<CLAN_ROOT>/imports/inventory` will be automatically imported. Note that only inventory-compatible modules can be used in this location. To be compatible, a module must contain a `roles` folder. 
-
-- **Adding a Module**: To add a module, such as `mymodule`, create a dedicated directory at `<CLAN_ROOT>/imports/inventory/mymodule`, ensuring that it includes a `roles` folder.
-
-For further details on creating Clan modules, please refer to the [Authoring Clan Modules](../clanmodules/index.md) section. 
-
 
 ## Manual declaration
 
