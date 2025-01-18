@@ -1,4 +1,3 @@
-# Mesh VPN
 
 This guide provides detailed instructions for configuring
 [ZeroTier VPN](https://zerotier.com) within Clan. Follow the

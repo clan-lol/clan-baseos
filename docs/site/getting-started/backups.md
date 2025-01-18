@@ -1,6 +1,4 @@
-# Backups
-
-## Introduction to Backups
+# Introduction to Backups
 
 When you're managing your own services, creating regular backups is crucial to ensure your data's safety.
 This guide introduces you to Clan's built-in backup functionalities.
@@ -8,8 +6,6 @@ Clan supports backing up your data to both local storage devices (like USB drive
 We might add more options in the future, but for now, let's dive into how you can secure your data.
 
 ## Backing Up Locally with Localbackup
-
-### What is Localbackup?
 
 Localbackup lets you backup your data onto physical storage devices connected to your computer,
 such as USB hard drives or network-attached storage. It uses a tool called rsnapshot for this purpose.

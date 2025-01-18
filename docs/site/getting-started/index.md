@@ -105,10 +105,3 @@ sara
 
     You just successfully bootstrapped your first clan directory.
 
----
-
-### What's Next?
-
-- [**Installer**](./installer.md): Setting up new computers remotely is easy with an USB stick.
-
----

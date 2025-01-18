@@ -1,4 +1,3 @@
-# Configuration - How to configure clan with your own machines
 
 Managing machine configurations can be done in the following ways:
 
@@ -208,11 +207,3 @@ If you only want to setup a single machine at this point, you can delete `sara` 
 ```
 git rm ./machines/sara
 ```
-
----
-
-## What's next?
-
-- [Secrets & Facts](secrets.md): Setting up secrets with sops-nix
-
----

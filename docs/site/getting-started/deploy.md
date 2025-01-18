@@ -1,4 +1,3 @@
-# Deploy Machine
 
 Integrating a new machine into your Clan environment is an easy yet flexible process, allowing for a straight forward management of multiple NixOS configurations.
 
@@ -215,12 +214,4 @@ buildClan {
 
 This is useful for machines that are not always online or are not part of the regular update cycle.
 
----
-
-## What's next ?
-
-- [**Disk Encryption**](./disk-encryption.md): Configure disk encryption with remote decryption
-- [**Mesh VPN**](./mesh-vpn.md): Configuring a secure mesh network.
-
----
 

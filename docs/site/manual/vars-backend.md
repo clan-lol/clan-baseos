@@ -1,4 +1,7 @@
-# Managing the root password declaratively using `vars`
+
+!!! Note
+    Vars is the new secret backend that will soon replace the Facts backend
+
 
 Defining a linux user's password via the nixos configuration previously required running `mkpasswd ...` and then copying the hash back into the nix configuration.
 
