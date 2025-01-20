@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import shlex
 import sys
 
@@ -29,11 +30,15 @@ from .inventory import get_all_machines, get_selected_machines
 log = logging.getLogger(__name__)
 
 
-def is_path_input(node: dict[str, dict[str, str]]) -> bool:
+def is_local_input(node: dict[str, dict[str, str]]) -> bool:
     locked = node.get("locked")
     if not locked:
         return False
-    return locked["type"] == "path" or locked.get("url", "").startswith("file://")
+    # matches path and git+file://
+    return (
+        locked["type"] == "path"
+        or re.match(r"^\w+\+file://", locked.get("url", "")) is not None
+    )
 
 
 def upload_sources(machine: Machine) -> str:
@@ -45,7 +50,7 @@ def upload_sources(machine: Machine) -> str:
     )
     flake_data = nix_metadata(flake_url)
     has_path_inputs = any(
-        is_path_input(node) for node in flake_data["locks"]["nodes"].values()
+        is_local_input(node) for node in flake_data["locks"]["nodes"].values()
     )
 
     if not has_path_inputs:
