@@ -42,9 +42,11 @@ in
             dependencies
             validationHash
             migrateFact
-            prompts
             share
             ;
+          # createFile is deprecated.
+          prompts = (lib.removeAttrs generator.prompts [ "createFile" ]);
+
           files = lib.flip lib.mapAttrs generator.files (
             _name: file: {
               inherit (file)
