@@ -114,10 +114,10 @@ def update_machines(base_path: str, machines: list[InventoryMachine]) -> None:
         # m.override_build_host = machine.deploy.buildHost
         group_machines.append(m)
 
-    deploy_machine(group_machines)
+    deploy_machines(group_machines)
 
 
-def deploy_machine(machines: list[Machine]) -> None:
+def deploy_machines(machines: list[Machine]) -> None:
     """
     Deploy to all hosts in parallel
     """
@@ -251,7 +251,7 @@ def update_command(args: argparse.Namespace) -> None:
                     machine.override_build_host = args.build_host
                     machine.host_key_check = HostKeyCheck.from_str(args.host_key_check)
 
-        deploy_machine(machines)
+        deploy_machines(machines)
     except KeyboardInterrupt:
         log.warning("Interrupted by user")
         sys.exit(1)
