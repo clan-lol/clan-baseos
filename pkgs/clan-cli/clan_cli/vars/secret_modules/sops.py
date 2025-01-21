@@ -141,10 +141,6 @@ class SecretStore(StoreBase):
         value: bytes,
     ) -> Path | None:
         secret_folder = self.secret_path(generator, var.name)
-        # delete directory
-        if secret_folder.exists() and not (secret_folder / "secret").exists():
-            # another backend has used that folder before -> error out
-            self.backend_collision_error(secret_folder)
         # create directory if it doesn't exist
         secret_folder.mkdir(parents=True, exist_ok=True)
         # initialize the secret
