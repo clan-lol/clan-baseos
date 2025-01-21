@@ -1,5 +1,25 @@
-{ self, ... }:
+{ self, lib, ... }:
 {
+  clan.machines.test-flash-machine = {
+    clan.core.networking.targetHost = "test-flash-machine";
+    fileSystems."/".device = lib.mkDefault "/dev/vda";
+    boot.loader.grub.device = lib.mkDefault "/dev/vda";
+
+    imports = [ self.nixosModules.test-flash-machine ];
+  };
+
+  flake.nixosModules = {
+    test-flash-machine =
+      { lib, ... }:
+      {
+        imports = [ self.nixosModules.test-install-machine ];
+
+        clan.core.vars.generators.test = lib.mkForce { };
+
+        disko.devices.disk.main.preCreateHook = lib.mkForce "";
+      };
+  };
+
   perSystem =
     {
       nodes,
@@ -10,19 +30,18 @@
     let
       dependencies = [
         pkgs.disko
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.pkgs.perlPackages.ConfigIniFiles
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.pkgs.perlPackages.FileSlurp
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-flash-machine.pkgs.perlPackages.ConfigIniFiles
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-flash-machine.pkgs.perlPackages.FileSlurp
 
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.build.toplevel
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.build.diskoScript
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.build.diskoScript.drvPath
-        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-install-machine.config.system.clan.deployment.file
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-flash-machine.config.system.build.toplevel
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-flash-machine.config.system.build.diskoScript
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-flash-machine.config.system.build.diskoScript.drvPath
+        self.clanInternals.machines.${pkgs.hostPlatform.system}.test-flash-machine.config.system.clan.deployment.file
 
       ] ++ builtins.map (i: i.outPath) (builtins.attrValues self.inputs);
       closureInfo = pkgs.closureInfo { rootPaths = dependencies; };
     in
     {
-      # Currently disabled...
       checks = pkgs.lib.mkIf (pkgs.stdenv.isLinux) {
         flash = (import ../lib/test-base.nix) {
           name = "flash";
@@ -46,7 +65,7 @@
           testScript = ''
             start_all()
 
-            machine.succeed("clan flash write --debug --flake ${../..} --yes --disk main /dev/vdb test-install-machine")
+            machine.succeed("clan flash write --debug --flake ${../..} --yes --disk main /dev/vdb test-flash-machine")
           '';
         } { inherit pkgs self; };
       };

@@ -14,7 +14,7 @@ from clan_cli.facts.generate import generate_facts
 from clan_cli.facts.secret_modules import SecretStoreBase
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
-from clan_cli.vars.generate import generate_vars_for_machine
+from clan_cli.vars.generate import generate_vars
 
 from .automount import pause_automounting
 from .list import list_possible_keymaps, list_possible_languages
@@ -54,8 +54,8 @@ def flash_machine(
             extra_args = []
         system_config_nix: dict[str, Any] = {}
 
-        generate_vars_for_machine(machine, generator_name=None, regenerate=False)
         generate_facts([machine])
+        generate_vars([machine])
 
         if system_config.language:
             if system_config.language not in list_possible_languages():
@@ -89,6 +89,12 @@ def flash_machine(
             system_config_nix["users"] = {
                 "users": {"root": {"openssh": {"authorizedKeys": {"keys": root_keys}}}}
             }
+
+        for generator in machine.vars_generators:
+            for file in generator.files:
+                if file.needed_for == "partitioning":
+                    msg = f"Partitioning time secrets are not supported with `clan flash write`: clan.core.vars.generators.{generator.name}.files.{file.name}"
+                    raise ClanError(msg)
 
         secret_facts_module = importlib.import_module(machine.secret_facts_module)
         secret_facts_store: SecretStoreBase = secret_facts_module.SecretStore(
