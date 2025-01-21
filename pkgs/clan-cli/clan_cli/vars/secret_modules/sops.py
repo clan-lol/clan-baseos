@@ -7,15 +7,18 @@ from clan_cli.errors import ClanError
 from clan_cli.machines.machines import Machine
 from clan_cli.secrets import sops
 from clan_cli.secrets.folders import (
+    sops_groups_folder,
     sops_machines_folder,
     sops_secrets_folder,
     sops_users_folder,
 )
 from clan_cli.secrets.machines import add_machine, add_secret, has_machine
 from clan_cli.secrets.secrets import (
+    allow_member,
     collect_keys_for_path,
     decrypt_secret,
     encrypt_secret,
+    groups_folder,
     has_secret,
 )
 from clan_cli.ssh.upload import upload
@@ -284,6 +287,16 @@ class SecretStore(StoreBase):
                     continue
 
                 secret_path = self.secret_path(generator, file.name)
+
+                for group in self.machine.deployment["sops"]["defaultGroups"]:
+                    allow_member(
+                        groups_folder(secret_path),
+                        sops_groups_folder(self.machine.flake_dir),
+                        group,
+                        # we just want to create missing symlinks, we call update_keys below:
+                        do_update_keys=False,
+                    )
+
                 update_keys(
                     secret_path,
                     collect_keys_for_path(secret_path),
