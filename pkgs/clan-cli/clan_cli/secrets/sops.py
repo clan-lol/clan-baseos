@@ -337,7 +337,7 @@ def maybe_get_admin_public_key() -> None | SopsKey:
     if len(keyring) > 1:
         last_3 = [f"{key.key_type.name.lower()}:{key.pubkey}" for key in keyring[:3]]
         msg = (
-            f"Found more than {len(keyring)} public keys in your "
+            f"Found {len(keyring)} public keys in your "
             f"environment/system and cannot decide which one to "
             f"use, first {len(last_3)}:\n\n"
             f"- {'\n- '.join(last_3)}\n\n"
