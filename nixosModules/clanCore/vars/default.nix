@@ -43,9 +43,8 @@ in
             validationHash
             migrateFact
             share
+            prompts
             ;
-          # createFile is deprecated.
-          prompts = (lib.removeAttrs generator.prompts [ "createFile" ]);
 
           files = lib.flip lib.mapAttrs generator.files (
             _name: file: {

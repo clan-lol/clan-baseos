@@ -259,9 +259,6 @@ in
               default = { };
               type = attrsOf (
                 submodule (prompt: {
-                  imports = [
-                    (lib.mkRenamedOptionModule [ "createFile" ] [ "persist" ])
-                  ];
                   options = {
                     name = lib.mkOption {
                       description = ''
