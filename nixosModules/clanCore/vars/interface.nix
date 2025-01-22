@@ -285,7 +285,7 @@ in
                         ```
                       '';
                       type = bool;
-                      default = true;
+                      default = generator.config.script == "";
                     };
                     description = lib.mkOption {
                       description = ''
