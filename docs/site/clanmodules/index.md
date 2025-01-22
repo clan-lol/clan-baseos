@@ -48,12 +48,12 @@ clanModules/borgbackup
 === "User module"
 
     If the module should be ad-hoc loaded.
-    It can be made avilable in any project via the [`clan.inventory.modules`](../reference/nix-api/inventory.md#inventory.modules) attribute.
+    It can be made available in any project via the [`clan.inventory.modules`](../reference/nix-api/inventory.md#inventory.modules) attribute.
 
     ```nix title="flake.nix"
     # ...
     buildClan {
-        # 1. Add the module to the avilable clanModules with inventory support
+        # 1. Add the module to the available clanModules with inventory support
         inventory.modules = {
             custom-module = ./modules/my_module;
         };

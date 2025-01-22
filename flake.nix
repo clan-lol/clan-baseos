@@ -45,7 +45,7 @@
         };
         systems = import systems;
         imports =
-          # only imporing existing paths allows to minimize the flake for test
+          # only importing existing paths allows to minimize the flake for test
           # by removing files
           filter pathExists [
             ./checks/flake-module.nix

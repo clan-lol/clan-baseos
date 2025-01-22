@@ -7,7 +7,7 @@ Defining a linux user's password via the nixos configuration previously required
 
 In this example, we will guide you through automating that interaction using clan `vars`.
 
-For a more general exaplanation of what clan vars are and how it works, see the intro of the [Reference Documentation for vars](https://docs.clan.lol/reference/clan-core/vars/)
+For a more general explanation of what clan vars are and how it works, see the intro of the [Reference Documentation for vars](https://docs.clan.lol/reference/clan-core/vars/)
 
 This guide assumes
 - clan is set up already (see [Getting Started](../getting-started/index.md))
@@ -114,7 +114,7 @@ clan machines update my_machine
 
 If we just imported the `root-password.nix` from above into more machines, clan would ask for a new password for each additional machine.
 
-If the root password instead should only be entered once and shared across all machines, the generator defined above needs to be declard as `shared`, by adding `share = true` to it:
+If the root password instead should only be entered once and shared across all machines, the generator defined above needs to be declared as `shared`, by adding `share = true` to it:
 ```nix
 {config, pkgs, ...}: {
   clan.vars.generators.root-password = {
@@ -124,7 +124,7 @@ If the root password instead should only be entered once and shared across all m
 }
 ```
 
-Importing that shared generator into each machine, will ensure that the pasword is only asked once the first machine gets updated and then re-used for all subsequent machines.
+Importing that shared generator into each machine, will ensure that the password is only asked once the first machine gets updated and then re-used for all subsequent machines.
 
 ## Change the root password
 
