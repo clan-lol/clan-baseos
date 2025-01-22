@@ -132,7 +132,7 @@ def create_machine(opts: CreateOptions) -> None:
     inventory["machines"] = inventory.get("machines", {})
     inventory["machines"][machine_name] = new_machine
 
-    # Commit at the end in that order to avoid commiting halve-baked machines
+    # Commit at the end in that order to avoid committing halve-baked machines
     # TODO: automatic rollbacks if something goes wrong
     set_inventory(inventory, clan_dir, "Imported machine from template")
 

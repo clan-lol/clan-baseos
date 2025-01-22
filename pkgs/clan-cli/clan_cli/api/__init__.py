@@ -272,7 +272,7 @@ API.register(open_file)
 
         # seems direct 'key in dict' doesnt work here
         if arg_name not in sig.parameters.keys():  # noqa: SIM118
-            msg = f"Argument {arg_name} not found in api method '{method_name}'. Avilable arguments: {list(sig.parameters.keys())}"
+            msg = f"Argument {arg_name} not found in api method '{method_name}'. Available arguments: {list(sig.parameters.keys())}"
             raise ClanError(msg)
 
         param = sig.parameters.get(arg_name)

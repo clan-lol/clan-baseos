@@ -51,7 +51,7 @@ def init_state(certificate: str, key: str) -> None:
     # write the initial bootstrap config file
     with moonlight_state_file().open("w") as file:
         config = ConfigParser()
-        # bytearray ojbects are not supported by ConfigParser,
+        # bytearray objects are not supported by ConfigParser,
         # so we need to adjust them ourselves
         config.add_section("General")
         config.set("General", "certificate", convert_string_to_bytearray(certificate))

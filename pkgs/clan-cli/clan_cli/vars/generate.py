@@ -406,7 +406,7 @@ def _check_can_migrate(
         msg = f"Cannot migrate facts for generator {generator.name} as some files already exist in the store"
         raise ClanError(msg)
     if all_files_present:
-        # all filles already migrated, no need to run migration again
+        # all files already migrated, no need to run migration again
         return False
 
     # ensure that all files can be migrated (exists in the corresponding fact store)

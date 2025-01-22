@@ -63,7 +63,7 @@ in
     constraints = mkOption {
       default = { };
       description = ''
-        Contraints for the module
+        Constraints for the module
 
         The following example requires exactly one `server`
         and supports up to `7` clients
