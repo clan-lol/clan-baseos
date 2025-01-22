@@ -33,9 +33,9 @@ def generate_key() -> sops.SopsKey:
 
 def generate_command(args: argparse.Namespace) -> None:
     key = generate_key()
-    print("Also add your age public key to the repository with:")
     key_type = key.key_type.name.lower()
-    print(f"clan secrets users add <username> --{key_type}-key <key>")
+    print(f"Add your {key_type} public key to the repository with:")
+    print(f"clan secrets users add <username> --{key_type}-key {key.pubkey}")
 
 
 def show_command(args: argparse.Namespace) -> None:
