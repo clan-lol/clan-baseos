@@ -803,12 +803,24 @@ def test_fails_when_files_are_left_from_other_backend(
             generator,
             regenerate=False,
         )
-    my_secret_generator["files"]["my_secret"]["secret"] = False
-    my_value_generator["files"]["my_value"]["secret"] = True
+    # Will raise. It was secret before, but now it's not.
+    my_secret_generator["files"]["my_secret"]["secret"] = (
+        False  # secret -> public (NOT OK)
+    )
+    # WIll not raise. It was not secret before, and it's secret now.
+    my_value_generator["files"]["my_value"]["secret"] = True  # public -> secret (OK)
     flake.refresh()
     monkeypatch.chdir(flake.path)
     for generator in ["my_secret_generator", "my_value_generator"]:
-        with pytest.raises(ClanError):
+        # This should raise an error
+        if generator == "my_secret_generator":
+            with pytest.raises(ClanError):
+                generate_vars_for_machine(
+                    Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+                    generator,
+                    regenerate=False,
+                )
+        else:
             generate_vars_for_machine(
                 Machine(name="my_machine", flake=FlakeId(str(flake.path))),
                 generator,
