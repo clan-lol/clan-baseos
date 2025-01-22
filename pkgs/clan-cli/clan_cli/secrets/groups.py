@@ -118,25 +118,30 @@ def add_member(
             raise ClanError(msg)
         user_target.unlink()
     user_target.symlink_to(os.path.relpath(source, user_target.parent))
-    return update_group_keys(flake_dir, group_folder.parent.name)
+    changed_files = [user_target]
+    changed_files.extend(update_group_keys(flake_dir, group_folder.parent.name))
+    return changed_files
 
 
-def remove_member(flake_dir: Path, group_folder: Path, name: str) -> None:
+def remove_member(flake_dir: Path, group_folder: Path, name: str) -> list[Path]:
     target = group_folder / name
     if not target.exists():
         msg = f"{name} does not exist in group in {group_folder}: "
         msg += list_directory(group_folder)
         raise ClanError(msg)
     target.unlink()
+    updated_files = [target]
 
     if len(os.listdir(group_folder)) > 0:
-        update_group_keys(flake_dir, group_folder.parent.name)
+        updated_files.extend(update_group_keys(flake_dir, group_folder.parent.name))
 
     if len(os.listdir(group_folder)) == 0:
         group_folder.rmdir()
 
     if len(os.listdir(group_folder.parent)) == 0:
         group_folder.parent.rmdir()
+
+    return updated_files
 
 
 def add_user(flake_dir: Path, group: str, name: str) -> None:
@@ -155,7 +160,12 @@ def add_user_command(args: argparse.Namespace) -> None:
 
 
 def remove_user(flake_dir: Path, group: str, name: str) -> None:
-    remove_member(flake_dir, users_folder(flake_dir, group), name)
+    updated_files = remove_member(flake_dir, users_folder(flake_dir, group), name)
+    commit_files(
+        updated_files,
+        flake_dir,
+        f"Remove user {name} from group {group}",
+    )
 
 
 def remove_user_command(args: argparse.Namespace) -> None:
@@ -181,7 +191,12 @@ def add_machine_command(args: argparse.Namespace) -> None:
 
 
 def remove_machine(flake_dir: Path, group: str, name: str) -> None:
-    remove_member(flake_dir, machines_folder(flake_dir, group), name)
+    updated_files = remove_member(flake_dir, machines_folder(flake_dir, group), name)
+    commit_files(
+        updated_files,
+        flake_dir,
+        f"Remove machine {name} from group {group}",
+    )
 
 
 def remove_machine_command(args: argparse.Namespace) -> None:
