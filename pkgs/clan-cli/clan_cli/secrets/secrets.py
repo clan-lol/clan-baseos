@@ -99,7 +99,7 @@ def collect_keys_for_type(folder: Path) -> set[tuple[str, sops.KeyType]]:
         if not p.is_symlink():
             continue
         try:
-            target = p.resolve()
+            target = p.resolve(strict=True)
         except FileNotFoundError:
             log.warning(f"Ignoring broken symlink {p}")
             continue
