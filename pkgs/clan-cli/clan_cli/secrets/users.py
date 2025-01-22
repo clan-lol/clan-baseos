@@ -1,5 +1,7 @@
 import argparse
 import json
+import logging
+import os
 import sys
 from pathlib import Path
 
@@ -7,14 +9,14 @@ from clan_cli.completions import add_dynamic_completer, complete_secrets, comple
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
-from . import secrets, sops
+from . import groups, secrets, sops
 from .folders import (
     list_objects,
     remove_object,
+    sops_groups_folder,
     sops_secrets_folder,
     sops_users_folder,
 )
-from .groups import get_groups
 from .secrets import update_secrets
 from .sops import read_key, write_key
 from .types import (
@@ -23,6 +25,8 @@ from .types import (
     secret_name_type,
     user_name_type,
 )
+
+log = logging.getLogger(__name__)
 
 
 def add_user(
@@ -34,12 +38,12 @@ def add_user(
 ) -> None:
     path = sops_users_folder(flake_dir) / name
 
-    groups = get_groups(flake_dir, "users", name)
+    groupnames = [p.name for p in groups.get_groups(flake_dir, "users", name)]
 
     def filter_user_secrets(secret: Path) -> bool:
         if secret.joinpath("users", name).exists():
             return True
-        return any(secret.joinpath("groups", group.name).exists() for group in groups)
+        return any(secret.joinpath("groups", name).exists() for name in groupnames)
 
     write_key(path, key, key_type, overwrite=force)
     paths = [path]
@@ -53,12 +57,24 @@ def add_user(
 
 
 def remove_user(flake_dir: Path, name: str) -> None:
-    removed_paths = remove_object(sops_users_folder(flake_dir), name)
-    commit_files(
-        removed_paths,
-        flake_dir,
-        f"Remove user {name}",
-    )
+    updated_paths: list[Path] = []
+    # Remove the user from any group where it belonged:
+    groups_dir = sops_groups_folder(flake_dir)
+    if groups_dir.exists():
+        for group in os.listdir(groups_dir):
+            group_folder = groups_dir / group
+            if not group_folder.is_dir():
+                continue
+            memberships = group_folder / "users"
+            if not (memberships / name).exists():
+                continue
+            log.info(f"Removing user {name} from group {group}")
+            updated_paths.extend(groups.remove_member(flake_dir, memberships, name))
+    # Remove the user's key:
+    updated_paths.extend(remove_object(sops_users_folder(flake_dir), name))
+    # Remove the user from any secret where it was used:
+    updated_paths.extend(update_secrets(flake_dir))
+    commit_files(updated_paths, flake_dir, f"Remove user {name}")
 
 
 def get_user(flake_dir: Path, name: str) -> sops.SopsKey:
