@@ -92,6 +92,7 @@ nav:
           - reference/clanModules/matrix-synapse.md
           - reference/clanModules/moonlight.md
           - reference/clanModules/mumble.md
+          - reference/clanModules/mycelium.md
           - reference/clanModules/nginx.md
           - reference/clanModules/packages.md
           - reference/clanModules/postgresql.md

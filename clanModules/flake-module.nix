@@ -26,6 +26,7 @@ in
     matrix-synapse = ./matrix-synapse;
     moonlight = ./moonlight;
     mumble = ./mumble;
+    mycelium = ./mycelium;
     nginx = ./nginx;
     packages = ./packages;
     postgresql = ./postgresql;
