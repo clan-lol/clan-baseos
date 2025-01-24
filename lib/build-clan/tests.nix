@@ -28,7 +28,7 @@ in
   test_all_simple =
     let
       config = evalClan {
-        directory = ./.;
+        self = ./.;
         machines = { };
         inventory = {
           meta.name = "test";

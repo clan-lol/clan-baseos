@@ -13,14 +13,14 @@ in
     # Empty inventory should return an empty module
     expr = buildInventory {
       inventory = { };
-      directory = ./.;
+      self = ./.;
     };
     expected = { };
   };
   test_inventory_role_imports =
     let
       configs = buildInventory {
-        directory = ./.;
+        self = ./.;
         inventory = {
           modules = clan-core.clanModules;
           services = {
@@ -62,7 +62,7 @@ in
   test_inventory_tag_resolve =
     let
       configs = buildInventory {
-        directory = ./.;
+        self = ./.;
         inventory = {
           modules = clan-core.clanModules;
           services = {
@@ -102,7 +102,7 @@ in
   test_inventory_multiple_roles =
     let
       configs = buildInventory {
-        directory = ./.;
+        self = ./.;
         inventory = {
           modules = clan-core.clanModules;
           services = {
@@ -132,7 +132,7 @@ in
   test_inventory_module_doesnt_exist =
     let
       configs = buildInventory {
-        directory = ./.;
+        self = ./.;
         inventory = {
           modules = clan-core.clanModules;
           services = {
@@ -157,7 +157,7 @@ in
   test_inventory_role_doesnt_exist =
     let
       configs = buildInventory {
-        directory = ./.;
+        self = ./.;
         inventory = {
           modules = clan-core.clanModules;
           services = {
@@ -183,7 +183,7 @@ in
   test_inventory_tag_doesnt_exist =
     let
       configs = buildInventory {
-        directory = ./.;
+        self = ./.;
         inventory = {
           modules = clan-core.clanModules;
           services = {
@@ -211,7 +211,7 @@ in
   test_inventory_disabled_service =
     let
       configs = buildInventory {
-        directory = ./.;
+        self = ./.;
         inventory = {
           modules = clan-core.clanModules;
           services = {

@@ -7,7 +7,7 @@
 }:
 let
   inherit (config)
-    directory
+    self
     machines
     pkgsForSystem
     specialArgs
@@ -44,7 +44,7 @@ let
   serviceConfigs = (
     buildInventory {
       inherit inventory;
-      inherit directory;
+      inherit self;
     }
   );
 
@@ -59,14 +59,14 @@ let
     nixpkgs.lib.nixosSystem {
       modules =
         let
-          hwConfig = "${directory}/machines/${name}/hardware-configuration.nix";
-          diskoConfig = "${directory}/machines/${name}/disko.nix";
+          hwConfig = "${self}/machines/${name}/hardware-configuration.nix";
+          diskoConfig = "${self}/machines/${name}/disko.nix";
         in
         [
           {
             # Autoinclude configuration.nix and hardware-configuration.nix
             imports = builtins.filter builtins.pathExists [
-              "${directory}/machines/${name}/configuration.nix"
+              "${self}/machines/${name}/configuration.nix"
               hwConfig
               diskoConfig
             ];
@@ -81,7 +81,7 @@ let
             {
               # Settings
               clan.core.settings = {
-                inherit directory;
+                directory = self;
                 inherit (config.inventory.meta) name icon;
 
                 machine = {
@@ -160,7 +160,7 @@ let
     ) supportedSystems
   );
 
-  inventoryFile = "${directory}/inventory.json";
+  inventoryFile = "${self}/inventory.json";
 
   inventoryLoaded =
     if builtins.pathExists inventoryFile then
@@ -171,6 +171,7 @@ let
 in
 {
   imports = [
+    (lib.mkRenamedOptionModule [ "directory" ] [ "self" ])
     # Merge the inventory file
     {
       inventory = _: {
@@ -180,9 +181,9 @@ in
     }
     # TODO: Figure out why this causes infinite recursion
     {
-      inventory.machines = lib.optionalAttrs (builtins.pathExists "${directory}/machines") (
+      inventory.machines = lib.optionalAttrs (builtins.pathExists "${self}/machines") (
         builtins.mapAttrs (_n: _v: { }) (
-          (lib.filterAttrs (_: t: t == "directory") (builtins.readDir "${directory}/machines"))
+          (lib.filterAttrs (_: t: t == "directory") (builtins.readDir "${self}/machines"))
         )
       );
     }

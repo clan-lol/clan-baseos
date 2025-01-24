@@ -41,7 +41,7 @@
       {
         clan = {
           meta.name = "clan-core";
-          directory = self;
+          inherit self;
         };
         systems = import systems;
         imports =
