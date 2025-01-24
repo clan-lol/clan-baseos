@@ -8,8 +8,7 @@ let
 in
 {
   options = {
-    # Required options
-    directory = lib.mkOption {
+    self = lib.mkOption {
       type = types.path;
       default = self;
       defaultText = "Root directory of the flake";

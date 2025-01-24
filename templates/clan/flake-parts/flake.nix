@@ -29,7 +29,7 @@
         specialArgs.self = {
           inherit (self) inputs nixosModules packages;
         };
-        directory = self;
+        inherit self;
         machines = {
           # "jon" will be the hostname of the machine
           jon =

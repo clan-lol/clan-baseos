@@ -9,7 +9,7 @@
     let
       # Usage see: https://docs.clan.lol
       clan = clan-core.lib.buildClan {
-        directory = self;
+        inherit self;
         # Ensure this is unique among all clans you want to use.
         meta.name = "__CHANGE_ME__";
 

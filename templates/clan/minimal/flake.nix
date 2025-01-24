@@ -6,7 +6,7 @@
     { self, clan-core, ... }:
     let
       # Usage see: https://docs.clan.lol
-      clan = clan-core.lib.buildClan { directory = self; };
+      clan = clan-core.lib.buildClan { inherit self; };
     in
     {
       # all machines managed by Clan

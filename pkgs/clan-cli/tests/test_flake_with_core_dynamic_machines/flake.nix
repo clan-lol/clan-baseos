@@ -9,7 +9,7 @@
     { self, clan-core }:
     let
       clan = clan-core.lib.buildClan {
-        directory = self;
+        inherit self;
         meta.name = "test_flake_with_core_dynamic_machines";
         machines =
           let

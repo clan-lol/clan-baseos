@@ -197,7 +197,7 @@ let
     machinesFromInventory :: Inventory -> { ${machine_name} :: NixOSConfiguration }
   */
   buildInventory =
-    { inventory, directory }:
+    { inventory, self }:
     # For every machine in the inventory, build a NixOS configuration
     # For each machine generate config, forEach service, if the machine is used.
     builtins.mapAttrs (
@@ -207,8 +207,8 @@ let
           machineName
           machineConfig
           inventory
-          directory
           ;
+        directory = self;
       }
     ) (inventory.machines or { });
 in
