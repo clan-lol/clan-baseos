@@ -61,6 +61,24 @@ in
       '';
     };
 
+    modules = lib.mkOption {
+      type = types.attrsOf (types.submodule { imports = [ ./modules/interface.nix ]; });
+      default = { };
+      description = ''
+        Experimental: In the future, 
+        this will be the main way to define Clan modules.
+      '';
+    };
+
+    templates = lib.mkOption {
+      type = types.submodule { imports = [ ./templates/interface.nix ]; };
+      default = { };
+      description = ''
+        Experimental: In the future, 
+        this will be the main way to define Clan templates.
+      '';
+    };
+
     # Meta
     meta = lib.mkOption {
       description = ''
@@ -107,6 +125,10 @@ in
           # We don't specify the type here, for better performance.
           inventory = lib.mkOption { type = lib.types.raw; };
           inventoryValuesPrios = lib.mkOption { type = lib.types.raw; };
+          # all exported clan templates from this clan
+          templates = lib.mkOption { type = lib.types.raw; };
+          # all exported clan modules from this clan
+          modules = lib.mkOption { type = lib.types.raw; };
           # all inventory module schemas
           moduleSchemas = lib.mkOption { type = lib.types.raw; };
           inventoryFile = lib.mkOption { type = lib.types.raw; };

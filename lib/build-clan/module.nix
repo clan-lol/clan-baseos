@@ -212,9 +212,11 @@ in
       builtins.removeAttrs (clan-core.lib.values.getPrios { options = inventory.options; })
         # tags are freeformType which is not supported yet.
         [ "tags" ];
+
+    modules = config.modules;
+    templates = config.templates;
     inventory = config.inventory;
     meta = config.inventory.meta;
-
     source = "${clan-core}";
 
     # machine specifics
