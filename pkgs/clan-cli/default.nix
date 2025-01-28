@@ -20,6 +20,9 @@ let
   pyDeps = ps: [
     ps.argcomplete # Enables shell completions
   ];
+  devDeps = ps: [
+    ps.ipython
+  ];
   pyTestDeps =
     ps:
     [
@@ -172,7 +175,7 @@ pythonRuntime.pkgs.buildPythonApplication {
   };
 
   passthru.nixpkgs = nixpkgs';
-  passthru.devshellPyDeps = ps: (pyTestDeps ps) ++ (pyDeps ps);
+  passthru.devshellPyDeps = ps: (pyTestDeps ps) ++ (pyDeps ps) ++ (devDeps ps);
   passthru.pythonRuntime = pythonRuntime;
   passthru.runtimeDependencies = runtimeDependencies;
   passthru.runtimeDependenciesMap = runtimeDependenciesMap;
