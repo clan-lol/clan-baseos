@@ -130,6 +130,7 @@ in
           clanModules = lib.mkOption { type = lib.types.raw; };
           source = lib.mkOption { type = lib.types.raw; };
           meta = lib.mkOption { type = lib.types.raw; };
+          lib = lib.mkOption { type = lib.types.raw; };
           all-machines-json = lib.mkOption { type = lib.types.raw; };
           machines = lib.mkOption { type = lib.types.raw; };
           machinesFunc = lib.mkOption { type = lib.types.raw; };

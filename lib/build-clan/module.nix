@@ -217,6 +217,10 @@ in
     templates = config.templates;
     inventory = config.inventory;
     meta = config.inventory.meta;
+    lib = {
+      inherit (clan-core.lib) select;
+    };
+
     source = "${clan-core}";
 
     # machine specifics

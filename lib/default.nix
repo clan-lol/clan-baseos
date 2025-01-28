@@ -21,4 +21,5 @@ in
     inherit lib;
     self = clan-core;
   };
+  select = import ./select.nix;
 }
