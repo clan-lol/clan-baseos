@@ -39,9 +39,27 @@ class Host:
         if not self.command_prefix:
             self.command_prefix = self.host
 
+    def __str__(self) -> str:
+        return self.target
+
     @property
     def target(self) -> str:
         return f"{self.user or 'root'}@{self.host}"
+
+    @classmethod
+    def from_host(cls, host: "Host") -> "Host":
+        return cls(
+            host=host.host,
+            user=host.user,
+            port=host.port,
+            key=host.key,
+            forward_agent=host.forward_agent,
+            command_prefix=host.command_prefix,
+            host_key_check=host.host_key_check,
+            meta=host.meta.copy(),
+            verbose_ssh=host.verbose_ssh,
+            ssh_options=host.ssh_options.copy(),
+        )
 
     def run_local(
         self,
