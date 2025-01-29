@@ -171,6 +171,7 @@ let
 in
 {
   imports = [
+    ./auto-imports.nix
     (lib.mkRenamedOptionModule [ "directory" ] [ "self" ])
     # Merge the inventory file
     {

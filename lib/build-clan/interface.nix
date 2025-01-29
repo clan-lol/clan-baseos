@@ -61,24 +61,6 @@ in
       '';
     };
 
-    modules = lib.mkOption {
-      type = types.attrsOf (types.submodule { imports = [ ./modules/interface.nix ]; });
-      default = { };
-      description = ''
-        Experimental: In the future, 
-        this will be the main way to define Clan modules.
-      '';
-    };
-
-    templates = lib.mkOption {
-      type = types.submodule { imports = [ ./templates/interface.nix ]; };
-      default = { };
-      description = ''
-        Experimental: In the future, 
-        this will be the main way to define Clan templates.
-      '';
-    };
-
     # Meta
     meta = lib.mkOption {
       description = ''

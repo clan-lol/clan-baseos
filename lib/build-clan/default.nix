@@ -48,6 +48,5 @@ eval {
     rest
     # implementation
     ./module.nix
-    ./auto-imports.nix
   ];
 }
