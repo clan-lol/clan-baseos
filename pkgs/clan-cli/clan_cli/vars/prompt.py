@@ -8,7 +8,7 @@ from typing import Any
 log = logging.getLogger(__name__)
 
 # This is for simulating user input in tests.
-MOCK_PROMPT_RESPONSE = None
+MOCK_PROMPT_RESPONSE: None = None
 
 
 class PromptType(enum.Enum):

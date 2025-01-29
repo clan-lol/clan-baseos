@@ -19,11 +19,11 @@ mkShell {
       ps:
       with ps;
       [
-        ruff
         mypy
       ]
       ++ (clan-app.devshellPyDeps ps)
     ))
+    ruff
   ] ++ clan-app.runtimeDeps;
 
   shellHook = ''

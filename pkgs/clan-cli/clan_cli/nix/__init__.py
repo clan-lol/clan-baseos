@@ -113,8 +113,8 @@ def nix_shell(packages: list[str], cmd: list[str]) -> list[str]:
 
 # lazy loads list of allowed and static programs
 class Programs:
-    allowed_programs = None
-    static_programs = None
+    allowed_programs: list[str] | None = None
+    static_programs: list[str] | None = None
 
     @classmethod
     def is_allowed(cls: type["Programs"], program: str) -> bool:
