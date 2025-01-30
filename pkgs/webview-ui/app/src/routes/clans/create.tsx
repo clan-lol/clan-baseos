@@ -45,9 +45,9 @@ export const CreateClan = () => {
 
     const loading_toast = toast.loading("Creating Clan....");
     const r = await callApi("create_clan", {
-      options: {
-        directory: target_dir[0],
-        template,
+      opts: {
+        dest: target_dir[0],
+        template_name: template,
         initial: {
           meta,
           services: {},
