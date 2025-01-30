@@ -102,6 +102,11 @@ pythonRuntime.pkgs.buildPythonApplication {
     ":"
     (lib.makeBinPath (lib.attrValues includedRuntimeDependenciesMap))
 
+    # We need this for templates to work
+    "--set"
+    "CLAN_CORE_PATH"
+    clan-core-path
+
     "--set"
     "CLAN_STATIC_PROGRAMS"
     (lib.concatStringsSep ":" (lib.attrNames includedRuntimeDependenciesMap))

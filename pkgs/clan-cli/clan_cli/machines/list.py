@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -43,9 +44,6 @@ class MachineDetails:
     machine: Machine
     hw_config: HardwareConfig | None = None
     disk_schema: MachineDiskMatter | None = None
-
-
-import re
 
 
 def extract_header(c: str) -> str:

@@ -43,6 +43,11 @@
           meta.name = "clan-core";
           inherit self;
         };
+
+        flake = {
+          clan.templates = import ./templates { };
+        };
+
         systems = import systems;
         imports =
           # only importing existing paths allows to minimize the flake for test
@@ -59,6 +64,7 @@
             ./nixosModules/flake-module.nix
             ./pkgs/flake-module.nix
             ./templates/flake-module.nix
+            ./new-templates/flake-module.nix
           ]
           ++ [
             (if pathExists ./flakeModules/clan.nix then import ./flakeModules/clan.nix inputs.self else { })

@@ -1,21 +1,28 @@
 # !/usr/bin/env python3
 import argparse
-import os
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from clan_cli.api import API
+from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import CmdOut, RunOpts, run
-from clan_cli.dirs import TemplateType, clan_templates
 from clan_cli.errors import ClanError
 from clan_cli.inventory import Inventory, init_inventory
-from clan_cli.nix import nix_command, nix_shell
+from clan_cli.nix import nix_shell
+from clan_cli.templates import (
+    InputPrio,
+    TemplateName,
+    copy_from_nixstore,
+    get_template,
+)
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
 class CreateClanResponse:
-    flake_init: CmdOut
-    flake_update: CmdOut
+    flake_update: CmdOut | None = None
     git_init: CmdOut | None = None
     git_add: CmdOut | None = None
     git_config_username: CmdOut | None = None
@@ -24,9 +31,10 @@ class CreateClanResponse:
 
 @dataclass
 class CreateOptions:
-    directory: Path | str
-    # URL to the template to use. Defaults to the "minimal" template
-    template: str = "minimal"
+    dest: Path
+    template_name: str
+    src_flake: FlakeId | None = None
+    input_prio: InputPrio | None = None
     setup_git: bool = True
     initial: Inventory | None = None
 
@@ -36,76 +44,88 @@ def git_command(directory: Path, *args: str) -> list[str]:
 
 
 @API.register
-def create_clan(options: CreateOptions) -> CreateClanResponse:
-    directory = Path(options.directory).resolve()
-    template_url = f"{clan_templates(TemplateType.CLAN)}#{options.template}"
-    if not directory.exists():
-        directory.mkdir()
-    else:
-        # Directory already exists
-        # Check if it is empty
-        # Throw error otherwise
-        dir_content = os.listdir(directory)
-        if len(dir_content) != 0:
-            raise ClanError(
-                location=f"{directory.resolve()}",
-                msg="Cannot create clan",
-                description="Directory already exists and is not empty.",
+def create_clan(opts: CreateOptions) -> CreateClanResponse:
+    dest = opts.dest.resolve()
+
+    template = get_template(
+        TemplateName(opts.template_name),
+        "clan",
+        input_prio=opts.input_prio,
+        clan_dir=opts.src_flake,
+    )
+    log.info(f"Found template '{template.name}' in '{template.input_variant}'")
+    src = Path(template.src["path"])
+
+    if dest.exists():
+        dest /= src.name
+
+    if dest.exists():
+        msg = f"Destination directory {dest} already exists"
+        raise ClanError(msg)
+
+    if not src.exists():
+        msg = f"Template {template} does not exist"
+        raise ClanError(msg)
+    if not src.is_dir():
+        msg = f"Template {template} is not a directory"
+        raise ClanError(msg)
+
+    copy_from_nixstore(src, dest)
+
+    response = CreateClanResponse()
+
+    if opts.setup_git:
+        response.git_init = run(git_command(dest, "init"))
+        response.git_add = run(git_command(dest, "add", "."))
+
+        # check if username is set
+        has_username = run(
+            git_command(dest, "config", "user.name"), RunOpts(check=False)
+        )
+        response.git_config_username = None
+        if has_username.returncode != 0:
+            response.git_config_username = run(
+                git_command(dest, "config", "user.name", "clan-tool")
             )
 
-    command = nix_command(
-        [
-            "flake",
-            "init",
-            "-t",
-            template_url,
-        ]
-    )
-    flake_init = run(command, RunOpts(cwd=directory))
+        has_username = run(
+            git_command(dest, "config", "user.email"), RunOpts(check=False)
+        )
+        if has_username.returncode != 0:
+            response.git_config_email = run(
+                git_command(dest, "config", "user.email", "clan@example.com")
+            )
 
     flake_update = run(
-        nix_shell(["nixpkgs#nix"], ["nix", "flake", "update"]), RunOpts(cwd=directory)
+        nix_shell(["nixpkgs#nix"], ["nix", "flake", "update"]), RunOpts(cwd=dest)
     )
+    response.flake_update = flake_update
 
-    if options.initial:
-        init_inventory(str(options.directory), init=options.initial)
-
-    response = CreateClanResponse(
-        flake_init=flake_init,
-        flake_update=flake_update,
-    )
-    if not options.setup_git:
-        return response
-
-    response.git_init = run(git_command(directory, "init"))
-    response.git_add = run(git_command(directory, "add", "."))
-
-    # check if username is set
-    has_username = run(
-        git_command(directory, "config", "user.name"), RunOpts(check=False)
-    )
-    response.git_config_username = None
-    if has_username.returncode != 0:
-        response.git_config_username = run(
-            git_command(directory, "config", "user.name", "clan-tool")
-        )
-
-    has_username = run(
-        git_command(directory, "config", "user.email"), RunOpts(check=False)
-    )
-    if has_username.returncode != 0:
-        response.git_config_email = run(
-            git_command(directory, "config", "user.email", "clan@example.com")
-        )
+    if opts.initial:
+        init_inventory(str(opts.dest), init=opts.initial)
 
     return response
 
 
 def register_create_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
+        "--input",
+        type=str,
+        help="Flake input name to use as template source",
+        action="append",
+        default=[],
+    )
+
+    parser.add_argument(
+        "--no-self-prio",
+        help="Do not prioritize 'self' input",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
         "--template",
         type=str,
-        choices=["default", "minimal", "flake-parts", "minimal-flake-parts"],
         help="Clan template name",
         default="default",
     )
@@ -118,15 +138,25 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
     )
 
     parser.add_argument(
-        "path", type=Path, help="Path to the clan directory", default=Path()
+        "path",
+        type=Path,
+        help="Path where to write the clan template to",
+        default=Path(),
     )
 
     def create_flake_command(args: argparse.Namespace) -> None:
+        if args.no_self_prio:
+            input_prio = InputPrio.try_inputs(tuple(args.input))
+        else:
+            input_prio = InputPrio.try_self_then_inputs(tuple(args.input))
+
         create_clan(
             CreateOptions(
-                directory=args.path,
-                template=args.template,
+                input_prio=input_prio,
+                dest=args.path,
+                template_name=args.template,
                 setup_git=not args.no_git,
+                src_flake=args.flake,
             )
         )
 
