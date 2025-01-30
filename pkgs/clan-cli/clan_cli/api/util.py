@@ -9,6 +9,7 @@ from typing import (
     Annotated,
     Any,
     Literal,
+    NewType,
     NotRequired,
     Required,
     TypeVar,
@@ -187,6 +188,10 @@ def type_to_dict(
             raise JSchemaTypeError(msg)
         return type_to_dict(type_map.get(t), scope, type_map)
 
+    if isinstance(t, NewType):
+        origtype = t.__supertype__
+        return type_to_dict(origtype, scope, type_map)
+
     if hasattr(t, "__origin__"):  # Check if it's a generic type
         origin = get_origin(t)
         args = get_args(t)
@@ -215,7 +220,7 @@ def type_to_dict(
                 "oneOf": union_types,
             }
 
-        if origin in {list, set, frozenset}:
+        if origin in {list, set, frozenset, tuple}:
             return {
                 "type": "array",
                 "items": type_to_dict(t.__args__[0], scope, type_map),
