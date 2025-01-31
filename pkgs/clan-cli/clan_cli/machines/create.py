@@ -1,16 +1,13 @@
 import argparse
 import logging
 import re
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 from clan_cli.api import API
 from clan_cli.clan_uri import FlakeId
-from clan_cli.cmd import Log, RunOpts, run
 from clan_cli.completions import add_dynamic_completer, complete_tags
-from clan_cli.dirs import TemplateType, clan_templates, get_clan_flake_toplevel_or_env
+from clan_cli.dirs import get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
 from clan_cli.git import commit_file
 from clan_cli.inventory import Machine as InventoryMachine
@@ -20,21 +17,14 @@ from clan_cli.inventory import (
     set_inventory,
 )
 from clan_cli.machines.list import list_nixos_machines
-from clan_cli.nix import nix_command
+from clan_cli.templates import (
+    InputPrio,
+    TemplateName,
+    copy_from_nixstore,
+    get_template,
+)
 
 log = logging.getLogger(__name__)
-
-
-def validate_directory(root_dir: Path) -> None:
-    machines_dir = root_dir / "machines"
-    for root, _, files in root_dir.walk():
-        for file in files:
-            file_path = Path(root) / file
-            if not file_path.is_relative_to(machines_dir):
-                msg = f"File {file_path} is not in the 'machines' directory."
-                log.error(msg)
-                description = "Template machines are only allowed to contain files in the 'machines' directory."
-                raise ClanError(msg, description=description)
 
 
 @dataclass
@@ -42,7 +32,7 @@ class CreateOptions:
     clan_dir: FlakeId
     machine: InventoryMachine
     target_host: str | None = None
-    template_src: FlakeId | None = None
+    input_prio: InputPrio | None = None
     template_name: str | None = None
 
 
@@ -53,15 +43,19 @@ def create_machine(opts: CreateOptions) -> None:
         description = "Import machine only works on local clans"
         raise ClanError(msg, description=description)
 
-    if not opts.template_src:
-        opts.template_src = FlakeId(str(clan_templates(TemplateType.CLAN)))
-
     if not opts.template_name:
         opts.template_name = "new-machine"
 
     clan_dir = opts.clan_dir.path
 
-    log.debug(f"Importing machine '{opts.template_name}' from {opts.template_src}")
+    template = get_template(
+        TemplateName(opts.template_name),
+        "machine",
+        input_prio=opts.input_prio,
+        clan_dir=opts.clan_dir,
+    )
+    log.info(f"Found template '{template.name}' in '{template.input_variant}'")
+
     machine_name = opts.machine.get("name")
     if opts.template_name in list_nixos_machines(clan_dir) and not opts.machine.get(
         "name"
@@ -73,7 +67,18 @@ def create_machine(opts: CreateOptions) -> None:
         raise ClanError(msg, description=description)
 
     machine_name = machine_name if machine_name else opts.template_name
-    dst = clan_dir / "machines" / machine_name
+    src = Path(template.src["path"])
+
+    if not src.exists():
+        msg = f"Template {template} does not exist"
+        raise ClanError(msg)
+    if not src.is_dir():
+        msg = f"Template {template} is not a directory"
+        raise ClanError(msg)
+
+    dst = clan_dir / "machines"
+    dst.mkdir(exist_ok=True)
+    dst /= machine_name
 
     # TODO: Move this into nix code
     hostname_regex = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)$"
@@ -81,7 +86,6 @@ def create_machine(opts: CreateOptions) -> None:
         msg = "Machine name must be a valid hostname"
         raise ClanError(msg, location="Create Machine")
 
-    # lopter@(2024-10-22): Could we just use warn and use the existing config?
     if dst.exists():
         msg = f"Machine {machine_name} already exists in {clan_dir}"
         description = (
@@ -89,37 +93,12 @@ def create_machine(opts: CreateOptions) -> None:
         )
         raise ClanError(msg, description=description)
 
-    with TemporaryDirectory(prefix="machine-template-") as tmpdir:
-        tmpdirp = Path(tmpdir)
-        command = nix_command(
-            [
-                "flake",
-                "init",
-                "-t",
-                f"{opts.template_src}#machineTemplates",
-            ]
-        )
+    if not (src / "configuration.nix").exists():
+        msg = f"Template machine '{opts.template_name}' does not contain a configuration.nix"
+        description = "Template machine must contain a configuration.nix"
+        raise ClanError(msg, description=description)
 
-        # Check if debug logging is enabled
-        is_debug_enabled = log.isEnabledFor(logging.DEBUG)
-        log_flag = Log.BOTH if is_debug_enabled else Log.NONE
-        run(command, RunOpts(log=log_flag, cwd=tmpdirp))
-
-        validate_directory(tmpdirp)
-
-        src = tmpdirp / "machines" / opts.template_name
-
-        if not (src / "configuration.nix").exists():
-            msg = f"Template machine '{opts.template_name}' does not contain a configuration.nix"
-            description = "Template machine must contain a configuration.nix"
-            raise ClanError(msg, description=description)
-
-        def log_copy(src: str, dst: str) -> None:
-            relative_dst = dst.replace(f"{clan_dir}/", "")
-            log.info(f"Adding file: {relative_dst}")
-            shutil.copy2(src, dst)
-
-        shutil.copytree(src, dst, ignore_dangling_symlinks=True, copy_function=log_copy)
+    copy_from_nixstore(src, dst)
 
     inventory = get_inventory(clan_dir)
 
@@ -157,12 +136,18 @@ def create_command(args: argparse.Namespace) -> None:
         )
         raise ClanError(msg, description=description)
 
+    if args.no_self:
+        input_prio = InputPrio.try_inputs(tuple(args.input))
+    else:
+        input_prio = InputPrio.try_self_then_inputs(tuple(args.input))
+
     machine = InventoryMachine(
         name=args.machine_name,
         tags=args.tags,
         deploy=MachineDeploy(),
     )
     opts = CreateOptions(
+        input_prio=input_prio,
         clan_dir=clan_dir,
         machine=machine,
         template_name=args.template_name,
@@ -194,4 +179,19 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
         "--target-host",
         type=str,
         help="Address of the machine to install and update, in the format of user@host:1234",
+    )
+    parser.add_argument(
+        "--input",
+        type=str,
+        help="""Flake input name to use as template source
+        can be specified multiple times, inputs are tried in order of definition
+        """,
+        action="append",
+        default=["clan-core"],
+    )
+    parser.add_argument(
+        "--no-self",
+        help="Do not look into own flake for templates",
+        action="store_true",
+        default=False,
     )

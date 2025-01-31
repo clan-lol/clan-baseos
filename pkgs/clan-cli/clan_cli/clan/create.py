@@ -115,7 +115,7 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
         can be specified multiple times, inputs are tried in order of definition
         """,
         action="append",
-        default=[],
+        default=["clan-core"],
     )
 
     parser.add_argument(

@@ -4,9 +4,10 @@
 
   # this placeholder is replaced by the path to nixpkgs
   inputs.clan-core.url = "__CLAN_CORE__";
+  inputs.nixpkgs.url = "__NIXPKGS__";
 
   outputs =
-    { self, clan-core }:
+    { self, clan-core, ... }:
     let
       clan = clan-core.lib.buildClan {
         inherit self;
