@@ -25,6 +25,9 @@ in
       networking.interfaces = lib.mkForce { };
       #networking.primaryIPAddress = lib.mkForce null;
       systemd.services.backdoor.enable = false;
+
+      # we don't have permission to set cpu scheduler in our container
+      systemd.services.nix-daemon.serviceConfig.CPUSchedulingPolicy = lib.mkForce "";
     };
     # to accept external dependencies such as disko
     node.specialArgs.self = self;
