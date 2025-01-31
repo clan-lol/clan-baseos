@@ -7,15 +7,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, NewType, TypedDict
 
-from clan_cli.clan_uri import FlakeId  # Custom FlakeId type for Nix Flakes
-from clan_cli.cmd import run  # Command execution utility
-from clan_cli.errors import ClanError  # Custom exception for Clan errors
-from clan_cli.nix import nix_eval  # Helper for Nix evaluation scripts
+from clan_cli.clan_uri import FlakeId
+from clan_cli.cmd import run
+from clan_cli.errors import ClanError
+from clan_cli.nix import nix_eval
 
-# Configure the logging module for debugging
 log = logging.getLogger(__name__)
 
-# Define custom types for better type annotations
 
 InputName = NewType("InputName", str)
 
@@ -31,60 +29,61 @@ class InputVariant:
         return self.input_name or "self"
 
 
-TemplateName = NewType("TemplateName", str)  # Represents the name of a template
-TemplateType = Literal[
-    "clan", "disko", "machine"
-]  # Literal to restrict template type to specific values
-ModuleName = NewType("ModuleName", str)  # Represents a module name in Clan exports
+TemplateName = NewType("TemplateName", str)
+TemplateType = Literal["clan", "disko", "machine"]
+ModuleName = NewType("ModuleName", str)
 
 
-# TypedDict for ClanModule with required structure
 class ClanModule(TypedDict):
-    description: str  # Description of the module
-    path: str  # Filepath of the module
+    description: str
+    path: str
 
 
-# TypedDict for a Template with required structure
 class Template(TypedDict):
-    description: str  # Template description
-    path: str  # Template path on disk
+    description: str
+    path: str
 
 
-# TypedDict for the structure of templates organized by type
 class TemplateTypeDict(TypedDict):
     disko: dict[TemplateName, Template]  # Templates under "disko" type
     clan: dict[TemplateName, Template]  # Templates under "clan" type
     machine: dict[TemplateName, Template]  # Templates under "machine" type
 
 
-# TypedDict for a Clan attribute set (attrset) with templates and modules
 class ClanAttrset(TypedDict):
-    templates: TemplateTypeDict  # Organized templates by type
-    modules: dict[ModuleName, ClanModule]  # Dictionary of modules by module name
+    templates: TemplateTypeDict
+    modules: dict[ModuleName, ClanModule]
 
 
-# TypedDict to represent exported Clan attributes
 class ClanExports(TypedDict):
-    inputs: dict[
-        InputName, ClanAttrset
-    ]  # Input names map to their corresponding attrsets
-    self: ClanAttrset  # The attribute set for the flake itself
+    inputs: dict[InputName, ClanAttrset]
+    self: ClanAttrset
 
 
-# Helper function to get Clan exports (Nix flake outputs)
-def get_clan_exports(clan_dir: FlakeId | None = None) -> ClanExports:
+def get_clan_nix_attrset(clan_dir: FlakeId | None = None) -> ClanExports:
     # Check if the clan directory is provided, otherwise use the environment variable
     if not clan_dir:
         clan_core_path = os.environ.get("CLAN_CORE_PATH")
         if not clan_core_path:
             msg = "Environment var CLAN_CORE_PATH is not set, this shouldn't happen"
             raise ClanError(msg)
-        # Use the clan core path from the environment variable
+
         clan_dir = FlakeId(clan_core_path)
 
     log.debug(f"Evaluating flake {clan_dir} for Clan attrsets")
 
-    # Nix evaluation script to compute the relevant exports
+    # from clan_cli.nix import nix_metadata
+    # from urllib.parse import urlencode
+    # myurl = f"path://{clan_dir}"
+
+    # metadata = nix_metadata(myurl)["locked"]
+    # query_params = {
+    #     "lastModified": metadata["lastModified"],
+    #     "narHash": metadata["narHash"]
+    # }
+    # url = f"{myurl}?{urlencode(query_params)}"
+
+    # Nix evaluation script to compute find inputs that have a "clan" attribute
     eval_script = f"""
         let
             self = builtins.getFlake "{clan_dir}";
@@ -96,17 +95,17 @@ def get_clan_exports(clan_dir: FlakeId | None = None) -> ClanExports:
             {{ inputs = inputsWithClan; self = self.clan or {{}}; }}
     """
 
-    # Evaluate the Nix expression and run the command
     cmd = nix_eval(
         [
-            "--json",  # Output the result as JSON
-            "--impure",  # Allow impure evaluations (env vars or system state)
-            "--expr",  # Evaluate the given Nix expression
+            "--json",
+            "--impure",
+            "--expr",
             eval_script,
         ]
     )
-    res = run(cmd).stdout  # Run the command and capture the JSON output
-    return json.loads(res)  # Parse and return as a Python dictionary
+    res = run(cmd).stdout
+
+    return json.loads(res)
 
 
 # Dataclass to manage input prioritization for templates
@@ -114,8 +113,6 @@ def get_clan_exports(clan_dir: FlakeId | None = None) -> ClanExports:
 class InputPrio:
     input_names: tuple[str, ...]  # Tuple of input names (ordered priority list)
     prioritize_self: bool = True  # Whether to prioritize "self" first
-
-    # Static factory methods for specific prioritization strategies
 
     @staticmethod
     def self_only() -> "InputPrio":
@@ -174,7 +171,7 @@ class TemplateList:
 def list_templates(
     template_type: TemplateType, clan_dir: FlakeId | None = None
 ) -> TemplateList:
-    clan_exports = get_clan_exports(clan_dir)
+    clan_exports = get_clan_nix_attrset(clan_dir)
     result = TemplateList()
     fallback: ClanAttrset = {
         "templates": {"disko": {}, "clan": {}, "machine": {}},

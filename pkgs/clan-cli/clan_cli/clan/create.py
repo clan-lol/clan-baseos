@@ -111,14 +111,16 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--input",
         type=str,
-        help="Flake input name to use as template source",
+        help="""Flake input name to use as template source
+        can be specified multiple times, inputs are tried in order of definition
+        """,
         action="append",
         default=[],
     )
 
     parser.add_argument(
-        "--no-self-prio",
-        help="Do not prioritize 'self' input",
+        "--no-self",
+        help="Do not look into own flake for templates",
         action="store_true",
         default=False,
     )
@@ -145,7 +147,7 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
     )
 
     def create_flake_command(args: argparse.Namespace) -> None:
-        if args.no_self_prio:
+        if args.no_self:
             input_prio = InputPrio.try_inputs(tuple(args.input))
         else:
             input_prio = InputPrio.try_self_then_inputs(tuple(args.input))

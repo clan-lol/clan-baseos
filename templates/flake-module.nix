@@ -1,7 +1,7 @@
 { self, inputs, ... }:
 {
   flake = {
-    checks.x86_64-linux.new-template-minimal =
+    checks.x86_64-linux.template-minimal =
       let
         path = self.clan.templates.clan.minimal.path;
         initialized = inputs.nixpkgs.legacyPackages.x86_64-linux.runCommand "minimal-clan-flake" { } ''
@@ -30,7 +30,7 @@
       in
       {
         type = "derivation";
-        name = "new-minimal-clan-flake-check";
+        name = "minimal-clan-flake-check";
         inherit (evaled.nixosConfigurations.testmachine.config.system.build.toplevel) drvPath outPath;
       };
   };

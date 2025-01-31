@@ -12,8 +12,15 @@
       inputs = inputs' // {
         clan-core = fake-clan-core;
       };
+      lib = inputs.nixpkgs.lib;
     in
     {
+      clan =
+        if lib.pathExists ./clan_attrs.json then
+          builtins.fromJSON (builtins.readFile ./clan_attrs.json)
+        else
+          { };
+
       nixosConfigurations.machine1 = inputs.nixpkgs.lib.nixosSystem {
         modules = [
           ./nixosModules/machine1.nix
