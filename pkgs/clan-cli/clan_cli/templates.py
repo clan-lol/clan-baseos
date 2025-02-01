@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import shutil
 import stat
 from dataclasses import dataclass, field
@@ -63,10 +62,12 @@ class ClanExports(TypedDict):
 def get_clan_nix_attrset(clan_dir: FlakeId | None = None) -> ClanExports:
     # Check if the clan directory is provided, otherwise use the environment variable
     if not clan_dir:
-        clan_core_path = os.environ.get("CLAN_CORE_PATH")
-        if not clan_core_path:
-            msg = "Environment var CLAN_CORE_PATH is not set, this shouldn't happen"
-            raise ClanError(msg)
+        # TODO: Quickfix, templates dir seems to be missing in CLAN_CORE_PATH??
+        clan_core_path = "git+https://git.clan.lol/clan/clan-core"
+        # clan_core_path = os.environ.get("CLAN_CORE_PATH")
+        # if not clan_core_path:
+        #     msg = "Environment var CLAN_CORE_PATH is not set, this shouldn't happen"
+        #     raise ClanError(msg)
 
         clan_dir = FlakeId(clan_core_path)
 
