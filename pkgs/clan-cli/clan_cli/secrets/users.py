@@ -131,15 +131,19 @@ def add_command(args: argparse.Namespace) -> None:
     if args.flake is None:
         msg = "Could not find clan flake toplevel directory"
         raise ClanError(msg)
+    keys_args = (args.age_key, args.agekey, args.pgp_key)
+    keys_count = sum(1 if key else 0 for key in keys_args)
+    if keys_count != 1:
+        err_msg = (
+            f"Please provide one key (got {keys_count}) through `--pgp-key`, "
+            f"`--age-key`, or as a positional (age key) argument."
+        )
+        raise ClanError(err_msg)
     if args.age_key or args.agekey:
         key_type = sops.KeyType.AGE
-    elif args.pgp_key:
-        key_type = sops.KeyType.PGP
     else:
-        msg = "BUG!: key type not set"
-        raise ValueError(msg)
+        key_type = sops.KeyType.PGP
     key = args.agekey or args.age_key or args.pgp_key
-    assert key is not None, "key is None"
     add_user(args.flake.path, args.user, key, key_type, args.force)
 
 
