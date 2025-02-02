@@ -16,6 +16,10 @@ in
   test_only_required =
     let
       config = evalClan {
+        self = {
+          inputs = { };
+        };
+        directory = ./.;
         meta.name = "test";
         imports = [ ./module.nix ];
       };
@@ -28,7 +32,10 @@ in
   test_all_simple =
     let
       config = evalClan {
-        self = ./.;
+        self = {
+          inputs = { };
+        };
+        directory = ./.;
         machines = { };
         inventory = {
           meta.name = "test";
@@ -43,6 +50,10 @@ in
   test_outputs_clanInternals =
     let
       config = evalClan {
+        self = {
+          inputs = { };
+        };
+        directory = ./.;
         imports = [
           # What the user needs to specif
           {
@@ -68,6 +79,9 @@ in
   test_fn_simple =
     let
       result = buildClan {
+        self = {
+          inputs = { };
+        };
         directory = ./.;
         meta.name = "test";
       };
@@ -84,6 +98,9 @@ in
   test_fn_extensiv_meta =
     let
       result = buildClan {
+        self = {
+          inputs = { };
+        };
         directory = ./.;
         meta.name = "test";
         meta.description = "test";
@@ -104,6 +121,9 @@ in
   test_fn_clan_core =
     let
       result = buildClan {
+        self = {
+          inputs = { };
+        };
         directory = ../../.;
         meta.name = "test-clan-core";
       };
@@ -119,6 +139,9 @@ in
   test_buildClan_all_machines =
     let
       result = buildClan {
+        self = {
+          inputs = { };
+        };
         directory = ./.;
         meta.name = "test";
         inventory.machines.machine1.meta.name = "machine1";
@@ -138,6 +161,9 @@ in
   test_buildClan_specialArgs =
     let
       result = buildClan {
+        self = {
+          inputs = { };
+        };
         directory = ./.;
         meta.name = "test";
         specialArgs.foo = "dream2nix";

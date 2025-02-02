@@ -2,8 +2,9 @@
   lib,
   nixpkgs,
   clan-core,
-  specialArgs ? { },
   self,
+  directory ? null,
+  specialArgs ? { },
 }:
 # Returns a function that takes self, which should point to the directory of the flake
 module:
@@ -14,6 +15,9 @@ module:
   modules = [
     ./interface.nix
     module
-    { inherit specialArgs; }
+    {
+      inherit specialArgs;
+      directory = lib.mkIf (directory != null) directory;
+    }
   ];
 }).config

@@ -8,8 +8,9 @@
 }:
 {
   ## Inputs
-  directory ? null, # The directory containing the machines subdirectory # allows to include machine-specific modules i.e. machines.${name} = { ... }
-  self ? null,
+  self ? null, # Reference to the current flake
+  directory ? null, # the directory containing the machines subdirectory. Optional: can be used if the machines is not in the root of the flake
+  # allows to include machine-specific modules i.e. machines.${name} = { ... }
   # A map from arch to pkgs, if specified this nixpkgs will be only imported once for each system.
   # This improves performance, but all nipxkgs.* options will be ignored.
   # deadnix: skip
@@ -20,27 +21,23 @@
   ...
 }@attrs:
 let
-  evalUnchecked = import ./eval.nix {
+  eval = import ./eval.nix {
     inherit
       lib
       nixpkgs
       clan-core
       ;
     inherit specialArgs;
-    self = if self != null then self else directory;
+    self =
+      if self == null then
+        lib.warn "The buildClan function requires argument 'self' to be set to the current flake" {
+          inputs = { };
+        }
+      else
+        self;
+    directory = if directory == null then self else directory;
   };
 
-  # Doing `self ? lib.trace "please use self" directory`, doesn't work
-  # as when both (directory and self) are set we get an infinite recursion error
-  eval =
-    if directory == null && self == null then
-      throw "The buildClan function requires argument 'self' to be set"
-    else if directory != null && self != null then
-      throw "Both 'self' and 'directory' are set, please remove 'directory' in favor of the 'self' argument"
-    else if directory != null then
-      lib.warn "The 'directory' argument in buildClan has been deprecated in favor of the 'self' argument" evalUnchecked
-    else
-      evalUnchecked;
   rest = builtins.removeAttrs attrs [ "specialArgs" ];
 in
 eval {
