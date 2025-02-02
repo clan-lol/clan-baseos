@@ -55,7 +55,7 @@ def split_selector(selector: str) -> list[Selector]:
 @dataclass
 class FlakeCacheEntry:
     """
-    a recrusive structure to store the cache, with a value and a selector
+    a recursive structure to store the cache, with a value and a selector
     """
 
     def __init__(

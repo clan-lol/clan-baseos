@@ -243,7 +243,7 @@ def calc_patches(
                 msg = f"Type mismatch for key '{update_key}'. Cannot update {type(all_values_flat.get(update_key))} with {type(update_data)}"
                 raise ClanError(msg)
 
-            # Handle list seperation
+            # Handle list separation
             if isinstance(update_data, list):
                 duplicates = find_duplicates(update_data)
                 if duplicates:

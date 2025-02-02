@@ -104,7 +104,7 @@ def test_vm_deployment(
         vm2 = stack.enter_context(spawn_vm(vm2_config, stdin=subprocess.DEVNULL))
         qga_m1 = stack.enter_context(vm1.qga_connect())
         qga_m2 = stack.enter_context(vm2.qga_connect())
-        # run these always succesfull commands to make sure all vms have started before continuing
+        # run these always successful commands to make sure all vms have started before continuing
         qga_m1.run(["echo"])
         qga_m2.run(["echo"])
         # check my_secret is deployed
