@@ -409,7 +409,7 @@ def test_groups(
     groups = os.listdir(test_flake.path / "sops" / "groups")
     assert len(groups) == 0
 
-    # Check if the symlink to the group was removed our foo test secret:
+    # Check if the symlink to the group was removed from our foo test secret:
     group_symlink = test_flake.path / "sops/secrets/foo/groups/group1"
     err_msg = (
         "Symlink to group1's key in foo secret "

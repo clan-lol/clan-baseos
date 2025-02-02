@@ -1,5 +1,6 @@
 import argparse
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 from clan_cli.completions import (
@@ -103,13 +104,19 @@ def update_group_keys(flake_dir: Path, group: str) -> list[Path]:
 
 
 def add_member(
-    flake_dir: Path, group_folder: Path, source_folder: Path, name: str
+    flake_dir: Path,
+    group_name: str,
+    get_group_folder: Callable[[Path, str], Path],
+    get_source_folder: Callable[[Path], Path],
+    name: str,
 ) -> list[Path]:
+    source_folder = get_source_folder(flake_dir)
     source = source_folder / name
     if not source.exists():
         msg = f"{name} does not exist in {source_folder}: "
         msg += list_directory(source_folder)
         raise ClanError(msg)
+    group_folder = get_group_folder(flake_dir, group_name)
     group_folder.mkdir(parents=True, exist_ok=True)
     user_target = group_folder / name
     if user_target.exists():
@@ -119,11 +126,18 @@ def add_member(
         user_target.unlink()
     user_target.symlink_to(os.path.relpath(source, user_target.parent))
     changed_files = [user_target]
-    changed_files.extend(update_group_keys(flake_dir, group_folder.parent.name))
+    group_name = group_folder.parent.name
+    changed_files.extend(update_group_keys(flake_dir, group_name))
     return changed_files
 
 
-def remove_member(flake_dir: Path, group_folder: Path, name: str) -> list[Path]:
+def remove_member(
+    flake_dir: Path,
+    group_name: str,
+    get_group_folder: Callable[[Path, str], Path],
+    name: str,
+) -> list[Path]:
+    group_folder = get_group_folder(flake_dir, group_name)
     target = group_folder / name
     if not target.exists():
         msg = f"{name} does not exist in group in {group_folder}: "
@@ -132,21 +146,24 @@ def remove_member(flake_dir: Path, group_folder: Path, name: str) -> list[Path]:
     target.unlink()
     updated_files = [target]
 
-    if len(os.listdir(group_folder)) > 0:
-        updated_files.extend(update_group_keys(flake_dir, group_folder.parent.name))
-
     if len(os.listdir(group_folder)) == 0:
         group_folder.rmdir()
 
     if len(os.listdir(group_folder.parent)) == 0:
         group_folder.parent.rmdir()
 
+    updated_files.extend(update_group_keys(flake_dir, group_name))
+
     return updated_files
 
 
 def add_user(flake_dir: Path, group: str, name: str) -> None:
     updated_files = add_member(
-        flake_dir, users_folder(flake_dir, group), sops_users_folder(flake_dir), name
+        flake_dir,
+        group,
+        users_folder,
+        sops_users_folder,
+        name,
     )
     commit_files(
         updated_files,
@@ -160,7 +177,12 @@ def add_user_command(args: argparse.Namespace) -> None:
 
 
 def remove_user(flake_dir: Path, group: str, name: str) -> None:
-    updated_files = remove_member(flake_dir, users_folder(flake_dir, group), name)
+    updated_files = remove_member(
+        flake_dir,
+        group,
+        users_folder,
+        name,
+    )
     commit_files(
         updated_files,
         flake_dir,
@@ -175,8 +197,9 @@ def remove_user_command(args: argparse.Namespace) -> None:
 def add_machine(flake_dir: Path, group: str, name: str) -> None:
     updated_files = add_member(
         flake_dir,
-        machines_folder(flake_dir, group),
-        sops_machines_folder(flake_dir),
+        group,
+        machines_folder,
+        sops_machines_folder,
         name,
     )
     commit_files(
@@ -191,7 +214,12 @@ def add_machine_command(args: argparse.Namespace) -> None:
 
 
 def remove_machine(flake_dir: Path, group: str, name: str) -> None:
-    updated_files = remove_member(flake_dir, machines_folder(flake_dir, group), name)
+    updated_files = remove_member(
+        flake_dir,
+        group,
+        machines_folder,
+        name,
+    )
     commit_files(
         updated_files,
         flake_dir,

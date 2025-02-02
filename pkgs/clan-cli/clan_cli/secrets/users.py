@@ -69,7 +69,9 @@ def remove_user(flake_dir: Path, name: str) -> None:
             if not (memberships / name).exists():
                 continue
             log.info(f"Removing user {name} from group {group}")
-            updated_paths.extend(groups.remove_member(flake_dir, memberships, name))
+            updated_paths.extend(
+                groups.remove_member(flake_dir, group, groups.users_folder, name)
+            )
     # Remove the user's key:
     updated_paths.extend(remove_object(sops_users_folder(flake_dir), name))
     # Remove the user from any secret where it was used:
