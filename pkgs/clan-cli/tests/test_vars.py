@@ -600,6 +600,7 @@ def test_api_set_prompts(
     config["nixpkgs"]["hostPlatform"] = "x86_64-linux"
     my_generator = config["clan"]["core"]["vars"]["generators"]["my_generator"]
     my_generator["prompts"]["prompt1"]["type"] = "line"
+    my_generator["prompts"]["prompt1"]["persist"] = True
     my_generator["files"]["prompt1"]["secret"] = False
     flake.refresh()
 

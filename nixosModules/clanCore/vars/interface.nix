@@ -282,7 +282,7 @@ in
                         ```
                       '';
                       type = bool;
-                      default = generator.config.script == "";
+                      default = false;
                     };
                     description = lib.mkOption {
                       description = ''
