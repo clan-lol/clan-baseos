@@ -1,5 +1,7 @@
 ---
 description = "Automatically generates and configures a password for the specified user account."
+categories = ["System"]
+features = ["inventory"]
 ---
 
 If setting the option prompt to true, the user will be prompted to type in their desired password.
