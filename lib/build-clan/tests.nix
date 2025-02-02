@@ -18,8 +18,8 @@ in
       config = evalClan {
         self = {
           inputs = { };
+          outPath = ./.;
         };
-        directory = ./.;
         meta.name = "test";
         imports = [ ./module.nix ];
       };
