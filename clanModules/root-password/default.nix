@@ -19,6 +19,7 @@
       pkgs.xkcdpass
     ];
     prompts.password.type = "hidden";
+    prompts.password.persist = true;
     prompts.password.description = "You can autogenerate a password, if you leave this prompt blank.";
 
     script = ''
