@@ -42,11 +42,12 @@ let
   generateRuntimeDependenciesMap =
     deps:
     lib.filterAttrs (_: pkg: !pkg.meta.unsupported or false) (lib.genAttrs deps (name: pkgs.${name}));
-  runtimeDependenciesMap = generateRuntimeDependenciesMap allDependencies;
-  runtimeDependencies = lib.attrValues runtimeDependenciesMap;
-  includedRuntimeDependenciesMap = generateRuntimeDependenciesMap includedRuntimeDeps;
+  testRuntimeDependenciesMap = generateRuntimeDependenciesMap allDependencies;
+  testRuntimeDependencies = lib.attrValues testRuntimeDependenciesMap;
+  bundledRuntimeDependenciesMap = generateRuntimeDependenciesMap includedRuntimeDeps;
+  bundledRuntimeDependencies = lib.attrValues bundledRuntimeDependenciesMap;
 
-  testDependencies = runtimeDependencies ++ [
+  testDependencies = testRuntimeDependencies ++ [
     gnupg
     stdenv.cc # Compiler used for certain native extensions
     (pythonRuntime.withPackages (ps: (pyTestDeps ps) ++ (pyDeps ps)))
@@ -103,7 +104,7 @@ pythonRuntime.pkgs.buildPythonApplication {
     "--prefix"
     "PATH"
     ":"
-    (lib.makeBinPath (lib.attrValues includedRuntimeDependenciesMap))
+    (lib.makeBinPath (lib.attrValues bundledRuntimeDependenciesMap))
 
     # We need this for templates to work
     "--set"
@@ -112,7 +113,7 @@ pythonRuntime.pkgs.buildPythonApplication {
 
     "--set"
     "CLAN_STATIC_PROGRAMS"
-    (lib.concatStringsSep ":" (lib.attrNames includedRuntimeDependenciesMap))
+    (lib.concatStringsSep ":" (lib.attrNames bundledRuntimeDependenciesMap))
   ];
 
   nativeBuildInputs = [
@@ -120,65 +121,69 @@ pythonRuntime.pkgs.buildPythonApplication {
     installShellFiles
   ];
 
-  propagatedBuildInputs = [ pythonRuntimeWithDeps ] ++ runtimeDependencies;
+  propagatedBuildInputs = [ pythonRuntimeWithDeps ] ++ bundledRuntimeDependencies;
 
   # Define and expose the tests and checks to run in CI
-  passthru.tests = (lib.mapAttrs' (n: lib.nameValuePair "clan-dep-${n}") runtimeDependenciesMap) // {
-    clan-pytest-without-core =
-      runCommand "clan-pytest-without-core" { nativeBuildInputs = testDependencies; }
-        ''
-          cp -r ${source} ./src
-          chmod +w -R ./src
-          cd ./src
+  passthru.tests =
+    (lib.mapAttrs' (n: lib.nameValuePair "clan-dep-${n}") testRuntimeDependenciesMap)
+    // {
+      clan-pytest-without-core =
+        runCommand "clan-pytest-without-core" { nativeBuildInputs = testDependencies; }
+          ''
+            cp -r ${source} ./src
+            chmod +w -R ./src
+            cd ./src
 
-          export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1 PYTHONWARNINGS=error
-          python -m pytest -m "not impure and not with_core" ./tests
-          touch $out
-        '';
-    clan-pytest-with-core =
-      runCommand "clan-pytest-with-core"
-        {
-          nativeBuildInputs = testDependencies;
-          buildInputs = [
-            pkgs.bash
-            pkgs.coreutils
-            pkgs.nix
-          ];
-          closureInfo = pkgs.closureInfo {
-            rootPaths = [
+            export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1 PYTHONWARNINGS=error
+            python -m pytest -m "not impure and not with_core" ./tests
+            touch $out
+          '';
+      clan-pytest-with-core =
+        runCommand "clan-pytest-with-core"
+          {
+            nativeBuildInputs = testDependencies;
+            buildInputs = [
               pkgs.bash
               pkgs.coreutils
-              pkgs.jq.dev
-              pkgs.stdenv
-              pkgs.stdenvNoCC
+              pkgs.nix
             ];
-          };
-        }
-        ''
-          cp -r ${source} ./src
-          chmod +w -R ./src
-          cd ./src
+            closureInfo = pkgs.closureInfo {
+              rootPaths = [
+                pkgs.bash
+                pkgs.coreutils
+                pkgs.jq.dev
+                pkgs.stdenv
+                pkgs.stdenvNoCC
+              ];
+            };
+          }
+          ''
+            cp -r ${source} ./src
+            chmod +w -R ./src
+            cd ./src
 
-          export CLAN_CORE=${clan-core-path}
-          export NIX_STATE_DIR=$TMPDIR/nix
-          export IN_NIX_SANDBOX=1
-          export PYTHONWARNINGS=error
-          export CLAN_TEST_STORE=$TMPDIR/store
-          # required to prevent concurrent 'nix flake lock' operations
-          export LOCK_NIX=$TMPDIR/nix_lock
-          mkdir -p "$CLAN_TEST_STORE/nix/store"
-          xargs cp --recursive --target "$CLAN_TEST_STORE/nix/store"  < "$closureInfo/store-paths"
-          nix-store --load-db --store "$CLAN_TEST_STORE" < "$closureInfo/registration"
-          python -m pytest -m "not impure and with_core" ./tests
-          touch $out
-        '';
-  };
+            export CLAN_CORE=${clan-core-path}
+            export NIX_STATE_DIR=$TMPDIR/nix
+            export IN_NIX_SANDBOX=1
+            export PYTHONWARNINGS=error
+            export CLAN_TEST_STORE=$TMPDIR/store
+            # required to prevent concurrent 'nix flake lock' operations
+            export LOCK_NIX=$TMPDIR/nix_lock
+            mkdir -p "$CLAN_TEST_STORE/nix/store"
+            xargs cp --recursive --target "$CLAN_TEST_STORE/nix/store"  < "$closureInfo/store-paths"
+            nix-store --load-db --store "$CLAN_TEST_STORE" < "$closureInfo/registration"
+            python -m pytest -m "not impure and with_core" ./tests
+            touch $out
+          '';
+    };
 
   passthru.nixpkgs = nixpkgs';
   passthru.devshellPyDeps = ps: (pyTestDeps ps) ++ (pyDeps ps) ++ (devDeps ps);
   passthru.pythonRuntime = pythonRuntime;
-  passthru.runtimeDependencies = runtimeDependencies;
-  passthru.runtimeDependenciesMap = runtimeDependenciesMap;
+  passthru.runtimeDependencies = bundledRuntimeDependencies;
+  passthru.runtimeDependenciesMap = bundledRuntimeDependenciesMap;
+  passthru.testRuntimeDependencies = testRuntimeDependencies;
+  passthru.testRuntimeDependenciesMap = testRuntimeDependenciesMap;
 
   postInstall = ''
     cp -r ${nixpkgs'} $out/${pythonRuntime.sitePackages}/clan_cli/nixpkgs

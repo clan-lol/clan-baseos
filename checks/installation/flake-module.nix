@@ -94,6 +94,7 @@
         self.nixosConfigurations.test-install-machine.config.system.clan.deployment.file
         pkgs.stdenv.drvPath
         pkgs.nixos-anywhere
+        pkgs.bubblewrap
       ] ++ builtins.map (i: i.outPath) (builtins.attrValues self.inputs);
       closureInfo = pkgs.closureInfo { rootPaths = dependencies; };
     in
