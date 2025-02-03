@@ -9,9 +9,8 @@ in
 {
   options = {
     self = lib.mkOption {
-      type = types.nullOr types.raw;
+      type = types.raw;
       default = self;
-      readOnly = true;
       defaultText = "Reference to the current flake";
       description = ''
         This is used to import external clan modules.
@@ -19,7 +18,15 @@ in
     };
 
     directory = lib.mkOption {
-      type = types.path;
+      type = types.coercedTo lib.types.raw (
+        v:
+        if lib.isAttrs v then
+          lib.warn "It appears you set 'clan.directory = self'. Instead set 'clan.self = self'. 'clan.directory' expects a path" v
+        else if v == null then
+          throw "Please set either clan.self or clan.directory"
+        else
+          builtins.toString v
+      ) lib.types.path;
       default = builtins.toString self;
       defaultText = "Root directory of the flake";
       description = ''
