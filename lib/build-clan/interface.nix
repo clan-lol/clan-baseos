@@ -9,7 +9,7 @@ in
 {
   options = {
     self = lib.mkOption {
-      type = types.raw;
+      type = types.nullOr types.raw;
       default = self;
       readOnly = true;
       defaultText = "Reference to the current flake";

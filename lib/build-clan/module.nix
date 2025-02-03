@@ -1,3 +1,4 @@
+# NixOS module
 {
   config,
   clan-core,
@@ -43,8 +44,7 @@ let
   # { ${machineName} :: Config }
   serviceConfigs = (
     buildInventory {
-      inherit inventory;
-      inherit directory;
+      inherit inventory directory;
     }
   );
 
