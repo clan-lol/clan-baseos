@@ -10,9 +10,30 @@ let
     inherit lib nixpkgs clan-core;
     self = ./.;
   };
+
+  # Shallowly force all attribute values to be evaluated.
+  shallowForceAllAttributes = lib.foldlAttrs (
+    _acc: _name: value:
+    lib.seq value true
+  ) true;
 in
 #######
 {
+  test_missing_self =
+    let
+      config = buildClan {
+        meta.name = "test";
+        imports = [ ./module.nix ];
+      };
+    in
+    {
+      expr = shallowForceAllAttributes config;
+      expectedError = {
+        type = "ThrownError";
+        msg = "A definition for option `directory' is not of type `path*";
+      };
+    };
+
   test_only_required =
     let
       config = evalClan {
@@ -25,7 +46,7 @@ in
       };
     in
     {
-      expr = config.inventory ? meta;
+      expr = shallowForceAllAttributes config;
       expected = true;
     };
 
