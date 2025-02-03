@@ -41,7 +41,6 @@
       {
         clan = {
           meta.name = "clan-core";
-          inherit self;
         };
 
         flake = {
