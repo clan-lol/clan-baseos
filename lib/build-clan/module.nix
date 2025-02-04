@@ -76,7 +76,7 @@ let
           (machines.${name} or { })
           # Inherit the inventory assertions ?
           # { inherit (mergedInventory) assertions; }
-          { imports = serviceConfigs.machines.${name}.machineImports or []; }
+          { imports = serviceConfigs.machines.${name}.machineImports or [ ]; }
           (
             {
               # Settings

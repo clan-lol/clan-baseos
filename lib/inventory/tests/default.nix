@@ -9,17 +9,21 @@ let
   inherit (inventory) buildInventory;
 in
 {
-  test_inventory_empty = {
-    # Empty inventory should return an empty module
-    expr = buildInventory {
-      inventory = { };
-      directory = ./.;
-    };
-    expected = { };
-  };
-  test_inventory_role_imports =
+  test_inventory_empty =
     let
-      configs = buildInventory {
+      compiled = buildInventory {
+        inventory = { };
+        directory = ./.;
+      };
+    in
+    {
+      # Empty inventory should return an empty module
+      expr = compiled.machines;
+      expected = { };
+    };
+  test_inventory_role_resolve =
+    let
+      compiled = buildInventory {
         directory = ./.;
         inventory = {
           modules = clan-core.clanModules;
@@ -42,21 +46,37 @@ in
     in
     {
       expr = {
-        server_imports = (builtins.head configs."backup_server").imports;
-        client_1_imports = (builtins.head configs."client_1_machine").imports;
-        client_2_imports = (builtins.head configs."client_2_machine").imports;
+        m1 = (compiled.machines."backup_server").compiledServices.borgbackup.matchedRoles;
+        m2 = (compiled.machines."client_1_machine").compiledServices.borgbackup.matchedRoles;
+        m3 = (compiled.machines."client_2_machine").compiledServices.borgbackup.matchedRoles;
+        inherit ((compiled.machines."client_2_machine").compiledServices.borgbackup)
+          resolvedRolesPerInstance
+          ;
       };
 
       expected = {
-        server_imports = [
-          (clan-core.clanModules.borgbackup + "/roles/server.nix")
+        m1 = [
+          "server"
         ];
-        client_1_imports = [
-          (clan-core.clanModules.borgbackup + "/roles/client.nix")
+        m2 = [
+          "client"
         ];
-        client_2_imports = [
-          (clan-core.clanModules.borgbackup + "/roles/client.nix")
+        m3 = [
+          "client"
         ];
+        resolvedRolesPerInstance = {
+          instance_1 = {
+            client = {
+              machines = [
+                "client_1_machine"
+                "client_2_machine"
+              ];
+            };
+            server = {
+              machines = [ "backup_server" ];
+            };
+          };
+        };
       };
     };
   test_inventory_tag_resolve =
@@ -83,19 +103,19 @@ in
       };
     in
     {
-      expr = {
-        # A machine that includes the backup service should have 3 imports
-        # - one for some service agnostic properties of the machine itself
-        # - One for the service itself (default.nix)
-        # - one for the role (roles/client.nix)
-        client_1_machine = builtins.length configs.client_1_machine;
-        client_2_machine = builtins.length configs.client_2_machine;
-        not_used_machine = builtins.length configs.not_used_machine;
-      };
+      expr = configs.machines.client_1_machine.compiledServices.borgbackup.resolvedRolesPerInstance;
       expected = {
-        client_1_machine = 4;
-        client_2_machine = 4;
-        not_used_machine = 2;
+        instance_1 = {
+          client = {
+            machines = [
+              "client_1_machine"
+              "client_2_machine"
+            ];
+          };
+          server = {
+            machines = [ ];
+          };
+        };
       };
     };
 
@@ -118,15 +138,11 @@ in
       };
     in
     {
-      expr = {
-        machine_1_imports = (builtins.head configs."machine_1").imports;
-      };
-      expected = {
-        machine_1_imports = [
-          (clan-core.clanModules.borgbackup + "/roles/client.nix")
-          (clan-core.clanModules.borgbackup + "/roles/server.nix")
-        ];
-      };
+      expr = configs.machines.machine_1.compiledServices.borgbackup.matchedRoles;
+      expected = [
+        "client"
+        "server"
+      ];
     };
 
   test_inventory_module_doesnt_exist =
@@ -147,7 +163,8 @@ in
       };
     in
     {
-      expr = configs;
+      inherit configs;
+      expr = configs.machines.machine_1.machineImports;
       expectedError = {
         type = "ThrownError";
         msg = "ClanModule not found*";
@@ -172,7 +189,8 @@ in
       };
     in
     {
-      expr = configs;
+      inherit configs;
+      expr = configs.machines.machine_1.machineImports;
       expectedError = {
         type = "ThrownError";
         msg = "Roles roleXYZ are not defined in the service borgbackup.";
@@ -201,7 +219,7 @@ in
       };
     in
     {
-      expr = configs;
+      expr = configs.machines.machine_1.machineImports;
       expectedError = {
         type = "Error";
         # TODO: Add warning matching in nix-unit
@@ -229,13 +247,8 @@ in
       };
     in
     {
-      expr = {
-        machine_1_config = (builtins.head configs."machine_1");
-      };
-      expected = {
-        # Empty config
-        machine_1_config = { };
-      };
-
+      inherit configs;
+      expr = builtins.filter (v: v != { }) configs.machines.machine_1.machineImports;
+      expected = [ ];
     };
 }
