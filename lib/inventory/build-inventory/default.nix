@@ -138,6 +138,7 @@ let
             resolvedRolesPerInstance
             firstRole
             isClanModule
+            supportedRoles
             ;
           # TODO: Add other attributes
           machineImports =
@@ -274,52 +275,58 @@ let
   buildInventory =
     { inventory, directory }:
     (lib.evalModules {
+      specialArgs = {
+        inherit directory inventory;
+      };
       modules = [
         ./internal.nix
-        {
-          machines = builtins.mapAttrs (
-            machineName: machineConfig:
-            let
-              compiledServices = compileServicesForMachine {
-                inherit
-                  machineName
-                  inventory
-                  directory
-                  ;
-              };
-              compiledMachine = compileMachine {
-                inherit
-                  machineConfig
-                  ;
-              };
+        (
+          { ... }:
+          {
+            machines = builtins.mapAttrs (
+              machineName: machineConfig:
+              let
+                compiledServices = compileServicesForMachine {
+                  inherit
+                    machineName
+                    inventory
+                    directory
+                    ;
+                };
+                compiledMachine = compileMachine {
+                  inherit
+                    machineConfig
+                    ;
+                };
 
-              machineImports =
-                compiledMachine.machineImports
-                ++ builtins.foldl' (
-                  acc: service:
-                  let
-                    failedAssertions = (lib.filterAttrs (_: v: !v.assertion) service.assertions);
-                    failedAssertionsImports =
-                      if failedAssertions != { } then
-                        [
-                          {
-                            clan.inventory.assertions = failedAssertions;
-                          }
-                        ]
-                      else
-                        [ ];
-                  in
-                  acc
-                  ++ service.machineImports
-                  # Import failed assertions
-                  ++ failedAssertionsImports
-                ) [ ] (builtins.attrValues compiledServices);
-            in
-            {
-              inherit machineImports compiledServices compiledMachine;
-            }
-          ) (inventory.machines or { });
-        }
+                machineImports =
+                  compiledMachine.machineImports
+                  ++ builtins.foldl' (
+                    acc: service:
+                    let
+                      failedAssertions = (lib.filterAttrs (_: v: !v.assertion) service.assertions);
+                      failedAssertionsImports =
+                        if failedAssertions != { } then
+                          [
+                            {
+                              clan.inventory.assertions = failedAssertions;
+                            }
+                          ]
+                        else
+                          [ ];
+                    in
+                    acc
+                    ++ service.machineImports
+                    # Import failed assertions
+                    ++ failedAssertionsImports
+                  ) [ ] (builtins.attrValues compiledServices);
+              in
+              {
+                inherit machineImports compiledServices compiledMachine;
+              }
+            ) (inventory.machines or { });
+          }
+        )
       ];
     }).config;
 in
