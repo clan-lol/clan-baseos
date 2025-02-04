@@ -9,6 +9,44 @@ let
   inherit (inventory) buildInventory;
 in
 {
+  test_inventory_a =
+    let
+      compiled = buildInventory {
+        inventory = {
+          machines = {
+            A = { };
+          };
+          services = {
+            clanModule = { };
+            legacyModule = { };
+          };
+          modules = {
+            clanModule = ./clanModule;
+            legacyModule = ./legacyModule;
+          };
+        };
+        directory = ./.;
+      };
+    in
+    {
+      expr = {
+        clanModule = lib.filterAttrs (
+          name: _: name == "isClanModule"
+        ) compiled.machines.A.compiledServices.clanModule;
+        legacyModule = lib.filterAttrs (
+          name: _: name == "isClanModule"
+        ) compiled.machines.A.compiledServices.legacyModule;
+      };
+      expected = {
+        clanModule = {
+          isClanModule = true;
+        };
+        legacyModule = {
+          isClanModule = false;
+        };
+      };
+    };
+
   test_inventory_empty =
     let
       compiled = buildInventory {

@@ -92,7 +92,6 @@ let
   };
 in
 {
-
   imports = [
     ./assertions.nix
   ];
