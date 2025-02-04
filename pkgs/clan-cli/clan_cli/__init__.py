@@ -148,6 +148,7 @@ Note: The meta results from clan/meta.json and manual flake arguments.
 
     parser_backups = subparsers.add_parser(
         "backups",
+        aliases=["b"],
         help="Manage backups of clan machines",
         description="Manage backups of clan machines",
         epilog=(
@@ -175,6 +176,7 @@ For more detailed information visit: {help_hyperlink("backups", "https://docs.cl
 
     parser_flake = subparsers.add_parser(
         "flakes",
+        aliases=["f"],
         help="Create a clan flake inside the current directory",
         description="Create a clan flake inside the current directory",
         epilog=(
@@ -300,6 +302,7 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
     # like facts but with vars instead of facts
     parser_vars = subparsers.add_parser(
         "vars",
+        aliases=["va"],
         help="Manage vars",
         description="Manage vars",
         epilog=(
@@ -336,6 +339,7 @@ For more detailed information, visit: {help_hyperlink("secrets", "https://docs.c
 
     parser_machine = subparsers.add_parser(
         "machines",
+        aliases=["m"],
         help="Manage machines and their configuration",
         description="Manage machines and their configuration",
         epilog=(
@@ -376,6 +380,7 @@ For more detailed information, visit: {help_hyperlink("deploy", "https://docs.cl
 
     parser_select = subparsers.add_parser(
         "select",
+        aliases=["se"],
         help="Select nixos values from the flake",
         description="Select nixos values from the flake",
         epilog=(
@@ -400,6 +405,7 @@ Examples:
 
     parser_state = subparsers.add_parser(
         "state",
+        aliases=["st"],
         help="Query state information about machines",
         description="Query state information about machines",
         epilog=(

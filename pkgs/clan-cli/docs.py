@@ -5,6 +5,8 @@ from pathlib import Path
 
 from clan_cli import create_parser
 
+hidden_subcommands = ["machine", "b", "f", "m", "se", "st", "va"]
+
 
 @dataclass
 class Option:
@@ -259,6 +261,12 @@ def collect_commands() -> list[Category]:
                 if str(subparser.description).startswith("WIP"):
                     print(f"Excluded {name} from documentation as it is marked as WIP")
                     continue
+                if str(name) in hidden_subcommands:
+                    print(
+                        f"Excluded {name} from documentation as it is a hidden subcommand."
+                    )
+                    continue
+
                 (_options, _positionals, _subcommands) = get_subcommands(
                     subparser, to=result, level=2, prefix=[name]
                 )
