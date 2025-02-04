@@ -47,7 +47,7 @@ class KeyType(enum.Enum):
         raise ClanError(msg)
 
     def collect_public_keys(self) -> Sequence[str]:
-        keyring: Sequence[str] = []
+        keyring: list[str] = []
 
         if self == self.AGE:
             if keys := os.environ.get("SOPS_AGE_KEY"):
