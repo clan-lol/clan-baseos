@@ -82,6 +82,11 @@ def update_secrets(
     for path in secret_paths:
         if not filter_secrets(path):
             continue
+        # clean-up non-existent users, groups, and machines
+        # from the secret before we update it:
+        changed_files.extend(cleanup_dangling_symlinks(path / "users"))
+        changed_files.extend(cleanup_dangling_symlinks(path / "groups"))
+        changed_files.extend(cleanup_dangling_symlinks(path / "machines"))
         changed_files.extend(
             update_keys(
                 path,
@@ -89,6 +94,17 @@ def update_secrets(
             )
         )
     return changed_files
+
+
+def cleanup_dangling_symlinks(folder: Path) -> list[Path]:
+    if not folder.exists():
+        return []
+    removed: list[Path] = []
+    for link in folder.iterdir():
+        if link.is_symlink() and not link.exists():
+            link.unlink()
+            removed.append(folder / link)
+    return removed
 
 
 def collect_keys_for_type(folder: Path) -> set[tuple[str, sops.KeyType]]:
@@ -99,7 +115,7 @@ def collect_keys_for_type(folder: Path) -> set[tuple[str, sops.KeyType]]:
         if not p.is_symlink():
             continue
         try:
-            target = p.resolve()
+            target = p.resolve(strict=True)
         except FileNotFoundError:
             log.warning(f"Ignoring broken symlink {p}")
             continue
