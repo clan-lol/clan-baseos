@@ -23,7 +23,7 @@ class Prompt:
     description: str
     prompt_type: PromptType
 
-    create_file: bool = False
+    persist: bool = False
     previous_value: str | None = None
 
     @classmethod
@@ -32,7 +32,7 @@ class Prompt:
             name=data["name"],
             description=data["description"],
             prompt_type=PromptType(data["type"]),
-            create_file=data.get("persist", data["persist"]),
+            persist=data.get("persist", data["persist"]),
             previous_value=data.get("previousValue"),
         )
 

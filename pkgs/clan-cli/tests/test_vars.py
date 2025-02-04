@@ -484,7 +484,7 @@ def test_prompt(
     my_generator["prompts"]["prompt2"]["persist"] = False
     my_generator["prompts"]["prompt2"]["type"] = "line"
 
-    my_generator["prompts"]["prompt_create_file"]["persist"] = True
+    my_generator["prompts"]["prompt_persist"]["persist"] = True
 
     my_generator["script"] = (
         "cat $prompts/prompt1 > $out/line_value; cat $prompts/prompt2 > $out/multiline_value"
@@ -494,7 +494,7 @@ def test_prompt(
     sops_setup.init()
     monkeypatch.setattr(
         "clan_cli.vars.prompt.MOCK_PROMPT_RESPONSE",
-        iter(["line input", "my\nmultiline\ninput\n", "prompt_create_file"]),
+        iter(["line input", "my\nmultiline\ninput\n", "prompt_persist"]),
     )
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     in_repo_store = in_repo.FactStore(
@@ -515,11 +515,11 @@ def test_prompt(
         Machine(name="my_machine", flake=FlakeId(str(flake.path)))
     )
     assert sops_store.exists(
-        Generator(name="my_generator", share=False, files=[]), "prompt_create_file"
+        Generator(name="my_generator", share=False, files=[]), "prompt_persist"
     )
     assert (
-        sops_store.get(Generator(name="my_generator"), "prompt_create_file").decode()
-        == "prompt_create_file"
+        sops_store.get(Generator(name="my_generator"), "prompt_persist").decode()
+        == "prompt_persist"
     )
 
 

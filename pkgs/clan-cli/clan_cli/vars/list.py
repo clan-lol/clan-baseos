@@ -47,7 +47,7 @@ def _get_previous_value(
     generator: Generator,
     prompt: Prompt,
 ) -> str | None:
-    if not prompt.create_file:
+    if not prompt.persist:
         return None
 
     pub_store = public_store(machine)
