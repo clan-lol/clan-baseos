@@ -237,7 +237,9 @@ def get_template(
             input_name = InputName(input_name_str)
             log.debug(f"Checking input '{input_name}' for template '{template_name}'")
 
-            template = find_template(template_name, template_list.inputs[input_name])
+            template = find_template(
+                template_name, template_list.inputs.get(input_name, {})
+            )
             if template:
                 log.debug(f"Found template '{template_name}' in input '{input_name}'")
                 break  # Stop searching once the template is found

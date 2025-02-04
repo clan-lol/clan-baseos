@@ -136,6 +136,9 @@ def create_command(args: argparse.Namespace) -> None:
         )
         raise ClanError(msg, description=description)
 
+    if len(args.input) == 0:
+        args.input = ["clan", "clan-core"]
+
     if args.no_self:
         input_prio = InputPrio.try_inputs(tuple(args.input))
     else:
@@ -185,9 +188,10 @@ def register_create_parser(parser: argparse.ArgumentParser) -> None:
         type=str,
         help="""Flake input name to use as template source
         can be specified multiple times, inputs are tried in order of definition
+        Example: --input clan --input clan-core
         """,
         action="append",
-        default=["clan-core"],
+        default=[],
     )
     parser.add_argument(
         "--no-self",
