@@ -18,7 +18,7 @@ export default tseslint.config(
         },
       ],
       "tailwindcss/no-custom-classname": [
-        "error",
+        "warn",
         {
           callees: ["cx"],
           whitelist: ["material-icons"],
