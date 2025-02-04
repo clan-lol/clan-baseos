@@ -192,7 +192,6 @@ class FlakeCacheEntry:
                     self.value[sel].is_cached(selectors[1:]) for sel in self.value
                 )
             # TODO: check if we already have all the keys anyway?
-            print("not cached because self.selector is not all")
             return False
         if (
             isinstance(selector, set)
@@ -200,15 +199,12 @@ class FlakeCacheEntry:
             and isinstance(self.value, dict)
         ):
             if not selector.issubset(self.selector):
-                print("not cached because selector is not subset of self.selector")
                 return False
             return all(self.value[sel].is_cached(selectors[1:]) for sel in selector)
         if isinstance(selector, str | int) and isinstance(self.value, dict):
             if selector in self.value:
                 return self.value[selector].is_cached(selectors[1:])
-            print("not cached because selector is not in self.value")
             return False
-        print("not cached because of unknown reason")
         return False
 
     def select(self, selectors: list[Selector]) -> Any:
@@ -307,6 +303,5 @@ class Flake:
     def select(self, selector: str) -> Any:
         if not self.cache.is_cached(selector):
             log.info(f"Cache miss for {selector}")
-            print(f"Cache miss for {selector}")
             self.prepare_cache([selector])
         return self.cache.select(selector)
