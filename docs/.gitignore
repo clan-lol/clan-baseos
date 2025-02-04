@@ -1,3 +1,3 @@
 /site/reference
-/site/static/Roboto-Regular.ttf
-/site/static/FiraCode-VF.ttf
+/site/static
+!/site/static/extra.css
