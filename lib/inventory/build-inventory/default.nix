@@ -85,7 +85,7 @@ let
             in
             if module ? _class then module._class == "clan" else false;
 
-          getRoleFile = role: inventory.modules.${serviceName} + "/roles/${role}.nix";
+          getRoleFile = role: builtins.seq role inventory.modules.${serviceName} + "/roles/${role}.nix";
 
           resolvedRolesPerInstance = lib.mapAttrs (
             instanceName: instanceConfig:
