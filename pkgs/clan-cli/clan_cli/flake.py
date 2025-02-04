@@ -307,6 +307,5 @@ class Flake:
     def select(self, selector: str) -> Any:
         if not self.cache.is_cached(selector):
             log.info(f"Cache miss for {selector}")
-            print(f"Cache miss for {selector}")
             self.prepare_cache([selector])
         return self.cache.select(selector)

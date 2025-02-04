@@ -18,6 +18,7 @@ from . import (
     clan,
     history,
     secrets,
+    select,
     state,
     vms,
 )
@@ -372,6 +373,29 @@ For more detailed information, visit: {help_hyperlink("deploy", "https://docs.cl
         description="manage history",
     )
     history.register_parser(parser_history)
+
+    parser_select = subparsers.add_parser(
+        "select",
+        help="Select nixos values from the flake",
+        description="Select nixos values from the flake",
+        epilog=(
+            """
+This subcommand provides an interface nix values defined in the flake.
+
+Examples:
+
+  $ clan select nixosConfigurations.*.config.networking.hostName
+    List hostnames of all nixos configurations as JSON.
+
+  $ clan select nixosConfigurations.{jon,alice}.config.clan.core.vars.generators.*.name
+    List all vars generators for jon and alice.
+
+  # clan select nixosConfigurations.jon.config.envirnonment.systemPackages.1
+    List the first system package for jon.
+        """
+        ),
+    )
+    select.register_parser(parser_select)
 
     parser_state = subparsers.add_parser(
         "state",

@@ -121,6 +121,7 @@ nav:
           - reference/cli/flash.md
           - reference/cli/history.md
           - reference/cli/machines.md
+          - reference/cli/select.md
           - reference/cli/secrets.md
           - reference/cli/show.md
           - reference/cli/ssh.md
