@@ -390,10 +390,11 @@ Examples:
   $ clan select nixosConfigurations.{jon,alice}.config.clan.core.vars.generators.*.name
     List all vars generators for jon and alice.
 
-  # clan select nixosConfigurations.jon.config.envirnonment.systemPackages.1
+  $ clan select nixosConfigurations.jon.config.envirnonment.systemPackages.1
     List the first system package for jon.
         """
         ),
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     select.register_parser(parser_select)
 
