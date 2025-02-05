@@ -231,7 +231,7 @@ in
       expr = configs.machines.machine_1.machineImports;
       expectedError = {
         type = "ThrownError";
-        msg = "Roles roleXYZ are not defined in the service borgbackup.";
+        msg = ''Roles \["roleXYZ"\] are not defined in the service borgbackup'';
       };
     };
   # Needs NIX_ABORT_ON_WARN=1
@@ -286,7 +286,9 @@ in
     in
     {
       inherit configs;
-      expr = builtins.filter (v: v != { }) configs.machines.machine_1.machineImports;
+      expr = builtins.filter (
+        v: v != { } && !v.clan.inventory.assertions ? "alive.assertion.inventory"
+      ) configs.machines.machine_1.machineImports;
       expected = [ ];
     };
 }
