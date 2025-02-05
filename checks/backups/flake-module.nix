@@ -146,7 +146,7 @@
           "clanModules/borgbackup"
           "clanModules/flake-module.nix"
           "clanModules/localbackup"
-          "clanModules/packages/roles"
+          "clanModules/packages"
           "clanModules/single-disk"
           "clanModules/zerotier"
           "flake.lock"
@@ -176,7 +176,7 @@
             clan.core.settings.directory = ./.;
             environment.systemPackages = [
               (pkgs.writeShellScriptBin "foo" ''
-                echo ${self}
+                echo ${clanCore}
               '')
             ];
           };
