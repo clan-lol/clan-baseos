@@ -35,7 +35,7 @@
       packages.webview-ui = pkgs.buildNpmPackage {
         pname = "clan-webview-ui";
         version = "0.0.1";
-
+        nodejs = pkgs.nodejs_20;
         src = ./app;
 
         npmDeps = pkgs.importNpmLock { npmRoot = ./app; };
