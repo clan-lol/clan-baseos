@@ -7,7 +7,7 @@ from typing import Any
 
 from clan_cli.cmd import run
 from clan_cli.errors import ClanError
-from clan_cli.nix import nix_build, nix_config
+from clan_cli.nix import nix_build, nix_command, nix_config, nix_test_store
 
 log = logging.getLogger(__name__)
 
@@ -278,7 +278,19 @@ class Flake:
     cache: FlakeCache = field(default_factory=FlakeCache)
 
     def __post_init__(self) -> None:
-        flake_prefetch = run(["nix", "flake", "prefetch", "--json", self.identifier])
+        flake_prefetch = run(
+            nix_command(
+                [
+                    "flake",
+                    "prefetch",
+                    "--json",
+                    "--option",
+                    "flake-registry",
+                    "",
+                    self.identifier,
+                ]
+            )
+        )
         flake_metadata = json.loads(flake_prefetch.stdout)
         self.store_path = flake_metadata["storePath"]
         self.hash = flake_metadata["hash"]
@@ -292,8 +304,10 @@ class Flake:
             in
               flake.inputs.nixpkgs.legacyPackages.{config["system"]}.writeText "clan-flake-select" (builtins.toJSON [ ({" ".join([f'flake.clanInternals.lib.select "{attr}" flake' for attr in selectors])}) ])
         """
-        build_output = run(nix_build(["--expr", nix_code])).stdout.strip()
-        outputs = json.loads(Path(build_output).read_text())
+        build_output = Path(run(nix_build(["--expr", nix_code])).stdout.strip())
+        if tmp_store := nix_test_store():
+            build_output = tmp_store.joinpath(*build_output.parts[1:])
+        outputs = json.loads(build_output.read_text())
         if len(outputs) != len(selectors):
             msg = f"flake_prepare_cache: Expected {len(outputs)} outputs, got {len(outputs)}"
             raise ClanError(msg)
