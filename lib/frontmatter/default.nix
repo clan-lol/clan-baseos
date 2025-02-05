@@ -68,7 +68,7 @@ let
         if (builtins.pathExists readme) then
           (builtins.readFile readme)
         else
-          throw "No README.md found for module ${modulename}";
+          throw "No README.md found for module ${modulename} (expected at ${readme})";
     in
     readmeContents;
 
