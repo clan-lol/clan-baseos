@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from clan_cli.api import API
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import CmdOut, RunOpts, run
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.inventory import Inventory, init_inventory
 from clan_cli.nix import nix_shell
 from clan_cli.templates import (
@@ -33,7 +33,7 @@ class CreateClanResponse:
 class CreateOptions:
     dest: Path
     template_name: str
-    src_flake: FlakeId | None = None
+    src_flake: Flake | None = None
     input_prio: InputPrio | None = None
     setup_git: bool = True
     initial: Inventory | None = None

@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import IO
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import (
     add_dynamic_completer,
     complete_groups,
@@ -19,6 +18,7 @@ from clan_cli.completions import (
     complete_users,
 )
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.git import commit_files
 
 from . import sops
@@ -341,7 +341,7 @@ def list_secrets(flake_dir: Path, pattern: str | None = None) -> list[str]:
 
 @dataclass
 class ListSecretsOptions:
-    flake: FlakeId
+    flake: Flake
     pattern: str | None
 
 

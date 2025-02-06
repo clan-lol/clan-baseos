@@ -163,7 +163,7 @@ export const Flash = () => {
           machine: {
             name: values.machine.devicePath,
             flake: {
-              loc: values.machine.flake,
+              identifier: values.machine.flake,
             },
           },
           mode: "format",

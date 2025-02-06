@@ -51,7 +51,7 @@ export const MachineListItem = (props: MachineListItemProps) => {
           machine: {
             name: name,
             flake: {
-              loc: active_clan,
+              identifier: active_clan,
             },
           },
           no_reboot: true,

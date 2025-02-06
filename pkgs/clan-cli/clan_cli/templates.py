@@ -6,9 +6,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, NewType, TypedDict
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.nix import nix_eval
 
 log = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ class ClanExports(TypedDict):
     self: ClanAttrset
 
 
-def get_clan_nix_attrset(clan_dir: FlakeId | None = None) -> ClanExports:
+def get_clan_nix_attrset(clan_dir: Flake | None = None) -> ClanExports:
     # Check if the clan directory is provided, otherwise use the environment variable
     if not clan_dir:
         # TODO: Quickfix, templates dir seems to be missing in CLAN_CORE_PATH??
@@ -69,7 +69,7 @@ def get_clan_nix_attrset(clan_dir: FlakeId | None = None) -> ClanExports:
         #     msg = "Environment var CLAN_CORE_PATH is not set, this shouldn't happen"
         #     raise ClanError(msg)
 
-        clan_dir = FlakeId(clan_core_path)
+        clan_dir = Flake(clan_core_path)
 
     log.debug(f"Evaluating flake {clan_dir} for Clan attrsets")
 
@@ -170,7 +170,7 @@ class TemplateList:
 
 
 def list_templates(
-    template_type: TemplateType, clan_dir: FlakeId | None = None
+    template_type: TemplateType, clan_dir: Flake | None = None
 ) -> TemplateList:
     clan_exports = get_clan_nix_attrset(clan_dir)
     result = TemplateList()
@@ -204,7 +204,7 @@ def get_template(
     template_type: TemplateType,
     *,
     input_prio: InputPrio | None = None,
-    clan_dir: FlakeId | None = None,
+    clan_dir: Flake | None = None,
 ) -> FoundTemplate:
     log.info(f"Searching for template '{template_name}' of type '{template_type}'")
 

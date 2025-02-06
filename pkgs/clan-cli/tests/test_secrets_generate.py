@@ -2,8 +2,8 @@ import ipaddress
 from typing import TYPE_CHECKING
 
 import pytest
-from clan_cli.clan_uri import FlakeId
 from clan_cli.facts.secret_modules.sops import SecretStore
+from clan_cli.flake import Flake
 from clan_cli.machines.facts import machine_get_fact
 from clan_cli.machines.machines import Machine
 from clan_cli.secrets.folders import sops_secrets_folder
@@ -48,7 +48,7 @@ def test_generate_secret(
     cmd = ["facts", "generate", "--flake", str(test_flake_with_core.path), "vm1"]
     cli.run(cmd)
     store1 = SecretStore(
-        Machine(name="vm1", flake=FlakeId(str(test_flake_with_core.path)))
+        Machine(name="vm1", flake=Flake(str(test_flake_with_core.path)))
     )
 
     assert store1.exists("", "age.key")
@@ -78,7 +78,7 @@ def test_generate_secret(
     ).exists()
 
     store2 = SecretStore(
-        Machine(name="vm2", flake=FlakeId(str(test_flake_with_core.path)))
+        Machine(name="vm2", flake=Flake(str(test_flake_with_core.path)))
     )
 
     # Should not exist clan facts generate

@@ -15,3 +15,8 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
         "selector",
         help="select from a flake",
     )
+    parser.add_argument(
+        "--impure",
+        action="store_true",
+        default=False,
+    )

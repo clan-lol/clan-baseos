@@ -3,7 +3,7 @@ import logging
 import shutil
 
 from clan_cli.api import API
-from clan_cli.clan_uri import FlakeId
+from clan_cli.clan_uri import Flake
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanError
@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 @API.register
-def delete_machine(flake: FlakeId, name: str) -> None:
+def delete_machine(flake: Flake, name: str) -> None:
     inventory = get_inventory(flake.path)
 
     if "machines" not in inventory:

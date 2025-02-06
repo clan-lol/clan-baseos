@@ -5,7 +5,7 @@ from contextlib import ExitStack
 import pytest
 from age_keys import SopsSetup
 from clan_cli import cmd
-from clan_cli.clan_uri import FlakeId
+from clan_cli.flake import Flake
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_eval, run
 from clan_cli.vms.run import inspect_vm, spawn_vm
@@ -97,8 +97,8 @@ def test_vm_deployment(
     # run nix flake lock
     cmd.run(["nix", "flake", "lock"], cmd.RunOpts(cwd=flake.path))
 
-    vm1_config = inspect_vm(machine=Machine("m1_machine", FlakeId(str(flake.path))))
-    vm2_config = inspect_vm(machine=Machine("m2_machine", FlakeId(str(flake.path))))
+    vm1_config = inspect_vm(machine=Machine("m1_machine", Flake(str(flake.path))))
+    vm2_config = inspect_vm(machine=Machine("m2_machine", Flake(str(flake.path))))
     with ExitStack() as stack:
         vm1 = stack.enter_context(spawn_vm(vm1_config, stdin=subprocess.DEVNULL))
         vm2 = stack.enter_context(spawn_vm(vm2_config, stdin=subprocess.DEVNULL))

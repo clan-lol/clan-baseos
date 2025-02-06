@@ -2,8 +2,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from clan_cli.clan_uri import FlakeId
 from clan_cli.facts.secret_modules.password_store import SecretStore
+from clan_cli.flake import Flake
 from clan_cli.machines.facts import machine_get_fact
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_shell
@@ -68,7 +68,7 @@ def test_upload_secret(
     )
     cli.run(["facts", "generate", "vm1", "--flake", str(flake.path)])
 
-    store = SecretStore(Machine(name="vm1", flake=FlakeId(str(flake.path))))
+    store = SecretStore(Machine(name="vm1", flake=Flake(str(flake.path))))
 
     network_id = machine_get_fact(flake.path, "vm1", "zerotier-network-id")
     assert len(network_id) == 16

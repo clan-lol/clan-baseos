@@ -8,7 +8,6 @@ import sys
 
 from clan_cli.api import API
 from clan_cli.async_run import AsyncContext, AsyncOpts, AsyncRuntime, is_async_cancelled
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import MsgColor, RunOpts, run
 from clan_cli.colors import AnsiColor
 from clan_cli.completions import (
@@ -18,6 +17,7 @@ from clan_cli.completions import (
 from clan_cli.errors import ClanError
 from clan_cli.facts.generate import generate_facts
 from clan_cli.facts.upload import upload_secrets
+from clan_cli.flake import Flake
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_command, nix_metadata
@@ -46,7 +46,7 @@ def upload_sources(machine: Machine) -> str:
     env = host.nix_ssh_env(os.environ.copy())
 
     flake_url = (
-        str(machine.flake.path) if machine.flake.is_local() else machine.flake.url
+        str(machine.flake.path) if machine.flake.is_local else machine.flake.identifier
     )
     flake_data = nix_metadata(flake_url)
     has_path_inputs = any(
@@ -96,6 +96,7 @@ def update_machines(base_path: str, machines: list[InventoryMachine]) -> None:
     group_machines: list[Machine] = []
 
     # Convert InventoryMachine to Machine
+    flake = Flake(base_path)
     for machine in machines:
         name = machine.get("name")
         if not name:
@@ -103,7 +104,7 @@ def update_machines(base_path: str, machines: list[InventoryMachine]) -> None:
             raise ClanError(msg)
         m = Machine(
             name,
-            flake=FlakeId(base_path),
+            flake=flake,
         )
         if not machine.get("deploy", {}).get("targetHost"):
             msg = f"'TargetHost' is not set for machine '{name}'"

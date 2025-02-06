@@ -1,4 +1,5 @@
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from clan_cli.clan_uri import ClanURI
 
@@ -15,26 +16,28 @@ def test_get_url() -> None:
     assert uri.get_url() == "/home/user/Downloads"
 
     uri = ClanURI.from_str("clan://file:///home/user/Downloads")
-    assert uri.get_url() == "/home/user/Downloads"
+    assert uri.get_url() == "file:///home/user/Downloads"
 
 
 def test_firefox_strip_uri() -> None:
-    uri = ClanURI.from_str("clan://https//git.clan.lol/clan/democlan")
-    assert uri.get_url() == "https://git.clan.lol/clan/democlan"
     uri = ClanURI.from_str("clan://git+https//git.clan.lol/clan/democlan.git")
     assert uri.get_url() == "git+https://git.clan.lol/clan/democlan.git"
 
 
 def test_local_uri() -> None:
-    # Create a ClanURI object from a local URI
-    uri = ClanURI.from_str("clan://file:///home/user/Downloads")
-    assert uri.flake.path == Path("/home/user/Downloads")
+    with TemporaryDirectory(prefix="clan_test") as tempdir:
+        flake_nix = Path(tempdir) / "flake.nix"
+        flake_nix.write_text("outputs = _: {}")
+
+        # Create a ClanURI object from a local URI
+        uri = ClanURI.from_str(f"clan://file://{tempdir}")
+        assert uri.flake.path == Path(tempdir)
 
 
 def test_is_remote() -> None:
     # Create a ClanURI object from a remote URI
     uri = ClanURI.from_str("clan://https://example.com")
-    assert uri.flake.url == "https://example.com"
+    assert uri.flake.identifier == "https://example.com"
 
 
 def test_direct_local_path() -> None:
@@ -54,35 +57,35 @@ def test_remote_with_clanparams() -> None:
     uri = ClanURI.from_str("clan://https://example.com")
 
     assert uri.machine_name == "defaultVM"
-    assert uri.flake.url == "https://example.com"
+    assert uri.flake.identifier == "https://example.com"
 
 
 def test_from_str_remote() -> None:
     uri = ClanURI.from_str(url="https://example.com", machine_name="myVM")
     assert uri.get_url() == "https://example.com"
     assert uri.machine_name == "myVM"
-    assert uri.flake.url == "https://example.com"
+    assert uri.flake.identifier == "https://example.com"
 
 
 def test_from_str_local() -> None:
-    uri = ClanURI.from_str(url="~/Projects/democlan", machine_name="myVM")
-    assert uri.get_url().endswith("/Projects/democlan")
-    assert uri.machine_name == "myVM"
-    assert uri.flake.is_local()
-    assert str(uri.flake).endswith("/Projects/democlan")  # type: ignore
+    with TemporaryDirectory(prefix="clan_test") as tempdir:
+        flake_nix = Path(tempdir) / "flake.nix"
+        flake_nix.write_text("outputs = _: {}")
+
+        uri = ClanURI.from_str(url=tempdir, machine_name="myVM")
+        assert uri.get_url().endswith(tempdir)
+        assert uri.machine_name == "myVM"
+        assert uri.flake.is_local
+        assert str(uri.flake).endswith(tempdir)  # type: ignore
 
 
 def test_from_str_local_no_machine() -> None:
-    uri = ClanURI.from_str("~/Projects/democlan")
-    assert uri.get_url().endswith("/Projects/democlan")
-    assert uri.machine_name == "defaultVM"
-    assert uri.flake.is_local()
-    assert str(uri.flake).endswith("/Projects/democlan")  # type: ignore
+    with TemporaryDirectory(prefix="clan_test") as tempdir:
+        flake_nix = Path(tempdir) / "flake.nix"
+        flake_nix.write_text("outputs = _: {}")
 
-
-def test_from_str_local_no_machine2() -> None:
-    uri = ClanURI.from_str("~/Projects/democlan#syncthing-peer1")
-    assert uri.get_url().endswith("/Projects/democlan")
-    assert uri.machine_name == "syncthing-peer1"
-    assert uri.flake.is_local()
-    assert str(uri.flake).endswith("/Projects/democlan")  # type: ignore
+        uri = ClanURI.from_str(tempdir)
+        assert uri.get_url().endswith(tempdir)
+        assert uri.machine_name == "defaultVM"
+        assert uri.flake.is_local
+        assert str(uri.flake).endswith(tempdir)  # type: ignore

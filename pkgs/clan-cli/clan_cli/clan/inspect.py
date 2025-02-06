@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run
 from clan_cli.dirs import machine_gcroot
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.machines.list import list_nixos_machines
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import (
@@ -21,7 +21,7 @@ from clan_cli.vms.inspect import VmConfig, inspect_vm
 
 @dataclass
 class FlakeConfig:
-    flake_url: FlakeId
+    flake_url: Flake
     flake_attr: str
 
     clan_name: str
@@ -35,7 +35,7 @@ class FlakeConfig:
     @classmethod
     def from_json(cls: type["FlakeConfig"], data: dict[str, Any]) -> "FlakeConfig":
         return cls(
-            flake_url=FlakeId.from_json(data["flake_url"]),
+            flake_url=Flake.from_json(data["flake_url"]),
             flake_attr=data["flake_attr"],
             clan_name=data["clan_name"],
             nar_hash=data["nar_hash"],
@@ -62,7 +62,7 @@ def inspect_flake(flake_url: str | Path, machine_name: str) -> FlakeConfig:
         msg = f"Machine {machine_name} not found in {flake_url}. Available machines: {', '.join(machines)}"
         raise ClanError(msg)
 
-    machine = Machine(machine_name, FlakeId(str(flake_url)))
+    machine = Machine(machine_name, Flake(str(flake_url)))
     vm = inspect_vm(machine)
 
     # Make symlink to gcroots from vm.machine_icon
@@ -105,7 +105,7 @@ def inspect_flake(flake_url: str | Path, machine_name: str) -> FlakeConfig:
     meta = nix_metadata(flake_url)
     return FlakeConfig(
         vm=vm,
-        flake_url=FlakeId(str(flake_url)),
+        flake_url=Flake(str(flake_url)),
         clan_name=clan_name,
         flake_attr=machine_name,
         nar_hash=meta["locked"]["narHash"],
@@ -119,13 +119,13 @@ def inspect_flake(flake_url: str | Path, machine_name: str) -> FlakeConfig:
 @dataclass
 class InspectOptions:
     machine: str
-    flake: FlakeId
+    flake: Flake
 
 
 def inspect_command(args: argparse.Namespace) -> None:
     inspect_options = InspectOptions(
         machine=args.machine,
-        flake=args.flake or FlakeId(str(Path.cwd())),
+        flake=args.flake or Flake(str(Path.cwd())),
     )
     res = inspect_flake(
         flake_url=str(inspect_options.flake), machine_name=inspect_options.machine

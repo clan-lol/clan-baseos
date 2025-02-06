@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from clan_cli.api.modules import list_modules
-from clan_cli.clan_uri import FlakeId
+from clan_cli.flake import Flake
 from clan_cli.inventory import (
     Inventory,
     Machine,
@@ -56,7 +56,7 @@ def test_add_module_to_inventory(
         ]
     )
     opts = CreateOptions(
-        clan_dir=FlakeId(str(base_path)),
+        clan_dir=Flake(str(base_path)),
         machine=Machine(name="machine1", tags=[], deploy=MachineDeploy()),
     )
 
@@ -93,7 +93,7 @@ def test_add_module_to_inventory(
     cli.run(cmd)
 
     machine = MachineMachine(
-        name="machine1", flake=FlakeId(str(test_flake_with_core.path))
+        name="machine1", flake=Flake(str(test_flake_with_core.path))
     )
 
     generator = None

@@ -82,7 +82,7 @@ def test_nested_nullable() -> None:
     data = {
         "machine": {
             "name": "flash-installer",
-            "flake": {"loc": "git+https://git.clan.lol/clan/clan-core"},
+            "flake": {"identifier": "git+https://git.clan.lol/clan/clan-core"},
         },
         "mode": "format",
         "disks": {"main": "/dev/sda"},
@@ -96,7 +96,7 @@ def test_nested_nullable() -> None:
     expected = FlashOptions(
         machine=machines.Machine(
             name="flash-installer",
-            flake=machines.FlakeId("git+https://git.clan.lol/clan/clan-core"),
+            flake=machines.Flake("git+https://git.clan.lol/clan/clan-core"),
         ),
         mode="format",
         disks={"main": "/dev/sda"},

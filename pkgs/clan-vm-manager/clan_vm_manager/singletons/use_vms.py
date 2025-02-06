@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import gi
-from clan_cli.clan_uri import ClanURI, FlakeId
+from clan_cli.clan_uri import ClanURI
+from clan_cli.flake import Flake
 from clan_cli.history.add import HistoryEntry
 from clan_cli.machines.machines import Machine
 
@@ -34,7 +35,7 @@ class Emitter(GObject.GObject):
 
 class ClanStore:
     _instance: "None | ClanStore" = None
-    _clan_store: GKVStore[FlakeId, VMStore]
+    _clan_store: GKVStore[Flake, VMStore]
 
     _emitter: Emitter
 
@@ -94,7 +95,7 @@ class ClanStore:
         self.clan_store.register_on_change(on_clanstore_change)
 
     @property
-    def clan_store(self) -> GKVStore[FlakeId, VMStore]:
+    def clan_store(self) -> GKVStore[Flake, VMStore]:
         return self._clan_store
 
     def create_vm_task(self, vm: HistoryEntry) -> bool:

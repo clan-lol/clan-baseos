@@ -22,11 +22,11 @@ from . import (
     state,
     vms,
 )
-from .clan_uri import FlakeId
 from .custom_logger import setup_logging
 from .dirs import get_clan_flake_toplevel_or_env
 from .errors import ClanError
 from .facts import cli as facts
+from .flake import Flake
 from .flash import cli as flash_cli
 from .hyperlink import help_hyperlink
 from .machines import cli as machines
@@ -41,17 +41,17 @@ with contextlib.suppress(ImportError):
     import argcomplete  # type: ignore[no-redef]
 
 
-def flake_path(arg: str) -> FlakeId:
+def flake_path(arg: str) -> Flake:
     flake_dir = Path(arg).resolve()
     if flake_dir.exists() and flake_dir.is_dir():
-        return FlakeId(str(flake_dir))
-    return FlakeId(arg)
+        return Flake(str(flake_dir))
+    return Flake(arg)
 
 
-def default_flake() -> FlakeId | None:
+def default_flake() -> Flake | None:
     val = get_clan_flake_toplevel_or_env()
     if val:
-        return FlakeId(str(val))
+        return Flake(str(val))
     return None
 
 

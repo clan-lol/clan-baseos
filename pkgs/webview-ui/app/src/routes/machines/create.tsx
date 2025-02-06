@@ -20,7 +20,7 @@ export function CreateMachine() {
     initialValues: {
       opts: {
         clan_dir: {
-          loc: activeURI() || "",
+          identifier: activeURI() || "",
         },
         machine: {
           tags: ["all"],
@@ -49,7 +49,7 @@ export function CreateMachine() {
       opts: {
         ...values.opts,
         clan_dir: {
-          loc: active_dir,
+          identifier: active_dir,
         },
       },
     });

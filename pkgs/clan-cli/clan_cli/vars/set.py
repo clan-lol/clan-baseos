@@ -2,8 +2,8 @@ import argparse
 import logging
 import sys
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.flake import Flake
 from clan_cli.git import commit_files
 from clan_cli.machines.machines import Machine
 from clan_cli.vars.get import get_var
@@ -15,9 +15,7 @@ from .prompt import ask
 log = logging.getLogger(__name__)
 
 
-def set_var(
-    machine: str | Machine, var: str | Var, value: bytes, flake: FlakeId
-) -> None:
+def set_var(machine: str | Machine, var: str | Var, value: bytes, flake: Flake) -> None:
     if isinstance(machine, str):
         _machine = Machine(name=machine, flake=flake)
     else:
@@ -35,7 +33,7 @@ def set_var(
         )
 
 
-def set_via_stdin(machine: str, var_id: str, flake: FlakeId) -> None:
+def set_via_stdin(machine: str, var_id: str, flake: Flake) -> None:
     var = get_var(str(flake.path), machine, var_id)
     if sys.stdin.isatty():
         new_value = ask(

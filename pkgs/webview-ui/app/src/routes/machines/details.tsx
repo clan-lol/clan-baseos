@@ -140,7 +140,7 @@ const InstallMachine = (props: InstallMachineProps) => {
         machine: {
           name: props.name,
           flake: {
-            loc: curr_uri,
+            identifier: curr_uri,
           },
         },
         target_host: target,

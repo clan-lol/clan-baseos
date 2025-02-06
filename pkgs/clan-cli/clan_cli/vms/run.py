@@ -236,7 +236,7 @@ def spawn_vm(
         # TODO: We should get this from the vm argument
         nixos_config = build_vm(machine, cachedir, nix_options)
 
-        state_dir = vm_state_dir(vm.flake_url, machine.name)
+        state_dir = vm_state_dir(vm.flake_url.identifier, machine.name)
         state_dir.mkdir(parents=True, exist_ok=True)
 
         # specify socket files for qmp and qga

@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from clan_cli.api import API
-from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_tags
 from clan_cli.dirs import get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.git import commit_file
 from clan_cli.inventory import Machine as InventoryMachine
 from clan_cli.inventory import (
@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class CreateOptions:
-    clan_dir: FlakeId
+    clan_dir: Flake
     machine: InventoryMachine
     target_host: str | None = None
     input_prio: InputPrio | None = None
@@ -38,7 +38,7 @@ class CreateOptions:
 
 @API.register
 def create_machine(opts: CreateOptions) -> None:
-    if not opts.clan_dir.is_local():
+    if not opts.clan_dir.is_local:
         msg = f"Clan {opts.clan_dir} is not a local clan."
         description = "Import machine only works on local clans"
         raise ClanError(msg, description=description)
@@ -127,7 +127,7 @@ def create_command(args: argparse.Namespace) -> None:
         clan_dir = args.flake
     else:
         tmp = get_clan_flake_toplevel_or_env()
-        clan_dir = FlakeId(str(tmp)) if tmp else None
+        clan_dir = Flake(str(tmp)) if tmp else None
 
     if not clan_dir:
         msg = "No clan found."

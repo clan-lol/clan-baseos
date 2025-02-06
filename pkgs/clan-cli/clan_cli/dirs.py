@@ -5,8 +5,6 @@ import urllib
 from enum import Enum
 from pathlib import Path
 
-from clan_cli.clan_uri import FlakeId
-
 from .errors import ClanError
 
 log = logging.getLogger(__name__)
@@ -110,7 +108,7 @@ def user_history_file() -> Path:
     return user_config_dir() / "clan" / "history"
 
 
-def vm_state_dir(flake_url: FlakeId, vm_name: str) -> Path:
+def vm_state_dir(flake_url: str, vm_name: str) -> Path:
     clan_key = clan_key_safe(str(flake_url))
     return user_data_dir() / "clan" / "vmstate" / clan_key / vm_name
 

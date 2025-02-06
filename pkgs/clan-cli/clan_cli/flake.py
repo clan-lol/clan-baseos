@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -275,9 +275,43 @@ class Flake:
     """
 
     identifier: str
-    cache: FlakeCache = field(default_factory=FlakeCache)
 
     def __post_init__(self) -> None:
+        self._cache: FlakeCache | None = None
+        self._path: Path | None = None
+        self._is_local: bool | None = None
+
+    @classmethod
+    def from_json(cls: type["Flake"], data: dict[str, Any]) -> "Flake":
+        return cls(data["identifier"])
+
+    def __str__(self) -> str:
+        return self.identifier
+
+    def __hash__(self) -> int:
+        return hash(self.identifier)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Flake):
+            return NotImplemented
+        return self.identifier == other.identifier
+
+    @property
+    def is_local(self) -> bool:
+        if self._is_local is None:
+            self.prefetch()
+        assert isinstance(self._is_local, bool)
+        return self._is_local
+
+    @property
+    def path(self) -> Path:
+        if self._path is None:
+            self.prefetch()
+        assert isinstance(self._path, Path)
+        return self._path
+
+    def prefetch(self) -> None:
+        self._cache = FlakeCache()
         flake_prefetch = run(
             nix_command(
                 [
@@ -294,9 +328,23 @@ class Flake:
         flake_metadata = json.loads(flake_prefetch.stdout)
         self.store_path = flake_metadata["storePath"]
         self.hash = flake_metadata["hash"]
-        self.cache = FlakeCache()
+        if flake_metadata["original"].get("url", "").startswith("file:"):
+            self._is_local = True
+            path = flake_metadata["original"]["url"].removeprefix("file://")
+            path = path.removeprefix("file:")
+            self._path = Path(path)
+        elif flake_metadata["original"].get("path"):
+            self._is_local = True
+            self._path = Path(flake_metadata["original"]["path"])
+        else:
+            self._is_local = False
+            self._path = Path(self.store_path)
 
     def prepare_cache(self, selectors: list[str]) -> None:
+        if self._cache is None:
+            self.prefetch()
+        assert self._cache is not None
+
         config = nix_config()
         nix_code = f"""
             let
@@ -312,10 +360,14 @@ class Flake:
             msg = f"flake_prepare_cache: Expected {len(outputs)} outputs, got {len(outputs)}"
             raise ClanError(msg)
         for i, selector in enumerate(selectors):
-            self.cache.insert(outputs[i], selector)
+            self._cache.insert(outputs[i], selector)
 
     def select(self, selector: str) -> Any:
-        if not self.cache.is_cached(selector):
+        if self._cache is None:
+            self.prefetch()
+        assert self._cache is not None
+
+        if not self._cache.is_cached(selector):
             log.info(f"Cache miss for {selector}")
             self.prepare_cache([selector])
-        return self.cache.select(selector)
+        return self._cache.select(selector)

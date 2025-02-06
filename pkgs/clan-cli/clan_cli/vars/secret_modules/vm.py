@@ -14,7 +14,7 @@ class SecretStore(StoreBase):
 
     def __init__(self, machine: Machine) -> None:
         self.machine = machine
-        self.dir = vm_state_dir(machine.flake, machine.name) / "secrets"
+        self.dir = vm_state_dir(machine.flake.identifier, machine.name) / "secrets"
         self.dir.mkdir(parents=True, exist_ok=True)
 
     @property

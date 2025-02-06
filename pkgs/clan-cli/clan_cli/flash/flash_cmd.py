@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.flake import Flake
 from clan_cli.machines.machines import Machine
 
 from .flash import Disk, SystemConfig, flash_machine
@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class FlashOptions:
-    flake: FlakeId
+    flake: Flake
     machine: str
     disks: list[Disk]
     dry_run: bool

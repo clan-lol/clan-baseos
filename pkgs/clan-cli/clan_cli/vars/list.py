@@ -3,9 +3,9 @@ import importlib
 import logging
 
 from clan_cli.api import API
-from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.machines.machines import Machine
 from clan_cli.vars._types import StoreBase
 
@@ -27,7 +27,7 @@ def secret_store(machine: Machine) -> StoreBase:
 
 @API.register
 def get_vars(base_dir: str, machine_name: str) -> list[Var]:
-    machine = Machine(name=machine_name, flake=FlakeId(base_dir))
+    machine = Machine(name=machine_name, flake=Flake(base_dir))
     pub_store = public_store(machine)
     sec_store = secret_store(machine)
     all_vars = []
@@ -61,7 +61,7 @@ def _get_previous_value(
 
 @API.register
 def get_generators(base_dir: str, machine_name: str) -> list[Generator]:
-    machine = Machine(name=machine_name, flake=FlakeId(base_dir))
+    machine = Machine(name=machine_name, flake=Flake(base_dir))
     generators: list[Generator] = machine.vars_generators
     for generator in generators:
         for prompt in generator.prompts:
@@ -76,7 +76,7 @@ def get_generators(base_dir: str, machine_name: str) -> list[Generator]:
 def set_prompts(
     base_dir: str, machine_name: str, updates: list[GeneratorUpdate]
 ) -> None:
-    machine = Machine(name=machine_name, flake=FlakeId(base_dir))
+    machine = Machine(name=machine_name, flake=Flake(base_dir))
     for update in updates:
         for generator in machine.vars_generators:
             if generator.name == update.generator:

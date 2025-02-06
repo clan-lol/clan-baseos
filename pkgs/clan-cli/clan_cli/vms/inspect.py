@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.completions import add_dynamic_completer, complete_machines
+from clan_cli.flake import Flake
 from clan_cli.machines.machines import Machine
 
 
@@ -26,7 +26,7 @@ class WaypipeConfig:
 @dataclass
 class VmConfig:
     machine_name: str
-    flake_url: FlakeId
+    flake_url: Flake
 
     cores: int
     memory_size: int
@@ -43,7 +43,7 @@ class VmConfig:
     def from_json(cls: type["VmConfig"], data: dict[str, Any]) -> "VmConfig":
         return cls(
             machine_name=data["machine_name"],
-            flake_url=FlakeId.from_json(data["flake_url"]),
+            flake_url=Flake.from_json(data["flake_url"]),
             cores=data["cores"],
             memory_size=data["memory_size"],
             graphics=data["graphics"],
@@ -64,13 +64,13 @@ def inspect_vm(machine: Machine) -> VmConfig:
 @dataclass
 class InspectOptions:
     machine: str
-    flake: FlakeId
+    flake: Flake
 
 
 def inspect_command(args: argparse.Namespace) -> None:
     inspect_options = InspectOptions(
         machine=args.machine,
-        flake=args.flake or FlakeId(str(Path.cwd())),
+        flake=args.flake or Flake(str(Path.cwd())),
     )
 
     machine = Machine(inspect_options.machine, inspect_options.flake)

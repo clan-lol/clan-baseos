@@ -207,13 +207,13 @@ def complete_secrets(
     """
     Provides completion functionality for clan secrets
     """
-    from .clan_uri import FlakeId
+    from .clan_uri import Flake
     from .secrets.secrets import ListSecretsOptions, list_secrets
 
     flake = clan_dir_result if (clan_dir_result := clan_dir(None)) is not None else "."
 
     options = ListSecretsOptions(
-        flake=FlakeId(flake),
+        flake=Flake(flake),
         pattern=None,
     )
 

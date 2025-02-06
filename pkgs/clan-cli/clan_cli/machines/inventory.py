@@ -1,15 +1,15 @@
 import json
 from pathlib import Path
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import run
+from clan_cli.flake import Flake
 from clan_cli.nix import nix_build, nix_config, nix_test_store
 
 from .machines import Machine
 
 
 # function to speedup eval if we want to evaluate all machines
-def get_all_machines(flake: FlakeId, nix_options: list[str]) -> list[Machine]:
+def get_all_machines(flake: Flake, nix_options: list[str]) -> list[Machine]:
     config = nix_config()
     system = config["system"]
     json_path = Path(
@@ -37,7 +37,7 @@ def get_all_machines(flake: FlakeId, nix_options: list[str]) -> list[Machine]:
 
 
 def get_selected_machines(
-    flake: FlakeId, nix_options: list[str], machine_names: list[str]
+    flake: Flake, nix_options: list[str], machine_names: list[str]
 ) -> list[Machine]:
     machines = []
     for name in machine_names:

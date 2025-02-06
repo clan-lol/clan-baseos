@@ -147,20 +147,14 @@ class VMObject(GObject.Object):
         uri = ClanURI.from_str(
             url=str(self.data.flake.flake_url), machine_name=self.data.flake.flake_attr
         )
-        if uri.flake.is_local():
-            self.machine = Machine(
-                name=self.data.flake.flake_attr,
-                flake=uri.flake,
-            )
-        if uri.flake.is_remote():
-            self.machine = Machine(
-                name=self.data.flake.flake_attr,
-                flake=uri.flake,
-            )
+        self.machine = Machine(
+            name=self.data.flake.flake_attr,
+            flake=uri.flake,
+        )
         assert self.machine is not None
 
         state_dir = vm_state_dir(
-            flake_url=self.machine.flake, vm_name=self.machine.name
+            flake_url=self.machine.flake.identifier, vm_name=self.machine.name
         )
         self.qmp_wrap = QMPWrapper(state_dir)
         assert self.machine is not None

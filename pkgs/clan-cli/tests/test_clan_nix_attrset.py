@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from clan_cli.clan_uri import FlakeId
+from clan_cli.flake import Flake
 from clan_cli.locked_open import locked_open
 from clan_cli.templates import get_clan_nix_attrset
 from fixtures_flakes import FlakeForTest
@@ -26,7 +26,7 @@ def nix_attr_tester(
     test_number: int,
 ) -> None:
     write_clan_attr(injected, test_flake)
-    nix_attrset = get_clan_nix_attrset(FlakeId(str(test_flake.path)))
+    nix_attrset = get_clan_nix_attrset(Flake(str(test_flake.path)))
 
     assert json.dumps(nix_attrset, indent=2) == json.dumps(expected, indent=2)
 

@@ -16,7 +16,6 @@
 #     (subdir / ".clan-flake").touch()
 #     assert _get_clan_flake_toplevel() == subdir
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.dirs import clan_key_safe, vm_state_dir
 
 
@@ -25,12 +24,12 @@ def test_clan_key_safe() -> None:
 
 
 def test_vm_state_dir_identity() -> None:
-    dir1 = vm_state_dir(FlakeId("https://some.clan"), "vm1")
-    dir2 = vm_state_dir(FlakeId("https://some.clan"), "vm1")
+    dir1 = vm_state_dir("https://some.clan", "vm1")
+    dir2 = vm_state_dir("https://some.clan", "vm1")
     assert str(dir1) == str(dir2)
 
 
 def test_vm_state_dir_no_collision() -> None:
-    dir1 = vm_state_dir(FlakeId("/foo/bar"), "vm1")
-    dir2 = vm_state_dir(FlakeId("https://some.clan"), "vm1")
+    dir1 = vm_state_dir("/foo/bar", "vm1")
+    dir2 = vm_state_dir("https://some.clan", "vm1")
     assert str(dir1) != str(dir2)

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from clan_cli.clan_uri import FlakeId
+from clan_cli.flake import Flake
 from clan_cli.machines.machines import Machine
 from clan_cli.vms.run import inspect_vm, spawn_vm
 from fixtures_flakes import ClanFlake, FlakeForTest
@@ -80,7 +80,7 @@ def test_vm_persistence(
 
     flake.refresh()
 
-    vm_config = inspect_vm(machine=Machine("my_machine", FlakeId(str(flake.path))))
+    vm_config = inspect_vm(machine=Machine("my_machine", Flake(str(flake.path))))
 
     with spawn_vm(vm_config) as vm, vm.qga_connect() as qga:
         # create state via qmp command instead of systemd service

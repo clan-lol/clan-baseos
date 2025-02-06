@@ -6,11 +6,11 @@ from enum import Enum
 from pathlib import Path
 
 from clan_cli.api import API
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import RunOpts, run, run_no_stdout
 from clan_cli.completions import add_dynamic_completer, complete_machines
 from clan_cli.dirs import specific_machine_dir
 from clan_cli.errors import ClanCmdError, ClanError
+from clan_cli.flake import Flake
 from clan_cli.git import commit_file
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_config, nix_eval, nix_shell
@@ -102,7 +102,7 @@ def show_machine_hardware_platform(clan_dir: Path, machine_name: str) -> str | N
 
 @dataclass
 class HardwareGenerateOptions:
-    flake: FlakeId
+    flake: Flake
     machine: str
     backend: HardwareConfig
     target_host: str | None = None

@@ -8,11 +8,11 @@ from tempfile import NamedTemporaryFile
 from time import time
 from typing import TYPE_CHECKING, Any, Literal
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.cmd import RunOpts, run_no_stdout
 from clan_cli.errors import ClanError
 from clan_cli.facts import public_modules as facts_public_modules
 from clan_cli.facts import secret_modules as facts_secret_modules
+from clan_cli.flake import Flake
 from clan_cli.nix import nix_build, nix_config, nix_eval, nix_metadata, nix_test_store
 from clan_cli.ssh.host import Host
 from clan_cli.ssh.host_key import HostKeyCheck
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 @dataclass
 class Machine:
     name: str
-    flake: FlakeId
+    flake: Flake
     nix_options: list[str] = field(default_factory=list)
     cached_deployment: None | dict[str, Any] = None
     override_target_host: None | str = None
@@ -201,12 +201,7 @@ class Machine:
 
     @property
     def flake_dir(self) -> Path:
-        if self.flake.is_local():
-            return self.flake.path
-        if self.flake.is_remote():
-            return Path(nix_metadata(self.flake.url)["path"])
-        msg = f"Unsupported flake url: {self.flake}"
-        raise ClanError(msg)
+        return self.flake.path
 
     @property
     def target_host(self) -> Host:

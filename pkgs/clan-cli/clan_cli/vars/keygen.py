@@ -2,8 +2,8 @@ import argparse
 import logging
 import os
 
-from clan_cli.clan_uri import FlakeId
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.secrets.key import generate_key
 from clan_cli.secrets.sops import KeyType, maybe_get_admin_public_key
 from clan_cli.secrets.users import add_user
@@ -11,7 +11,7 @@ from clan_cli.secrets.users import add_user
 log = logging.getLogger(__name__)
 
 
-def keygen(user: str | None, flake: FlakeId, force: bool) -> None:
+def keygen(user: str | None, flake: Flake, force: bool) -> None:
     if user is None:
         user = os.getenv("USER", None)
         if not user:

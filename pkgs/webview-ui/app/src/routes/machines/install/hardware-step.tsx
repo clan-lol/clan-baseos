@@ -83,7 +83,7 @@ export const HWStep = (props: StepProps<HardwareValues>) => {
     setIsGenerating(true);
     const r = await callApi("generate_machine_hardware_info", {
       opts: {
-        flake: { loc: curr_uri },
+        flake: { identifier: curr_uri },
         machine: props.machine_id,
         target_host: target,
         backend: "nixos-facter",

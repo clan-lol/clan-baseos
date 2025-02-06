@@ -26,7 +26,7 @@ class FactStore(StoreBase):
         var: Var,
         value: bytes,
     ) -> Path | None:
-        if not self.machine.flake.is_local():
+        if not self.machine.flake.is_local:
             msg = f"in_flake fact storage is only supported for local flakes: {self.machine.flake}"
             raise ClanError(msg)
         folder = self.directory(generator, var.name)

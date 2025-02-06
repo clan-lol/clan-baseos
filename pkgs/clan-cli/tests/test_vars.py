@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 from age_keys import SopsSetup
-from clan_cli.clan_uri import FlakeId
 from clan_cli.errors import ClanError
+from clan_cli.flake import Flake
 from clan_cli.machines.machines import Machine
 from clan_cli.nix import nix_eval, run
 from clan_cli.vars.check import check_vars
@@ -138,7 +138,7 @@ def test_generate_public_and_secret_vars(
     monkeypatch.chdir(flake.path)
     sops_setup.init()
 
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    machine = Machine(name="my_machine", flake=Flake(str(flake.path)))
     assert not check_vars(machine)
     vars_text = stringify_all_vars(machine)
     assert "my_generator/my_value: <not set>" in vars_text
@@ -184,11 +184,11 @@ def test_generate_public_and_secret_vars(
     )
     vars_text = stringify_all_vars(machine)
     in_repo_store = in_repo.FactStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert not in_repo_store.exists(Generator("my_generator"), "my_secret")
     sops_store = sops.SecretStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert sops_store.exists(Generator("my_generator"), "my_secret")
     assert sops_store.get(Generator("my_generator"), "my_secret").decode() == "secret"
@@ -246,11 +246,11 @@ def test_generate_secret_var_sops_with_default_group(
     cli.run(["secrets", "groups", "add-user", "my_group", sops_setup.user])
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     in_repo_store = in_repo.FactStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert not in_repo_store.exists(Generator("my_generator"), "my_secret")
     sops_store = sops.SecretStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert sops_store.exists(Generator("my_generator"), "my_secret")
     assert sops_store.get(Generator("my_generator"), "my_secret").decode() == "hello\n"
@@ -317,8 +317,8 @@ def test_generated_shared_secret_sops(
     flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
-    machine1 = Machine(name="machine1", flake=FlakeId(str(flake.path)))
-    machine2 = Machine(name="machine2", flake=FlakeId(str(flake.path)))
+    machine1 = Machine(name="machine1", flake=Flake(str(flake.path)))
+    machine2 = Machine(name="machine2", flake=Flake(str(flake.path)))
     cli.run(["vars", "generate", "--flake", str(flake.path), "machine1"])
     assert check_vars(machine1)
     cli.run(["vars", "generate", "--flake", str(flake.path), "machine2"])
@@ -368,12 +368,12 @@ def test_generate_secret_var_password_store(
     shutil.copytree(test_root / "data" / "password-store", password_store_dir)
     monkeypatch.setenv("PASSWORD_STORE_DIR", str(flake.path / "pass"))
 
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    machine = Machine(name="my_machine", flake=Flake(str(flake.path)))
     assert not check_vars(machine)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     assert check_vars(machine)
     store = password_store.SecretStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert store.exists(Generator("my_generator", share=False, files=[]), "my_secret")
     assert not store.exists(
@@ -432,10 +432,10 @@ def test_generate_secret_for_multiple_machines(
     cli.run(["vars", "generate", "--flake", str(flake.path)])
     # check if public vars have been created correctly
     in_repo_store1 = in_repo.FactStore(
-        Machine(name="machine1", flake=FlakeId(str(flake.path)))
+        Machine(name="machine1", flake=Flake(str(flake.path)))
     )
     in_repo_store2 = in_repo.FactStore(
-        Machine(name="machine2", flake=FlakeId(str(flake.path)))
+        Machine(name="machine2", flake=Flake(str(flake.path)))
     )
     assert in_repo_store1.exists(Generator("my_generator"), "my_value")
     assert in_repo_store2.exists(Generator("my_generator"), "my_value")
@@ -449,10 +449,10 @@ def test_generate_secret_for_multiple_machines(
     )
     # check if secret vars have been created correctly
     sops_store1 = sops.SecretStore(
-        Machine(name="machine1", flake=FlakeId(str(flake.path)))
+        Machine(name="machine1", flake=Flake(str(flake.path)))
     )
     sops_store2 = sops.SecretStore(
-        Machine(name="machine2", flake=FlakeId(str(flake.path)))
+        Machine(name="machine2", flake=Flake(str(flake.path)))
     )
     assert sops_store1.exists(Generator("my_generator"), "my_secret")
     assert sops_store2.exists(Generator("my_generator"), "my_secret")
@@ -498,7 +498,7 @@ def test_prompt(
     )
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
     in_repo_store = in_repo.FactStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert in_repo_store.exists(Generator("my_generator"), "line_value")
     assert (
@@ -512,7 +512,7 @@ def test_prompt(
         == "my\nmultiline\ninput\n"
     )
     sops_store = sops.SecretStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert sops_store.exists(
         Generator(name="my_generator", share=False, files=[]), "prompt_persist"
@@ -553,8 +553,8 @@ def test_multi_machine_shared_vars(
     flake.refresh()
     monkeypatch.chdir(flake.path)
     sops_setup.init()
-    machine1 = Machine(name="machine1", flake=FlakeId(str(flake.path)))
-    machine2 = Machine(name="machine2", flake=FlakeId(str(flake.path)))
+    machine1 = Machine(name="machine1", flake=Flake(str(flake.path)))
+    machine2 = Machine(name="machine2", flake=Flake(str(flake.path)))
     sops_store_1 = sops.SecretStore(machine1)
     sops_store_2 = sops.SecretStore(machine2)
     in_repo_store_1 = in_repo.FactStore(machine1)
@@ -616,7 +616,7 @@ def test_api_set_prompts(
             )
         ],
     )
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    machine = Machine(name="my_machine", flake=Flake(str(flake.path)))
     store = in_repo.FactStore(machine)
     assert store.exists(Generator("my_generator"), "prompt1")
     assert store.get(Generator("my_generator"), "prompt1").decode() == "input1"
@@ -663,7 +663,7 @@ def test_stdout_of_generate(
     # with capture_output as output:
     with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
-            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            Machine(name="my_machine", flake=Flake(str(flake.path))),
             "my_generator",
             regenerate=False,
         )
@@ -673,10 +673,10 @@ def test_stdout_of_generate(
     assert "new: hello" in caplog.text
     caplog.clear()
 
-    set_var("my_machine", "my_generator/my_value", b"world", FlakeId(str(flake.path)))
+    set_var("my_machine", "my_generator/my_value", b"world", Flake(str(flake.path)))
     with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
-            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            Machine(name="my_machine", flake=Flake(str(flake.path))),
             "my_generator",
             regenerate=True,
         )
@@ -687,7 +687,7 @@ def test_stdout_of_generate(
     # check the output when nothing gets regenerated
     with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
-            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            Machine(name="my_machine", flake=Flake(str(flake.path))),
             "my_generator",
             regenerate=True,
         )
@@ -696,7 +696,7 @@ def test_stdout_of_generate(
     caplog.clear()
     with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
-            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            Machine(name="my_machine", flake=Flake(str(flake.path))),
             "my_secret_generator",
             regenerate=False,
         )
@@ -707,11 +707,11 @@ def test_stdout_of_generate(
         "my_machine",
         "my_secret_generator/my_secret",
         b"world",
-        FlakeId(str(flake.path)),
+        Flake(str(flake.path)),
     )
     with caplog.at_level(logging.INFO):
         generate_vars_for_machine(
-            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            Machine(name="my_machine", flake=Flake(str(flake.path))),
             "my_secret_generator",
             regenerate=True,
         )
@@ -760,10 +760,10 @@ def test_migration(
     assert "Migrated var my_generator/my_value" in caplog.text
     assert "Migrated secret var my_generator/my_secret" in caplog.text
     in_repo_store = in_repo.FactStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     sops_store = sops.SecretStore(
-        Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+        Machine(name="my_machine", flake=Flake(str(flake.path)))
     )
     assert in_repo_store.exists(Generator("my_generator"), "my_value")
     assert in_repo_store.get(Generator("my_generator"), "my_value").decode() == "hello"
@@ -800,7 +800,7 @@ def test_fails_when_files_are_left_from_other_backend(
     sops_setup.init()
     for generator in ["my_secret_generator", "my_value_generator"]:
         generate_vars_for_machine(
-            Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+            Machine(name="my_machine", flake=Flake(str(flake.path))),
             generator,
             regenerate=False,
         )
@@ -817,36 +817,33 @@ def test_fails_when_files_are_left_from_other_backend(
         if generator == "my_secret_generator":
             with pytest.raises(ClanError):
                 generate_vars_for_machine(
-                    Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+                    Machine(name="my_machine", flake=Flake(str(flake.path))),
                     generator,
                     regenerate=False,
                 )
         else:
             generate_vars_for_machine(
-                Machine(name="my_machine", flake=FlakeId(str(flake.path))),
+                Machine(name="my_machine", flake=Flake(str(flake.path))),
                 generator,
                 regenerate=False,
             )
 
 
 @pytest.mark.with_core
-def test_keygen(
-    monkeypatch: pytest.MonkeyPatch,
-    temporary_home: Path,
-) -> None:
-    monkeypatch.chdir(temporary_home)
-    cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
+def test_keygen(monkeypatch: pytest.MonkeyPatch, flake: ClanFlake) -> None:
+    monkeypatch.chdir(flake.path)
+    cli.run(["vars", "keygen", "--flake", str(flake.path), "--user", "user"])
     # check public key exists
-    assert (temporary_home / "sops" / "users" / "user").is_dir()
+    assert (flake.path / "sops" / "users" / "user").is_dir()
     # check private key exists
-    assert (temporary_home / ".config" / "sops" / "age" / "keys.txt").is_file()
+    assert (flake.temporary_home / ".config" / "sops" / "age" / "keys.txt").is_file()
     # it should still work, even if the keys already exist
     import shutil
 
-    shutil.rmtree(temporary_home / "sops" / "users" / "user")
-    cli.run(["vars", "keygen", "--flake", str(temporary_home), "--user", "user"])
+    shutil.rmtree(flake.path / "sops" / "users" / "user")
+    cli.run(["vars", "keygen", "--flake", str(flake.path), "--user", "user"])
     # check public key exists
-    assert (temporary_home / "sops" / "users" / "user").is_dir()
+    assert (flake.path / "sops" / "users" / "user").is_dir()
 
 
 @pytest.mark.with_core
@@ -862,7 +859,7 @@ def test_invalidation(
     flake.refresh()
     monkeypatch.chdir(flake.path)
     cli.run(["vars", "generate", "--flake", str(flake.path), "my_machine"])
-    machine = Machine(name="my_machine", flake=FlakeId(str(flake.path)))
+    machine = Machine(name="my_machine", flake=Flake(str(flake.path)))
     value1 = get_var(
         str(machine.flake.path), machine.name, "my_generator/my_value"
     ).printable_value

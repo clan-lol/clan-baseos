@@ -12,7 +12,7 @@ class FactStore(FactStoreBase):
         self.works_remotely = False
 
     def set(self, service: str, name: str, value: bytes) -> Path | None:
-        if self.machine.flake.is_local():
+        if self.machine.flake.is_local:
             fact_path = (
                 self.machine.flake.path
                 / "machines"
