@@ -144,18 +144,13 @@ def _test_identities(
         cli.run(["secrets", what, "list", "--flake", str(test_flake.path)])
     assert "foo" not in output.out
 
-    if what == "machines":
-        # lopter@(2025-02-02): Let's address #2659 first and then figure out
-        # what we wanna do about secrets when a machine is deleted.
-        return
-
-    user_symlink = sops_folder / "secrets" / test_secret_name / what / "foo"
+    user_or_machine_symlink = sops_folder / "secrets" / test_secret_name / what / "foo"
     err_msg = (
         f"Symlink to {what_singular} foo's key in secret "
         f"{test_secret_name} was not cleaned up after "
         f"{what_singular} foo was removed."
     )
-    assert not user_symlink.exists(follow_symlinks=False), err_msg
+    assert not user_or_machine_symlink.exists(follow_symlinks=False), err_msg
 
 
 def test_users(

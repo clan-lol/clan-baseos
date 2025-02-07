@@ -11,13 +11,13 @@ from clan_cli.git import commit_files
 from clan_cli.machines.types import machine_name_type, validate_hostname
 
 from . import secrets, sops
+from .filters import get_secrets_filter_for_machine
 from .folders import (
     list_objects,
     remove_object,
     sops_machines_folder,
     sops_secrets_folder,
 )
-from .groups import get_groups
 from .secrets import update_secrets
 from .sops import read_key, write_key
 from .types import public_or_private_age_key_type, secret_name_type
@@ -28,14 +28,8 @@ def add_machine(flake_dir: Path, name: str, pubkey: str, force: bool) -> None:
     write_key(machine_path, pubkey, sops.KeyType.AGE, overwrite=force)
     paths = [machine_path]
 
-    groups = get_groups(flake_dir, "machines", name)
-
-    def filter_machine_secrets(secret: Path) -> bool:
-        if (secret / "machines" / name).exists():
-            return True
-        return any(secret.joinpath("groups", group.name).exists() for group in groups)
-
-    paths.extend(update_secrets(flake_dir, filter_secrets=filter_machine_secrets))
+    filter_machine_secrets = get_secrets_filter_for_machine(flake_dir, name)
+    paths.extend(update_secrets(flake_dir, filter_machine_secrets))
     commit_files(
         paths,
         flake_dir,
@@ -45,6 +39,8 @@ def add_machine(flake_dir: Path, name: str, pubkey: str, force: bool) -> None:
 
 def remove_machine(flake_dir: Path, name: str) -> None:
     removed_paths = remove_object(sops_machines_folder(flake_dir), name)
+    filter_machine_secrets = get_secrets_filter_for_machine(flake_dir, name)
+    removed_paths.extend(update_secrets(flake_dir, filter_machine_secrets))
     commit_files(
         removed_paths,
         flake_dir,
