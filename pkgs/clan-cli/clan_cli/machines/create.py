@@ -10,11 +10,14 @@ from clan_cli.dirs import get_clan_flake_toplevel_or_env
 from clan_cli.errors import ClanError
 from clan_cli.flake import Flake
 from clan_cli.git import commit_file
-from clan_cli.inventory import Machine as InventoryMachine
+from clan_cli.inventory import (
+    Machine as InventoryMachine,
+    patch_inventory_with,
+    dataclass_to_dict,
+)
 from clan_cli.inventory import (
     MachineDeploy,
     get_inventory,
-    set_inventory,
 )
 from clan_cli.machines.list import list_nixos_machines
 from clan_cli.templates import (
@@ -100,20 +103,18 @@ def create_machine(opts: CreateOptions) -> None:
 
     copy_from_nixstore(src, dst)
 
-    inventory = get_inventory(clan_dir)
-
     target_host = opts.target_host
-    # TODO: We should allow the template to specify machine metadata if not defined by user
+
     new_machine = opts.machine
     if target_host:
         new_machine["deploy"] = {"targetHost": target_host}
 
-    inventory["machines"] = inventory.get("machines", {})
-    inventory["machines"][machine_name] = new_machine
+    patch_inventory_with(
+        clan_dir, f"machines.{machine_name}", dataclass_to_dict(new_machine)
+    )
 
     # Commit at the end in that order to avoid committing halve-baked machines
     # TODO: automatic rollbacks if something goes wrong
-    set_inventory(inventory, clan_dir, "Imported machine from template")
 
     commit_file(
         clan_dir / "machines" / machine_name,

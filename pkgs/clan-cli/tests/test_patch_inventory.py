@@ -307,9 +307,7 @@ def test_update_list() -> None:
     assert writeables == {"writeable": {"foo"}, "non_writeable": set()}
 
     # Add "C" to the list
-    update = {
-        "foo": ["A", "B", "C"]  # User wants to add "C"
-    }
+    update = {"foo": ["A", "B", "C"]}  # User wants to add "C"
 
     patchset, _ = calc_patches(
         data_disk, update, all_values=data_eval, writeables=writeables
@@ -320,9 +318,7 @@ def test_update_list() -> None:
     # "foo": ["A", "B"]
     # Remove "B" from the list
     # Expected is [ ] because ["A"] is defined in nix
-    update = {
-        "foo": ["A"]  # User wants to remove "B"
-    }
+    update = {"foo": ["A"]}  # User wants to remove "B"
 
     patchset, _ = calc_patches(
         data_disk, update, all_values=data_eval, writeables=writeables
@@ -350,9 +346,7 @@ def test_update_list_duplicates() -> None:
     assert writeables == {"writeable": {"foo"}, "non_writeable": set()}
 
     # Add "A" to the list
-    update = {
-        "foo": ["A", "B", "A"]  # User wants to add duplicate "A"
-    }
+    update = {"foo": ["A", "B", "A"]}  # User wants to add duplicate "A"
 
     with pytest.raises(ClanError) as error:
         calc_patches(data_disk, update, all_values=data_eval, writeables=writeables)
@@ -361,6 +355,31 @@ def test_update_list_duplicates() -> None:
         str(error.value)
         == "Key 'foo' contains duplicates: ['A']. This not supported yet."
     )
+
+
+def test_dont_persist_defaults() -> None:
+    """
+    Default values should not be persisted to disk if not explicitly requested by the user.
+    """
+
+    prios = {
+        "enabled": {"__prio": 1500},
+        "config": {"__prio": 100},
+    }
+    data_eval = {
+        "enabled": True,
+        "config": {"foo": "bar"},
+    }
+    data_disk = {}
+    writeables = determine_writeability(prios, data_eval, data_disk)
+    assert writeables == {"writeable": {"config", "enabled"}, "non_writeable": set()}
+
+    update = {"config": {"foo": "foo"}}
+    patchset, delete_set = calc_patches(
+        data_disk, update, all_values=data_eval, writeables=writeables
+    )
+    assert patchset == {"config.foo": "foo"}
+    assert delete_set == set()
 
 
 def test_update_mismatching_update_type() -> None:
