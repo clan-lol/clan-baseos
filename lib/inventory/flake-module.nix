@@ -53,6 +53,7 @@ in
                   "lib/default.nix"
                   "lib/flake-module.nix"
                   "lib/inventory"
+                  "lib/constraints"
                   "lib/frontmatter"
                   "clanModules/flake-module.nix"
                   "clanModules/borgbackup"

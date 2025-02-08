@@ -157,6 +157,7 @@
           "lib/flake-module.nix"
           "lib/frontmatter"
           "lib/inventory"
+          "lib/constraints"
           "nixosModules"
         ];
       };

@@ -60,6 +60,7 @@ let
   legacyResolveImports =
     {
       supportedRoles,
+      resolvedRolesPerInstance,
       serviceConfigs,
       serviceName,
       machineName,
@@ -69,18 +70,7 @@ let
       # : [ Modules ] -> String -> ServiceConfig -> [ Modules ]
       acc2: instanceName: serviceConfig:
       let
-        resolvedRoles = lib.genAttrs supportedRoles (
-          roleName:
-          resolveTags {
-            members = serviceConfig.roles.${roleName} or { };
-            inherit
-              serviceName
-              instanceName
-              roleName
-              inventory
-              ;
-          }
-        );
+        resolvedRoles = resolvedRolesPerInstance.${instanceName};
 
         isInService = builtins.any (members: builtins.elem machineName members.machines) (
           builtins.attrValues resolvedRoles
@@ -90,6 +80,7 @@ let
         machineRoles = builtins.attrNames (
           lib.filterAttrs (_role: roleConfig: builtins.elem machineName roleConfig.machines) resolvedRoles
         );
+
         machineServiceConfig = (serviceConfig.machines.${machineName} or { }).config or { };
         globalConfig = serviceConfig.config or { };
 
@@ -99,7 +90,7 @@ let
           acc: role: acc ++ serviceConfig.roles.${role}.extraModules or [ ]
         ) [ ] machineRoles;
 
-        # TODO: maybe optimize this dont lookup the role in inverse roles. Imports are not lazy
+        # TODO: maybe optimize this don't lookup the role in inverse roles. Imports are not lazy
         roleModules = builtins.map (
           role:
           if builtins.elem role supportedRoles && inventory.modules ? ${serviceName} then
@@ -117,28 +108,14 @@ let
         extraModules = map (s: if builtins.typeOf s == "string" then "${directory}/${s}" else s) (
           globalExtraModules ++ machineExtraModules ++ roleServiceExtraModules
         );
-
-        nonExistingRoles = builtins.filter (role: !(builtins.elem role supportedRoles)) (
-          builtins.attrNames (serviceConfig.roles or { })
-        );
-
-        constraintAssertions = clan-core.lib.modules.checkConstraints {
-          moduleName = serviceName;
-          allModules = inventory.modules;
-          inherit resolvedRoles instanceName;
-        };
       in
-      if (nonExistingRoles != [ ]) then
-        throw "Roles ${builtins.toString nonExistingRoles} are not defined in the service ${serviceName}."
-      else if !(serviceConfig.enabled or true) then
+      if !(serviceConfig.enabled or true) then
         acc2
       else if isInService then
         acc2
         ++ [
           {
             imports = roleModules ++ extraModules;
-
-            clan.inventory.assertions = constraintAssertions;
             clan.inventory.services.${serviceName}.${instanceName} = {
               roles = resolvedRoles;
               # TODO: Add inverseRoles to the service config if needed
@@ -162,7 +139,9 @@ let
     ) [ ] (serviceConfigs));
 in
 {
-  imports = [ ./interface.nix ];
+  imports = [
+    ./interface.nix
+  ];
   config = {
     machines = builtins.mapAttrs (
       machineName: machineConfig: m:
@@ -173,68 +152,38 @@ in
             { config, ... }:
             let
               serviceName = config.serviceName;
-              loadModuleForClassCheck =
-                m:
-                if lib.isFunction m then
-                  let
-                    args = lib.functionArgs m;
-                  in
-                  m args
-                else
-                  m;
-              firstRole = import (getRoleFile (builtins.head config.supportedRoles));
-              getRoleFile = role: builtins.seq role inventory.modules.${serviceName} + "/roles/${role}.nix";
 
-              resolvedRolesPerInstance = lib.mapAttrs (
-                instanceName: instanceConfig:
-                let
-                  resolvedRoles = lib.genAttrs config.supportedRoles (
-                    roleName:
-                    resolveTags {
-                      members = instanceConfig.roles.${roleName} or { };
-                      inherit
-                        instanceName
-                        serviceName
-                        roleName
-                        inventory
-                        ;
-                    }
-                  );
-                  usedRoles = builtins.attrNames instanceConfig.roles;
-                  unmatchedRoles = builtins.filter (role: !builtins.elem role config.supportedRoles) usedRoles;
-                in
-                if unmatchedRoles != [ ] then
-                  throw ''
-                    Service: '${serviceName}' Instance: '${instanceName}'
-                    The following roles do not exist: ${builtins.toJSON unmatchedRoles}
-                    Please use one of available roles: ${builtins.toJSON config.supportedRoles}
-                  ''
-                else
-                  resolvedRoles
-              ) serviceConfigs;
+              getRoleFile = role: builtins.seq role inventory.modules.${serviceName} + "/roles/${role}.nix";
             in
             {
-              # Roles resolution
-              # : List String
-              supportedRoles = clan-core.lib.modules.getRoles inventory.modules serviceName;
-              matchedRoles = builtins.attrNames (
-                lib.filterAttrs (_: ms: builtins.elem machineName ms) config.machinesRoles
-              );
-              inherit resolvedRolesPerInstance;
+              _module.args = {
+                inherit
+                  resolveTags
+                  inventory
+                  clan-core
+                  machineName
+                  serviceConfigs
+                  ;
+              };
+              imports = [
+                ./roles.nix
+              ];
+
               isClanModule =
                 let
-                  module = loadModuleForClassCheck firstRole;
+                  firstRole = import (getRoleFile (builtins.head config.supportedRoles));
+                  loadModuleForClassCheck =
+                    m:
+                    if lib.isFunction m then
+                      let
+                        args = lib.functionArgs m;
+                      in
+                      m args
+                    else
+                      m;
+                  module = loadModuleForClassCheck (firstRole);
                 in
-                if module ? _class then module._class == "clan" else false;
-
-              machinesRoles = builtins.zipAttrsWith (
-                _n: vs:
-                let
-                  flat = builtins.foldl' (acc: s: acc ++ s.machines) [ ] vs;
-                in
-                lib.unique flat
-              ) (builtins.attrValues resolvedRolesPerInstance);
-
+                if (module) ? _class then module._class == "clan" else false;
               # The actual result
               machineImports =
                 if config.isClanModule then
@@ -242,6 +191,7 @@ in
                 else
                   legacyResolveImports {
                     supportedRoles = config.supportedRoles;
+                    resolvedRolesPerInstance = config.resolvedRolesPerInstance;
                     inherit
                       serviceConfigs
                       serviceName
@@ -280,7 +230,7 @@ in
             ;
         };
 
-        machineImports =
+        machineImports = (
           compiledMachine.machineImports
           ++ builtins.foldl' (
             acc: service:
@@ -294,14 +244,26 @@ in
                     }
                   ]
                 else
-                  [ ];
+                  [
+                    {
+                      clan.inventory.assertions = {
+                        "alive.assertion.inventory" = {
+                          assertion = true;
+                          message = ''
+                            No failed assertions found for machine ${machineName}. This will never be displayed.
+                            It is here for testing purposes.
+                          '';
+                        };
+                      };
+                    }
+                  ];
             in
             acc
             ++ service.machineImports
             # Import failed assertions
             ++ failedAssertionsImports
-          ) [ ] (builtins.attrValues m.config.compiledServices);
-
+          ) [ ] (builtins.attrValues m.config.compiledServices)
+        );
       in
       {
         inherit machineImports compiledServices compiledMachine;
