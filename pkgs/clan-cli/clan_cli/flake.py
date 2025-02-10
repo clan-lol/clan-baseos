@@ -62,6 +62,7 @@ class FlakeCacheEntry:
         self,
         value: str | float | dict[str, Any] | list[Any],
         selectors: list[Selector],
+        is_out_path: bool = False,
     ) -> None:
         self.value: str | float | int | dict[str | int, FlakeCacheEntry]
         self.selector: Selector
@@ -75,14 +76,28 @@ class FlakeCacheEntry:
         else:
             self.selector = selectors[0]
 
-        if isinstance(value, dict):
+        if is_out_path:
+            if selectors != []:
+                msg = "Cannot index outPath"
+                raise ValueError(msg)
+            if not isinstance(value, str):
+                msg = "outPath must be a string"
+                raise ValueError(msg)
+            self.value = value
+
+        elif isinstance(value, dict):
             if isinstance(self.selector, set):
                 if not all(isinstance(v, str) for v in self.selector):
                     msg = "Cannot index dict with non-str set"
                     raise ValueError(msg)
             self.value = {}
             for key, value_ in value.items():
-                self.value[key] = FlakeCacheEntry(value_, selectors[1:])
+                if key == "outPath":
+                    self.value[key] = FlakeCacheEntry(
+                        value_, selectors[1:], is_out_path=True
+                    )
+                else:
+                    self.value[key] = FlakeCacheEntry(value_, selectors[1:])
 
         elif isinstance(value, list):
             if isinstance(self.selector, int):
@@ -110,6 +125,12 @@ class FlakeCacheEntry:
             else:
                 msg = f"expected integer selector or all for type list, but got {type(selectors[0])}"
                 raise TypeError(msg)
+
+        elif isinstance(value, str) and value.startswith("/nix/store/"):
+            self.value = {}
+            self.value["outPath"] = FlakeCacheEntry(
+                value, selectors[1:], is_out_path=True
+            )
 
         elif isinstance(value, (str | float | int)):
             self.value = value
@@ -213,6 +234,9 @@ class FlakeCacheEntry:
             selector = AllSelector()
         else:
             selector = selectors[0]
+
+        if selectors == [] and isinstance(self.value, dict) and "outPath" in self.value:
+            return self.value["outPath"].value
 
         if isinstance(self.value, str | float | int):
             return self.value
