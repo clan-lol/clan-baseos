@@ -90,6 +90,7 @@
             set -e
             export HOME=$(realpath .)
             export NIX_STATE_DIR=$HOME
+            export NIX_STORE_DIR=$HOME
             cp -r ${clanCore} $out
             chmod +w -R $out
             cp ${clanCoreLockFile} $out/flake.lock
