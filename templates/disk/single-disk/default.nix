@@ -1,4 +1,8 @@
 {
+
+  boot.loader.grub.efiSupport = true;
+  boot.loader.grub.efiInstallAsRemovable = true;
+  boot.loader.grub.enable = true;
   disko.devices = {
     disk = {
       main = {
@@ -8,6 +12,11 @@
         content = {
           type = "gpt";
           partitions = {
+            "boot" = {
+              size = "1M";
+              type = "EF02"; # for grub MBR
+              priority = 1;
+            };
             ESP = {
               type = "EF00";
               size = "500M";
