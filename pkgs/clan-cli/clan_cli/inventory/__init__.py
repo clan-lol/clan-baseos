@@ -473,10 +473,18 @@ def patch(d: dict[str, Any], path: str, content: Any) -> None:
 
 @API.register
 def patch_inventory_with(base_dir: Path, section: str, content: dict[str, Any]) -> None:
+    """
+    Pass only the section to update and the content to update with.
+    Make sure you pass only attributes that you would like to persist.
+    ATTENTION: Don't pass nix eval values unintentionally.
+    """
+
     inventory_file = get_inventory_path(base_dir)
+
     curr_inventory = {}
-    with inventory_file.open("r") as f:
-        curr_inventory = json.load(f)
+    if inventory_file.exists():
+        with inventory_file.open("r") as f:
+            curr_inventory = json.load(f)
 
     patch(curr_inventory, section, content)
 
