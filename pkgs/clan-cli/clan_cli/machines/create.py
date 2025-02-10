@@ -12,12 +12,11 @@ from clan_cli.flake import Flake
 from clan_cli.git import commit_file
 from clan_cli.inventory import (
     Machine as InventoryMachine,
-    patch_inventory_with,
-    dataclass_to_dict,
 )
 from clan_cli.inventory import (
     MachineDeploy,
-    get_inventory,
+    dataclass_to_dict,
+    patch_inventory_with,
 )
 from clan_cli.machines.list import list_nixos_machines
 from clan_cli.templates import (

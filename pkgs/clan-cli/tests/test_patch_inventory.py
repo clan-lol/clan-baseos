@@ -1,4 +1,6 @@
 # Functions to test
+from typing import Any
+
 import pytest
 from clan_cli.errors import ClanError
 from clan_cli.inventory import (
@@ -370,7 +372,7 @@ def test_dont_persist_defaults() -> None:
         "enabled": True,
         "config": {"foo": "bar"},
     }
-    data_disk = {}
+    data_disk: dict[str, Any] = {}
     writeables = determine_writeability(prios, data_eval, data_disk)
     assert writeables == {"writeable": {"config", "enabled"}, "non_writeable": set()}
 
