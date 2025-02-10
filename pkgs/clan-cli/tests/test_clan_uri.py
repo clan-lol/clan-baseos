@@ -2,6 +2,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from clan_cli.clan_uri import ClanURI
+from clan_cli.flake import Flake
+from fixtures_flakes import ClanFlake
 
 
 def test_get_url() -> None:
@@ -17,6 +19,14 @@ def test_get_url() -> None:
 
     uri = ClanURI.from_str("clan://file:///home/user/Downloads")
     assert uri.get_url() == "file:///home/user/Downloads"
+
+
+def test_is_local(flake: ClanFlake) -> None:
+    uri = ClanURI.from_str(f"clan://git+file://{flake.path}")
+    assert uri.get_url() == str(flake.path)
+    assert uri.flake.is_local
+    myflake = Flake(f"git+file://{flake.path}")
+    assert myflake.is_local
 
 
 def test_firefox_strip_uri() -> None:
