@@ -5,7 +5,7 @@ import pytest
 from clan_cli.errors import ClanError
 from clan_cli.inventory import (
     calc_patches,
-    delete,
+    delete_by_path,
     determine_writeability,
     patch,
     unmerge_lists,
@@ -384,6 +384,32 @@ def test_dont_persist_defaults() -> None:
     assert delete_set == set()
 
 
+def test_machine_delete() -> None:
+    prios = {
+        "machines": {"__prio": 100},
+    }
+    data_eval = {
+        "machines": {
+            "foo": {"name": "foo"},
+            "bar": {"name": "bar"},
+            "naz": {"name": "naz"},
+        },
+    }
+    data_disk = data_eval
+
+    writeables = determine_writeability(prios, data_eval, data_disk)
+    assert writeables == {"writeable": {"machines"}, "non_writeable": set()}
+
+    # Delete machine "bar"  from the inventory
+    update = {"machines": {"foo": {"name": "foo"}, "naz": {"name": "naz"}}}
+    patchset, delete_set = calc_patches(
+        data_disk, update, all_values=data_eval, writeables=writeables
+    )
+
+    assert patchset == {}
+    assert delete_set == {"machines.bar"}
+
+
 def test_update_mismatching_update_type() -> None:
     prios = {
         "foo": {
@@ -504,7 +530,7 @@ def test_delete_atom() -> None:
     data = {"foo": {"bar": 1}}
     # Removes the key "foo.bar"
     # Returns the deleted key-value pair { "bar": 1 }
-    entry = delete(data, "foo.bar")
+    entry = delete_by_path(data, "foo.bar")
 
     assert entry == {"bar": 1}
     assert data == {"foo": {}}
@@ -513,7 +539,7 @@ def test_delete_atom() -> None:
 def test_delete_intermediate() -> None:
     data = {"a": {"b": {"c": {"d": 42}}}}
     # Removes "a.b.c.d"
-    entry = delete(data, "a.b.c")
+    entry = delete_by_path(data, "a.b.c")
 
     assert entry == {"c": {"d": 42}}
     # Check all intermediate dictionaries remain intact
@@ -523,7 +549,7 @@ def test_delete_intermediate() -> None:
 def test_delete_top_level() -> None:
     data = {"x": 100, "y": 200}
     # Deletes top-level key
-    entry = delete(data, "x")
+    entry = delete_by_path(data, "x")
     assert entry == {"x": 100}
     assert data == {"y": 200}
 
@@ -532,7 +558,7 @@ def test_delete_key_not_found() -> None:
     data = {"foo": {"bar": 1}}
     # Trying to delete a non-existing key "foo.baz"
     with pytest.raises(ClanError) as excinfo:
-        delete(data, "foo.baz")
+        delete_by_path(data, "foo.baz")
     assert "Cannot delete. Path 'foo.baz'" in str(excinfo.value)
     # Data should remain unchanged
     assert data == {"foo": {"bar": 1}}
@@ -542,7 +568,7 @@ def test_delete_intermediate_not_dict() -> None:
     data = {"foo": "not a dict"}
     # Trying to go deeper into a non-dict value
     with pytest.raises(ClanError) as excinfo:
-        delete(data, "foo.bar")
+        delete_by_path(data, "foo.bar")
     assert "not found or not a dictionary" in str(excinfo.value)
     # Data should remain unchanged
     assert data == {"foo": "not a dict"}
@@ -552,7 +578,7 @@ def test_delete_empty_path() -> None:
     data = {"foo": {"bar": 1}}
     # Attempting to delete with an empty path
     with pytest.raises(ClanError) as excinfo:
-        delete(data, "")
+        delete_by_path(data, "")
     # Depending on how you handle empty paths, you might raise an error or handle it differently.
     # If you do raise an error, check the message.
     assert "Cannot delete. Path is empty" in str(excinfo.value)
@@ -563,7 +589,7 @@ def test_delete_non_existent_path_deep() -> None:
     data = {"foo": {"bar": {"baz": 123}}}
     # non-existent deep path
     with pytest.raises(ClanError) as excinfo:
-        delete(data, "foo.bar.qux")
+        delete_by_path(data, "foo.bar.qux")
     assert "not found" in str(excinfo.value)
     # Data remains unchanged
     assert data == {"foo": {"bar": {"baz": 123}}}
