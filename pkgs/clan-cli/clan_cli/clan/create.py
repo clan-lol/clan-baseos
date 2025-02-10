@@ -37,6 +37,7 @@ class CreateOptions:
     input_prio: InputPrio | None = None
     setup_git: bool = True
     initial: Inventory | None = None
+    update_clan: bool = True
 
 
 def git_command(directory: Path, *args: str) -> list[str]:
@@ -96,10 +97,11 @@ def create_clan(opts: CreateOptions) -> CreateClanResponse:
                 git_command(dest, "config", "user.email", "clan@example.com")
             )
 
-    flake_update = run(
-        nix_shell(["nixpkgs#nix"], ["nix", "flake", "update"]), RunOpts(cwd=dest)
-    )
-    response.flake_update = flake_update
+    if opts.update_clan:
+        flake_update = run(
+            nix_shell(["nixpkgs#nix"], ["nix", "flake", "update"]), RunOpts(cwd=dest)
+        )
+        response.flake_update = flake_update
 
     if opts.initial:
         init_inventory(str(opts.dest), init=opts.initial)
