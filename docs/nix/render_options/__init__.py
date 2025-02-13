@@ -585,7 +585,7 @@ Each attribute is documented below
 
         ```nix
         buildClan {
-            directory = self;
+            self = self;
             machines = {
                 jon = { };
                 sara = { };

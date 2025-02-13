@@ -81,7 +81,7 @@ For the provide flake example, your flake should now look like this:
   outputs = { self, nixpkgs, ... }:
   let
     clan = clan-core.lib.buildClan {
-        directory = self; # this needs to point at the repository root
+        self = self; # this needs to point at the repository root
         specialArgs = {};
         inventory.meta.name = "NEEDS_TO_BE_UNIQUE"; # TODO: Changeme
 
