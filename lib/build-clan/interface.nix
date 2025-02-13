@@ -69,6 +69,15 @@ in
             ```
       '';
     };
+
+    templates = lib.mkOption {
+      type = types.submodule { imports = [ ./templates/interface.nix ]; };
+      default = { };
+      description = ''
+        Define Clan templates.
+      '';
+    };
+
     inventory = lib.mkOption {
       type = types.submodule { imports = [ ../inventory/build-inventory/interface.nix ]; };
       description = ''
@@ -112,11 +121,11 @@ in
       type = types.lazyAttrsOf types.raw;
       default = { };
     };
+
     # flake.clanInternals
     clanInternals = lib.mkOption {
       # Hide from documentation. Exposes internals to the cli.
       visible = false;
-      # type = types.raw;
       # ClanInternals
       type = types.submodule {
         options = {

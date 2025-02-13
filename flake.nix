@@ -43,10 +43,6 @@
           meta.name = "clan-core";
         };
 
-        flake = {
-          clan.templates = import ./templates { };
-        };
-
         systems = import systems;
         imports =
           # only importing existing paths allows to minimize the flake for test

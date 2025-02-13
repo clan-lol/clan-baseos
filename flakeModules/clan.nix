@@ -27,9 +27,13 @@ in
   };
 
   options.flake = flake-parts-lib.mkSubmoduleOptions {
+    clan = lib.mkOption { type = types.raw; };
     clanInternals = lib.mkOption { type = types.raw; };
   };
   config = {
+    flake.clan = {
+      inherit (config.clan.clanInternals) templates;
+    };
     flake.clanInternals = config.clan.clanInternals;
     flake.nixosConfigurations = config.clan.nixosConfigurations;
   };
