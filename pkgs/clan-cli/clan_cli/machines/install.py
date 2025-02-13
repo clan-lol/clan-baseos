@@ -32,6 +32,7 @@ class InstallOptions:
     kexec: str | None = None
     debug: bool = False
     no_reboot: bool = False
+    phases: str | None = None
     build_on_remote: bool = False
     nix_options: list[str] = field(default_factory=list)
     update_hardware_config: HardwareConfig = HardwareConfig.NONE
@@ -94,6 +95,9 @@ def install_machine(opts: InstallOptions) -> None:
 
         if opts.no_reboot:
             cmd.append("--no-reboot")
+
+        if opts.phases:
+            cmd += ["--phases", str(opts.phases)]
 
         if opts.update_hardware_config is not HardwareConfig.NONE:
             cmd.extend(
@@ -185,6 +189,7 @@ def install_command(args: argparse.Namespace) -> None:
                 machine=machine,
                 target_host=target_host,
                 kexec=args.kexec,
+                phases=args.phases,
                 debug=args.debug,
                 no_reboot=args.no_reboot,
                 nix_options=args.option,
@@ -208,7 +213,7 @@ def register_install_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--no-reboot",
         action="store_true",
-        help="do not reboot after installation",
+        help="do not reboot after installation (deprecated)",
         default=False,
     )
     parser.add_argument(
@@ -235,6 +240,12 @@ def register_install_parser(parser: argparse.ArgumentParser) -> None:
         default="none",
         help="update the hardware configuration",
         choices=[x.value for x in HardwareConfig],
+    )
+
+    parser.add_argument(
+        "--phases",
+        type=str,
+        help="comma separated list of phases to run. Default is: kexec,disko,install,reboot",
     )
 
     machines_parser = parser.add_argument(

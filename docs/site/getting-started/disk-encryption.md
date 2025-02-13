@@ -49,7 +49,8 @@ Replace `kernelModules` with the ethernet module loaded one on your target machi
       port = 7172;
       authorizedKeys = [ "<yourkey>" ];
       hostKeys = [
-        "/var/lib/initrd-ssh-key"
+        "/var/lib/initrd_host_ed25519_key"
+        "/var/lib/initrd_host_rsa_key"
       ];
     };
   };
@@ -73,7 +74,7 @@ Before starting the installation process, ensure that the SSH public key is copi
 ssh-copy-id -o PreferredAuthentications=password -o PubkeyAuthentication=no root@nixos-installer.local
 ```
 
-### Step 1.5: Prepare Secret Key and Clear Disk Data
+### Step 1.5: Prepare Secret Key and Partition Disks
 
 1. Access the installer using SSH:
 
@@ -90,13 +91,13 @@ nano /tmp/secret.key
 3. Discard the old disk partition data:
 
 ```bash
-blkdiscard /dev/disk/by-id/nvme-eui.002538b931b59865
+blkdiscard /dev/disk/by-id/<installdisk>
 ```
 
-4. Run the `clan` machine installation with the following command:
+4. Run `clan` machines install, only running kexec and disko, with the following command:
 
 ```bash
-clan machines install gchq-local --target-host root@nixos-installer --yes --no-reboot
+clan machines install gchq-local --target-host root@nixos-installer --phases kexec,disko
 ```
 
 ### Step 2: ZFS Pool Import and System Installation
@@ -107,14 +108,10 @@ clan machines install gchq-local --target-host root@nixos-installer --yes --no-r
 ssh root@nixos-installer.local
 ```
 
-2. Perform the following commands on the remote installation environment:
+2. Run the following command on the remote installation environment:
 
 ```bash
-zpool import zroot
 zfs set keylocation=prompt zroot/root
-zfs load-key zroot/root
-zfs set mountpoint=/mnt zroot/root/nixos
-mount /dev/nvme0n1p2 /mnt/boot
 ```
 
 3. Disconnect from the SSH session:
@@ -123,43 +120,36 @@ mount /dev/nvme0n1p2 /mnt/boot
 CTRL+D
 ```
 
-4. Securely copy your local `initrd_rsa_key` to the installer's `/mnt` directory:
+4. Locally generate ssh host keys. You only need to generate ones for the algorithms you're using in `authorizedKeys`.
 
 ```bash
-scp ~/.ssh/initrd_rsa_key root@nixos-installer.local:/mnt/var/lib/initrd-ssh-key
+ssh-keygen -q -N "" -t ed25519 -f ./initrd_host_ed25519_key
+ssh-keygen -q -N "" -t rsa -b 4096 -f ./initrd_host_rsa_key
 ```
 
-5. SSH back into the installer:
+5. Securely copy your local initrd ssh host keys to the installer's `/mnt` directory:
 
 ```bash
-ssh root@nixos-installer.local
+scp ./initrd_host* root@nixos-installer.local:/mnt/var/lib/
 ```
 
-6. Navigate to the `/mnt` directory, enter the `nixos-enter` environment, and then exit:
-
+6. Install nixos to the mounted partitions
 ```bash
-cd /mnt
-nixos-enter
-realpath /run/current-system
-exit
+clan machines install gchq-local --target-host root@nixos-installer --phases install
 ```
 
-7. Run the `nixos-install` command with the appropriate system path `<SYS_PATH>`:
-
-```bash
-nixos-install --no-root-passwd --no-channel-copy --root /mnt --system <SYS_PATH>
-```
-
-8. After the installation process, unmount `/mnt/boot`, change the ZFS mountpoint, and reboot the system:
+7. After the installation process, unmount `/mnt/boot`, change the ZFS mountpoints and unmount all the ZFS volumes by exporting the zpool:
 
 ```bash
 umount /mnt/boot
 cd /
-zfs set mountpoint=/ zroot/root/nixos
-reboot
+zfs set -u mountpoint=/ zroot/root/nixos
+zfs set -u mountpoint=/tmp zroot/root/tmp
+zfs set -u mountpoint=/home zroot/root/home
+zpool export zroot
 ```
 
-9. Perform a hard reboot of the machine and remove the USB stick.
+8. Perform a reboot of the machine and remove the USB installer.
 
 ### Step 3: Accessing the Initial Ramdisk (initrd) Environment
 
