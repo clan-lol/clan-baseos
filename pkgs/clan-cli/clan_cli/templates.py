@@ -100,9 +100,6 @@ def get_clan_nix_attrset(clan_dir: Flake | None = None) -> ClanExports:
         [
             "--json",
             "--impure",
-            "--option",
-            "flake-registry",
-            "",
             "--expr",
             eval_script,
         ]
@@ -142,10 +139,6 @@ class FoundTemplate:
 
 
 def copy_from_nixstore(src: Path, dest: Path) -> None:
-    if not src.is_dir():
-        msg = f"The source path '{src}' is not a directory."
-        raise ClanError(msg)
-
     # Walk through the source directory
     for root, _dirs, files in src.walk(on_error=log.error):
         relative_path = Path(root).relative_to(src)
