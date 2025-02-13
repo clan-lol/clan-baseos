@@ -12,6 +12,7 @@ in
     ./flash/flake-module.nix
     ./impure/flake-module.nix
     ./installation/flake-module.nix
+    ./morph/flake-module.nix
     ./nixos-documentation/flake-module.nix
   ];
   perSystem =

@@ -31,6 +31,7 @@ in
     };
     # to accept external dependencies such as disko
     node.specialArgs.self = self;
+    _module.args = { inherit self; };
     imports = [
       test
       ./container-driver/module.nix

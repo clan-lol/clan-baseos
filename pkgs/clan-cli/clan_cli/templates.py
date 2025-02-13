@@ -139,7 +139,7 @@ def copy_from_nixstore(src: Path, dest: Path) -> None:
         return
 
     # Walk through the source directory
-    for root, _dirs, files in src.walk(on_error=log.error):
+    for root, dirs, files in src.walk(on_error=log.error):
         relative_path = Path(root).relative_to(src)
         dest_dir = dest / relative_path
 
@@ -149,6 +149,9 @@ def copy_from_nixstore(src: Path, dest: Path) -> None:
         dest_dir.chmod(
             stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC | stat.S_IRGRP | stat.S_IXGRP
         )
+
+        for d in dirs:
+            (dest_dir / d).mkdir()
 
         for file_name in files:
             src_file = Path(root) / file_name

@@ -19,6 +19,7 @@ in
     }
   );
 
+  _module.args = { inherit self; };
   # to accept external dependencies such as disko
   node.specialArgs.self = self;
   imports = [ test ];

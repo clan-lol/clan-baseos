@@ -6,6 +6,7 @@ from .delete import register_delete_parser
 from .hardware import register_update_hardware_config
 from .install import register_install_parser
 from .list import register_list_parser
+from .morph import register_morph_parser
 from .update import register_update_parser
 
 
@@ -45,6 +46,9 @@ For more detailed information, visit: https://docs.clan.lol/getting-started/depl
 
     delete_parser = subparser.add_parser("delete", help="Delete a machine")
     register_delete_parser(delete_parser)
+
+    morph_parser = subparser.add_parser("morph", help="morph a machine")
+    register_morph_parser(morph_parser)
 
     list_parser = subparser.add_parser(
         "list",
