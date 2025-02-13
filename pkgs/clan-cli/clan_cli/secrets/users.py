@@ -10,6 +10,7 @@ from clan_cli.errors import ClanError
 from clan_cli.git import commit_files
 
 from . import groups, secrets, sops
+from .filters import get_secrets_filter_for_user
 from .folders import (
     list_objects,
     remove_object,
@@ -38,19 +39,13 @@ def add_user(
 ) -> None:
     path = sops_users_folder(flake_dir) / name
 
-    groupnames = [p.name for p in groups.get_groups(flake_dir, "users", name)]
-
-    def filter_user_secrets(secret: Path) -> bool:
-        if secret.joinpath("users", name).exists():
-            return True
-        return any(secret.joinpath("groups", name).exists() for name in groupnames)
-
     write_key(path, key, key_type, overwrite=force)
-    paths = [path]
+    updated_paths = [path]
 
-    paths.extend(update_secrets(flake_dir, filter_secrets=filter_user_secrets))
+    filter_user_secrets = get_secrets_filter_for_user(flake_dir, name)
+    updated_paths.extend(update_secrets(flake_dir, filter_user_secrets))
     commit_files(
-        paths,
+        updated_paths,
         flake_dir,
         f"Add user {name} to secrets",
     )
@@ -75,7 +70,8 @@ def remove_user(flake_dir: Path, name: str) -> None:
     # Remove the user's key:
     updated_paths.extend(remove_object(sops_users_folder(flake_dir), name))
     # Remove the user from any secret where it was used:
-    updated_paths.extend(update_secrets(flake_dir))
+    filter_user_secrets = get_secrets_filter_for_user(flake_dir, name)
+    updated_paths.extend(update_secrets(flake_dir, filter_user_secrets))
     commit_files(updated_paths, flake_dir, f"Remove user {name}")
 
 

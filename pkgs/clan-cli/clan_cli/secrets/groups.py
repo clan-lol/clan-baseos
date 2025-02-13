@@ -246,18 +246,18 @@ def add_secret(flake_dir: Path, group: str, name: str) -> None:
     )
 
 
-def get_groups(
-    flake_dir: Path,
-    type_name: str,
-    name: str,
-) -> list[Path]:
+def get_groups(flake_dir: Path, what: str, name: str) -> list[str]:
+    """Returns the list of group names the given user or machine is part of."""
+    assert what == "users" or what == "machines"
+
     groups_dir = sops_groups_folder(flake_dir)
+    if not groups_dir.exists():
+        return []
 
     groups = []
-    if groups_dir.exists():
-        for group in groups_dir.iterdir():
-            if group.is_dir() and (group / type_name / name).exists():
-                groups.append(group)
+    for group in groups_dir.iterdir():
+        if group.is_dir() and (group / what / name).is_symlink():
+            groups.append(group.name)
     return groups
 
 
