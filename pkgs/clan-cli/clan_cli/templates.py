@@ -73,17 +73,6 @@ def get_clan_nix_attrset(clan_dir: Flake | None = None) -> ClanExports:
 
     log.debug(f"Evaluating flake {clan_dir} for Clan attrsets")
 
-    # from clan_cli.nix import nix_metadata
-    # from urllib.parse import urlencode
-    # myurl = f"path://{clan_dir}"
-
-    # metadata = nix_metadata(myurl)["locked"]
-    # query_params = {
-    #     "lastModified": metadata["lastModified"],
-    #     "narHash": metadata["narHash"]
-    # }
-    # url = f"{myurl}?{urlencode(query_params)}"
-
     # Nix evaluation script to compute find inputs that have a "clan" attribute
     eval_script = f"""
         let

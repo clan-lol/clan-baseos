@@ -51,6 +51,20 @@ wintux
 
 If you're using VSCode, it has a handy feature that makes paths to source code files clickable in the integrated terminal. Combined with the previously mentioned techniques, this allows you to open a Clan in VSCode, execute a command like `clan machines list --debug`, and receive a printed path to the code that initiates the subprocess. With the `Ctrl` key (or `Cmd` on macOS) and a mouse click, you can jump directly to the corresponding line in the code file and add a `breakpoint()` function to it, to inspect the internal state.
 
+
+
+## Finding Print Messages
+
+To identify where a specific print message comes from, you can enable a helpful feature. Simply set the environment variable `export TRACE_PRINT=1`. When you run commands with `--debug` mode, each print message will include information about its source location.
+
+If you need more details, you can expand the stack trace information that appears with each print by setting the environment variable `export TRACE_DEPTH=3`.
+
+## Analyzing Performance
+
+To understand what's causing slow performance, set the environment variable `export CLAN_CLI_PERF=1`. When you complete a clan command, you'll see a summary of various performance metrics, helping you identify what's taking up time.
+
+
+
 ## See all possible packages and tests
 
 To quickly show all possible packages and tests execute:

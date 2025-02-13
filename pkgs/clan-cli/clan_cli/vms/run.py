@@ -129,6 +129,7 @@ def start_vm(
     env.update(extra_env)
     cmd = nix_shell(packages, args)
     machine.debug(f"Starting VM with command: {cmd}")
+
     with subprocess.Popen(
         cmd, env=env, stdout=stdout, stderr=stderr, stdin=stdin
     ) as process:
@@ -354,7 +355,7 @@ def run_vm(
             stdout=sys.stdout.buffer,
             stderr=sys.stderr.buffer,
             input_bytes=None,
-            log=Log.BOTH,
+            log=Log.NONE,
         )
         args: list[str] = vm.process.args  # type: ignore[assignment]
 
