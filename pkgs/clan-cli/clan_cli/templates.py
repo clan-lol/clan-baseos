@@ -100,6 +100,9 @@ def get_clan_nix_attrset(clan_dir: Flake | None = None) -> ClanExports:
         [
             "--json",
             "--impure",
+            "--option",
+            "flake-registry",
+            "",
             "--expr",
             eval_script,
         ]
@@ -144,23 +147,29 @@ def copy_from_nixstore(src: Path, dest: Path) -> None:
         raise ClanError(msg)
 
     # Walk through the source directory
-    for root, _dirs, files in src.walk():
+    for root, _dirs, files in src.walk(on_error=log.error):
         relative_path = Path(root).relative_to(src)
         dest_dir = dest / relative_path
 
         dest_dir.mkdir(exist_ok=True)
         log.debug(f"Creating directory '{dest_dir}'")
         # Set permissions for directories
-        dest_dir.chmod(stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
+        dest_dir.chmod(
+            stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC | stat.S_IRGRP | stat.S_IXGRP
+        )
 
         for file_name in files:
             src_file = Path(root) / file_name
             dest_file = dest_dir / file_name
 
-            # Copy the file
-            shutil.copy(src_file, dest_file)
-
-            dest_file.chmod(stat.S_IWRITE | stat.S_IREAD)
+            if src_file.is_symlink():
+                target = src_file.readlink()
+                dest_file.symlink_to(target)
+                log.debug(f"Created symlink '{dest_file}' -> '{target}'")
+            else:
+                # Copy the file
+                shutil.copy(src_file, dest_file)
+                dest_file.chmod(stat.S_IWRITE | stat.S_IREAD | stat.S_IRGRP)
 
 
 @dataclass

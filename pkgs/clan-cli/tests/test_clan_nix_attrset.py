@@ -5,9 +5,17 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from clan_cli.cmd import run
 from clan_cli.flake import Flake
 from clan_cli.locked_open import locked_open
-from clan_cli.templates import get_clan_nix_attrset
+from clan_cli.nix import nix_command
+from clan_cli.templates import (
+    InputName,
+    TemplateName,
+    copy_from_nixstore,
+    get_clan_nix_attrset,
+    list_templates,
+)
 from fixtures_flakes import FlakeForTest
 
 
@@ -29,6 +37,64 @@ def nix_attr_tester(
     nix_attrset = get_clan_nix_attrset(Flake(str(test_flake.path)))
 
     assert json.dumps(nix_attrset, indent=2) == json.dumps(expected, indent=2)
+
+
+@pytest.mark.impure
+def test_clan_core_templates(
+    test_flake_with_core: FlakeForTest,
+    monkeypatch: pytest.MonkeyPatch,
+    temporary_home: Path,
+) -> None:
+    clan_dir = Flake(str(test_flake_with_core.path))
+    nix_attrset = get_clan_nix_attrset(clan_dir)
+    clan_core_templates = nix_attrset["inputs"][InputName("clan-core")]["templates"][
+        "clan"
+    ]
+    clan_core_template_keys = list(clan_core_templates.keys())
+
+    expected_templates = ["default", "flake-parts", "minimal", "minimal-flake-parts"]
+    assert clan_core_template_keys == expected_templates
+    vlist_temps = list_templates("clan", clan_dir)
+    list_template_keys = list(vlist_temps.inputs[InputName("clan-core")].keys())
+    assert list_template_keys == expected_templates
+
+    new_clan = temporary_home / "new_clan"
+    copy_from_nixstore(
+        Path(
+            vlist_temps.inputs[InputName("clan-core")][TemplateName("default")]["path"]
+        ),
+        new_clan,
+    )
+    assert (new_clan / "flake.nix").exists()
+    assert (new_clan / "machines").is_dir()
+    assert (new_clan / "machines" / "jon").is_dir()
+    config_nix_p = new_clan / "machines" / "jon" / "configuration.nix"
+    assert (config_nix_p).is_file()
+
+    # Test if we can write to the configuration.nix file
+    with config_nix_p.open("r+") as f:
+        data = f.read()
+        f.write(data)
+
+
+def test_copy_from_nixstore_symlink(
+    monkeypatch: pytest.MonkeyPatch, temporary_home: Path
+) -> None:
+    src = temporary_home / "src"
+    src.mkdir()
+    (src / "file.txt").write_text("magicstring!")
+    res = run(nix_command(["store", "add", str(src)]))
+    src_nix = Path(res.stdout.strip())
+    src2 = temporary_home / "src2"
+    src2.mkdir()
+    (src2 / "file.txt").symlink_to(src_nix / "file.txt")
+    res = run(nix_command(["store", "add", str(src2)]))
+    src2_nix = Path(res.stdout.strip())
+    dest = temporary_home / "dest"
+    copy_from_nixstore(src2_nix, dest)
+    assert (dest / "file.txt").exists()
+    assert (dest / "file.txt").read_text() == "magicstring!"
+    assert (dest / "file.txt").is_symlink()
 
 
 # Test Case 1: Minimal input with empty templates
