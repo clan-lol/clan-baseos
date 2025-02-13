@@ -522,7 +522,9 @@ def get_inventory_with_writeable_keys(
 
 
 @API.register
-def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> None:
+def set_inventory(
+    inventory: Inventory, flake_dir: str | Path, message: str, commit: bool = True
+) -> None:
     """
     Write the inventory to the flake directory
     and commit it to git with the given message
@@ -553,7 +555,8 @@ def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> 
     with inventory_file.open("w") as f:
         json.dump(persisted, f, indent=2)
 
-    commit_file(inventory_file, Path(flake_dir), commit_message=message)
+    if commit:
+        commit_file(inventory_file, Path(flake_dir), commit_message=message)
 
 
 @API.register

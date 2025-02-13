@@ -39,7 +39,7 @@ class CreateOptions:
 
 
 @API.register
-def create_machine(opts: CreateOptions) -> None:
+def create_machine(opts: CreateOptions, commit: bool = True) -> None:
     if not opts.clan_dir.is_local:
         msg = f"Clan {opts.clan_dir} is not a local clan."
         description = "Import machine only works on local clans"
@@ -115,11 +115,12 @@ def create_machine(opts: CreateOptions) -> None:
     # Commit at the end in that order to avoid committing halve-baked machines
     # TODO: automatic rollbacks if something goes wrong
 
-    commit_file(
-        clan_dir / "machines" / machine_name,
-        repo_dir=clan_dir,
-        commit_message=f"Add machine {machine_name}",
-    )
+    if commit:
+        commit_file(
+            clan_dir / "machines" / machine_name,
+            repo_dir=clan_dir,
+            commit_message=f"Add machine {machine_name}",
+        )
 
 
 def create_command(args: argparse.Namespace) -> None:
