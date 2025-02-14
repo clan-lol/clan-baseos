@@ -3,6 +3,7 @@ import logging
 import pickle
 import re
 from dataclasses import dataclass
+from hashlib import sha1
 from pathlib import Path
 from typing import Any
 
@@ -365,7 +366,8 @@ class Flake:
         self.hash = flake_metadata["hash"]
 
         self._cache = FlakeCache()
-        self.flake_cache_path = Path(user_cache_dir()) / "clan" / "flakes" / self.hash
+        hashed_hash = sha1(self.hash.encode()).hexdigest()
+        self.flake_cache_path = Path(user_cache_dir()) / "clan" / "flakes" / hashed_hash
         if self.flake_cache_path.exists():
             self._cache.load_from_file(self.flake_cache_path)
 
