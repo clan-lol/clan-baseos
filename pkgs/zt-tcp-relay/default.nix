@@ -15,7 +15,8 @@ rustPlatform.buildRustPackage {
     hash = "sha256-7ZNWyPf/b4dJqyPQFTBrv2RvY9dDz990CvwcHpaCKSA=";
   };
 
-  cargoHash = "sha256-IOxWLvA6jqSYqfDZJn9Set/KKFhf03NsNm7Y67paxCQ=";
+  useFetchCargoVendor = true;
+  cargoHash = "sha256-gGKiPmvDJFiUec1RHI8D2QwOxL2kyHz49tEmyjetXpw=";
 
   meta = with lib; {
     description = "ZeroTier One TCP relay";
