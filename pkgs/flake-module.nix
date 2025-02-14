@@ -32,11 +32,7 @@
         pending-reviews = pkgs.callPackage ./pending-reviews { };
         editor = pkgs.callPackage ./editor/clan-edit-codium.nix { };
         classgen = pkgs.callPackage ./classgen { };
-        # When Nixpkgs gets bumped to include the newer version of ZeroTier
-        # we can remove our vendored version
-        zerotierone =
-          assert builtins.compareVersions pkgs.zerotierone.version "1.14.2" == -1;
-          pkgs.callPackage ./zerotierone { };
+        zerotierone = pkgs.callPackage ./zerotierone { };
         webview-lib = pkgs.callPackage ./webview-lib { };
       };
     };
