@@ -15,7 +15,7 @@ let
         self.clanModules.trusted-nix-caches
       ];
 
-      system.stateVersion = config.system.nixos.version;
+      system.stateVersion = config.system.nixos.release;
       nixpkgs.pkgs = self.inputs.nixpkgs.legacyPackages.x86_64-linux;
 
       boot.loader.grub.efiSupport = lib.mkDefault true;

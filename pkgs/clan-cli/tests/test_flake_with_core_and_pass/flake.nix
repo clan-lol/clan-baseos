@@ -13,7 +13,7 @@
         meta.name = "test_flake_with_core_and_pass";
         machines = {
           vm1 =
-            { lib, ... }:
+            { lib, config, ... }:
             {
               imports = [
                 clan-core.clanModules.sshd
@@ -24,7 +24,7 @@
               clan.user-password.prompt = false;
 
               clan.core.networking.targetHost = "__CLAN_TARGET_ADDRESS__";
-              system.stateVersion = lib.version;
+              system.stateVersion = config.system.nixos.release;
               clan.core.facts.secretStore = "password-store";
               clan.core.facts.secretUploadDirectory = lib.mkForce "__CLAN_SOPS_KEY_DIR__/secrets";
 

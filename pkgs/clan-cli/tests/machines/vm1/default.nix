@@ -1,7 +1,7 @@
-{ lib, ... }:
+{ config, ... }:
 {
   clan.core.networking.targetHost = "__CLAN_TARGET_ADDRESS__";
-  system.stateVersion = lib.version;
+  system.stateVersion = config.system.nixos.release;
   sops.age.keyFile = "__CLAN_SOPS_KEY_PATH__";
   clan.core.facts.secretUploadDirectory = "__CLAN_SOPS_KEY_DIR__";
   clan.virtualisation.graphics = false;

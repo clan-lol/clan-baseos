@@ -7,14 +7,17 @@ in
 (nixos-lib.runTest {
   hostPkgs = pkgs;
   # speed-up evaluation
-  defaults = {
-    imports = [
-      ./minify.nix
-    ];
-    documentation.enable = lib.mkDefault false;
-    nix.settings.min-free = 0;
-    system.stateVersion = lib.version;
-  };
+  defaults = (
+    { config, ... }:
+    {
+      imports = [
+        ./minify.nix
+      ];
+      documentation.enable = lib.mkDefault false;
+      nix.settings.min-free = 0;
+      system.stateVersion = config.system.nixos.release;
+    }
+  );
 
   # to accept external dependencies such as disko
   node.specialArgs.self = self;

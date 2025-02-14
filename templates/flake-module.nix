@@ -11,9 +11,9 @@
 
           # TODO: Instead create a machine by calling the API, this wont break in future tests and is much closer to what the user performs
           cat > $out/machines/testmachine/hardware-configuration.nix << EOF
-          { lib, ... }: {
+          { lib, config, ... }: {
             nixpkgs.hostPlatform = "x86_64-linux";
-            system.stateVersion = lib.version;
+            system.stateVersion = config.system.nixos.release;
             documentation.enable = false;
             users.users.root.initialPassword = "fnord23";
             boot.loader.grub.devices = lib.mkForce [ "/dev/sda" ];

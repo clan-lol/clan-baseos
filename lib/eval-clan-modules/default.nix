@@ -6,11 +6,14 @@
 let
   baseModule = {
     imports = (import (pkgs.path + "/nixos/modules/module-list.nix")) ++ [
-      {
-        nixpkgs.pkgs = pkgs;
-        clan.core.name = "dummy";
-        system.stateVersion = lib.version;
-      }
+      (
+        { config, ... }:
+        {
+          nixpkgs.pkgs = pkgs;
+          clan.core.name = "dummy";
+          system.stateVersion = config.system.nixos.release;
+        }
+      )
     ];
   };
 

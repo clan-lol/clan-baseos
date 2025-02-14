@@ -14,11 +14,11 @@
         meta.name = "test_flake_with_core";
         machines = {
           vm1 =
-            { lib, ... }:
+            { config, ... }:
             {
               nixpkgs.hostPlatform = "x86_64-linux";
               clan.core.networking.targetHost = "__CLAN_TARGET_ADDRESS__";
-              system.stateVersion = lib.version;
+              system.stateVersion = config.system.nixos.release;
               sops.age.keyFile = "__CLAN_SOPS_KEY_PATH__";
               clan.core.facts.secretUploadDirectory = "__CLAN_SOPS_KEY_DIR__";
               clan.core.sops.defaultGroups = [ "admins" ];
@@ -28,7 +28,7 @@
               networking.useDHCP = false;
             };
           vm2 =
-            { lib, ... }:
+            { config, ... }:
             {
               nixpkgs.hostPlatform = "x86_64-linux";
               imports = [
@@ -39,7 +39,7 @@
               clan.user-password.user = "alice";
               clan.user-password.prompt = false;
               clan.core.networking.targetHost = "__CLAN_TARGET_ADDRESS__";
-              system.stateVersion = lib.version;
+              system.stateVersion = config.system.nixos.release;
               sops.age.keyFile = "__CLAN_SOPS_KEY_PATH__";
               clan.core.facts.secretUploadDirectory = "__CLAN_SOPS_KEY_DIR__";
               clan.core.networking.zerotier.networkId = "82b44b162ec6c013";
