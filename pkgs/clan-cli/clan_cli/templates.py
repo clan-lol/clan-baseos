@@ -128,6 +128,16 @@ class FoundTemplate:
 
 
 def copy_from_nixstore(src: Path, dest: Path) -> None:
+    if src.is_symlink():
+        target = src.readlink()
+        src.symlink_to(target)
+        return
+
+    if src.is_file():
+        shutil.copy(src, dest)
+        dest.chmod(stat.S_IWRITE | stat.S_IREAD | stat.S_IRGRP)
+        return
+
     # Walk through the source directory
     for root, _dirs, files in src.walk(on_error=log.error):
         relative_path = Path(root).relative_to(src)
