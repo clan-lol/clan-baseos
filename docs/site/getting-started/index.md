@@ -42,7 +42,7 @@ By the end of this guide, you'll have a fresh NixOS configuration ready to push 
 Add the Clan CLI into your development workflow:
 
 ```bash
-nix shell git+https://git.clan.lol/clan/clan-core#clan-cli
+nix shell git+https://git.clan.lol/clan/clan-core#clan-cli --refresh
 ```
 
 You can find reference documentation for the `clan` cli program [here](../reference/cli/index.md).
