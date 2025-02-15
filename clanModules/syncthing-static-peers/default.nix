@@ -7,7 +7,8 @@
 let
   dir = config.clan.core.settings.directory;
   machineDir = dir + "/machines/";
-  syncthingPublicKeyPath = machines: machineDir + machines + "/facts/syncthing.pub";
+  machineVarDir = dir + "/vars/per-machine/";
+  syncthingPublicKeyPath = machines: machineVarDir + machines + "/syncthing/id/value";
   machinesFileSet = builtins.readDir machineDir;
   machines = lib.mapAttrsToList (name: _: name) machinesFileSet;
   syncthingPublicKeysUnchecked = builtins.map (
@@ -83,24 +84,26 @@ in
         configDir = "/var/lib/syncthing";
         group = "syncthing";
 
-        key = lib.mkDefault config.clan.core.facts.services.syncthing.secret."syncthing.key".path or null;
-        cert = lib.mkDefault config.clan.core.facts.services.syncthing.secret."syncthing.cert".path or null;
+        key = lib.mkDefault config.clan.core.vars.generators.syncthing.files.key.path or null;
+        cert = lib.mkDefault config.clan.core.vars.generators.syncthing.files.cert.path or null;
       };
 
-      clan.core.facts.services.syncthing = {
-        secret."syncthing.key" = { };
-        secret."syncthing.cert" = { };
-        public."syncthing.pub" = { };
-        generator.path = [
+      clan.core.vars.generators.syncthing = {
+        files.key = { };
+        files.cert = { };
+        files.api = { };
+        files.id.secret = false;
+        runtimeInputs = [
           pkgs.coreutils
           pkgs.gnugrep
           pkgs.syncthing
         ];
-        generator.script = ''
-          syncthing generate --config "$secrets"
-          mv "$secrets"/key.pem "$secrets"/syncthing.key
-          mv "$secrets"/cert.pem "$secrets"/syncthing.cert
-          cat "$secrets"/config.xml | grep -oP '(?<=<device id=")[^"]+' | uniq > "$facts"/syncthing.pub
+        script = ''
+          syncthing generate --config $out
+          mv $out/key.pem $out/key
+          mv $out/cert.pem $out/cert
+          cat $out/config.xml | grep -oP '(?<=<device id=")[^"]+' | uniq > $out/id
+          cat $out/config.xml | grep -oP '<apikey>\K[^<]+' | uniq > $out/api
         '';
       };
     }
