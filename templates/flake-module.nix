@@ -11,12 +11,12 @@
     machine = {
       flash-installer = {
         description = "Initialize a new flash-installer machine";
-        path = ./clan/machineTemplates/machines/flash-installer;
+        path = ./machine/flash-installer;
       };
 
       new-machine = {
         description = "Initialize a new machine";
-        path = ./clan/machineTemplates/machines/new-machine;
+        path = ./machine/new-machine;
       };
     };
 

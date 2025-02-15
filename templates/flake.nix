@@ -21,7 +21,7 @@
         };
         machineTemplates = {
           description = "Machine templates";
-          path = ./clan/machineTemplates;
+          path = ./machine;
         };
       };
     };
