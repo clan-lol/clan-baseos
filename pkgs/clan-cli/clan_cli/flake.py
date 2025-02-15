@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from hashlib import sha1
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from clan_cli.cmd import run
 from clan_cli.dirs import user_cache_dir
@@ -68,16 +68,22 @@ class FlakeCacheEntry:
         is_out_path: bool = False,
     ) -> None:
         self.value: str | float | int | dict[str | int, FlakeCacheEntry]
-        self.selector: Selector
+        self.selector: set[int] | set[str] | AllSelector
+        selector: Selector = AllSelector()
 
         if selectors == []:
             self.selector = AllSelector()
+        elif isinstance(selectors[0], set):
+            self.selector = selectors[0]
+            selector = selectors[0]
+        elif isinstance(selectors[0], int):
+            self.selector = {int(selectors[0])}
+            selector = int(selectors[0])
         elif isinstance(selectors[0], str):
-            self.selector = selectors[0]
-            self.value = {self.selector: FlakeCacheEntry(value, selectors[1:])}
-            return
-        else:
-            self.selector = selectors[0]
+            self.selector = {(selectors[0])}
+            selector = selectors[0]
+        elif isinstance(selectors[0], AllSelector):
+            self.selector = AllSelector()
 
         if is_out_path:
             if selectors != []:
@@ -87,6 +93,9 @@ class FlakeCacheEntry:
                 msg = "outPath must be a string"
                 raise ValueError(msg)
             self.value = value
+
+        elif isinstance(selector, str):
+            self.value = {selector: FlakeCacheEntry(value, selectors[1:])}
 
         elif isinstance(value, dict):
             if isinstance(self.selector, set):
@@ -103,18 +112,17 @@ class FlakeCacheEntry:
                     self.value[key] = FlakeCacheEntry(value_, selectors[1:])
 
         elif isinstance(value, list):
-            if isinstance(self.selector, int):
+            if isinstance(selector, int):
                 if len(value) != 1:
                     msg = "Cannot index list with int selector when value is not singleton"
                     raise ValueError(msg)
-                self.value = {}
-                self.value[int(self.selector)] = FlakeCacheEntry(
-                    value[0], selectors[1:]
-                )
-            if isinstance(self.selector, set):
-                if all(isinstance(v, int) for v in self.selector):
+                self.value = {
+                    int(selector): FlakeCacheEntry(value[0], selectors[1:]),
+                }
+            if isinstance(selector, set):
+                if all(isinstance(v, int) for v in selector):
                     self.value = {}
-                    for i, v in enumerate(self.selector):
+                    for i, v in enumerate([selector]):
                         assert isinstance(v, int)
                         self.value[int(v)] = FlakeCacheEntry(value[i], selectors[1:])
                 else:
@@ -126,11 +134,12 @@ class FlakeCacheEntry:
                     if isinstance(v, dict | list | str | float | int):
                         self.value[i] = FlakeCacheEntry(v, selectors[1:])
             else:
-                msg = f"expected integer selector or all for type list, but got {type(selectors[0])}"
+                msg = f"expected integer selector or all for type list, but got {type(selector)}"
                 raise TypeError(msg)
 
         elif isinstance(value, str) and value.startswith("/nix/store/"):
             self.value = {}
+            self.selector = self.selector = {"outPath"}
             self.value["outPath"] = FlakeCacheEntry(
                 value, selectors[1:], is_out_path=True
             )
@@ -160,7 +169,34 @@ class FlakeCacheEntry:
         if isinstance(selector, AllSelector):
             self.selector = AllSelector()
         elif isinstance(self.selector, set) and isinstance(selector, set):
-            self.selector.union(selector)
+            if all(isinstance(v, str) for v in self.selector) and all(
+                isinstance(v, str) for v in selector
+            ):
+                selector = cast(set[str], selector)
+                self.selector = cast(set[str], self.selector)
+                self.selector = self.selector.union(selector)
+            elif all(isinstance(v, int) for v in self.selector) and all(
+                isinstance(v, int) for v in selector
+            ):
+                selector = cast(set[int], selector)
+                self.selector = cast(set[int], self.selector)
+                self.selector = self.selector.union(selector)
+            else:
+                msg = "Cannot union set of different types"
+                raise ValueError(msg)
+        elif isinstance(self.selector, set) and isinstance(selector, int):
+            if all(isinstance(v, int) for v in self.selector):
+                self.selector = cast(set[int], self.selector)
+                self.selector.add(selector)
+
+        elif isinstance(self.selector, set) and isinstance(selector, str):
+            if all(isinstance(v, str) for v in self.selector):
+                self.selector = cast(set[str], self.selector)
+                self.selector.add(selector)
+
+        else:
+            msg = f"Cannot insert {selector} into {self.selector}"
+            raise TypeError(msg)
 
         if isinstance(self.value, dict) and isinstance(value, dict):
             for key, value_ in value.items():
@@ -191,6 +227,11 @@ class FlakeCacheEntry:
                     self.value[selector].insert(value[0], selectors[1:])
                 else:
                     self.value[selector] = FlakeCacheEntry(value[0], selectors[1:])
+        elif isinstance(value, str) and value.startswith("/nix/store/"):
+            self.value = {}
+            self.value["outPath"] = FlakeCacheEntry(
+                value, selectors[1:], is_out_path=True
+            )
 
         elif isinstance(value, (str | float | int)):
             if self.value:

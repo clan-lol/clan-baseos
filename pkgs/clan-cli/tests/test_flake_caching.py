@@ -53,5 +53,8 @@ def test_cache_persistance(flake: ClanFlake) -> None:
         "nixosConfigurations.*.config.networking.hostName"
     )
     flake1.select("nixosConfigurations.*.config.networking.hostName")
+    flake1.select("nixosConfigurations.*.config.networking.{hostName,hostId}")
     flake2.prefetch()
-    assert flake2._cache.is_cached("nixosConfigurations.*.config.networking.hostName")  # noqa: SLF001
+    assert flake2._cache.is_cached(  # noqa: SLF001
+        "nixosConfigurations.*.config.networking.{hostName,hostId}"
+    )
