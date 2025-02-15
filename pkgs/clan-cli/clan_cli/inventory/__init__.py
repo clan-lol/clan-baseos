@@ -418,7 +418,7 @@ def load_inventory_json(flake_dir: str | Path) -> Inventory:
     return inventory
 
 
-def delete(d: dict[str, Any], path: str) -> Any:
+def delete_by_path(d: dict[str, Any], path: str) -> Any:
     """
     Deletes the nested entry specified by a dot-separated path from the dictionary using pop().
 
@@ -547,13 +547,36 @@ def set_inventory(inventory: Inventory, flake_dir: str | Path, message: str) -> 
         patch(persisted, patch_path, data)
 
     for delete_path in delete_set:
-        delete(persisted, delete_path)
+        delete_by_path(persisted, delete_path)
 
     inventory_file = get_inventory_path(flake_dir)
     with inventory_file.open("w") as f:
         json.dump(persisted, f, indent=2)
 
     commit_file(inventory_file, Path(flake_dir), commit_message=message)
+
+
+@API.register
+def delete(directory: str | Path, delete_set: set[str]) -> None:
+    """
+    Delete keys from the inventory
+    """
+    write_info = get_inventory_with_writeable_keys(directory)
+
+    data_disk = dict(write_info.data_disk)
+
+    for delete_path in delete_set:
+        delete_by_path(data_disk, delete_path)
+
+    inventory_file = get_inventory_path(directory)
+    with inventory_file.open("w") as f:
+        json.dump(data_disk, f, indent=2)
+
+    commit_file(
+        inventory_file,
+        Path(directory),
+        commit_message=f"Delete inventory keys {delete_set}",
+    )
 
 
 def init_inventory(directory: str, init: Inventory | None = None) -> None:

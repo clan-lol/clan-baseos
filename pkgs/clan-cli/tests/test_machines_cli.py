@@ -1,4 +1,5 @@
 import pytest
+from clan_cli.inventory import load_inventory_json
 from fixtures_flakes import FlakeForTest
 from helpers import cli
 from stdout import CaptureOutput
@@ -21,6 +22,10 @@ def test_machine_subcommands(
         ]
     )
 
+    inventory: dict = dict(load_inventory_json(str(test_flake_with_core.path)))
+    assert "machine1" in inventory["machines"]
+    assert "service" not in inventory
+
     with capture_output as output:
         cli.run(["machines", "list", "--flake", str(test_flake_with_core.path)])
 
@@ -32,6 +37,10 @@ def test_machine_subcommands(
     cli.run(
         ["machines", "delete", "--flake", str(test_flake_with_core.path), "machine1"]
     )
+
+    inventory_2: dict = dict(load_inventory_json(str(test_flake_with_core.path)))
+    assert "machine1" not in inventory_2["machines"]
+    assert "service" not in inventory_2
 
     with capture_output as output:
         cli.run(["machines", "list", "--flake", str(test_flake_with_core.path)])
