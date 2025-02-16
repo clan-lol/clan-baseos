@@ -166,6 +166,10 @@ def deploy_machines(machines: list[Machine]) -> None:
             extra_env=env,
         )
 
+        # Last output line (config store path) is printed to stdout instead of stderr
+        lines = ret.stdout.splitlines()
+        if lines: print(lines[-1])
+
         if is_async_cancelled():
             return
 
