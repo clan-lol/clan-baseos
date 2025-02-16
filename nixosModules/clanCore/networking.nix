@@ -91,7 +91,7 @@
       ]
     )
   ];
-  config = {
+  config = lib.mkIf config.clan.core.setDefaults {
     # conflicts with systemd-resolved
     networking.useHostResolvConf = false;
 
