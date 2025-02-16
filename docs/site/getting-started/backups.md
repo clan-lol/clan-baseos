@@ -143,3 +143,25 @@ Ensure the path to the public key is correct.
   ```bash
   clan backups create mymachine
   ```
+
+- **Restoring Backups:** To restore a backup that has been listed by the list command (NAME):
+
+  ```bash
+  clan backups restore [MACHINE] [PROVIDER] [NAME]
+
+  ```
+
+  Example (Restoring a machine called `client` with the backup provider `borgbackup`):
+
+  ```bash
+  clan backups restore client borgbackup [NAME]
+
+  ```
+
+  The `backups` command is service aware and allows optional specification of the `--service` flag.
+
+  To only restore the service called `zerotier` on a machine called `controller` through the backup provider `borgbackup` use the following command:
+
+```bash
+  clan backups restore client borgbackup [NAME] --service zerotier
+```
