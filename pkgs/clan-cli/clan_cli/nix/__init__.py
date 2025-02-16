@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 from typing import Any
+from clan_cli.locked_open import locked_open
 
 from clan_cli.cmd import run, run_no_stdout
 from clan_cli.dirs import nixpkgs_flake, nixpkgs_source
@@ -60,11 +61,12 @@ def nix_config() -> dict[str, Any]:
 
 
 def nix_test_store() -> Path | None:
+    store = os.environ.get("CLAN_TEST_STORE", None)
     if not os.environ.get("IN_NIX_SANDBOX"):
         return None
-    store = os.environ.get("CLAN_TEST_STORE", None)
     if store:
-        return Path(store)
+        with locked_open(Path(store) / "lockfile"):
+            return Path(store)
     return None
 
 
