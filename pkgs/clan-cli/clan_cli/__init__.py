@@ -437,7 +437,7 @@ For more detailed information, visit: {help_hyperlink("getting-started", "https:
     state.register_parser(parser_state)
 
     if argcomplete:
-        argcomplete.autocomplete(parser)
+        argcomplete.autocomplete(parser, exclude=["morph"])
 
     register_common_flags(parser)
 

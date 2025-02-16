@@ -17,6 +17,9 @@ def register_parser(parser: argparse.ArgumentParser) -> None:
         description="the command to run",
         help="the command to run",
         required=True,
+        # Workaround https://github.com/python/cpython/issues/67037 by setting
+        # `metavar` to ensure `morph` isn't mentioned
+        metavar="{update,create,delete,list,update-hardware-config,install}",
     )
 
     update_parser = subparser.add_parser(
@@ -47,7 +50,8 @@ For more detailed information, visit: https://docs.clan.lol/getting-started/depl
     delete_parser = subparser.add_parser("delete", help="Delete a machine")
     register_delete_parser(delete_parser)
 
-    morph_parser = subparser.add_parser("morph", help="morph a machine")
+    # Don't set `help` so that it doesn't show up in `clan machines --help`
+    morph_parser = subparser.add_parser("morph")
     register_morph_parser(morph_parser)
 
     list_parser = subparser.add_parser(
