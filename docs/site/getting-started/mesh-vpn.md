@@ -18,89 +18,128 @@ Clan
 If you select multiple network technologies at the same time. e.g. (zerotier + yggdrassil)
 You must choose one of them as primary network and the machines are always connected via the primary network.
 
-## 1. Set-Up the VPN Controller
-
-The VPN controller is initially essential for providing configuration to new
-peers. Once addresses are allocated, the controller's continuous operation is not essential.
-
-1. **Designate a Machine**: Label a machine as the VPN controller in the clan,
-   referred to as `<CONTROLLER>` henceforth in this guide.
-2. **Add Configuration**: Input the following configuration to the NixOS
-   configuration of the controller machine:
-   ```nix
-   clan.core.networking.zerotier.controller = {
-     enable = true;
-     public = true;
-   };
-   ```
-3. **Update the Controller Machine**: Execute the following:
-   ```bash
-   clan machines update <CONTROLLER>
-   ```
-   Your machine is now operational as the VPN controller.
-
-## 2. Add Machines to the VPN
-
-To introduce a new machine to the VPN, adhere to the following steps:
-
-1. **Update Configuration**: On the new machine, incorporate the following to its
-   configuration, substituting `<CONTROLLER>` with the controller machine name:
-   ```nix
-   { config, ... }: {
-     clan.core.networking.zerotier.networkId = builtins.readFile (config.clan.core.settings.directory + "/machines/<CONTROLLER>/facts/zerotier-network-id");
-   }
-   ```
-1. **Update the New Machine**: Execute:
-   ```bash
-   $ clan machines update <NEW_MACHINE>
-   ```
-   Replace `<NEW_MACHINE>` with the designated new machine name.
-
-    !!! Note "For Private Networks"
-        1. **Retrieve Zerotier Metadata**
-
-            === "From the repo"
-                **Retrieve the ZeroTier IP**: In the clan repo, execute:
-                 ```console
-                 $ clan facts list <NEW_MACHINE> |  jq -r '.["zerotier-ip"]'
-                 ```
-
-                 The returned address is the Zerotier IP address of the machine.
-
-            === "On the new machine"
-                **Retrieve the ZeroTier ID**: On the `new_machine`, execute:
-                 ```bash
-                 $ sudo zerotier-cli info
-                 ```
-                 Example Output:
-                 ```{.console, .no-copy}
-                 200 info d2c71971db 1.12.1 OFFLINE
-                 ```
-                 , where `d2c71971db` is the ZeroTier ID.
+This guide shows you how to configure `zerotier` either through `NixOS Options` directly, or Clan's `Inventory` System.
 
 
-        2. **Authorize the New Machine on the Controller**: On the controller machine,
-             execute:
+=== "**Inventory**"
+    ## 1. Choose the Controller
 
-            === "with ZerotierIP"
-                 ```bash
-                 $ sudo zerotier-members allow --member-ip <IP>
-                 ```
-                 Substitute `<IP>` with the ZeroTier IP obtained previously.
-            === "with ZerotierID"
-                 ```bash
-                 $ sudo zerotier-members allow <ID>
-                 ```
-                 Substitute `<ID>` with the ZeroTier ID obtained previously.
+    The controller is the initial entrypoint for new machines into the vpn.
+    It will sign the id's of new machines.
+    Once id's are signed, the controller's continuous operation is not essential.
+    A good controller choice is nevertheless a machine that can always be reached for updates - so that new peers can be added to the network.
 
-2. **Verify Connection**: On the `new_machine`, re-execute:
-   ```bash
-   $ sudo zerotier-cli info
-   ```
-   The status should now be "ONLINE":
-   ```{.console, .no-copy}
-   200 info d2c71971db 1.12.1 ONLINE
-   ```
+    For the purpose of this guide we have two machines:
+
+    - The `controller` machine, which will be the zerotier controller.
+    - The `new_machine` machine, which is the machine we want to add to the vpn network.
+
+    ## 2. Configure the Inventory
+    ```nix
+    clan.inventory = {
+      services.zerotier.default = {
+        roles.controller.machines = [
+          "controller"
+        ];
+        roles.peer.machines = [
+          "new_machine"
+        ];
+      };
+    };
+    ```
+    
+    ## 3. Apply the Configuration
+    Update the `controller` machine:
+
+    ```bash
+    clan machines update controller
+    ```
+
+
+=== "**NixOS Options**"
+    ## 1. Set-Up the VPN Controller
+
+    The VPN controller is initially essential for providing configuration to new
+    peers. Once addresses are allocated, the controller's continuous operation is not essential.
+
+    1. **Designate a Machine**: Label a machine as the VPN controller in the clan,
+       referred to as `<CONTROLLER>` henceforth in this guide.
+    2. **Add Configuration**: Input the following configuration to the NixOS
+       configuration of the controller machine:
+       ```nix
+       clan.core.networking.zerotier.controller = {
+         enable = true;
+         public = true;
+       };
+       ```
+    3. **Update the Controller Machine**: Execute the following:
+       ```bash
+       clan machines update <CONTROLLER>
+       ```
+       Your machine is now operational as the VPN controller.
+
+    ## 2. Add Machines to the VPN
+
+    To introduce a new machine to the VPN, adhere to the following steps:
+
+    1. **Update Configuration**: On the new machine, incorporate the following to its
+       configuration, substituting `<CONTROLLER>` with the controller machine name:
+       ```nix
+       { config, ... }: {
+         clan.core.networking.zerotier.networkId = builtins.readFile (config.clan.core.settings.directory + "/machines/<CONTROLLER>/facts/zerotier-network-id");
+       }
+       ```
+    1. **Update the New Machine**: Execute:
+       ```bash
+       $ clan machines update <NEW_MACHINE>
+       ```
+       Replace `<NEW_MACHINE>` with the designated new machine name.
+
+        !!! Note "For Private Networks"
+            1. **Retrieve Zerotier Metadata**
+
+                === "From the repo"
+                    **Retrieve the ZeroTier IP**: In the clan repo, execute:
+                     ```console
+                     $ clan facts list <NEW_MACHINE> |  jq -r '.["zerotier-ip"]'
+                     ```
+
+                     The returned address is the Zerotier IP address of the machine.
+
+                === "On the new machine"
+                    **Retrieve the ZeroTier ID**: On the `new_machine`, execute:
+                     ```bash
+                     $ sudo zerotier-cli info
+                     ```
+                     Example Output:
+                     ```{.console, .no-copy}
+                     200 info d2c71971db 1.12.1 OFFLINE
+                     ```
+                     , where `d2c71971db` is the ZeroTier ID.
+
+
+            2. **Authorize the New Machine on the Controller**: On the controller machine,
+                 execute:
+
+                === "with ZerotierIP"
+                     ```bash
+                     $ sudo zerotier-members allow --member-ip <IP>
+                     ```
+                     Substitute `<IP>` with the ZeroTier IP obtained previously.
+                === "with ZerotierID"
+                     ```bash
+                     $ sudo zerotier-members allow <ID>
+                     ```
+                     Substitute `<ID>` with the ZeroTier ID obtained previously.
+
+    2. **Verify Connection**: On the `new_machine`, re-execute:
+       ```bash
+       $ sudo zerotier-cli info
+       ```
+       The status should now be "ONLINE":
+       ```{.console, .no-copy}
+       200 info d2c71971db 1.12.1 ONLINE
+       ```
 
 !!! success "Congratulations!"
     The new machine is now part of the VPN, and the ZeroTier
