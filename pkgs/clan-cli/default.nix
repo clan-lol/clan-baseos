@@ -130,11 +130,18 @@ pythonRuntime.pkgs.buildPythonApplication {
       clan-pytest-without-core =
         runCommand "clan-pytest-without-core" { nativeBuildInputs = testDependencies; }
           ''
+            set -ux -o pipefail
             cp -r ${source} ./src
             chmod +w -R ./src
             cd ./src
 
             export NIX_STATE_DIR=$TMPDIR/nix IN_NIX_SANDBOX=1 PYTHONWARNINGS=error
+
+            # required to prevent concurrent 'nix flake lock' operations
+            export CLAN_TEST_STORE=$TMPDIR/store
+            export LOCK_NIX=$TMPDIR/nix_lock
+            mkdir -p "$CLAN_TEST_STORE/nix/store"
+
             python -m pytest -m "not impure and not with_core" ./tests
             touch $out
           '';
@@ -158,6 +165,7 @@ pythonRuntime.pkgs.buildPythonApplication {
             };
           }
           ''
+            set -ux -o pipefail
             cp -r ${source} ./src
             chmod +w -R ./src
             cd ./src
