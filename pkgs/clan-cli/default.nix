@@ -130,7 +130,7 @@ pythonRuntime.pkgs.buildPythonApplication {
       clan-pytest-without-core =
         runCommand "clan-pytest-without-core" { nativeBuildInputs = testDependencies; }
           ''
-            set -ux -o pipefail
+            set -u -o pipefail
             cp -r ${source} ./src
             chmod +w -R ./src
             cd ./src
@@ -165,7 +165,7 @@ pythonRuntime.pkgs.buildPythonApplication {
             };
           }
           ''
-            set -ux -o pipefail
+            set -u -o pipefail
             cp -r ${source} ./src
             chmod +w -R ./src
             cd ./src
