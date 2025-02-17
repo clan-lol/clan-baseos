@@ -9,7 +9,7 @@ from clan_cli.cmd import CmdOut, RunOpts, run
 from clan_cli.errors import ClanError
 from clan_cli.flake import Flake
 from clan_cli.inventory import Inventory, init_inventory
-from clan_cli.nix import nix_shell
+from clan_cli.nix import nix_metadata, nix_shell
 from clan_cli.templates import (
     InputPrio,
     TemplateName,
@@ -47,6 +47,13 @@ def git_command(directory: Path, *args: str) -> list[str]:
 @API.register
 def create_clan(opts: CreateOptions) -> CreateClanResponse:
     dest = opts.dest.resolve()
+
+    try:
+        nix_metadata(str(opts.src_flake))
+    except ClanError:
+        log.error(f"Found a repository, but it is not a valid flake: {opts.src_flake}")
+        log.warning("Setting src_flake to None")
+        opts.src_flake = None
 
     template = get_template(
         TemplateName(opts.template_name),
