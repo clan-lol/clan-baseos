@@ -5,8 +5,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from clan_cli.cmd import run
 from clan_cli.flake import Flake
 from clan_cli.locked_open import locked_open
+from clan_cli.nix import nix_command
 from clan_cli.templates import (
     InputName,
     TemplateName,
@@ -35,6 +37,27 @@ def nix_attr_tester(
     nix_attrset = get_clan_nix_attrset(Flake(str(test_flake.path)))
 
     assert json.dumps(nix_attrset, indent=2) == json.dumps(expected, indent=2)
+
+
+@pytest.mark.impure
+def test_copy_from_nixstore_symlink(
+    monkeypatch: pytest.MonkeyPatch, temporary_home: Path
+) -> None:
+    src = temporary_home / "src"
+    src.mkdir()
+    (src / "file.txt").write_text("magicstring!")
+    res = run(nix_command(["store", "add", str(src)]))
+    src_nix = Path(res.stdout.strip())
+    src2 = temporary_home / "src2"
+    src2.mkdir()
+    (src2 / "file.txt").symlink_to(src_nix / "file.txt")
+    res = run(nix_command(["store", "add", str(src2)]))
+    src2_nix = Path(res.stdout.strip())
+    dest = temporary_home / "dest"
+    copy_from_nixstore(src2_nix, dest)
+    assert (dest / "file.txt").exists()
+    assert (dest / "file.txt").read_text() == "magicstring!"
+    assert (dest / "file.txt").is_symlink()
 
 
 @pytest.mark.impure
