@@ -14,6 +14,17 @@
     '';
   };
 
+  passBackend = lib.mkOption {
+    type = lib.types.enum [
+      "passage"
+      "pass"
+    ];
+    default = "pass";
+    description = ''
+      password-store backend to use. Valid options are `pass` and `passage`
+    '';
+  };
+
   secretModule = lib.mkOption {
     type = lib.types.str;
     internal = true;

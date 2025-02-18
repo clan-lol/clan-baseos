@@ -1,4 +1,5 @@
 import io
+import json
 import logging
 import os
 import tarfile
@@ -30,7 +31,16 @@ class SecretStore(StoreBase):
         return "password_store"
 
     @property
+    def _store_backend(self) -> str:
+        backend = json.loads(
+            self.machine.eval_nix("config.clan.core.vars.settings.passBackend")
+        )
+        return backend
+
+    @property
     def _password_store_dir(self) -> str:
+        if self._store_backend == "passage":
+            return os.environ.get("PASSAGE_DIR", f"{os.environ['HOME']}/.passage/store")
         return os.environ.get(
             "PASSWORD_STORE_DIR", f"{os.environ['HOME']}/.password-store"
         )
@@ -46,9 +56,9 @@ class SecretStore(StoreBase):
     ) -> Path | None:
         run(
             nix_shell(
-                ["nixpkgs#pass"],
+                [f"nixpkgs#{self._store_backend}"],
                 [
-                    "pass",
+                    f"{self._store_backend}",
                     "insert",
                     "-m",
                     str(self.entry_dir(generator, var.name)),
@@ -61,9 +71,9 @@ class SecretStore(StoreBase):
     def get(self, generator: Generator, name: str) -> bytes:
         return run(
             nix_shell(
-                ["nixpkgs#pass"],
+                [f"nixpkgs#{self._store_backend}"],
                 [
-                    "pass",
+                    f"{self._store_backend}",
                     "show",
                     str(self.entry_dir(generator, name)),
                 ],
@@ -141,7 +151,7 @@ class SecretStore(StoreBase):
             # TODO get the path to the secrets from the machine
             [
                 "cat",
-                f"{self.machine.deployment['password-store']['secretLocation']}/.pass_info",
+                f"{self.machine.deployment['password-store']['secretLocation']}/.{self._store_backend}_info",
             ],
             RunOpts(log=Log.STDERR, check=False),
         ).stdout.strip()
@@ -211,7 +221,7 @@ class SecretStore(StoreBase):
                         out_file.parent.mkdir(parents=True, exist_ok=True)
                         out_file.write_bytes(self.get(generator, file.name))
 
-        (output_dir / ".pass_info").write_bytes(self.generate_hash())
+        (output_dir / f".{self._store_backend}_info").write_bytes(self.generate_hash())
 
     def upload(self, phases: list[str]) -> None:
         if "partitioning" in phases:
