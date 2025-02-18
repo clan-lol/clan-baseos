@@ -111,7 +111,7 @@ This process involves preparing a suitable hardware and disk partitioning config
     1. **SSH with Password Authentication**
         Run the following command to install using SSH:
         ```bash
-        clan machines install [MACHINE] --target-host <IP>
+        clan machines install [MACHINE] --target-host <IP>  --update-hardware-config nixos-facter
         ```
 
     2. **Scanning a QR Code for Installation Details**
@@ -119,12 +119,12 @@ This process involves preparing a suitable hardware and disk partitioning config
           - **Using a JSON String or File Path:**
               Provide the path to a JSON string or input the string directly:
               ```terminal
-              clan machines install [MACHINE] --json [JSON]
+              clan machines install [MACHINE] --json [JSON]  --update-hardware-config nixos-facter
               ```
           - **Using an Image Containing the QR Code:**
               Provide the path to an image file containing the relevant QR code:
               ```terminal
-              clan machines install [MACHINE] --png [PATH]
+              clan machines install [MACHINE] --png [PATH]  --update-hardware-config nixos-facter
            ```
 
 === "**SSH access**"
@@ -132,7 +132,7 @@ This process involves preparing a suitable hardware and disk partitioning config
     Replace `<target_host>` with the **target computers' ip address**:
 
     ```bash
-    clan machines install [MACHINE] --target-host <target_host>
+    clan machines install [MACHINE] --target-host <target_host>  --update-hardware-config nixos-facter
     ```
 
 

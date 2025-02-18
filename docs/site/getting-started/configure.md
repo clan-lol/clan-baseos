@@ -79,9 +79,14 @@ Adding or configuring a new machine requires two simple steps:
     └─nvme0n1p3 nvme-eui.e8238fa6bf530001001b448b4aec2929-part3 swap    16.8G
     ```
 
-1. Edit the following fields inside the `./machines/jon/configuration.nix` and/or `./machines/sara/configuration.nix`
+    !!! Warning
+        Make sure to copy the `ID-LINK` from toplevel disk device like `nvme0n1` or `sda` instead of `nvme0n1p1` or `sda1`
 
-   ```nix title="./machines/<machine>/configuration.nix" hl_lines="13 18 23 27"
+
+2. Edit the following fields inside the `./machines/jon/configuration.nix` and/or `./machines/sara/configuration.nix`
+
+    <!-- Note: Use "jon" instead of "<machine>" as "<" is not supported in title tag -->
+   ```nix title="./machines/jon/configuration.nix" hl_lines="13 18 22 26"
    {
       imports = [
         ./hardware-configuration.nix
@@ -96,14 +101,13 @@ Adding or configuring a new machine requires two simple steps:
       # Put your username here for login
       users.users.user.username = "__YOUR_USERNAME__";
 
-      # Set this for clan commands use ssh i.e. `clan machines update`
+      # Set this for clan commands that use ssh
       # If you change the hostname, you need to update this line to root@<new-hostname>
       # This only works however if you have avahi running on your admin machine else use IP
       clan.core.networking.targetHost = "root@__IP__";
 
-      # You can get your disk id by running the following command on the installer:
-      # Replace <IP> with the IP of the installer printed on the screen or by running the `ip addr` command.
-      # ssh root@<IP> lsblk --output NAME,ID-LINK,FSTYPE,SIZE,MOUNTPOINT
+
+      # Replace this __CHANGE_ME__ with the result of the lsblk command from step 1. 
       disko.devices.disk.main.device = "/dev/disk/by-id/__CHANGE_ME__";
 
       # IMPORTANT! Add your SSH key here
@@ -114,79 +118,31 @@ Adding or configuring a new machine requires two simple steps:
    }
    ```
 
-   You can also create additional machines using the `clan machines create` command:
-
-   ```
-   $ clan machines create --help
-   usage: clan [-h] [SUBCOMMAND] machines create [-h] [--tags TAGS [TAGS ...]] [--template-name TEMPLATE_NAME]
-                                                 [--target-host TARGET_HOST] [--debug] [--option name value] [--flake PATH]
-                                                 machine_name
-
-   positional arguments:
-     machine_name          The name of the machine to create
-
-   options:
-     -h, --help            show this help message and exit
-     --tags TAGS [TAGS ...]
-                           Tags to associate with the machine. Can be used to assign multiple machines to services.
-     --template-name TEMPLATE_NAME
-                           The name of the template machine to import
-     --target-host TARGET_HOST
-                           Address of the machine to install and update, in the format of user@host:1234
-     --debug               Enable debug logging
-     --option name value   Nix option to set
-     --flake PATH          path to the flake where the clan resides in, can be a remote flake or local, can be set through
-                           the [CLAN_DIR] environment variable
-   ```
-
 
 !!! Info "Replace `__YOUR_USERNAME__` with the ip of your machine, if you use avahi you can also use your hostname"
 !!! Info "Replace `__IP__` with the ip of your machine, if you use avahi you can also use your hostname"
-!!! Info "Replace `__CHANGE_ME__` with the appropriate identifier, such as `nvme-eui.e8238fa6bf530001001b448b4aec2929`"
+!!! Info "Replace `__CHANGE_ME__` with the appropriate `ID-LINK` identifier, such as `nvme-eui.e8238fa6bf530001001b448b4aec2929`"
 !!! Info "Replace `__YOUR_SSH_KEY__` with your personal key, like `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILoMI0NC5eT9pHlQExrvR5ASV3iW9+BXwhfchq0smXUJ jon@jon-desktop`"
 
-These steps will allow you to update your machine later.
 
-### Step 2: Detect Drivers
+   You can also create additional machines using the cli:
 
-Generate the `hardware-configuration.nix` file for your machine by executing the following command:
+   ```
+   $ clan machines create <machinename>
+   ```
 
-```bash
-clan machines update-hardware-config [MACHINE_NAME] [HOSTNAME]
-```
-
-replace `[MACHINE_NAME]` with the name of the machine i.e. `jon` and `[HOSTNAME]` with the `ip_address` or `hostname` of the machine within the network. i.e. `<IP>`
-
-!!! Example
-    ```bash
-    clan machines update-hardware-config jon
-    ```
-
-    This command connects to the ip configured in the previous step, runs [nixos-facter](https://github.com/nix-community/nixos-facter)
-    to detect hardware configurations (excluding filesystems), and writes them to `machines/jon/facter.json`.
-
-### Step 3: Custom Disk Formatting
+### Step 2: Custom Disk Formatting
 
 In `./modules/disko.nix`, a simple `ext4` disk partitioning scheme is defined for the Disko module. For more complex disk partitioning setups,
 refer to the [Disko templates](https://github.com/nix-community/disko-templates) or  [Disko examples](https://github.com/nix-community/disko/tree/master/example).
 
-### Step 4: Custom Configuration
+### Step 3 (Optional): Renaming Machine
 
-Modify `./machines/jon/configuration.nix` to personalize the system settings according to your requirements.
 If you wish to name your machine to something else, do the following steps:
 
 ```
 mv ./machines/jon/configuration.nix ./machines/newname/configuration.nix
 ```
-
-Than rename `jon` to your preferred name in `machines` in `flake.nix` as well as the import line:
-
-```diff
-- imports = [ ./machines/jon/configuration.nix ];
-+ imports = [ ./machines/__NEW_NAME__/configuration.nix ];
-```
-
-!!! Info "Replace `__NEW_NAME__` with the name of the machine"
 
 Note that our clan lives inside a git repository.
 Only files that have been added with `git add` are recognized by `nix`.

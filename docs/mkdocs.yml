@@ -48,6 +48,7 @@ nav:
       - Add Machines: getting-started/configure.md
       - Secrets & Facts: getting-started/secrets.md
       - Deploy Machine: getting-started/deploy.md
+      - Continuous Integration: getting-started/check.md
   - Guides:
       - Disk Encryption: getting-started/disk-encryption.md
       - Mesh VPN: getting-started/mesh-vpn.md
