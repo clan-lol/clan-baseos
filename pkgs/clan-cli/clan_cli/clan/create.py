@@ -48,12 +48,15 @@ def git_command(directory: Path, *args: str) -> list[str]:
 def create_clan(opts: CreateOptions) -> CreateClanResponse:
     dest = opts.dest.resolve()
 
-    try:
-        nix_metadata(str(opts.src_flake))
-    except ClanError:
-        log.error(f"Found a repository, but it is not a valid flake: {opts.src_flake}")
-        log.warning("Setting src_flake to None")
-        opts.src_flake = None
+    if opts.src_flake is not None:
+        try:
+            nix_metadata(str(opts.src_flake))
+        except ClanError:
+            log.error(
+                f"Found a repository, but it is not a valid flake: {opts.src_flake}"
+            )
+            log.warning("Setting src_flake to None")
+            opts.src_flake = None
 
     template = get_template(
         TemplateName(opts.template_name),
