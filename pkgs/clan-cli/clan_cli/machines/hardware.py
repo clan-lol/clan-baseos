@@ -135,7 +135,6 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareCon
         ]
 
     host = machine.target_host
-    target_host = f"{host.user or 'root'}@{host.host}"
     cmd = nix_shell(
         [
             "nixpkgs#openssh",
@@ -156,14 +155,19 @@ def generate_machine_hardware_info(opts: HardwareGenerateOptions) -> HardwareCon
                 if machine.target_host.port
                 else []
             ),
-            target_host,
+            host.target,
             *config_command,
         ],
     )
-    out = run(cmd, RunOpts(needs_user_terminal=True, prefix=machine.name))
+    out = run(cmd, RunOpts(needs_user_terminal=True, prefix=machine.name, check=False))
     if out.returncode != 0:
+        if "nixos-facter" in out.stderr and "not found" in out.stderr:
+            machine.error(str(out.stderr))
+            msg = "Please use our custom nixos install images. nixos-factor only works on nixos / clan systems currently."
+            raise ClanError(msg)
+
         machine.error(str(out))
-        msg = f"Failed to inspect {opts.machine}. Address: {opts.target_host}"
+        msg = f"Failed to inspect {opts.machine}. Address: {host.target}"
         raise ClanError(msg)
 
     backup_file = None
