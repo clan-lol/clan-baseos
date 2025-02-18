@@ -14,33 +14,46 @@ def parse_deployment_address(
     forward_agent: bool = True,
     meta: dict[str, Any] | None = None,
 ) -> Host:
-    if meta is None:
-        meta = {}
-    parts = host.split("@")
-    user: str | None = None
-    # count the number of : in the hostname
-    if host.count(":") > 1 and not re.match(r".*\[.*\]", host):
+    parts = host.split("?", maxsplit=1)
+    endpoint, maybe_options = parts if len(parts) == 2 else (parts[0], "")
+
+    parts = endpoint.split("@")
+    match len(parts):
+        case 2:
+            user, host_port = parts
+        case 1:
+            user, host_port = "", parts[0]
+        case _:
+            msg = f"Invalid host, got `{host}` but expected something like `[user@]hostname[:port]`"
+            raise ClanError(msg)
+
+    # Make this check now rather than failing with a `ValueError`
+    # when looking up the port from the `urlsplit` result below:
+    if host_port.count(":") > 1 and not re.match(r".*\[.*]", host_port):
         msg = f"Invalid hostname: {host}. IPv6 addresses must be enclosed in brackets , e.g. [::1]"
         raise ClanError(msg)
-    if len(parts) > 1:
-        user = parts[0]
-        hostname = parts[1]
-    else:
-        hostname = parts[0]
-    maybe_options = hostname.split("?")
+
     options: dict[str, str] = {}
-    if len(maybe_options) > 1:
-        hostname = maybe_options[0]
-        for option in maybe_options[1].split("&"):
-            k, v = option.split("=")
-            options[k] = v
-    result = urllib.parse.urlsplit("//" + hostname)
+    for o in maybe_options.split("&"):
+        if len(o) == 0:
+            continue
+        parts = o.split("=", maxsplit=1)
+        if len(parts) != 2:
+            msg = (
+                f"Invalid option in host `{host}`: option `{o}` does not have "
+                f"a value (i.e. expected something like `name=value`)"
+            )
+            raise ClanError(msg)
+        name, value = parts
+        options[name] = value
+
+    result = urllib.parse.urlsplit(f"//{host_port}")
     if not result.hostname:
-        msg = f"Invalid hostname: {hostname}"
+        msg = f"Invalid host, got `{host}` but expected something like `[user@]hostname[:port]`"
         raise ClanError(msg)
     hostname = result.hostname
     port = result.port
-    meta = meta.copy()
+
     return Host(
         hostname,
         user=user,
@@ -48,6 +61,6 @@ def parse_deployment_address(
         host_key_check=host_key_check,
         command_prefix=machine_name,
         forward_agent=forward_agent,
-        meta=meta,
+        meta={} if meta is None else meta.copy(),
         ssh_options=options,
     )
