@@ -1,11 +1,16 @@
-# Create an Installer Image
+# Clan Installer Image for Physical Machines
 
-Our installer image simplifies the process of performing remote installations.
+To install Clan on physical machines, you need to use our custom installer image. This is necessary for proper installation and operation.
 
-Follow our step-by-step guide to create and transfer this image onto a bootable USB drive.
+!!! note "Using a Cloud VM?"
+    If you're using a cloud provider's virtual machine (VM), you can skip this section and go directly to the [Configure Machines](configure.md) step. In this scenario, we automatically use [nixos-anywhere](https://github.com/nix-community/nixos-anywhere) to replace the kernel during runtime.
 
-!!! info
-    If you already have a NixOS machine you can ssh into (in the cloud for example) you can skip this chapter and go directly to [Configure Machines](configure.md).
+??? info "Why nixos-anywhere Doesn't Work on Physical Hardware?"
+    nixos-anywhere relies on [kexec](https://wiki.archlinux.org/title/Kexec) to replace the running kernel with our custom one. This method often has compatibility issues with real hardware, especially systems with dedicated graphics cards like laptops and servers, leading to crashes and black screens.
+
+??? info "Reasons for a Custom Install Image"
+    Our custom install images are built to include essential tools like [nixos-facter](https://github.com/nix-community/nixos-facter) and support for [ZFS](https://wiki.archlinux.org/title/ZFS). They're also optimized to run on systems with as little as 1 GB of RAM, ensuring efficient performance even on lower-end hardware.
+
 
 ### Step 0. Prerequisites
 
@@ -40,9 +45,9 @@ Follow our step-by-step guide to create and transfer this image onto a bootable 
 sudo umount /dev/sdb1
 ```
 === "**Linux OS**"
-    ### Step 2. Flash Custom Installer
+    ### Step 2. Create a Custom Installer
 
-    Using clan flash enables the inclusion of ssh public keys and wifi access points.
+    Using clan flash enables the inclusion of ssh public keys into the image.
     It also allows to set language and keymap in the installer image.
 
     ```bash

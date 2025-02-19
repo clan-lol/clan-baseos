@@ -136,7 +136,7 @@ Adding or configuring a new machine requires two simple steps:
 In `./modules/disko.nix`, a simple `ext4` disk partitioning scheme is defined for the Disko module. For more complex disk partitioning setups,
 refer to the [Disko templates](https://github.com/nix-community/disko-templates) or  [Disko examples](https://github.com/nix-community/disko/tree/master/example).
 
-### Step 3 (Optional): Renaming Machine
+### (Optional): Renaming Machine
 
 If you wish to name your machine to something else, do the following steps:
 
@@ -158,8 +158,10 @@ For renaming jon to your own machine name, you can use the following command:
 git mv ./machines/jon ./machines/newname
 ```
 
+### (Optional): Removing a Machine
+
 If you only want to setup a single machine at this point, you can delete `sara` from `flake.nix` as well as from the machines directory:
 
 ```
-git rm -r ./machines/sara
+git rm -rf ./machines/sara
 ```

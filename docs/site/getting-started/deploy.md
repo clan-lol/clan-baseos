@@ -1,13 +1,7 @@
+# Deploy your Clan
 
-Integrating a new machine into your Clan environment is an easy yet flexible process, allowing for a straight forward management of multiple NixOS configurations.
+Now that you have created a new machine, we will walk through how to install it.
 
-We'll walk you through adding a new computer to your Clan.
-
-## Installing a New Machine
-
-Clan CLI, in conjunction with [nixos-anywhere](https://github.com/nix-community/nixos-anywhere), provides a seamless method for installing NixOS on various machines.
-
-This process involves preparing a suitable hardware and disk partitioning configuration and ensuring the target machine is accessible via SSH.
 
 ### Step 0. Prerequisites
 
@@ -24,7 +18,7 @@ This process involves preparing a suitable hardware and disk partitioning config
 
         2. Boot the target machine and connect it to a network that makes it reachable from your setup computer.
 
-=== "**Remote Machines**"
+=== "**Cloud VMs**"
 
     - [x] **Two Computers**: You need one computer that you're getting ready (we'll call this the Target Computer) and another one to set it up from (we'll call this the Setup Computer). Make sure both can talk to each other over the network using SSH.
     - [x] **Machine configuration**: See our basic [configuration guide](./configure.md)
@@ -107,27 +101,22 @@ This process involves preparing a suitable hardware and disk partitioning config
         For easy sharing of deployment information via QR code, we highly recommend using [KDE Connect](https://apps.kde.org/de/kdeconnect/).
 
     There are two ways to deploy your machine:
+    === "**Password Auth**"
+        Run the following command to login over SSH with password authentication
+            ```bash
+            clan machines install [MACHINE] --target-host <IP>  --update-hardware-config nixos-facter
+            ```
+    === "**QR Code Auth**"
+        Using the JSON contents of the QR Code:
+            ```terminal
+            clan machines install [MACHINE] --json "[JSON]"  --update-hardware-config nixos-facter
+            ```
+        OR using a picture containing the QR code
+            ```terminal
+            clan machines install [MACHINE] --png [PATH]  --update-hardware-config nixos-facter
+            ```
 
-    1. **SSH with Password Authentication**
-        Run the following command to install using SSH:
-        ```bash
-        clan machines install [MACHINE] --target-host <IP>  --update-hardware-config nixos-facter
-        ```
-
-    2. **Scanning a QR Code for Installation Details**
-        You can input the information by following one of these methods:
-          - **Using a JSON String or File Path:**
-              Provide the path to a JSON string or input the string directly:
-              ```terminal
-              clan machines install [MACHINE] --json [JSON]  --update-hardware-config nixos-facter
-              ```
-          - **Using an Image Containing the QR Code:**
-              Provide the path to an image file containing the relevant QR code:
-              ```terminal
-              clan machines install [MACHINE] --png [PATH]  --update-hardware-config nixos-facter
-           ```
-
-=== "**SSH access**"
+=== "**Cloud VM**"
 
     Replace `<target_host>` with the **target computers' ip address**:
 
