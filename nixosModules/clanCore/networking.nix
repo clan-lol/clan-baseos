@@ -9,11 +9,11 @@
           By default, the node's attribute name will be used.
           If set to null, only local deployment will be supported.
 
-          format: user@host:port&SSH_OPTION=SSH_VALUE
+          format: user@host:port?SSH_OPTION=SSH_VALUE[&SSH_OPTION_2=VALUE_2]
           examples:
             - machine.example.com
             - user@machine2.example.com
-            - root@example.com:2222&IdentityFile=/path/to/private/key
+            - root@example.com:2222?IdentityFile=/path/to/private/key&StrictHostKeyChecking=yes
         '';
         default = null;
         type = lib.types.nullOr lib.types.str;
@@ -24,11 +24,11 @@
 
           If set to null, the targetHost will be used.
 
-          format: user@host:port&SSH_OPTION=SSH_VALUE
+          format: user@host:port?SSH_OPTION=SSH_VALUE&SSH_OPTION_2=VALUE_2
           examples:
             - machine.example.com
             - user@machine2.example.com
-            - root@example.com:2222&IdentityFile=/path/to/private/key
+            - root@example.com:2222?IdentityFile=/path/to/private/key&StrictHostKeyChecking=yes
         '';
         type = lib.types.nullOr lib.types.str;
         default = null;
