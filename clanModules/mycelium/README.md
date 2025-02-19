@@ -24,14 +24,7 @@ mycelium.default = {
     "berlin"
     "munich"
   ];
-  config = {
-    topLevelDomain = "m";
-    openFirewall = true;
-    addHostedPublicNodes = true;
-  };
 };
 ```
 
 This will add the machines named `berlin` and `munich` to the `mycelium` vpn.
-And will also set the toplevel domain of the mycelium vpn to `m`, meaning the 
-machines are now reachable via `berlin.m` and `munich.m`.
