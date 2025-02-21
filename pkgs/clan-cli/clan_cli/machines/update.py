@@ -37,7 +37,8 @@ def is_local_input(node: dict[str, dict[str, str]]) -> bool:
     # matches path and git+file://
     return (
         locked["type"] == "path"
-        or re.match(r"^\w+\+file://", locked.get("url", "")) is not None
+        # local vcs inputs i.e. git+file:///
+        or re.match(r"^file://", locked.get("url", "")) is not None
     )
 
 
